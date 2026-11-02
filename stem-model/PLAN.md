@@ -64,7 +64,14 @@ nspire-tlm's published count.
 Reasons: 5.46M leaves 21 MB of the 27 MB heap for the KV cache (1.62 MB) and
 scratch; it clears the 77 ms/token bandwidth floor with margin; and the
 `d176` result below says the grounded task survives at a third of that size.
-A 24-token call is then 3 s at 198 MHz and 5 s at 144 MHz.
+
+The parameter counts in the table are not estimates: `train.py` builds each
+configuration and reports 2,457,840 / 5,460,840 / 9,646,560, matching the
+formula exactly.
+
+Output length is much shorter than assumed. With relation names as single
+tokens, a measured call is **7.4 tokens** (max 11), not 24. At 5.3 tok/s that
+is **1.4 s** per answer at 144 MHz, or 1.0 s at 198 MHz.
 
 Evidence on size, from nspire-tlm's width ladder (6 layers, widths 176/264/352):
 `d176` (~3M) was only **2.5 points worse on grounded computation** but **69.3
@@ -85,9 +92,10 @@ chemistry nomenclature alone proves unlearnable at this width.
 The model emits `CALL <relation> <args>` and never a number; the runtime
 executes it. `relations.py` is the contract.
 
-- **Volume:** ~1M traces, 30-40 tokens each, roughly 35M tokens. nspire-tlm
+- **Volume:** ~1M traces, ~52 tokens each (44 question + 7.4 call), roughly
+  52M tokens. nspire-tlm
   shipped on an 8,000-step run and found 17,750 steps no better, so ~100M
-  tokens of training is the working budget, i.e. ~3 epochs.
+  tokens of training is the working budget, i.e. ~2 epochs.
 - **Distractors:** 50% of rows carry one plausible same-unit extra quantity.
   This is the highest-value data lever available: nspire-tlm reports 116/120
   dropping to 61/120 when one irrelevant value precedes the relevant ones.
@@ -98,8 +106,13 @@ executes it. `relations.py` is the contract.
 
 ## 6. Tokenizer
 
-Domain BPE at 512-1024 tokens over question text plus call vocabulary, with
-byte fallback, and the call delimiters as reserved single tokens.
+Domain BPE at 512 tokens over question text plus call vocabulary, with byte
+fallback, and the call delimiters as reserved single tokens.
+
+Implemented in `tokenizer.py` and measured on 12,000 traces: 240 merges,
+**43.9 tokens per question**, **7.4 tokens per call**, and 12,000/12,000 exact
+round-trips. `CALL` and each relation name are single tokens, which is what
+makes the call so short and what makes constrained decoding a small trie.
 
 Rationale: at V=4096 and d=264 the embedding table is 1.08M parameters, 20% of
 the model spent on vocabulary. At V=512 it is 2.5%. That is the cheapest
@@ -111,6 +124,14 @@ Copy the recipe that is known to work at this scale rather than inventing one:
 AdamW, lr 3e-4, 3% warmup, cosine decay to 10%, weight decay 0.1, batch 24,
 seq 512, 8,000 steps.
 
+**Mask the loss to the call tokens.** This is not a detail. Training on the
+whole sequence spends almost all of the gradient reproducing the question, and
+the model learns to emit `CALL` and then repeat it. Measured on CPU at d=176:
+full-sequence loss reached 4.71 in 347 steps and produced
+`CALL CALL CALL CALL`; call-only loss reached 3.10 in 431 steps and produced
+the correct relation name on all three held-out samples. Deployment only needs
+the call, so the question tokens should never contribute loss.
+
 Hardware: an RTX 4070 with 12 GB is comfortably sufficient. Weights 22 MB,
 AdamW moments 44 MB, activations small; the whole run fits in well under 2 GB,
 so batch size can be raised for speed.
@@ -119,6 +140,10 @@ Time, from `6 * N * D` FLOPs: 8,000 steps at 5.46M parameters is 3.2e15 FLOPs,
 about **6 minutes** at 9 TFLOP/s effective. Even allowing for a 4x
 inefficiency this is under half an hour. nspire-tlm spent 156 minutes on the
 same shape of run, so treat this as an optimistic bound until measured.
+
+Measured on 2 CPU cores, d=176, batch 32, seq 128: about **0.9 s per step**, so
+8,000 steps would be roughly 2 hours on CPU. A 4070 should be one to two orders
+of magnitude faster; this is the number to beat.
 
 ## 8. Quantization and export
 

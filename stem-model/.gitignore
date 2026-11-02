@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 traces.jsonl
 weights.h
+tokenizer.json
+model.pt

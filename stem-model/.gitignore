@@ -4,3 +4,9 @@ traces.jsonl
 weights.h
 tokenizer.json
 model.pt
+data/
+weights.bin
+ref.npy
+runtime/infer_host
+pytest_cache/
+__pycache__/

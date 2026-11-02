@@ -25,14 +25,15 @@ def relation(name, subject, params, exact=True):
 
 
 def fmt(value):
-    value = sp.nsimplify(sp.sympify(value))
-    if value.is_rational:
+    if isinstance(value, (int, sp.Integer)):
+        return str(int(value))
+    if isinstance(value, sp.Rational):
         return str(value)
-    return str(sp.N(value, 4))
+    return dec(value)
 
 
 def dec(value):
-    return f"{float(sp.N(value, 4)):g}"
+    return f"{float(value):.4g}"
 
 
 def poly(coeffs, var="x"):

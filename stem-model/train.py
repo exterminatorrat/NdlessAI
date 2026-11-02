@@ -10,6 +10,18 @@ import torch.nn.functional as F
 
 from tokenizer import Tokenizer
 
+THETA = 10000.0
+
+
+def rope(x, theta=THETA):
+    b, h, t, hd = x.shape
+    half = hd // 2
+    freq = 1.0 / (theta ** (torch.arange(0, half, dtype=torch.float32) / half))
+    ang = torch.outer(torch.arange(t, dtype=torch.float32), freq)
+    cos, sin = ang.cos()[None, None], ang.sin()[None, None]
+    x1, x2 = x[..., :half], x[..., half:]
+    return torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
+
 
 class Config:
     def __init__(self, dim, layers, heads, hidden, vocab, seq):
@@ -47,6 +59,7 @@ class Attention(nn.Module):
         q = q.view(b, t, self.heads, self.head_dim).transpose(1, 2)
         k = k.view(b, t, self.heads, self.head_dim).transpose(1, 2)
         v = v.view(b, t, self.heads, self.head_dim).transpose(1, 2)
+        q, k = rope(q), rope(k)
         out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         return self.wo(out.transpose(1, 2).reshape(b, t, -1))
 
@@ -111,24 +124,38 @@ def generate(model, tok, prompt, max_new=16):
 
 
 def pack(rows, tok, seq):
-    flat, is_call = [], []
+    cap = seq + 1
+    windows, skipped = [], 0
+    cur_ids, cur_mask = [], []
+
     for r in rows:
         prompt = tok.encode(f"{r['question']} <sep>")
         call = tok.encode(r["call"])
-        flat.extend(prompt)
-        is_call.extend([False] * len(prompt))
-        flat.extend(call)
-        is_call.extend([True] * len(call))
-        flat.append(258)
-        is_call.append(True)
+        ids = prompt + call + [258]
+        mask = [False] * len(prompt) + [True] * (len(call) + 1)
+        if len(ids) > cap:
+            skipped += 1
+            continue
+        if len(cur_ids) + len(ids) > cap:
+            pad = cap - len(cur_ids)
+            windows.append((cur_ids + [256] * pad, cur_mask + [False] * pad))
+            cur_ids, cur_mask = [], []
+        cur_ids.extend(ids)
+        cur_mask.extend(mask)
 
-    usable = (len(flat) - 1) // seq * seq
-    flat = np.asarray(flat[:usable + 1], dtype=np.int64)
-    is_call = np.asarray(is_call[:usable + 1], dtype=bool)
-    x = flat[:-1].reshape(-1, seq)
-    y = flat[1:].reshape(-1, seq)
-    m = is_call[1:].reshape(-1, seq)
-    return x, y, m
+    if cur_ids:
+        pad = cap - len(cur_ids)
+        windows.append((cur_ids + [256] * pad, cur_mask + [False] * pad))
+
+    if skipped:
+        print(f"warning: skipped {skipped} rows longer than {cap} tokens")
+    if not windows:
+        raise SystemExit(
+            f"no training windows: need rows shorter than {cap} tokens and at least one row")
+
+    flat = np.asarray([w[0] for w in windows], dtype=np.int64)
+    mask = np.asarray([w[1] for w in windows], dtype=bool)
+    return flat[:, :seq], flat[:, 1:], mask[:, 1:]
 
 
 def batch(x, y, m, size, rng):
@@ -140,9 +167,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--traces", default="traces.jsonl")
     ap.add_argument("--tokenizer", default="tokenizer.json")
-    ap.add_argument("--dim", type=int, default=264)
+    ap.add_argument("--dim", type=int, default=256)
     ap.add_argument("--layers", type=int, default=6)
-    ap.add_argument("--heads", type=int, default=6)
+    ap.add_argument("--heads", type=int, default=8)
     ap.add_argument("--hidden", type=int, default=768)
     ap.add_argument("--seq", type=int, default=512)
     ap.add_argument("--batch", type=int, default=24)
@@ -161,6 +188,8 @@ def main():
 
     if args.dim % args.heads:
         raise SystemExit(f"--dim {args.dim} is not divisible by --heads {args.heads}")
+    if args.dim % 32:
+        raise SystemExit(f"--dim {args.dim} must be a multiple of 32 for int8 group quantization")
 
     rows = [json.loads(line) for line in open(args.traces)]
     tok = Tokenizer.from_json(json.load(open(args.tokenizer)))

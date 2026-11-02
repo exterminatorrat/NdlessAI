@@ -56,18 +56,23 @@ nspire-tlm's published count.
 
 | d | L | vocab | hidden | params | int8 size | ms/tok @144 | tok/s | ms/tok @198 | tok/s |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 176 | 6 | 512 | 512 | 2,457,840 | 2.46 MB | 85 | 11.7 | 62 | 16.1 |
-| 264 | 6 | 512 | 768 | 5,460,840 | 5.46 MB | 190 | 5.3 | 138 | 7.3 |
+| 128 | 6 | 512 | 512 | 1,640,064 | 1.64 MB | 57 | 17.6 | 41 | 24.1 |
+| 256 | 6 | 512 | 768 | 5,246,208 | 5.25 MB | 182 | 5.5 | 132 | 7.6 |
 | 352 | 6 | 512 | 1024 | 9,646,560 | 9.65 MB | 335 | 3.0 | 244 | 4.1 |
 
-**Decision: start at d=264 (5.46M), keep d=352 (9.65M) as the fallback.**
-Reasons: 5.46M leaves 21 MB of the 27 MB heap for the KV cache (1.62 MB) and
-scratch; it clears the 77 ms/token bandwidth floor with margin; and the
-`d176` result below says the grounded task survives at a third of that size.
+**Decision: d=256 (5.25M).** It leaves 21 MB of the 27 MB heap for the KV cache
+and scratch, clears the 77 ms/token bandwidth floor with margin, and is the
+smallest width that satisfies the int8 group constraint below.
+
+`d` must be a multiple of the int8 group size, because a per-group scale cannot
+span a partial group. Group 32 forces d to be a multiple of 32, which rules out
+176 (5.5 groups) and 264 (8.25 groups) even though those widths look natural.
+With group 32 the whole weight matrix has 12.5% scale overhead; group 8 would
+divide any width but cost 50%. d=256 with group 32 keeps both small.
 
 The parameter counts in the table are not estimates: `train.py` builds each
-configuration and reports 2,457,840 / 5,460,840 / 9,646,560, matching the
-formula exactly.
+configuration and reports them, matching the formula exactly. The counts were
+re-verified after adding rotary embeddings, which add no parameters.
 
 Output length is much shorter than assumed. With relation names as single
 tokens, a measured call is **7.4 tokens** (max 11), not 24. At 5.3 tok/s that
@@ -109,6 +114,12 @@ executes it. `relations.py` is the contract.
 Domain BPE at 512 tokens over question text plus call vocabulary, with byte
 fallback, and the call delimiters as reserved single tokens.
 
+Position information comes from rotary embeddings (theta 10000), applied to q
+and k per head, matching llama2. This matters for this task specifically: with
+causal masking alone the model is close to permutation-invariant, and the CALL
+arguments are distinguished only by their order. The trainer and the C engine
+implement the same rotation, and the parity test covers it.
+
 Implemented in `tokenizer.py` and measured on 12,000 traces: 240 merges,
 **43.9 tokens per question**, **7.4 tokens per call**, and 12,000/12,000 exact
 round-trips. `CALL` and each relation name are single tokens, which is what
@@ -147,9 +158,17 @@ of magnitude faster; this is the number to beat.
 
 ## 8. Quantization and export
 
-Per-channel int8 with group-32 blocks and Q16 fixed-point scales, so the
-calculator never executes a float. `export_int8.py` implements and checks this:
-on a 64x352 tensor, max abs error 1.1e-3 and dot-product relative error 1.44%.
+Per-channel int8 with group-32 blocks and **Q24** fixed-point scales.
+
+Q16 was measured to be the dominant error term: for weights with standard
+deviation 0.02 the scale is only about 46 in Q16, i.e. 6 significant bits, which
+tripled the weight error (3.4e-4 with exact scales versus 1.1e-3 in Q16). Q24
+brings it back to 3.4e-4, and an int32 scale holds 2^24 * 0.1 comfortably.
+
+One consequence for the device port: the accumulator must be int64 (or float)
+because `acc * scale` reaches 2^31 in Q24. The host engine uses float, which is
+exact enough here but slow on a chip without an FPU; the deploy kernel should
+keep int32 accumulators, dequantize with a shift, and stay in fixed point.
 
 Group 32 instead of nspire-tlm's 88: 32 divides the power-of-two dimensions and
 keeps loads aligned. Weights go out as packed `uint32_t` in the layout

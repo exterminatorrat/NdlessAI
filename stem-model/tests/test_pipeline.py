@@ -154,6 +154,13 @@ def test_tokenizer_ids_are_distinct():
     assert min(ids) >= 256
 
 
+def test_tokenizer_rejects_vocab_below_specials():
+    from tokenizer import FIRST_MERGE
+
+    with pytest.raises(ValueError):
+        train_tokenizer(["Solve 2x = 4 <sep> CALL quad_solve 0 2 -4"], FIRST_MERGE - 1)
+
+
 def test_pack_never_straddles_rows():
     from train import pack
 

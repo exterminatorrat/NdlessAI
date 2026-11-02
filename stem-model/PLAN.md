@@ -109,6 +109,16 @@ executes it. `relations.py` is the contract.
 - **Execution check:** every row is executed and compared to its solver. This
   already runs; 5,500 rows across 20 seeds, 0 mismatches.
 
+That check is a parse round-trip, not a correctness check: it compares
+`run_call` against the same solver, so it catches a broken call string but
+cannot catch a wrong formula. Correctness is covered by hand-computed golden
+values in the test suite instead.
+
+Polynomial questions render coefficients implicitly: `2x^2 - 3` is
+`CALL deriv_poly3 0 2 0 -3`. That is deliberate. It makes the model recover
+missing coefficients from position rather than copying them, and it is
+unambiguous for fixed arity. The cost is a slightly harder copying task.
+
 ## 6. Tokenizer
 
 Domain BPE at 512 tokens over question text plus call vocabulary, with byte

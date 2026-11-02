@@ -84,6 +84,11 @@ def count_pairs(ids_list):
 
 
 def train(texts, vocab_size=512):
+    if vocab_size < FIRST_MERGE:
+        raise ValueError(
+            f"vocab_size {vocab_size} below the {FIRST_MERGE} reserved ids; "
+            f"minimum is {FIRST_MERGE + 1}")
+
     encoded = []
     for text in texts:
         for is_special, piece in split_specials(text):

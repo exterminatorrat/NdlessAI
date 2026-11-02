@@ -32,7 +32,28 @@ def fmt(value):
 
 
 def dec(value):
-    return str(sp.N(value, 4))
+    return f"{float(sp.N(value, 4)):g}"
+
+
+def poly(coeffs, var="x"):
+    terms = []
+    deg = len(coeffs) - 1
+    for i, c in enumerate(coeffs):
+        d = deg - i
+        if c == 0:
+            continue
+        mag = abs(c)
+        if d == 0:
+            body = str(mag)
+        elif d == 1:
+            body = ("" if mag == 1 else str(mag)) + var
+        else:
+            body = ("" if mag == 1 else str(mag)) + f"{var}^{d}"
+        if not terms:
+            terms.append(("-" if c < 0 else "") + body)
+        else:
+            terms.append((" - " if c < 0 else " + ") + body)
+    return "".join(terms) or "0"
 
 
 @relation("quad_solve", "precalc", ["a", "b", "c"])
@@ -42,7 +63,7 @@ class QuadSolve:
         r1, r2 = rng.randint(-6, 6), rng.randint(-6, 6)
         a = rng.choice([1, 1, 1, 2, -1, 3])
         b, c = -a * (r1 + r2), a * r1 * r2
-        q = f"Solve {a}x^2 + {b}x + {c} = 0 for x."
+        q = f"Solve {poly([a, b, c])} = 0 for x."
         return [a, b, c], q
 
     @staticmethod
@@ -57,7 +78,7 @@ class DerivPoly3:
     def gen(rng):
         a, b, c, d = (rng.randint(-4, 4) for _ in range(4))
         x = rng.randint(-3, 3)
-        q = f"Evaluate the derivative of f(x) = {a}x^3 + {b}x^2 + {c}x + {d} at x = {x}."
+        q = f"Evaluate the derivative of f(x) = {poly([a, b, c, d])} at x = {x}."
         return [a, b, c, d, x], q
 
     @staticmethod
@@ -74,7 +95,7 @@ class IntegPoly3:
         a, b, c, d = (rng.randint(-3, 3) for _ in range(4))
         lo = rng.randint(-2, 2)
         hi = lo + rng.randint(1, 4)
-        q = (f"Compute the definite integral of {a}x^3 + {b}x^2 + {c}x + {d} "
+        q = (f"Compute the definite integral of {poly([a, b, c, d])} "
              f"from x = {lo} to x = {hi}.")
         return [a, b, c, d, lo, hi], q
 

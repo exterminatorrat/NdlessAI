@@ -13,7 +13,9 @@ would be 300+ tokens and a minute and a half.
 
     relations.py      the contract: fixed arity, so the grammar is trivial
     gen_traces.py     question -> call -> answer, every row executed to check it
+    distractors.py    one plausible same-unit extra quantity per row
     export_int8.py    per-channel int8 + fixed-point scales, checked against float
+    PLAN.md           the full plan: measured hardware, model size, training, gates
 
 Run it:
 
@@ -24,10 +26,10 @@ executed through `run_call` and compared against the relation's own solver, so
 the call string is proven to round-trip and the answer is computed rather than
 hand-written.
 
-Stage 2, next: distractors. Rewrite each question to carry one number that is
-irrelevant to the call, then discard rows where the answer changes. Published
-work shows a small model drops from 116/120 to 61/120 on exactly this, so it is
-the highest-value data work available and it costs no parameters.
+Stage 2, done: distractors. Each question can carry one extra quantity of the
+same unit, drawn from a per-relation pool so it stays plausible. Published work
+shows a small model drops from 116/120 to 61/120 on exactly this, so it is the
+highest-value data work available and it costs no parameters.
 
 Stage 3: tokenizer. Byte-level or a 512-1024 token domain BPE over the call
 vocabulary. Small vocab keeps the embedding table from eating the 21.5 MiB

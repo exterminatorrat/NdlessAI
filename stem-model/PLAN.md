@@ -1,0 +1,188 @@
+# Plan: a small STEM model on a TI-Nspire CX II
+
+Target: on the calculator, in a few seconds, turn a typed school problem into
+an exact answer. Bounded by what the hardware actually measures, not what it
+was advertised to do.
+
+## 1. Measured facts
+
+From `docs/HARDWARE.md` in the nspire-tlm project, measured on a CX II CAS:
+
+| Quantity | Measured |
+|---|---|
+| Largest single `malloc` | 21.56 MiB (22.6 MB) |
+| Total heap in 64 KB chunks | 27.12 MiB (28.4 MB) |
+| LPDDR sequential read | 70.5 MB/s |
+| `memcpy` | 50.9 MB/s |
+| I-cache / D-cache | 16 KB / 8 KB, 32-byte lines, 4-way |
+| SPI NAND sequential | 1.46 MB/s |
+| Random 4 KB flash latency | 58 ms |
+
+Two constraints follow immediately:
+
+- **One buffer cannot hold the whole model.** Weights must be allocated per
+  layer, so the runtime allocates `L` buffers, not one.
+- **Weights are re-read every token.** 5.46M int8 weights at 70.5 MB/s sets a
+  77 ms/token floor regardless of compute.
+
+The CPU clock is **disputed**, and this matters more than anything else here:
+TI documentation and community CoreMark runs say 396 MHz, while the measured
+figure in the same project is 198 MHz on a first run and **144 MHz on
+subsequent runs**. `int8bench` exists to settle it on the unit in hand. Every
+number below is quoted at both 144 and 198 MHz.
+
+## 2. Cycle model
+
+A batch-1 decode token costs about one MAC per parameter, plus attention, which
+is small at the short contexts this model uses. The disassembly of the
+benchmark kernel is 5 instructions per MAC (`ldrsb`, `ldrsb`, `cmp`, `smlabb`,
+`bne`) on a single-issue ARM926EJ-S, so:
+
+    cycles/token  ~= 5 * params
+
+Cross-check: nspire-tlm's own derived table gives 15M parameters at 2.33 tok/s
+at 144 MHz, which implies 4.1 cycles per parameter. Our 5.0 is conservative by
+about 20%, which is the right direction for planning.
+
+## 3. Model size
+
+Parameter count for a llama2-style decoder with tied embeddings, verified
+against a published model:
+
+    N = V*d + L*(4d^2 + 3*d*hidden + 2d) + d
+
+Check: d=352, L=6, V=4096, hidden=1024 gives 10,908,128, which is exactly
+nspire-tlm's published count.
+
+| d | L | vocab | hidden | params | int8 size | ms/tok @144 | tok/s | ms/tok @198 | tok/s |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 176 | 6 | 512 | 512 | 2,457,840 | 2.46 MB | 85 | 11.7 | 62 | 16.1 |
+| 264 | 6 | 512 | 768 | 5,460,840 | 5.46 MB | 190 | 5.3 | 138 | 7.3 |
+| 352 | 6 | 512 | 1024 | 9,646,560 | 9.65 MB | 335 | 3.0 | 244 | 4.1 |
+
+**Decision: start at d=264 (5.46M), keep d=352 (9.65M) as the fallback.**
+Reasons: 5.46M leaves 21 MB of the 27 MB heap for the KV cache (1.62 MB) and
+scratch; it clears the 77 ms/token bandwidth floor with margin; and the
+`d176` result below says the grounded task survives at a third of that size.
+A 24-token call is then 3 s at 198 MHz and 5 s at 144 MHz.
+
+Evidence on size, from nspire-tlm's width ladder (6 layers, widths 176/264/352):
+`d176` (~3M) was only **2.5 points worse on grounded computation** but **69.3
+points worse on `explain`**. That is the single most useful result for this
+design: shrinking hurts open-ended explanation, not call selection. Put
+knowledge in code, keep the model on grounded calls, and small works.
+
+## 4. One model or three
+
+**One model, three relation tables.** The language job is identical across
+subjects (find quantities, pick an operation, fill slots), so three models
+triple the data and training work for no extra capability. Subject separation
+belongs in the tables and solvers, which cost kilobytes. Revisit only if
+chemistry nomenclature alone proves unlearnable at this width.
+
+## 5. Data
+
+The model emits `CALL <relation> <args>` and never a number; the runtime
+executes it. `relations.py` is the contract.
+
+- **Volume:** ~1M traces, 30-40 tokens each, roughly 35M tokens. nspire-tlm
+  shipped on an 8,000-step run and found 17,750 steps no better, so ~100M
+  tokens of training is the working budget, i.e. ~3 epochs.
+- **Distractors:** 50% of rows carry one plausible same-unit extra quantity.
+  This is the highest-value data lever available: nspire-tlm reports 116/120
+  dropping to 61/120 when one irrelevant value precedes the relevant ones.
+- **Splits:** train / val / dev / fresh, disjoint by generator seed and by
+  template, so an apparent gain cannot come from memorised wording.
+- **Execution check:** every row is executed and compared to its solver. This
+  already runs; 5,500 rows across 20 seeds, 0 mismatches.
+
+## 6. Tokenizer
+
+Domain BPE at 512-1024 tokens over question text plus call vocabulary, with
+byte fallback, and the call delimiters as reserved single tokens.
+
+Rationale: at V=4096 and d=264 the embedding table is 1.08M parameters, 20% of
+the model spent on vocabulary. At V=512 it is 2.5%. That is the cheapest
+capacity win available.
+
+## 7. Training
+
+Copy the recipe that is known to work at this scale rather than inventing one:
+AdamW, lr 3e-4, 3% warmup, cosine decay to 10%, weight decay 0.1, batch 24,
+seq 512, 8,000 steps.
+
+Hardware: an RTX 4070 with 12 GB is comfortably sufficient. Weights 22 MB,
+AdamW moments 44 MB, activations small; the whole run fits in well under 2 GB,
+so batch size can be raised for speed.
+
+Time, from `6 * N * D` FLOPs: 8,000 steps at 5.46M parameters is 3.2e15 FLOPs,
+about **6 minutes** at 9 TFLOP/s effective. Even allowing for a 4x
+inefficiency this is under half an hour. nspire-tlm spent 156 minutes on the
+same shape of run, so treat this as an optimistic bound until measured.
+
+## 8. Quantization and export
+
+Per-channel int8 with group-32 blocks and Q16 fixed-point scales, so the
+calculator never executes a float. `export_int8.py` implements and checks this:
+on a 64x352 tensor, max abs error 1.1e-3 and dot-product relative error 1.44%.
+
+Group 32 instead of nspire-tlm's 88: 32 divides the power-of-two dimensions and
+keeps loads aligned. Weights go out as packed `uint32_t` in the layout
+`int8bench` reads.
+
+## 9. On-device runtime
+
+- Per-layer weight buffers, each under 21.5 MB, total under 27 MB.
+- int8 dot product with `SMLABB` contraction; do not hand-roll packing, the
+  benchmark shows it does not help.
+- Fixed-point RMSNorm; `exp` for softmax from a table, since there is no FPU.
+- KV cache at int8: 1.62 MB at d=264, seq 512.
+- Grammar-constrained decoding from a trie of valid next tokens, so an invalid
+  call cannot be produced and no retry is needed.
+- One repair attempt on a failed call, then a declared failure rather than
+  prose arithmetic.
+
+## 10. Evaluation
+
+Report exact-match accuracy and wrong-answer rate separately, on held-out
+generators, with and without distractors. Loss is not the metric; a model that
+declines is better than one that guesses.
+
+Acceptance gates:
+
+| Gate | Threshold |
+|---|---|
+| Relation-supplied, no distractor | >= 95% correct |
+| Relation-supplied, with distractor | >= 85% correct |
+| End-to-end fresh problems | >= 70% correct, <= 5% wrong |
+| Rule-based baseline | measured on the same sets; the neural path must beat it where rules cannot apply |
+
+nspire-tlm's own finding sets the bar: their rule-based path was more often
+correct than the model on every numeric set, so any neural version has to
+justify itself against a deterministic baseline, not against nothing.
+
+## 11. Milestones
+
+| # | Deliverable | Verified by |
+|---|---|---|
+| M0 | `int8bench` measures real tok/s and clock on the unit | numbers recorded in the PR |
+| M1 | Trace generator + distractors | every row executed, 0 mismatches |
+| M2 | Training run at d=264 | val loss falls, then plateaus |
+| M3 | int8 export | dot-product error < 2% |
+| M4 | C runtime on device | matches host outputs on 100 held-out calls |
+| M5 | Evaluation on fresh sets | gates above |
+
+## 12. Risks
+
+- **Clock uncertainty (factor 2.5).** Everything above moves with it. M0
+  settles it; no model size should be fixed before then.
+- **Distractor brittleness.** Largest known accuracy risk, and a data problem
+  rather than a size problem.
+- **Soft-float drift.** No FPU, so numerics are fixed point. Mitigated by
+  executing arithmetic in exact code, but RMSNorm and softmax still need
+  care.
+- **Overfitting at 100M tokens.** nspire-tlm saw no gain past 8,000 steps and
+  used more unique data rather than more steps. Expect the same.
+- **Tokenizer on math text.** Digits, `^`, and implicit multiplication
+  tokenize badly under generic BPE; this is why the vocabulary is domain
+  specific and checked before training, not after.

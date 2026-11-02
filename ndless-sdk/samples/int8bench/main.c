@@ -7,6 +7,7 @@
 #define DIM 352
 #define PARAMS 11000000
 #define REPS 3
+#define MACS_PER_TOKEN PARAMS
 
 static uint32_t rng = 12345;
 static volatile int32_t sink;
@@ -82,7 +83,7 @@ int main(void)
 	printf("PHASE 2 DONE\n");
 
 	printf("\ntokens/s = %d / seconds\n", REPS);
-	printf("(one rep = %d MACs)\n", 2 * PARAMS);
+	printf("(one rep = %d MACs)\n", MACS_PER_TOKEN);
 	wait_key_pressed();
 
 	free(w8);

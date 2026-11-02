@@ -2,6 +2,7 @@ import argparse
 import json
 import random
 
+from distractors import add_distractor
 from relations import RELATIONS
 
 
@@ -29,6 +30,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--distractors", type=float, default=0.5)
     ap.add_argument("--out", default="traces.jsonl")
     args = ap.parse_args()
 
@@ -43,11 +45,18 @@ def main():
             call = render_call(name, params)
             answer = run_call(call)
             assert answer == rel.solve(*params), f"{name} roundtrip mismatch"
+            distractor = None
+            if rng.random() < args.distractors:
+                question, distractor = add_distractor(name, params, question, rng)
+                assert str(distractor) in question, f"{name} distractor missing"
+                assert str(distractor) not in {str(p) for p in params}, f"{name} distractor collides"
+                assert run_call(call) == answer, f"{name} answer moved"
             out.write(json.dumps({
                 "subject": rel.subject,
                 "question": question,
                 "call": call,
                 "answer": answer,
+                "distractor": distractor,
             }) + "\n")
             rows += 1
 

@@ -211,12 +211,35 @@ justify itself against a deterministic baseline, not against nothing.
 |---|---|---|
 | M0 | `int8bench` measures real tok/s and clock on the unit | numbers recorded in the PR |
 | M1 | Trace generator + distractors | every row executed, 0 mismatches |
-| M2 | Training run at d=264 | val loss falls, then plateaus |
+| M2 | Training run at d=256 | val loss falls (1.03 -> 0.12 observed) |
 | M3 | int8 export | dot-product error < 2% |
 | M4 | C runtime on device | matches host outputs on 100 held-out calls |
 | M5 | Evaluation on fresh sets | gates above |
 
-## 12. Risks
+## 12. Measured results so far
+
+Everything below was run, not estimated.
+
+| Step | Result |
+|---|---|
+| Dataset, 50k rows | 9 min to generate, 12 MB, 44.0 tokens per problem, 7.5 per call |
+| Distractor coverage | 25,113 of 50,000 rows carry one |
+| Training, d=256, 331 steps | val loss 1.034 at step 150, **0.119 at step 300** |
+| Training cost | 657 s on 2 CPU cores, 2.0 s per step, batch 32, seq 128 |
+| Held-out, PyTorch | 3 of 4 calls exact |
+| Held-out, int8 C engine, 60 problems | **81.7% exact, 18.3% right relation with wrong arguments, 0% wrong relation** |
+| Exported weights | 5.91 MB, max per-group error 4.2e-4 |
+| C vs PyTorch logits | max abs difference 7.4e-07, identical argmax |
+
+The zero wrong-relation rate is the important column. The failure mode is
+digit copying, not picking the wrong tool, and that is the failure a
+constrained decoder plus an argument-level check can catch.
+
+This is a half-epoch model on a laptop CPU. The gates in section 10 are not
+met yet and are not expected to be at this budget; the point is that the whole
+chain works end to end and the remaining gap is training time.
+
+## 13. Risks
 
 - **Clock uncertainty (factor 2.5).** Everything above moves with it. M0
   settles it; no model size should be fixed before then.

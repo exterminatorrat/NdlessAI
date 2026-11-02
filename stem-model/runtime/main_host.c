@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 	model_t m;
 	state_t *s;
 	float *logits;
-	int pos = 0, n = 0;
+	int pos = 0, n = 0, want = 0;
 
 	if (argc < 3) {
 		fprintf(stderr, "usage: %s weights.bin <token> [token ...]\n", argv[0]);
@@ -22,6 +22,8 @@ int main(int argc, char **argv)
 	m.seq = argc - 2;
 	if (getenv("NSM_SEQ"))
 		m.seq = atoi(getenv("NSM_SEQ"));
+	if (getenv("NSM_GEN"))
+		want = atoi(getenv("NSM_GEN"));
 	if (m.seq < 1)
 		m.seq = 1;
 	s = state_new(&m);
@@ -52,6 +54,20 @@ int main(int argc, char **argv)
 
 	printf("tokens %d\n", n);
 	printf("argmax %d\n", argmax(logits, m.vocab));
+
+	if (want > 0) {
+		printf("gen");
+		for (int i = 0; i < want && pos < m.seq; i++) {
+			int next = argmax(logits, m.vocab);
+
+			printf(" %d", next);
+			if (next == 258)
+				break;
+			forward(&m, s, next, pos++, logits);
+		}
+		printf("\n");
+	}
+
 	for (int i = 0; i < m.vocab; i++)
 		printf("logit %d %.6f\n", i, logits[i]);
 

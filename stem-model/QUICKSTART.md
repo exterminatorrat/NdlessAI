@@ -7,6 +7,7 @@ optional: the whole model trains on a laptop CPU, just slower.
     make train     # train the model (about an hour on CPU, minutes on a GPU)
     make export    # quantize to int8 and write weights.bin
     make host      # build the C engine and check it against PyTorch
+    make eval      # score the int8 C engine on held-out problems
 
 `make test` runs the full suite, including the test that the C engine's logits
 match PyTorch to within 1e-4.

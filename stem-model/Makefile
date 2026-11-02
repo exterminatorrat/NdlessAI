@@ -17,6 +17,9 @@ export:
 host:
 	$(MAKE) -C runtime
 
+eval: export host
+	$(PY) python evaluate.py
+
 test:
 	uv run --with pytest --with torch --with numpy --with sympy \
 		python -m pytest tests -q
@@ -25,4 +28,4 @@ clean:
 	rm -rf $(DATA) model.pt weights.bin ref.npy __pycache__ tests/__pycache__
 	$(MAKE) -C runtime clean
 
-.PHONY: all data train export host test clean
+.PHONY: all data train export host eval test clean

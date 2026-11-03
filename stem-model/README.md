@@ -1,0 +1,85 @@
+Everything the on-device model has to learn is the mapping
+
+    question text  ->  CALL <relation> <arg> <arg> ...
+
+It never emits a number. Numbers come from `relations.py`, executing on the
+calculator in exact arithmetic, which is why an 11M-parameter model is enough:
+the mathematics lives in code, and only the language understanding lives in
+weights.
+
+Fewer tokens is also the only real speed lever. A call is ~24 tokens, so at the
+measured ~3.5 tok/s that is about 7 s per problem, while a narrated derivation
+would be 300+ tokens and a minute and a half.
+
+    relations.py      the contract: fixed arity, so the grammar is trivial
+    gen_traces.py     question -> call -> answer, every row executed to check it
+    distractors.py    one plausible same-unit extra quantity per row
+    tokenizer.py      byte-level BPE, 512 tokens, relation names as single tokens
+    train.py          llama2-style decoder with RoPE, loss masked to call tokens
+    export_int8.py    per-channel int8 + Q24 fixed-point scales
+    export_model.py   checkpoint -> weights.bin + reference logits
+    make_dataset.py   one command to build the dataset and tokenizer
+    runtime/          C int8 inference engine, parity-checked against PyTorch
+    tests/            the test suite
+    PLAN.md           the full plan: measured hardware, model size, training, gates
+
+Start with `QUICKSTART.md`: `make data`, `make train`, `make export`, `make host`.
+
+Run it:
+
+    uv run --with sympy python gen_traces.py --n 400 --out traces.jsonl
+
+Stage 1, where this stands: a verified data contract. Every generated row is
+executed through `run_call` and compared against the relation's own solver, so
+the call string is proven to round-trip and the answer is computed rather than
+hand-written.
+
+Stage 2, done: distractors. Each question can carry one extra quantity of the
+same unit, drawn from a per-relation pool so it stays plausible. Published work
+shows a small model drops from 116/120 to 61/120 on exactly this, so it is the
+highest-value data work available and it costs no parameters.
+
+Stage 3, done: tokenizer. Byte-level BPE at 512 tokens with `CALL` and each
+relation name as single tokens. Measured on 12,000 traces: 43.9 tokens per
+question, 7.4 per call, 12,000/12,000 exact round-trips.
+
+Stage 4, done: training off-device. `train.py` builds a llama2-style decoder
+with rotary embeddings and masks the loss to the call tokens, which matters:
+training on the whole sequence teaches the model to recite the question and
+then repeat `CALL`. Windows never split a row, so no call is ever trained
+against a truncated prompt.
+
+    uv run --with torch --with numpy python train.py \
+        --traces traces.jsonl --tokenizer tokenizer.json
+
+Measured on 2 CPU cores at d=176: 0.9 s/step, and after 431 steps the model
+already selected the correct relation on all three held-out samples.
+
+Stage 7, done: evaluation harness. `tests/test_pipeline.py` holds golden-value
+tests for every relation (hand-computed answers, not round-trips), the
+quantization error bound, tokenizer round-trips, the window-packing invariant,
+loss-decrease on a short run, and a C-versus-PyTorch logit parity check.
+
+Two data bugs were found by review and fixed here: `dec()` printed
+binary-rounding noise as extra digits (`0.200001 M` for 0.2), and `fmt()`
+ran `nsimplify` on rationals, which turns `2284/3` into a wrong symbolic form
+(`761.3`). Both would have been learned as target strings.
+
+Stage 5: export. Per-channel int8, group size 32, scales stored as fixed-point
+Q16 so the calculator never touches a float. Weights are emitted as packed
+`uint32_t` words in the same layout `int8bench` reads.
+
+    uv run --with numpy python export_int8.py --out weights.h
+
+Stage 6: on-device runtime. Prompt template, grammar-constrained decoding so
+only valid call tokens can be sampled, then dispatch into the ported relation
+solvers C-side.
+
+Stage 7: evaluation that matters. Exact-match on held-out generated sets, with
+and without distractors, reported as accuracy and decline rate rather than
+loss.
+
+The benchmark already settled the hardware question, so stages 4-6 are ordinary
+work. The risk is concentrated in stage 2 and stage 7: whether language
+understanding at this capacity is good enough, which is an evaluation question,
+not a modelling one.

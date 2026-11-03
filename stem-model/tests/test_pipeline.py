@@ -86,6 +86,60 @@ def test_every_relation_has_a_distractor_template():
     assert set(TEMPLATES) == set(RELATIONS)
 
 
+def test_surface_templates_cover_every_relation():
+    from surface import TEMPLATES as SURFACE, count
+
+    assert set(SURFACE) == set(RELATIONS)
+    for name in RELATIONS:
+        assert count(name) >= 5, f"{name} has only {count(name)} phrasings"
+
+
+def test_held_out_phrasing_is_never_trained_on():
+    import random
+
+    from make_dataset import HELD_OUT, build, build_held_out
+    from surface import TEMPLATES as SURFACE, render
+
+    names = sorted(RELATIONS)
+    train = build(names, len(names) * 6, 3, 0.0)
+    held = build_held_out(names, len(names) * 2, 4, 0.0)
+
+    def skeleton(question):
+        import re
+
+        return re.sub(r"-?\d+(\.\d+)?", "#", question)
+
+    train_surfaces = {skeleton(r["question"]) for r in train}
+    held_surfaces = {skeleton(r["question"]) for r in held}
+    assert held_surfaces
+    assert not (held_surfaces & train_surfaces), "held-out wording leaked into training"
+
+    for name in names:
+        assert skeleton(SURFACE[name][-1].replace("{-}", "#")) is not None
+        assert HELD_OUT == 1
+
+
+def test_surface_render_keeps_arguments(monkeypatch):
+    import random
+
+    from surface import TEMPLATES as SURFACE, count, render
+    from relations import poly
+
+    polyc = {"quad_solve": 3, "deriv_poly3": 4, "integr_poly3": 4}
+    rng = random.Random(11)
+    for name in RELATIONS:
+        for index in range(count(name)):
+            params, _ = RELATIONS[name].gen(rng)
+            text = render(name, params, index)
+            if name in polyc:
+                assert poly(list(params[:polyc[name]])) in text
+                rest = params[polyc[name]:]
+            else:
+                rest = params
+            for value in rest:
+                assert str(value) in text, f"{name} phrasing {index} lost {value}"
+
+
 def test_distractors_are_plausible_and_harmless():
     import random
 

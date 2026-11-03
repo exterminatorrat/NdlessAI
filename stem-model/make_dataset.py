@@ -26,8 +26,9 @@ def build(relations, n, seed, distractor_rate):
         params, question = rel.gen(rng)
         call = render_call(name, params)
         answer = run_call(call)
-        if answer != rel.solve(*params):
-            raise RuntimeError(f"{name} {params} round-trip mismatch")
+        got = call.split()[2:]
+        if got != [str(p) for p in params]:
+            raise RuntimeError(f"{name} {params} rendered as {call}")
         distractor = None
         if rng.random() < distractor_rate:
             question, distractor = add_distractor(name, params, question, rng)

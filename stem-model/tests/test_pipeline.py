@@ -316,3 +316,25 @@ def test_export_rejects_bad_vocab_id(tmp_path):
          "--out", str(tmp_path / "w.bin"), "--ref-ids", "9999"],
         cwd=ROOT, capture_output=True, text=True)
     assert proc.returncode != 0
+
+
+def test_tokenizer_header_sync_check_detects_staleness(tmp_path):
+    from check_tokenizer_sync import header_sha, source_sha
+
+    tok_a = tmp_path / "a.json"
+    tok_a.write_text(json.dumps({"merges": [[1, 2], [3, 4]]}))
+    tok_b = tmp_path / "b.json"
+    tok_b.write_text(json.dumps({"merges": [[5, 6], [7, 8]]}))
+    header = tmp_path / "bpe.h"
+    header.write_text(f"/* BPE_SOURCE_SHA {source_sha(tok_a)} */\n")
+
+    assert header_sha(header) == source_sha(tok_a)
+    assert header_sha(header) != source_sha(tok_b)
+
+
+def test_committed_tokenizer_header_is_current():
+    if not os.path.exists(os.path.join(ROOT, "data", "tokenizer.json")):
+        pytest.skip("no built dataset present")
+    proc = subprocess.run([sys.executable, "check_tokenizer_sync.py"],
+                          cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stdout + proc.stderr

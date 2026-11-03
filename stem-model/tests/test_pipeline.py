@@ -87,18 +87,20 @@ def test_every_relation_has_a_distractor_template():
 
 
 def test_surface_templates_cover_every_relation():
-    from surface import TEMPLATES as SURFACE, count
+    from surface import TEMPLATES as SURFACE, count, held_out_indices, train_indices
 
     assert set(SURFACE) == set(RELATIONS)
     for name in RELATIONS:
-        assert count(name) >= 5, f"{name} has only {count(name)} phrasings"
+        assert count(name) >= 8, f"{name} has only {count(name)} phrasings"
+        assert len(train_indices(name)) >= 6
+        assert len(held_out_indices(name)) >= 1
+        assert not (set(train_indices(name)) & set(held_out_indices(name)))
 
 
 def test_held_out_phrasing_is_never_trained_on():
     import random
 
-    from make_dataset import HELD_OUT, build, build_held_out
-    from surface import TEMPLATES as SURFACE, render
+    from make_dataset import build, build_held_out
 
     names = sorted(RELATIONS)
     train = build(names, len(names) * 6, 3, 0.0)
@@ -113,10 +115,6 @@ def test_held_out_phrasing_is_never_trained_on():
     held_surfaces = {skeleton(r["question"]) for r in held}
     assert held_surfaces
     assert not (held_surfaces & train_surfaces), "held-out wording leaked into training"
-
-    for name in names:
-        assert skeleton(SURFACE[name][-1].replace("{-}", "#")) is not None
-        assert HELD_OUT == 1
 
 
 def test_surface_render_keeps_arguments(monkeypatch):

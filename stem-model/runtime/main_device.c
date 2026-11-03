@@ -79,6 +79,39 @@ static int run_call_text(const char *call, char *answer, int answer_max)
     return solvers_solve(parts[1], args, n - 2, answer, answer_max);
 }
 
+/*
+ * Every argument must be a number that appears in the question. The model's
+ * dominant failure on unseen wording is copying a plausible but wrong number,
+ * and those show up as arguments with no counterpart in the text. Refusing is
+ * better than answering: a wrong number is indistinguishable from a right one.
+ */
+static int args_are_grounded(const char *call, const char *question)
+{
+    char work[256];
+    size_t len = strlen(call), i = 0;
+    int word = 0;
+
+    if (len + 1 > sizeof work)
+        return 0;
+    memcpy(work, call, len + 1);
+
+    while (i < len) {
+        char *start;
+
+        while (i < len && work[i] == ' ')
+            work[i++] = '\0';
+        if (i >= len)
+            break;
+        start = work + i;
+        while (i < len && work[i] != ' ')
+            i++;
+        if (word >= 2 && !strstr(question, start))
+            return 0;
+        word++;
+    }
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     static model_t m;
@@ -170,6 +203,10 @@ int main(int argc, char **argv)
         }
         if (run_call_text(call, answer, (int)sizeof answer) < 0) {
             printf("bad\t%s\n", call);
+            continue;
+        }
+        if (!getenv("NSM_NO_GUARD") && !args_are_grounded(call, line)) {
+            printf("!uncertain\t%s\n", call);
             continue;
         }
         printf("%s\t%s\n", answer, call);

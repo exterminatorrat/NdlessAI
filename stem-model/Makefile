@@ -8,7 +8,8 @@ data:
 
 train:
 	$(PY) python train.py --traces $(DATA)/train.jsonl \
-		--tokenizer $(DATA)/tokenizer.json --out model.pt
+		--tokenizer $(DATA)/tokenizer.json --seq 128 --batch 32 \
+		--steps 6000 --eval-every 250 --out model.pt
 
 export:
 	$(PY) python export_model.py --ckpt model.pt --out weights.bin \

@@ -223,8 +223,8 @@ justify itself against a deterministic baseline, not against nothing.
 | M1 | Trace generator + distractors | every row executed, 0 mismatches |
 | M2 | Training run at d=256 | val loss falls (1.03 -> 0.12 observed) |
 | M3 | int8 export | dot-product error < 2% |
-| M4 | C runtime on device | matches host outputs on 100 held-out calls |
-| M5 | Evaluation on fresh sets | gates above |
+| M4 | C runtime on device | host parity done; NDless build still open |
+| M5 | Evaluation on fresh sets | 93.8% exact, 0% wrong relation on 80 held-out |
 
 ## 12. Measured results so far
 
@@ -232,18 +232,36 @@ Everything below was run, not estimated.
 
 | Step | Result |
 |---|---|
-| Dataset, 50k rows | 9 min to generate, 12 MB, 44.0 tokens per problem, 7.5 per call |
-| Distractor coverage | 25,113 of 50,000 rows carry one |
-| Training, d=256, 331 steps | val loss 1.034 at step 150, **0.119 at step 300** |
-| Training cost | 657 s on 2 CPU cores, 2.0 s per step, batch 32, seq 128 |
-| Held-out, PyTorch | 3 of 4 calls exact |
-| Held-out, int8 C engine, 60 problems | **81.7% exact, 18.3% right relation with wrong arguments, 0% wrong relation** |
+| Dataset, 200k rows | 11 min to generate, 47 MB, 44.0 tokens per problem, 7.5 per call |
+| Distractor coverage | 100,444 of 200,000 rows carry one |
+| Training, d=256, 500 steps | val loss 1.068 at step 100, **0.066 at step 500** |
+| Training cost | 834 s on 2 CPU cores, 1.7 s per step, batch 32, seq 128 |
+| PyTorch samples | 3 of 3 held-out calls exact |
+| Held-out, float int8 C engine, 60 problems | 95.0% exact, 5.0% right relation wrong args, **0% wrong relation** |
+| Held-out, full device path, 80 problems | **93.8% exact, 0% wrong relation, 95.0% correct final answer** |
 | Exported weights | 5.91 MB, max per-group error 4.2e-4 |
 | C vs PyTorch logits | max abs difference 7.4e-07, identical argmax |
+| C solvers vs Python | 3,571 embedded + 1,400 independent fresh cases, **0 mismatches** |
+| C tokenizer vs Python | 542 committed cases and 12,000 cross-check cases, **0 mismatches** |
+| Fixed point vs float logits | correlation >= 0.9999, argmax agrees at every position, 0 saturations |
 
 The zero wrong-relation rate is the important column. The failure mode is
 digit copying, not picking the wrong tool, and that is the failure a
-constrained decoder plus an argument-level check can catch.
+constrained decoder plus an argument-level check can catch. It has held at
+zero across 140 problems and two independent engines.
+
+The full device path is BPE tokenizer -> fixed-point forward pass -> greedy
+decode -> C solver, with no float in the arithmetic and no libm in the hot
+loops. It scores the same as the float engine within noise, which is the point
+of the parity tests.
+
+One integration trap worth recording: the first device-path run scored 0/40.
+The cause was not precision but artifacts from different runs: the checkpoint
+had been trained on the 50k-row tokenizer while `bpe.h` was exported from the
+200k-row one. Tokenization was self-consistent, so every unit test passed while
+the model saw unfamiliar token ids. Retraining against the same tokenizer fixed
+it and produced the numbers above. A checkpoint and a tokenizer have to be
+produced together.
 
 This is a half-epoch model on a laptop CPU. The gates in section 10 are not
 met yet and are not expected to be at this budget; the point is that the whole

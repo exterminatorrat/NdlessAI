@@ -8,5 +8,13 @@ data/
 weights.bin
 ref.npy
 runtime/infer_host
+runtime/main_device
+runtime/test_solvers
+runtime/test_bpe
+runtime/test_fixed
 pytest_cache/
 __pycache__/
+model2.pt
+weights2.bin
+*.pt
+*.bin

@@ -8,10 +8,23 @@ import time
 from distractors import add_distractor
 from gen_traces import render_call, run_call
 from relations import RELATIONS
+from surface import count as phrasing_count, render as render_phrasing
 from tokenizer import Tokenizer, train as train_tokenizer
+
+# The last phrasing of every relation is held out for evaluation, so a
+# paraphrase score is measured on wording the model never trained on.
+HELD_OUT = 1
 
 
 def build(relations, n, seed, distractor_rate):
+    return _build(relations, n, seed, distractor_rate, held_out=False)
+
+
+def build_held_out(relations, n, seed, distractor_rate):
+    return _build(relations, n, seed, distractor_rate, held_out=True)
+
+
+def _build(relations, n, seed, distractor_rate, held_out):
     start = time.time()
     rng = random.Random(seed)
     rows = []
@@ -24,6 +37,11 @@ def build(relations, n, seed, distractor_rate):
         name = relations[i % len(relations)]
         rel = RELATIONS[name]
         params, question = rel.gen(rng)
+        total = phrasing_count(name)
+        if held_out:
+            question = render_phrasing(name, params, total - 1)
+        else:
+            question = render_phrasing(name, params, rng.randrange(total - HELD_OUT))
         call = render_call(name, params)
         answer = run_call(call)
         got = call.split()[2:]
@@ -50,6 +68,8 @@ def main():
     ap.add_argument("--out", default="data")
     ap.add_argument("--train", type=int, default=200000)
     ap.add_argument("--val", type=int, default=4000)
+    ap.add_argument("--held-out", type=int, default=2000,
+                    help="rows using phrasings reserved from training")
     ap.add_argument("--vocab", type=int, default=512)
     ap.add_argument("--tokenizer-rows", type=int, default=20000,
                     help="rows used to learn the BPE merges; more is slower "
@@ -65,6 +85,8 @@ def main():
     train_rows = build(names, args.train, args.seed, args.distractors)
     print(f"generating {args.val} val rows", flush=True)
     val_rows = build(names, args.val, args.seed + 90001, args.distractors)
+    print(f"generating {args.held_out} held-out phrasing rows", flush=True)
+    held_rows = build_held_out(names, args.held_out, args.seed + 31337, args.distractors)
 
     sample = train_rows[:args.tokenizer_rows]
     print(f"training tokenizer on {len(sample)} rows", flush=True)
@@ -72,7 +94,8 @@ def main():
                           args.vocab)
 
     print(f"writing {args.out}/train.jsonl and val.jsonl", flush=True)
-    for fname, rows in (("train.jsonl", train_rows), ("val.jsonl", val_rows)):
+    for fname, rows in (("train.jsonl", train_rows), ("val.jsonl", val_rows),
+                        ("held_out.jsonl", held_rows)):
         with open(os.path.join(args.out, fname), "w") as f:
             for r in rows:
                 f.write(json.dumps(r) + "\n")
@@ -96,6 +119,8 @@ def main():
         "seed": args.seed,
         "distractor_rate": args.distractors,
         "tokenizer_rows": len(sample),
+        "held_out": len(held_rows),
+        "held_out_phrasings": {n: phrasing_count(n) - HELD_OUT for n in names},
     }
     with open(os.path.join(args.out, "meta.json"), "w") as f:
         json.dump(meta, f, indent=2)

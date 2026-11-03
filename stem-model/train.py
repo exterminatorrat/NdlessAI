@@ -11,14 +11,19 @@ import torch.nn.functional as F
 from tokenizer import Tokenizer
 
 THETA = 10000.0
+_ROPE_CACHE = {}
 
 
 def rope(x, theta=THETA):
-    b, h, t, hd = x.shape
+    t, hd = x.shape[-2], x.shape[-1]
     half = hd // 2
-    freq = 1.0 / (theta ** (torch.arange(0, half, dtype=torch.float32) / half))
-    ang = torch.outer(torch.arange(t, dtype=torch.float32), freq)
-    cos, sin = ang.cos()[None, None], ang.sin()[None, None]
+    key = (t, hd, x.device, theta)
+    if key not in _ROPE_CACHE:
+        idx = torch.arange(half, dtype=torch.float32, device=x.device)
+        freq = 1.0 / (theta ** (idx / half))
+        ang = torch.outer(torch.arange(t, dtype=torch.float32, device=x.device), freq)
+        _ROPE_CACHE[key] = (ang.cos()[None, None], ang.sin()[None, None])
+    cos, sin = _ROPE_CACHE[key]
     x1, x2 = x[..., :half], x[..., half:]
     return torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
 
@@ -113,10 +118,11 @@ class Model(nn.Module):
 def generate(model, tok, prompt, max_new=16):
     model.eval()
     ids = tok.encode(prompt)
+    device = next(model.parameters()).device
     for _ in range(max_new):
-        idx = torch.tensor([ids[-model.cfg.seq:]])
+        idx = torch.tensor([ids[-model.cfg.seq:]], device=device)
         logits, _ = model(idx)
-        nxt = int(logits[0, -1].argmax())
+        nxt = int(logits[0, -1].argmax().item())
         ids.append(nxt)
         if nxt == 258:
             break
@@ -158,9 +164,21 @@ def pack(rows, tok, seq):
     return flat[:, :seq], flat[:, 1:], mask[:, 1:]
 
 
-def batch(x, y, m, size, rng):
+def batch(x, y, m, size, rng, device):
     idx = rng.integers(0, len(x), size=size)
-    return torch.from_numpy(x[idx]), torch.from_numpy(y[idx]), torch.from_numpy(m[idx])
+    return (torch.from_numpy(x[idx]).to(device),
+            torch.from_numpy(y[idx]).to(device),
+            torch.from_numpy(m[idx]).to(device))
+
+
+def pick_device(name):
+    if name != "auto":
+        return torch.device(name)
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
 
 
 def main():
@@ -181,10 +199,13 @@ def main():
     ap.add_argument("--out", default="model.pt")
     ap.add_argument("--max-minutes", type=float, default=0.0)
     ap.add_argument("--samples", type=int, default=3)
+    ap.add_argument("--device", default="auto", help="auto, cpu, cuda or mps")
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
+    device = pick_device(args.device)
+    print(f"device {device}")
 
     if args.dim % args.heads:
         raise SystemExit(f"--dim {args.dim} is not divisible by --heads {args.heads}")
@@ -208,7 +229,7 @@ def main():
                                ignore_index=-100)
 
     cfg = Config(args.dim, args.layers, args.heads, args.hidden, tok.size, args.seq)
-    model = Model(cfg)
+    model = Model(cfg).to(device)
     print(f"parameters {model.n_params():,}")
 
     decay = [p for p in model.parameters() if p.dim() >= 2]
@@ -230,7 +251,7 @@ def main():
     for step in range(args.steps):
         for group in opt.param_groups:
             group["lr"] = lr_at(step)
-        bx, by, bm = batch(train_x, train_y, train_m, args.batch, rng)
+        bx, by, bm = batch(train_x, train_y, train_m, args.batch, rng, device)
         logits, _ = model(bx)
         loss = loss_of(logits, by, bm)
         opt.zero_grad(set_to_none=True)
@@ -241,7 +262,7 @@ def main():
         if (step + 1) % args.eval_every == 0:
             model.eval()
             with torch.no_grad():
-                vx, vy, vm = batch(val_x, val_y, val_m, min(16, len(val_x)), rng)
+                vx, vy, vm = batch(val_x, val_y, val_m, min(16, len(val_x)), rng, device)
                 vlogits, _ = model(vx)
                 vloss = loss_of(vlogits, vy, vm)
             print(f"step {step + 1:5d} loss {loss.item():.4f} val {vloss.item():.4f} "
@@ -251,7 +272,7 @@ def main():
             print(f"stopping at {step + 1} steps (time limit)")
             break
 
-    torch.save({"model": model.state_dict(),
+    torch.save({"model": {k: v.cpu() for k, v in model.state_dict().items()},
                 "config": vars(cfg)}, args.out)
     print(f"saved {args.out}")
 

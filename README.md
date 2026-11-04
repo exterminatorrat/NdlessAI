@@ -1,205 +1,140 @@
-Ndless r2023 for TI-Nspire OS <= v6.4.0.74
-===========================================
-
-Installing Ndless on your calculator makes it possible to run assembly programs.
-
-Ndless combines an executable loader and utilities to open the TI-Nspire to third-party C and assembly development.
-
-The official website is available on:
-
-->    http://ndless.me
-
-The official Discord server is available on:
-
-->    https://discord.gg/k3yjBdrx8P
-
-The source code can be found on:
-
-->    https://github.com/ndless-nspire/Ndless 
-
-A user guide is available online, make sure to read for more installation instructions:
-
-->    https://tiplanet.org/ndless
-
-A guide for Developers can be found here:
-
-->    https://ndlessly.wordpress.com/ndless-for-developers/
-
-Pull requests and and issues are welcome!
-
-For more in-depth info, visit the wiki:
-
-->    https://hackspire.org
-
-Quick guide
-===========
-
-OS 6.2.0.333 + 6.4.0.74 <img src="https://i.imgur.com/TxjLO71.gif" align="right">
---------
-
-Prerequisites: OS 6.2.0.333 or 6.4.0.74 on CX II, CX II-T or CX II CAS. 
-
-### Standard Installation
-* Transfer `ndless_installer_4.5.5-6.2.0-6.4.0.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer, press any alphanumeric key and wait
-* If it fails or reboots, try again until it works
-* Have fun!
-
-### Persistent Installation
-A persistent installation means Ndless will automatically load when you turn on or reboot the calculator, removing the need to run the installer every time.
-
-**Warning:** While this feature has been tested properly, the Ndless team is not responsible for any data loss, reboot-looped calculators, or any damage incurred to your Nspire.
-
-* Ensure Ndless is not currently installed (reset your calculator first if it is).
-* Transfer `persistent_6.2.0-6.4.0.tns` into the "`ndless`" folder
-* Rename the file you just transferred to `persistent.tns`
-* Transfer `ndless_resources.tns` into the same folder
-* Open `persistent.tns` and wait for the automatic installation
-* Have fun!
-  * If you get stuck in a reboot loop, hold `[ESC]`. If that fails, format your filesystem via the maintenance menu.
-  * By running the `ndless_resources.tns` file after installing, you can uninstall the loader as well.
-
-OS 4.5.5.79 <img src="https://i.imgur.com/S09QO3e.gif" align="right">
---------
-
-Prerequisites: OS 4.5.5.79 on CX or CX CAS
-
-* Determine your "boot1" version (needed later).
-  * Press `[Home]` > `[5]` (Settings) > `[4]` (Status) > About button.
-  * Here is a YouTube [video](https://youtu.be/htr106_ggjg) for this.
-* Transfer `ndless_installer_4.5.5-6.2.0-6.4.0.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer, press the corresponding key for your boot1 version and wait
-* If it fails or reboots, try again until it works
-* Have fun!
-
-
-OS 5.2.0.771 + 5.3.0.564 <img src="https://i.imgur.com/kozAxpP.png" align="right">
---------
-
-Prerequisites: OS 5.2.0.771 or 5.3.0.564 on CX II, CX II-T or CX II CAS
-
-* Transfer `ndless_installer_5.2.0-5.3.0.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer and wait
-* Have fun!
-
-OS 4.5.3.14 + 4.5.4.48 <img src="https://i.imgur.com/uuO3ue9.png" align="right">
---------
-
-Prerequisites: OS 4.5.3.14 or 4.5.4.48 on CX or CX CAS
-
-* Transfer `ndless_installer_4.5.3-4.5.4.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer and wait
-* Have fun!
-
-OS 4.5.0 <img src="https://i.imgur.com/ZdWgSCq.png" align="right">
---------
-
-Prerequisites: OS 4.5.0 on CX or CX CAS
-
-* Transfer `ndless_installer_4.5.0.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer and wait
-* Have fun!
-
-OS 4.4.0 <img src="http://i.imgur.com/mDOg6JG.png" align="right">
---------
-
-Prerequisites: OS 4.4.0 on CX or CX CAS
-
-* Transfer `ndless_installer_4.4.0.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer
-* Close the installer with Ctrl+W
-* Have fun!
-
-OS 4.2.0 <img src="http://i.imgur.com/GS2K9tS.png" align="right">
---------
-
-Prerequisites: OS 4.2.0 on CX or CX CAS
-
-* Transfer `ndless_installer_4.2.0_cx.tns` or `ndless_installer_4.2.0_cascx.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer
-* Close the installer with Ctrl+W
-* Have fun!
-
-OS 4.0.3 <img src="https://i.imgur.com/oEsrtC2.png" align="right">
---------
-
-Prerequisites: OS 4.0.3 on CX or CX CAS
-
-* Transfer `ndless_installer_4.0.3_cx.tns` or `ndless_installer_4.0.3_cascx.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer
-* Close the installer with Ctrl+W
-* Have fun!
-
-OS 3.9.1 <img src="https://i.imgur.com/rT8Ltmy.png" align="right">
---------
-
-Prerequisites: OS 3.9.1 on CX and CX CAS
-
-* Transfer the `ndless_installer_3.9.1.tns` file into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Disconnect your USB cable
-* Open the installer
-* If you get a message that says "Insufficient memory", reset your calculator and try again!
-* Connect the handheld to your computer!
-* Close the installer with Ctrl+W
-* Have fun!
-
-
-OS 3.9.0 <img src="https://i.imgur.com/V9U8RSc.png" align="right">
---------
-
-Prerequisites: OS 3.9.0 on Clickpad (CAS/non-CAS) or Touchpad (CAS/non-CAS)
-
-For CX and CX CAS please install 3.9.1.
-
-* Transfer `ndless_installer_3.9.0_classic_new.tns` into a folder named "`ndless`" (top-level)
-* Transfer `ndless_resources.tns` into the same folder
-* Open the installer
-* Close the installer with Ctrl+W
-* Have fun!
-
-OS 3.6 <img src="https://i.imgur.com/6cq8g7Z.png" align="right">
-------
-
-Prerequisites: OS 3.6
-
-* Transfer `ndless_installer.tns` and `ndless_resources.tns` into a folder named "`ndless`" (top-level)
-* Open the installer
-* Press the menu button
-* Have fun!
-
-Uninstalling
-------
-
-To uninstall Ndless, simply run the `ndless_resources.tns` file and select "Yes", after which the device will reboot.
-
-Development team
-================
-
-Lead maintainer:
-  Fabian Vogt aka Vogtinator - < vogtinator at ritter dash vogt dot de >
-
-Creators:
-  Geoffrey Anneheim aka geogeo - < geoffrey dot anneheim at free dot fr >
-  Olivier Armand aka ExtendeD  - < olivier dot calc at gmail dot com >
-
-Contributors and testers: Adriweb, bsl, cherpixel, critor, delta, Excale, Goplat, hoffa, Jim Bauwens, Legimet, Levak, Lionel Debroux, lkj, sasdallas, satyamedh, tangrs, timmycraft, vailithree... and many others.  
-More contributions can be seen on [the GitHub repo](https://github.com/ndless-nspire/Ndless/graphs/contributors).
-
-Ndless is brought to you by https://codewalr.us, https://www.omnimaga.org and https://tiplanet.org
-
-Legal stuff
-===========
-
-Most of the work is covered by the Mozilla Public License, version 1.1 (MPL). 
-Please read the file [`Mozilla-Public-License-v1.1.html`](./Mozilla-Public-License-v1.1.html) carefully before distributing any part of Ndless, with or without modification.
-
-Some parts are covered by other licenses. Others are in the public domain. These parts are identified by the files `LICENSE.txt` or `LICENSE.html` in the sub-directory.
+# NdlessAI
+
+NdlessAI is an on-device STEM solver for TI-Nspire calculators, built as a fork of [Ndless](https://github.com/ndless-nspire/Ndless). A small int8 transformer reads a word problem and emits one exact solver call; the calculator computes the answer in integer and rational arithmetic. There is no network, no floating point in the hot path, and the model never writes the answer itself.
+
+> **Status: developer research preview.** The data contract, training and export pipeline, C inference engine, and ARM cross-compile checks are implemented and exercised on the host. The runtime is not yet packaged as a `.tns` application, and no trained checkpoint or release artifact is committed.
+
+## How it works
+
+The model maps language to a fixed-arity call, not to an answer:
+
+```text
+Solve x^2 - 5x + 6 = 0  ->  CALL quad_solve 1 -5 6  ->  x=2, x=3
+```
+
+```mermaid
+flowchart LR
+  Q["Word problem<br/>plain English"] --> T["bpe.c<br/>512-token byte-level BPE"]
+  T --> M["int8 transformer<br/>6 layers, 5.25M parameters"]
+  M --> C["CALL relation args<br/>about 7 tokens"]
+  C --> G{"Every argument appears<br/>in the question?"}
+  G -- yes --> S["solvers.c<br/>exact integer and rational math"]
+  G -- no --> R["!uncertain<br/>no answer shown"]
+  S --> A["Answer text<br/>formatted on device"]
+```
+
+The grounding check is deliberately conservative. If the model copies a number that is not present in the question, the runtime refuses the answer instead of showing a plausible wrong one. The relation name and `CALL` are single tokens, and the exported tokenizer uses a 512-token vocabulary.
+
+## At a glance
+
+| | |
+| --- | --- |
+| Task | English word problem to one `CALL <relation> <args>` line |
+| Model | 5,246,208 parameters; 6 layers, d=256, 8 heads, hidden 768, vocabulary 512 |
+| Training | Llama-2-style decoder with RoPE and a loss masked to call tokens |
+| Runtime | C11; int8 weights, Q12 fixed-point activations, no FPU in the hot path |
+| Target | TI-Nspire CX II, ARM926EJ-S; hardware cost measured with `int8bench` |
+| Artifacts | `weights.bin` (5.91 MB, NSM1 format) and an embedded BPE header |
+| Subjects | Precalculus, calculus, physics, and chemistry |
+| Status | Research preview; host-verified, not yet a calculator application |
+
+## Supported relations
+
+Every relation has a fixed arity, a generator, an exact solver, and at least eight phrasings. Every fifth phrasing is reserved for held-out wording tests.
+
+| Subject | Relations |
+| --- | --- |
+| Precalculus | `quad_solve`, `linear2`, `exp_solve` |
+| Calculus | `deriv_poly3`, `integr_poly3` |
+| Physics | `kinematic_v`, `proj_range`, `ohm_i` |
+| Chemistry | `moles`, `dilution`, `gas_p` |
+
+## Quickstart
+
+Requirements are Python 3, [`uv`](https://docs.astral.sh/uv/), `make`, and a C11 compiler. A GPU is optional; the recorded training run used two CPU cores.
+
+```sh
+cd stem-model
+
+make data         # about 200k traces plus the tokenizer (roughly 11 minutes)
+make train        # 5.25M-parameter decoder; 834 s on 2 CPU cores in the recorded run
+make export       # weights.bin and the generated tokenizer header
+make host         # build the C engine and its test binaries
+make eval         # score the int8 engine on held-out validation rows
+make eval-device  # score the full path: BPE, fixed point, call, C solver
+make test         # the full Python suite
+```
+
+No weights are committed. The commands above create `stem-model/data/`, `stem-model/model.pt`, and `stem-model/weights.bin` locally. See [docs/development.md](docs/development.md) for the complete workflow and for adding a relation.
+
+## Repository map
+
+```mermaid
+flowchart TB
+  subgraph offline["Offline pipeline (Python)"]
+    Rel["relations.py<br/>call contract and exact solvers"]
+    Surf["surface.py<br/>phrasing variants"]
+    Dist["distractors.py<br/>plausible extra quantity"]
+    Data["make_dataset.py<br/>train, validation, held-out splits"]
+    Tok["tokenizer.py<br/>byte-level BPE, 512 tokens"]
+    Train["train.py<br/>decoder, call-masked loss"]
+    Exp["export_model.py<br/>int8 weights and Q24 scales"]
+    Rel --> Data
+    Surf --> Data
+    Dist --> Data
+    Data --> Train
+    Tok --> Train
+    Train --> Exp
+  end
+
+  subgraph runtime["On-device path (C11)"]
+    BPE["bpe.c"]
+    Fixed["fixed.c<br/>Q12 integer forward pass"]
+    Inf["infer.c<br/>NSM1 loader"]
+    Main["main_device.c<br/>decode and grounding"]
+    Solv["solvers.c<br/>exact answers"]
+    BPE --> Main
+    Inf --> Fixed
+    Fixed --> Main
+    Main --> Solv
+  end
+
+  subgraph ndless["Ndless platform"]
+    Loader["ndless/<br/>loader and installers"]
+    SDK["ndless-sdk/<br/>toolchain and samples"]
+  end
+
+  W[("weights.bin<br/>5.91 MB")]
+  H[("bpe.h<br/>tokenizer tables")]
+  Bench["int8bench<br/>hardware measurement"]
+
+  Exp --> W
+  Tok --> H
+  W -. loaded by .-> Inf
+  H -. compiled into .-> BPE
+  Solv -. cross-compiled with .-> SDK
+  Bench -. sizes the model .-> Train
+  Loader -. future host for .-> Main
+```
+
+| Path | Contents |
+| --- | --- |
+| [`stem-model/`](stem-model/) | Python data, training, export, evaluation, and the C runtime |
+| [`stem-model/runtime/`](stem-model/runtime/) | BPE, fixed-point transformer, NSM1 loader, solvers, host and device entry points |
+| [`stem-model/tests/`](stem-model/tests/) | Golden solver values, data invariants, quantization, tokenizer, packing, training, and logit parity |
+| [`ndless-sdk/samples/int8bench/`](ndless-sdk/samples/int8bench/) | Hardware benchmark that settled the int8 dot-product cost on a CX II |
+| [`ndless/`](ndless/) and [`ndless-sdk/`](ndless-sdk/) | Upstream Ndless loader, installers, toolchain, and samples |
+| [`docs/`](docs/) | Architecture, model notes, development guide, and upstream Ndless documentation |
+
+## Documentation
+
+- [Architecture](docs/architecture.md): boundaries, call contract, fixed-point formats, and failure behavior.
+- [Model](docs/model.md): data generation, training, quantization, measured results, and limitations.
+- [Development](docs/development.md): host workflow, tests, cross-compilation, and adding a relation.
+- [Upstream Ndless](docs/upstream-ndless.md): the original Ndless README and calculator installation instructions.
+
+## Ndless and licensing
+
+NdlessAI leaves the upstream Ndless loader, installers, and SDK in place; the only addition under `ndless-sdk/` is the `int8bench` sample. Installing Ndless on a calculator works exactly as it does upstream; see [docs/upstream-ndless.md](docs/upstream-ndless.md) or the [Ndless user guide](https://tiplanet.org/ndless). NdlessAI does not yet ship a `.tns` build of the solver.
+
+This repository is a derivative of Ndless and retains its licensing: most work is covered by the Mozilla Public License 1.1, and components with their own `LICENSE.txt` or `LICENSE.html` keep those terms. Read [`Mozilla-Public-License-v1.1.html`](Mozilla-Public-License-v1.1.html) before redistributing any part of the repository. Upstream links: [website](http://ndless.me), [source](https://github.com/ndless-nspire/Ndless), [wiki](https://hackspire.org), [developer guide](https://ndlessly.wordpress.com/ndless-for-developers/).

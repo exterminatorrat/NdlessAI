@@ -215,7 +215,7 @@ next:
     }
 
     if (getenv("NSM_IDS"))
-        fprintf(stderr, "saturations %u\n", fixed_sat_count);
+        fprintf(stderr, "saturations %lu\n", (unsigned long)fixed_sat_count);
     free(logits);
     qwork_free(&qw);
     qstate_free(&qs);

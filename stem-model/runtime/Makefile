@@ -25,6 +25,7 @@ check: all
 	./test_solvers
 	./test_bpe
 	./test_fixed ../weights.bin
+	sh crosscheck.sh
 
 clean:
 	rm -f infer_host main_device test_solvers test_bpe test_fixed

@@ -2,52 +2,49 @@
 # Live progress for ndless-sdk/toolchain/build_toolchain.sh, which goes quiet
 # for long stretches while GCC compiles.
 #
-# Usage:  sh tools/watch_toolchain.sh &
-#         sh .github/packaging/build.sh
+# Usage:  cd ~/Desktop/ndlessAI && sh tools/watch_toolchain.sh
 #
-# Prints one line every 15 s: the current phase, a spinner showing that
-# compilation is still moving, and elapsed time.
+# Works whether or not the build is already running. Prints one line every
+# 15 s: phase, compiler activity, and how long ago a build file last changed.
 set -u
 
 TC=${1:-ndless-sdk/toolchain}
 SPIN='|/-\'
 i=0
 start=$(date +%s)
+prev=0
+
+# Number of compiler processes actually running. pgrep matches the full
+# command line, so it works whether comm reports a bare name (Linux) or a
+# full path (macOS).
+compilers() {
+    n=$(pgrep -f 'cc1plus|cc1 |cc1$' 2>/dev/null | wc -l | tr -d ' ')
+    echo "${n:-0}"
+}
 
 phase() {
     if [ -f "$TC/.built_gdb" ]; then
-        echo "done"
-    elif [ -f "$TC/.built_gcc_step2" ]; then
-        echo "gcc step 2 (final compiler)"
-    elif [ -f "$TC/.built_newlib" ]; then
+        echo "complete"
+    elif [ -f "$TC/.built_gcc_step2" ] || [ -f "$TC/.built_newlib" ]; then
         echo "gcc step 2 (final compiler)"
     elif [ -f "$TC/.built_gcc_step1" ]; then
         echo "newlib (target C library)"
     elif [ -f "$TC/.built_binutils" ]; then
         echo "gcc step 1 (bootstrap compiler)"
     else
-        echo "downloading sources or building binutils"
+        echo "downloading or building binutils"
     fi
 }
 
-count() {
-    # Number of compiler processes is the only reliable "is it moving" signal.
-    ps -eo comm 2>/dev/null | grep -cE '^cc1(\+\+)?$'
+# Count of build artefacts written so far. The count only rises as compilation
+# proceeds, and unlike mtime formatting it behaves identically under BSD and
+# GNU tools, so the delta between ticks is honest evidence of progress.
+objects() {
+    find "$TC/build" -type f 2>/dev/null | wc -l | tr -d ' '
 }
 
-# Rough cumulative minutes to reach each phase boundary, for a rough ETA.
-# Calibrated from a 2-core build; a fast Mac finishes sooner. Labelled
-# "rough" in the output so it is not mistaken for a measurement.
-eta_total() {
-    if [ -f "$TC/.built_gcc_step2" ] || [ -f "$TC/.built_newlib" ]; then
-        echo 70
-    elif [ -f "$TC/.built_gcc_step1" ]; then
-        echo 60
-    elif [ -f "$TC/.built_binutils" ]; then
-        echo 50
-    else
-        echo 60
-    fi
+running() {
+    pgrep -f 'build_toolchain' >/dev/null 2>&1 && echo yes || echo no
 }
 
 while :; do
@@ -56,16 +53,29 @@ while :; do
     mins=$((elapsed / 60))
     secs=$((elapsed % 60))
     p=$(phase)
-    if [ "$p" = "done" ]; then
+
+    if [ "$p" = "complete" ]; then
         printf '\n[%02d:%02d] toolchain complete\n' "$mins" "$secs"
         exit 0
     fi
-    n=$(count)
-    total=$(eta_total)
-    left=$((total - mins))
-    [ "$left" -lt 0 ] && left=0
-    printf '[%02d:%02d] %s %s  (%s compiling, ~%d min left)\n' \
-        "$mins" "$secs" "$ch" "$p" "$n" "$left"
+
+    n=$(compilers)
+    objs=$(objects)
+    delta=$((objs - prev))
+    prev=$objs
+    act=$(running)
+
+    printf '[%02d:%02d] %s  %s  (%s compiling, %s files' \
+        "$mins" "$secs" "$ch" "$p" "$n" "$objs"
+    if [ "$delta" -gt 0 ]; then
+        printf ', +%s new)\n' "$delta"
+    elif [ "$act" = "no" ]; then
+        printf ', build not running)\n'
+    elif [ "$objs" -gt 0 ] && [ "$n" -eq 0 ]; then
+        printf ', no new files - may be stalled)\n'
+    else
+        printf ')\n'
+    fi
     i=$((i + 1))
     sleep 15
 done

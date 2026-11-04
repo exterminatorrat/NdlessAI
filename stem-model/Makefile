@@ -14,15 +14,18 @@ train:
 export:
 	$(PY) python export_model.py --ckpt model.pt --out weights.bin \
 		--ref-ids 259,32,261,32,258 --ref-out ref.npy
+	$(PY) python export_tokenizer.py --tokenizer $(DATA)/tokenizer.json
 
 host:
 	$(MAKE) -C runtime
 
 eval: export host
+	$(PY) python check_tokenizer_sync.py $(DATA)/tokenizer.json
 	$(PY) python evaluate.py
 
 eval-device:
 	$(MAKE) -C runtime
+	$(PY) python check_tokenizer_sync.py $(DATA)/tokenizer.json
 	$(PY) python evaluate_device.py
 
 test:

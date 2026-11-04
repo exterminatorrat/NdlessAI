@@ -87,18 +87,20 @@ def test_every_relation_has_a_distractor_template():
 
 
 def test_surface_templates_cover_every_relation():
-    from surface import TEMPLATES as SURFACE, count
+    from surface import TEMPLATES as SURFACE, count, held_out_indices, train_indices
 
     assert set(SURFACE) == set(RELATIONS)
     for name in RELATIONS:
-        assert count(name) >= 5, f"{name} has only {count(name)} phrasings"
+        assert count(name) >= 8, f"{name} has only {count(name)} phrasings"
+        assert len(train_indices(name)) >= 6
+        assert len(held_out_indices(name)) >= 1
+        assert not (set(train_indices(name)) & set(held_out_indices(name)))
 
 
 def test_held_out_phrasing_is_never_trained_on():
     import random
 
-    from make_dataset import HELD_OUT, build, build_held_out
-    from surface import TEMPLATES as SURFACE, render
+    from make_dataset import build, build_held_out
 
     names = sorted(RELATIONS)
     train = build(names, len(names) * 6, 3, 0.0)
@@ -113,10 +115,6 @@ def test_held_out_phrasing_is_never_trained_on():
     held_surfaces = {skeleton(r["question"]) for r in held}
     assert held_surfaces
     assert not (held_surfaces & train_surfaces), "held-out wording leaked into training"
-
-    for name in names:
-        assert skeleton(SURFACE[name][-1].replace("{-}", "#")) is not None
-        assert HELD_OUT == 1
 
 
 def test_surface_render_keeps_arguments(monkeypatch):
@@ -318,3 +316,25 @@ def test_export_rejects_bad_vocab_id(tmp_path):
          "--out", str(tmp_path / "w.bin"), "--ref-ids", "9999"],
         cwd=ROOT, capture_output=True, text=True)
     assert proc.returncode != 0
+
+
+def test_tokenizer_header_sync_check_detects_staleness(tmp_path):
+    from check_tokenizer_sync import header_sha, source_sha
+
+    tok_a = tmp_path / "a.json"
+    tok_a.write_text(json.dumps({"merges": [[1, 2], [3, 4]]}))
+    tok_b = tmp_path / "b.json"
+    tok_b.write_text(json.dumps({"merges": [[5, 6], [7, 8]]}))
+    header = tmp_path / "bpe.h"
+    header.write_text(f"/* BPE_SOURCE_SHA {source_sha(tok_a)} */\n")
+
+    assert header_sha(header) == source_sha(tok_a)
+    assert header_sha(header) != source_sha(tok_b)
+
+
+def test_committed_tokenizer_header_is_current():
+    if not os.path.exists(os.path.join(ROOT, "data", "tokenizer.json")):
+        pytest.skip("no built dataset present")
+    proc = subprocess.run([sys.executable, "check_tokenizer_sync.py"],
+                          cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stdout + proc.stderr

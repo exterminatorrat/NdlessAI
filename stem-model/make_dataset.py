@@ -8,23 +8,19 @@ import time
 from distractors import add_distractor
 from gen_traces import render_call, run_call
 from relations import RELATIONS
-from surface import count as phrasing_count, render as render_phrasing
+from surface import held_out_indices, render as render_phrasing, train_indices
 from tokenizer import Tokenizer, train as train_tokenizer
 
-# The last phrasing of every relation is held out for evaluation, so a
-# paraphrase score is measured on wording the model never trained on.
-HELD_OUT = 1
-
-
-def build(relations, n, seed, distractor_rate):
-    return _build(relations, n, seed, distractor_rate, held_out=False)
+def build(relations, n, seed, distractor_rate, max_phrasings=None):
+    return _build(relations, n, seed, distractor_rate, held_out=False,
+                  max_phrasings=max_phrasings)
 
 
 def build_held_out(relations, n, seed, distractor_rate):
     return _build(relations, n, seed, distractor_rate, held_out=True)
 
 
-def _build(relations, n, seed, distractor_rate, held_out):
+def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None):
     start = time.time()
     rng = random.Random(seed)
     rows = []
@@ -37,11 +33,10 @@ def _build(relations, n, seed, distractor_rate, held_out):
         name = relations[i % len(relations)]
         rel = RELATIONS[name]
         params, question = rel.gen(rng)
-        total = phrasing_count(name)
-        if held_out:
-            question = render_phrasing(name, params, total - 1)
-        else:
-            question = render_phrasing(name, params, rng.randrange(total - HELD_OUT))
+        pool = held_out_indices(name) if held_out else train_indices(name)
+        if not held_out and max_phrasings:
+            pool = pool[:max_phrasings]
+        question = render_phrasing(name, params, rng.choice(pool))
         call = render_call(name, params)
         answer = run_call(call)
         got = call.split()[2:]
@@ -76,13 +71,16 @@ def main():
                          "and changes the vocabulary almost not at all")
     ap.add_argument("--distractors", type=float, default=0.5)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--max-train-phrasings", type=int, default=0,
+                    help="cap phrasings per relation; for A/B tests only")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
     names = sorted(RELATIONS)
 
     print(f"generating {args.train} train rows", flush=True)
-    train_rows = build(names, args.train, args.seed, args.distractors)
+    train_rows = build(names, args.train, args.seed, args.distractors,
+                       args.max_train_phrasings or None)
     print(f"generating {args.val} val rows", flush=True)
     val_rows = build(names, args.val, args.seed + 90001, args.distractors)
     print(f"generating {args.held_out} held-out phrasing rows", flush=True)
@@ -120,7 +118,8 @@ def main():
         "distractor_rate": args.distractors,
         "tokenizer_rows": len(sample),
         "held_out": len(held_rows),
-        "held_out_phrasings": {n: phrasing_count(n) - HELD_OUT for n in names},
+        "train_phrasings": {n: len(train_indices(n)) for n in names},
+        "held_out_phrasings": {n: len(held_out_indices(n)) for n in names},
     }
     with open(os.path.join(args.out, "meta.json"), "w") as f:
         json.dump(meta, f, indent=2)

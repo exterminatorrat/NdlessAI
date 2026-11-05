@@ -15,6 +15,13 @@
 #define SEQ 160
 
 /*
+ * Shown in the title bar so it is obvious which build is on the calculator.
+ * Bump this whenever behaviour changes; a stale .tns is otherwise
+ * indistinguishable from a broken fix.
+ */
+#define BUILD_STAMP "stemhelp v5"
+
+/*
  * TI's transfer software only accepts files ending in .tns, so the model
  * ships as weights.bin.tns. The plain name is still tried so the app also
  * works with a file copied by other means, such as USB mass storage or a
@@ -56,7 +63,7 @@ int main(void)
 
 	for (;;) {
 		char *input = NULL;
-		int len = show_msg_user_input("STEM helper", "Enter a problem:", "", &input);
+		int len = show_msg_user_input(BUILD_STAMP, "Enter a problem:", "", &input);
 		int rc;
 
 		if (len < 0 || !input)

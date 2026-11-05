@@ -58,6 +58,10 @@ Rules:
 Add 8-14 phrasings to `TEMPLATES["NAME"]`. Every fifth is held out
 automatically by `is_held_out()`.
 
+Also add the argument names to `_ARG_NAMES`, in the same order as the
+`@relation` params list. `render()` zips them together, so a missing entry is
+a `KeyError` at dataset build time.
+
 Rules:
 
 - Vary the verb, word order, and notation. "Find", "compute", "what is",
@@ -66,6 +70,21 @@ Rules:
 - Use `{argname}` placeholders matching the names in `@relation`.
 - Do not write fewer than 8. Measured: 4 phrasings gave 35% held-out, 8-12
   gave 57%.
+
+### Step 3: runtime/solvers.c
+
+### Step 2b: distractors.py
+
+Add one entry to `TEMPLATES` and, if the relation has a natural pool of
+plausible wrong values, one to `POOLS`. The template takes `{n}`, a number
+that is not one of the relation's arguments.
+
+```python
+"NAME": "A second problem in the same set asks for {n}.",
+```
+
+`tests/test_pipeline.py::test_every_relation_has_a_distractor_template` fails
+without this. The recipe originally omitted this step; the gate caught it.
 
 ### Step 3: runtime/solvers.c
 

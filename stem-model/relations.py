@@ -228,3 +228,16 @@ class GasP:
     def solve(n, T, V):
         p = sp.Float(n) * sp.Float("0.08206") * sp.Float(T) / sp.Float(V)
         return f"{dec(p)} atm"
+
+
+@relation("sin_eval", "trig", ["a"], exact=False)
+class SinEval:
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([0, 5, 10, 12, 15, 20, 25, 30, 35, 37, 40, 45,
+                        50, 53, 55, 60, 65, 70, 75, 80, 85, 90])
+        return [a], f"What is sin({a})?"
+
+    @staticmethod
+    def solve(a):
+        return dec(sp.sin(sp.rad(a)))

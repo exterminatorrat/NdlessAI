@@ -1,6 +1,7 @@
 import random
 
 TEMPLATES = {
+    "sin_eval": "A second problem in the same set asks for sin({n}).",
     "quad_solve": "A second equation on the same worksheet has constant term {n}.",
     "deriv_poly3": "A separate part of the question gives x = {n} for a related curve.",
     "integr_poly3": "A second integral in the same set runs over an interval of width {n}.",
@@ -15,6 +16,7 @@ TEMPLATES = {
 }
 
 POOLS = {
+    "sin_eval": [10, 20, 30, 40, 50, 60, 70, 80],
     "exp_solve": [2, 3, 4, 5, 6, 7, 8, 10],
     "dilution": [10, 25, 50, 100, 150, 200, 250, 500],
     "gas_p": [1, 2, 5, 10, 20, 22.4],

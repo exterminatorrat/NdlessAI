@@ -881,6 +881,27 @@ static int solve_gasp(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_sin_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat a;
+	int rc, ea;
+	long long s9;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0)
+		return rc;
+	ea = pow10_index(a.d);
+	if (ea < 0 || ea > 9)
+		return -4;
+	s9 = sin9(a.n, ea, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(s9, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -941,6 +962,11 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "gas_p") == 0) {
 		if (nargs == 3)
 			rc = solve_gasp(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "sin_eval") == 0) {
+		if (nargs == 1)
+			rc = solve_sin_eval(args, out, outlen);
 		else
 			rc = -2;
 	} else {

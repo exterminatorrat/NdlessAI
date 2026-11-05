@@ -10,7 +10,7 @@ section done without the gate passing.
 | Section | Status | Commit | Notes |
 |---|---|---|---|
 | S0 infrastructure | done | | ledger, gate script, batch template |
-| A1 trig_eval | pending | | |
+| A1 sin_eval | done | | 200/200 C cases exact; cos/tan split out as A1b/A1c |
 | A2 trig_inverse | pending | | |
 | A3 pythagoras | pending | | |
 | A4 right_triangle | pending | | |

@@ -13,6 +13,18 @@ correct call is unchanged.
 from relations import poly
 
 TEMPLATES = {
+    "sin_eval": [
+        "What is sin({a})?",
+        "Find sin({a}).",
+        "Compute the sine of {a} degrees.",
+        "Evaluate sin({a}) in degrees.",
+        "What is the sine of {a} degrees?",
+        "Calculate sin({a}).",
+        "Give the value of sin({a}).",
+        "Determine sin({a}).",
+        "Find the sine of an angle of {a} degrees.",
+        "What does sin({a}) equal?",
+    ],
     "quad_solve": [
         "Solve {p} = 0 for x.",
         "Find the roots of {p}.",
@@ -157,6 +169,7 @@ TEMPLATES = {
 
 
 _ARG_NAMES = {
+    "sin_eval": ("a",),
     "quad_solve": ("a", "b", "c"),
     "deriv_poly3": ("a", "b", "c", "d", "x"),
     "integr_poly3": ("a", "b", "c", "d", "lo", "hi"),

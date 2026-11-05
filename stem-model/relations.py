@@ -241,3 +241,89 @@ class SinEval:
     @staticmethod
     def solve(a):
         return dec(sp.sin(sp.rad(a)))
+
+
+@relation("cos_eval", "trig", ["a"], exact=False)
+class CosEval:
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([0, 5, 10, 12, 15, 20, 25, 30, 35, 37, 40, 45,
+                        50, 53, 55, 60, 65, 70, 75, 80, 85, 90])
+        return [a], f"What is cos({a})?"
+
+    @staticmethod
+    def solve(a):
+        return dec(sp.cos(sp.rad(a)))
+
+
+@relation("tan_eval", "trig", ["a"], exact=False)
+class TanEval:
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([0, 5, 10, 12, 15, 20, 25, 30, 35, 37, 40, 45,
+                        50, 53, 55, 60, 65, 70, 75, 80, 85])
+        return [a], f"What is tan({a})?"
+
+    @staticmethod
+    def solve(a):
+        return dec(sp.tan(sp.rad(a)))
+
+
+@relation("pythagoras", "trig", ["a", "b"], exact=False)
+class Pythagoras:
+    @staticmethod
+    def gen(rng):
+        a, b = rng.randint(3, 20), rng.randint(3, 20)
+        return [a, b], (f"A right triangle has legs {a} and {b}. "
+                        f"Find the hypotenuse.")
+
+    @staticmethod
+    def solve(a, b):
+        return dec(sp.sqrt(a ** 2 + b ** 2))
+
+
+@relation("law_sines", "trig", ["a", "A", "B"], exact=False)
+class LawSines:
+    @staticmethod
+    def gen(rng):
+        a = rng.randint(4, 30)
+        A = rng.choice([30, 40, 50, 60, 70, 80])
+        B = rng.choice([20, 30, 40, 50, 60, 70])
+        return [a, A, B], (f"In a triangle, side a = {a} is opposite angle "
+                           f"A = {A} degrees, and angle B = {B} degrees. "
+                           f"Find side b.")
+
+    @staticmethod
+    def solve(a, A, B):
+        b = sp.Float(a) * sp.sin(sp.rad(B)) / sp.sin(sp.rad(A))
+        return dec(b)
+
+
+@relation("law_cosines", "trig", ["a", "b", "C"], exact=False)
+class LawCosines:
+    @staticmethod
+    def gen(rng):
+        a, b = rng.randint(3, 20), rng.randint(3, 20)
+        C = rng.choice([30, 45, 60, 90, 120, 135])
+        return [a, b, C], (f"A triangle has sides {a} and {b} with an "
+                           f"included angle of {C} degrees. "
+                           f"Find the third side.")
+
+    @staticmethod
+    def solve(a, b, C):
+        c2 = a ** 2 + b ** 2 - 2 * a * b * sp.cos(sp.rad(C))
+        return dec(sp.sqrt(c2))
+
+
+@relation("arc_length", "trig", ["r", "theta"], exact=False)
+class ArcLength:
+    @staticmethod
+    def gen(rng):
+        r = rng.randint(1, 20)
+        theta = rng.choice([30, 45, 60, 90, 120, 135, 180, 270, 360])
+        return [r, theta], (f"A circle of radius {r} has an arc subtending "
+                            f"{theta} degrees. Find the arc length.")
+
+    @staticmethod
+    def solve(r, theta):
+        return dec(sp.Float(r) * sp.Float(theta) * sp.pi / 180)

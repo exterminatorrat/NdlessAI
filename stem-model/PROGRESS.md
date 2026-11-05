@@ -11,6 +11,14 @@ section done without the gate passing.
 |---|---|---|---|
 | S0 infrastructure | done | | ledger, gate script, batch template |
 | A1 sin_eval | done | | 200/200 C cases exact; cos/tan split out as A1b/A1c |
+| A2 cos_eval | done | | 200/200 exact |
+| A3 tan_eval | done | | 200/200 exact; 90 excluded (undefined) |
+| A4 pythagoras | done | | 200/200 exact; uses sqrt12 |
+| A5 law_sines | done | | 200/200 exact |
+| A6 law_cosines | done | | 200/200 exact; sqrt at 1e6 scale |
+| A7 arc_length | done | | 200/200 exact |
+| A8 right_triangle | blocked | | needs atan; no helper exists |
+| A9 sinusoid | pending | | multi-value output, deferred |
 | A2 trig_inverse | pending | | |
 | A3 pythagoras | pending | | |
 | A4 right_triangle | pending | | |

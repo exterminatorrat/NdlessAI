@@ -33,6 +33,7 @@ if [ -d runtime ]; then
     run "solvers match Python"   sh -c 'cd runtime && ./test_solvers | grep -q "0 mismatches"'
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
+    run "graph"                  sh -c 'cd runtime && make -s test_graph >/dev/null 2>&1 && ./test_graph | grep -q "all checks passed"'
     if [ -f weights.bin ]; then
         run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'
     else

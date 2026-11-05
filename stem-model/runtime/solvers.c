@@ -902,6 +902,171 @@ static int solve_sin_eval(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_cos_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat a;
+	int rc, ea;
+	long long s9;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0)
+		return rc;
+	ea = pow10_index(a.d);
+	if (ea < 0 || ea > 9)
+		return -4;
+	s9 = sin9(a.n + 90LL * P10[ea], ea, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(s9, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_tan_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat a;
+	int rc, ea;
+	long long s9, c9;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0)
+		return rc;
+	ea = pow10_index(a.d);
+	if (ea < 0 || ea > 9)
+		return -4;
+	s9 = sin9(a.n, ea, &rc);
+	if (rc != 0)
+		return rc;
+	c9 = sin9(a.n + 90LL * P10[ea], ea, &rc);
+	if (rc != 0)
+		return rc;
+	if (c9 == 0)
+		return -4;
+	if (c9 < 0) {
+		s9 = -s9;
+		c9 = -c9;
+	}
+	if ((rc = dec4_render(s9, c9, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_pythagoras(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b, s;
+	int rc;
+	long long s12;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0)
+		return rc;
+	s.n = a.n * a.n * b.d * b.d + b.n * b.n * a.d * a.d;
+	s.d = a.d * a.d * b.d * b.d;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	s12 = sqrt12(s.n, s.d, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(s12, 1000000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_law_sines(const char *const *args, char *out, size_t outlen)
+{
+	rat a, A, B;
+	int rc, eA, eB;
+	long long sA, sB, num, den;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &A, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &B, NULL)) != 0)
+		return rc;
+	eA = pow10_index(A.d);
+	eB = pow10_index(B.d);
+	if (eA < 0 || eA > 9 || eB < 0 || eB > 9)
+		return -4;
+	sA = sin9(A.n, eA, &rc);
+	if (rc != 0)
+		return rc;
+	sB = sin9(B.n, eB, &rc);
+	if (rc != 0)
+		return rc;
+	if (sA == 0)
+		return -4;
+	num = a.n * sB;
+	den = a.d * sA;
+	if (den < 0) {
+		num = -num;
+		den = -den;
+	}
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_law_cosines(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b, C;
+	int rc, eC;
+	long long sC, num, den, c2_9, c6, rr;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &C, NULL)) != 0)
+		return rc;
+	eC = pow10_index(C.d);
+	if (eC < 0 || eC > 9)
+		return -4;
+	sC = sin9(C.n + 90LL * P10[eC], eC, &rc);
+	if (rc != 0)
+		return rc;
+	num = (a.n * a.n * b.d * b.d + b.n * b.n * a.d * a.d) * 1000000000LL
+	      - 2 * a.n * b.n * a.d * b.d * sC;
+	den = a.d * a.d * b.d * b.d * 1000000000LL;
+	if (num <= 0 || den <= 0)
+		return -4;
+	c2_9 = (num / den) * 1000000000LL + ((num % den) * 1000000000LL) / den;
+	if (c2_9 <= 0)
+		return -4;
+	c6 = (long long)isqrt64((unsigned long long)c2_9 * 1000ULL);
+	rr = c2_9 * 1000LL - c6 * c6;
+	c6 += div_round(rr, 2 * c6);
+	if ((rc = dec4_render(c6, 1000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_arc_length(const char *const *args, char *out, size_t outlen)
+{
+	rat r, th;
+	int rc;
+	long long num, den;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &th, NULL)) != 0)
+		return rc;
+	num = r.n * th.n * 3141592653LL;
+	den = r.d * th.d * 180LL * 1000000000LL;
+	if (den < 0) {
+		num = -num;
+		den = -den;
+	}
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -967,6 +1132,36 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "sin_eval") == 0) {
 		if (nargs == 1)
 			rc = solve_sin_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "cos_eval") == 0) {
+		if (nargs == 1)
+			rc = solve_cos_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "tan_eval") == 0) {
+		if (nargs == 1)
+			rc = solve_tan_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "pythagoras") == 0) {
+		if (nargs == 2)
+			rc = solve_pythagoras(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "law_sines") == 0) {
+		if (nargs == 3)
+			rc = solve_law_sines(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "law_cosines") == 0) {
+		if (nargs == 3)
+			rc = solve_law_cosines(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "arc_length") == 0) {
+		if (nargs == 2)
+			rc = solve_arc_length(args, out, outlen);
 		else
 			rc = -2;
 	} else {

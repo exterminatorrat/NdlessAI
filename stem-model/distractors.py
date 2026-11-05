@@ -2,6 +2,12 @@ import random
 
 TEMPLATES = {
     "sin_eval": "A second problem in the same set asks for sin({n}).",
+    "cos_eval": "A second problem in the same set asks for cos({n}).",
+    "tan_eval": "A second problem in the same set asks for tan({n}).",
+    "pythagoras": "A second triangle on the same page has a leg of {n}.",
+    "law_sines": "A second triangle in the same exercise has a side of {n}.",
+    "law_cosines": "A second triangle in the same exercise has a side of {n}.",
+    "arc_length": "A second circle in the same exercise has radius {n}.",
     "quad_solve": "A second equation on the same worksheet has constant term {n}.",
     "deriv_poly3": "A separate part of the question gives x = {n} for a related curve.",
     "integr_poly3": "A second integral in the same set runs over an interval of width {n}.",

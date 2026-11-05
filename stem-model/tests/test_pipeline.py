@@ -234,8 +234,10 @@ def test_pack_never_straddles_rows():
 
 def test_pack_rejects_empty_input():
     from train import pack
+    from tokenizer import FIRST_MERGE
 
-    tok = train_tokenizer(["Solve 2x = 4 <sep> CALL quad_solve 0 2 -4"], 300)
+    tok = train_tokenizer(["Solve 2x = 4 <sep> CALL quad_solve 0 2 -4"],
+                          FIRST_MERGE + 10)
     with pytest.raises(SystemExit):
         pack([], tok, 64)
 

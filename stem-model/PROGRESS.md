@@ -42,18 +42,18 @@ section done without the gate passing.
 | C6 system2 | done | | 200/200 exact; 3x3 needs 9 args, harness caps at 6 |
 | C7 abs_value_eq | done | | 200/200 exact |
 | C8 linear_ineq | done | | 200/200 exact |
-| D1 kinetic_energy | pending | | |
-| D2 potential_energy | pending | | |
-| D3 work | pending | | |
-| D4 power | pending | | |
-| D5 momentum | pending | | |
-| D6 newton2 | pending | | |
-| D7 circular_accel | pending | | |
-| D8 wave_speed | pending | | |
-| D9 specific_heat | pending | | |
-| D10 ohm_v | pending | | |
-| D11 ohm_power | pending | | |
-| D12 free_fall | pending | | |
+| D1 kinetic_energy | done | | 200/200 exact |
+| D2 potential_energy | done | | 200/200 exact; uses dec_exact |
+| D3 work | done | | 200/200 exact; cos via sin9 shift |
+| D4 power | done | | 200/200 exact |
+| D5 momentum | done | | 200/200 exact |
+| D6 newton2 | done | | 200/200 exact |
+| D7 circular_accel | done | | 200/200 exact |
+| D8 wave_speed | done | | 200/200 exact |
+| D9 specific_heat | done | | 200/200 exact; uses dec_exact |
+| D10 ohm_v | done | | 200/200 exact |
+| D11 ohm_power | done | | 200/200 exact |
+| D12 free_fall | done | | 200/200 exact; sqrt12 |
 | E1 molarity | pending | | |
 | E2 ph | pending | | |
 | E3 poh | pending | | |

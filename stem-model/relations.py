@@ -32,8 +32,86 @@ def fmt(value):
     return dec(value)
 
 
+def _exact(value):
+    if isinstance(value, (int, sp.Integer)):
+        return sp.Rational(int(value))
+    if isinstance(value, sp.Rational):
+        return sp.Rational(value)
+    if isinstance(value, sp.Float):
+        return sp.Rational(str(value))
+    if isinstance(value, float):
+        return sp.Rational(repr(value))
+    return sp.Rational(str(sp.N(value, 20)))
+
+
 def dec(value):
     return f"{float(value):.4g}"
+
+
+def dec_exact(value):
+    """Four significant digits, round half to even, matching dec4_render.
+
+    Use this when the answer is an exact rational of the decimal inputs, as
+    with a physical constant like 9.81. There the C renderer rounds the exact
+    rational while %.4g rounds the nearest double, and the two disagree on
+    ties: 15*3*9.81 is exactly 441.45, so the device shows 441.4 and %.4g
+    gives 441.5. Rounding the exact rational here keeps them identical.
+
+    Do not use this for irrational results such as a sine or a square root.
+    There the double is the better approximation of the true value and
+    matches the device's integer approximation more often.
+    """
+
+    r = _exact(value)
+    if r == 0:
+        return "0"
+    neg = r < 0
+    r = abs(r)
+    e = 0
+    while r >= 10:
+        r /= 10
+        e += 1
+    while r < 1:
+        r *= 10
+        e -= 1
+    x = r * 10000
+    n = int(x)
+    rem = x - n
+    d = [int(c) for c in str(n).rjust(5, "0")]
+    up = 0
+    if d[4] > 5 or (d[4] == 5 and rem > 0):
+        up = 1
+    elif d[4] == 5:
+        up = d[3] & 1
+    if up:
+        v = int("".join(str(d[i]) for i in range(4))) + 1
+        if v >= 10000:
+            v //= 10
+            e += 1
+        d = [int(c) for c in str(v).rjust(4, "0")] + [0]
+    else:
+        d[4] = 0
+    if e >= 4 or e <= -5:
+        fz = 3
+        while fz > 0 and d[fz] == 0:
+            fz -= 1
+        s = str(d[0])
+        if fz > 0:
+            s += "." + "".join(str(d[i]) for i in range(1, fz + 1))
+        s += "e" + ("-" if e < 0 else "+") + str(abs(e)).rjust(2, "0")
+    elif e >= 0:
+        s = "".join(str(d[i]) for i in range(e + 1))
+        fz = 3
+        while fz > e and d[fz] == 0:
+            fz -= 1
+        if fz > e:
+            s += "." + "".join(str(d[i]) for i in range(e + 1, fz + 1))
+    else:
+        fz = 3
+        while fz > 0 and d[fz] == 0:
+            fz -= 1
+        s = "0." + "0" * (-e - 1) + "".join(str(d[i]) for i in range(fz + 1))
+    return ("-" if neg else "") + s
 
 
 def poly(coeffs, var="x"):
@@ -382,8 +460,8 @@ class CompoundInterest:
 
     @staticmethod
     def solve(P, r, n, t):
-        A = sp.Float(P) * (1 + sp.Float(r) / 100 / n) ** (n * t)
-        return dec(A)
+        A = sp.Rational(P) * (1 + sp.Rational(r, 100 * n)) ** (n * t)
+        return dec_exact(A)
 
 
 @relation("continuous_growth", "logs", ["P", "r", "t"], exact=False)
@@ -565,3 +643,176 @@ def _factor(r):
     if r > 0:
         return f"(x-{fmt(r)})"
     return f"(x+{fmt(-r)})"
+
+
+@relation("kinetic_energy", "physics", ["m", "v"], exact=False)
+class KineticEnergy:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+        v = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [m, v], (f"A {m} kg object moves at {v} m/s. "
+                        f"Find its kinetic energy.")
+
+    @staticmethod
+    def solve(m, v):
+        return f"{dec(sp.Rational(m * v * v, 2))} J"
+
+
+@relation("potential_energy", "physics", ["m", "h", "g"], exact=False)
+class PotentialEnergy:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+        h = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        g = rng.choice([9.8, 9.81, 10])
+        return [m, h, g], (f"A {m} kg mass is raised {h} m. Find its "
+                           f"gravitational potential energy using g = {g}.")
+
+    @staticmethod
+    def solve(m, h, g):
+        return f"{dec_exact(sp.Rational(m) * sp.Rational(h) * _exact(g))} J"
+
+
+@relation("work", "physics", ["F", "d", "theta"], exact=False)
+class Work:
+    @staticmethod
+    def gen(rng):
+        F = rng.choice([10, 20, 25, 30, 40, 50, 60, 80, 100])
+        d = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        theta = rng.choice([0, 30, 45, 60, 90, 120, 180])
+        return [F, d, theta], (f"A force of {F} N acts at {theta} degrees to "
+                               f"the displacement over {d} m. Find the work "
+                               f"done.")
+
+    @staticmethod
+    def solve(F, d, theta):
+        return f"{dec(sp.Float(F) * sp.Float(d) * sp.cos(sp.rad(theta)))} J"
+
+
+@relation("power", "physics", ["W", "t"], exact=False)
+class Power:
+    @staticmethod
+    def gen(rng):
+        W = rng.choice([100, 200, 300, 400, 500, 600, 800, 1000, 1200])
+        t = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [W, t], (f"{W} J of work is done in {t} s. "
+                        f"Find the power.")
+
+    @staticmethod
+    def solve(W, t):
+        return f"{dec(sp.Rational(W, t))} W"
+
+
+@relation("momentum", "physics", ["m", "v"], exact=False)
+class Momentum:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+        v = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [m, v], (f"A {m} kg object moves at {v} m/s. "
+                        f"Find its momentum.")
+
+    @staticmethod
+    def solve(m, v):
+        return f"{dec(m * v)} kg m/s"
+
+
+@relation("newton2", "physics", ["m", "a"], exact=False)
+class Newton2:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+        a = rng.choice([1, 2, 3, 4, 5, 6, 8, 10])
+        return [m, a], (f"A net force acts on a {m} kg mass, giving it an "
+                        f"acceleration of {a} m/s^2. Find the force.")
+
+    @staticmethod
+    def solve(m, a):
+        return f"{dec(m * a)} N"
+
+
+@relation("circular_accel", "physics", ["v", "r"], exact=False)
+class CircularAccel:
+    @staticmethod
+    def gen(rng):
+        v = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        r = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [v, r], (f"An object moves at {v} m/s in a circle of radius "
+                        f"{r} m. Find its centripetal acceleration.")
+
+    @staticmethod
+    def solve(v, r):
+        return f"{dec(sp.Rational(v * v, r))} m/s^2"
+
+
+@relation("wave_speed", "physics", ["f", "lam"], exact=False)
+class WaveSpeed:
+    @staticmethod
+    def gen(rng):
+        f = rng.choice([2, 4, 5, 8, 10, 20, 25, 50, 100, 200])
+        lam = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15])
+        return [f, lam], (f"A wave has frequency {f} Hz and wavelength "
+                          f"{lam} m. Find its speed.")
+
+    @staticmethod
+    def solve(f, lam):
+        return f"{dec(f * lam)} m/s"
+
+
+@relation("specific_heat", "physics", ["m", "c", "dT"], exact=False)
+class SpecificHeat:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 20, 50])
+        c = rng.choice([0.9, 1, 2.1, 4.18, 4.2])
+        dT = rng.choice([5, 10, 15, 20, 25, 30, 40, 50])
+        return [m, c, dT], (f"Find the heat needed to raise {m} kg of a "
+                            f"substance with specific heat {c} J/(g C) by "
+                            f"{dT} degrees.")
+
+    @staticmethod
+    def solve(m, c, dT):
+        return f"{dec_exact(sp.Rational(m) * _exact(c) * sp.Rational(dT))} J"
+
+
+@relation("ohm_v", "physics", ["I", "R"], exact=False)
+class OhmV:
+    @staticmethod
+    def gen(rng):
+        I = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12])
+        R = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [I, R], (f"A current of {I} A flows through a {R} ohm "
+                        f"resistor. Find the voltage across it.")
+
+    @staticmethod
+    def solve(I, R):
+        return f"{dec(I * R)} V"
+
+
+@relation("ohm_power", "physics", ["I", "V"], exact=False)
+class OhmPower:
+    @staticmethod
+    def gen(rng):
+        I = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12])
+        V = rng.choice([2, 3, 5, 6, 9, 12, 15, 20, 24])
+        return [I, V], (f"A device draws {I} A at {V} V. "
+                        f"Find the power it dissipates.")
+
+    @staticmethod
+    def solve(I, V):
+        return f"{dec(I * V)} W"
+
+
+@relation("free_fall", "physics", ["h", "g"], exact=False)
+class FreeFall:
+    @staticmethod
+    def gen(rng):
+        h = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 45])
+        g = rng.choice([9.8, 9.81, 10])
+        return [h, g], (f"An object is dropped from {h} m. Find its speed "
+                        f"on impact using g = {g}.")
+
+    @staticmethod
+    def solve(h, g):
+        return f"{dec(sp.sqrt(2 * sp.Float(h) * sp.Float(g)))} m/s"

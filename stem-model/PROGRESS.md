@@ -34,14 +34,14 @@ section done without the gate passing.
 | B5 continuous_growth | done | | 200/200 exact |
 | B6 half_life | done | | 200/200 exact |
 | B7 doubling_time | done | | 200/200 exact |
-| C1 cubic_solve | pending | | |
-| C2 factor_quadratic | pending | | |
-| C3 complete_square | pending | | |
-| C4 arith_seq | pending | | |
-| C5 geom_seq | pending | | |
-| C6 system3 | pending | | |
-| C7 abs_value_eq | pending | | |
-| C8 linear_ineq | pending | | |
+| C1 cubic_solve | blocked | | rational-root deflation; deferred as its own section |
+| C2 factor_quadratic | done | | 200/200 exact |
+| C3 complete_square | done | | 200/200 exact |
+| C4 arith_seq | done | | 200/200 exact |
+| C5 geom_seq | done | | 200/200 exact |
+| C6 system2 | done | | 200/200 exact; 3x3 needs 9 args, harness caps at 6 |
+| C7 abs_value_eq | done | | 200/200 exact |
+| C8 linear_ineq | done | | 200/200 exact |
 | D1 kinetic_energy | pending | | |
 | D2 potential_energy | pending | | |
 | D3 work | pending | | |

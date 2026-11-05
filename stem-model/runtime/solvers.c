@@ -1369,6 +1369,275 @@ static int solve_doubling_time(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_arith_seq(const char *const *args, char *out, size_t outlen)
+{
+	rat a1, d, n;
+	int rc;
+	long long an, sn;
+	char buf[96];
+
+	if ((rc = parse_rat(args[0], &a1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &d, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &n, NULL)) != 0)
+		return rc;
+	if (a1.d != 1 || d.d != 1 || n.d != 1 || n.n < 1)
+		return -4;
+	an = a1.n + (n.n - 1) * d.n;
+	sn = n.n * (a1.n + an) / 2;
+	snprintf(buf, sizeof(buf), "a_n=%lld, S_n=%lld", an, sn);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_geom_seq(const char *const *args, char *out, size_t outlen)
+{
+	rat a1, r, n;
+	int rc, i;
+	long long an, sn, p;
+	char buf[96];
+
+	if ((rc = parse_rat(args[0], &a1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &n, NULL)) != 0)
+		return rc;
+	if (a1.d != 1 || r.d != 1 || n.d != 1 || n.n < 1 || r.n == 1)
+		return -4;
+	if (n.n > 18)
+		return -4;
+	p = 1;
+	for (i = 1; i < n.n; i++) {
+		if (p > 9000000000000000LL / (r.n < 0 ? -r.n : r.n))
+			return -4;
+		p *= r.n;
+	}
+	an = a1.n * p;
+	if (p > 9000000000000000LL / (r.n < 0 ? -r.n : r.n))
+		return -4;
+	p *= r.n;
+	sn = a1.n * (p - 1) / (r.n - 1);
+	snprintf(buf, sizeof(buf), "a_n=%lld, S_n=%lld", an, sn);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_abs_value_eq(const char *const *args, char *out,
+                              size_t outlen)
+{
+	rat a, b, c, r1, r2, t;
+	int rc;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0)
+		return rc;
+	if (a.n == 0 || c.n <= 0)
+		return -4;
+	r1.n = c.n - b.n;
+	r1.d = a.n;
+	r2.n = -c.n - b.n;
+	r2.d = a.n;
+	if (r1.d < 0) {
+		r1.n = -r1.n;
+		r1.d = -r1.d;
+	}
+	if (r2.d < 0) {
+		r2.n = -r2.n;
+		r2.d = -r2.d;
+	}
+	if ((rc = rat_norm(&r1)) != 0 || (rc = rat_norm(&r2)) != 0)
+		return rc;
+	if (rat_cmp(&r1, &r2) > 0) {
+		t = r1;
+		r1 = r2;
+		r2 = t;
+	}
+	fmt_rat(&r1, f1, sizeof(f1));
+	fmt_rat(&r2, f2, sizeof(f2));
+	snprintf(buf, sizeof(buf), "x=%s, x=%s", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_linear_ineq(const char *const *args, char *out,
+                             size_t outlen)
+{
+	rat a, b, c, bound;
+	int rc;
+	char f1[48], buf[80];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0)
+		return rc;
+	if (a.n == 0)
+		return -4;
+	bound.n = c.n - b.n;
+	bound.d = a.n;
+	if (bound.d < 0) {
+		bound.n = -bound.n;
+		bound.d = -bound.d;
+	}
+	if ((rc = rat_norm(&bound)) != 0)
+		return rc;
+	fmt_rat(&bound, f1, sizeof(f1));
+	snprintf(buf, sizeof(buf), "x %s %s", a.n > 0 ? "<" : ">", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_system2(const char *const *args, char *out, size_t outlen)
+{
+	rat a1, b1, c1, a2, b2, c2, det, x, y;
+	int rc;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &a1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c1, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &a2, NULL)) != 0 ||
+	    (rc = parse_rat(args[4], &b2, NULL)) != 0 ||
+	    (rc = parse_rat(args[5], &c2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&det, &a1, &b2)) != 0 ||
+	    (rc = rat_mul(&x, &a2, &b1)) != 0 ||
+	    (rc = rat_sub(&det, &det, &x)) != 0)
+		return rc;
+	if (det.n == 0)
+		return -4;
+	if ((rc = rat_mul(&x, &c1, &b2)) != 0 ||
+	    (rc = rat_mul(&y, &c2, &b1)) != 0 ||
+	    (rc = rat_sub(&x, &x, &y)) != 0 ||
+	    (rc = rat_div(&x, &x, &det)) != 0)
+		return rc;
+	if ((rc = rat_mul(&y, &a1, &c2)) != 0 ||
+	    (rc = rat_mul(&det, &a2, &c1)) != 0 ||
+	    (rc = rat_sub(&y, &y, &det)) != 0)
+		return rc;
+	if ((rc = rat_mul(&det, &a1, &b2)) != 0 ||
+	    (rc = rat_mul(&c1, &a2, &b1)) != 0 ||
+	    (rc = rat_sub(&det, &det, &c1)) != 0 ||
+	    (rc = rat_div(&y, &y, &det)) != 0)
+		return rc;
+	fmt_rat(&x, f1, sizeof(f1));
+	fmt_rat(&y, f2, sizeof(f2));
+	snprintf(buf, sizeof(buf), "x=%s, y=%s", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_complete_square(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat a, b, c, h, k, t;
+	int rc;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0)
+		return rc;
+	if (a.n == 0)
+		return -4;
+	h.n = -b.n;
+	h.d = 2 * a.n;
+	if ((rc = rat_norm(&h)) != 0)
+		return rc;
+	if ((rc = rat_mul(&t, &b, &b)) != 0)
+		return rc;
+	t.d *= 4 * a.n;
+	if ((rc = rat_norm(&t)) != 0)
+		return rc;
+	if ((rc = rat_sub(&k, &c, &t)) != 0)
+		return rc;
+	fmt_rat(&h, f1, sizeof(f1));
+	fmt_rat(&k, f2, sizeof(f2));
+	snprintf(buf, sizeof(buf), "vertex=(%s, %s)", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static void factor_term(long long n, long long d, char *out, size_t outlen)
+{
+	char f[48];
+	rat r;
+
+	r.n = n;
+	r.d = d;
+	if (rat_norm(&r) != 0) {
+		out_set(out, outlen, "");
+		return;
+	}
+	if (r.n == 0) {
+		out_set(out, outlen, "x");
+		return;
+	}
+	fmt_rat(&r, f, sizeof(f));
+	if (r.n > 0)
+		snprintf(out, outlen, "(x-%s)", f);
+	else {
+		r.n = -r.n;
+		fmt_rat(&r, f, sizeof(f));
+		snprintf(out, outlen, "(x+%s)", f);
+	}
+}
+
+static int solve_factor_quadratic(const char *const *args, char *out,
+                                  size_t outlen)
+{
+	rat a, b, c, disc, s, r1, r2, t;
+	int rc;
+	long long sq;
+	char lead[24], f1[64], f2[64], buf[192];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0)
+		return rc;
+	if (a.n == 0)
+		return -4;
+	if ((rc = rat_mul(&t, &b, &b)) != 0)
+		return rc;
+	if ((rc = rat_mul(&disc, &a, &c)) != 0)
+		return rc;
+	disc.n *= 4;
+	if ((rc = rat_norm(&disc)) != 0)
+		return rc;
+	if ((rc = rat_sub(&disc, &t, &disc)) != 0)
+		return rc;
+	if (disc.n < 0)
+		return -4;
+	sq = (long long)isqrt64((unsigned long long)disc.n * disc.d);
+	if (sq * sq != disc.n * disc.d)
+		return -4;
+	s.n = sq;
+	s.d = disc.d;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	r1.n = -b.n * s.d + s.n * b.d;
+	r1.d = 2 * a.n * s.d * b.d;
+	if ((rc = rat_norm(&r1)) != 0)
+		return rc;
+	r2.n = -b.n * s.d - s.n * b.d;
+	r2.d = 2 * a.n * s.d * b.d;
+	if ((rc = rat_norm(&r2)) != 0)
+		return rc;
+	if (rat_cmp(&r1, &r2) > 0) {
+		t = r1;
+		r1 = r2;
+		r2 = t;
+	}
+	factor_term(r1.n, r1.d, f1, sizeof(f1));
+	factor_term(r2.n, r2.d, f2, sizeof(f2));
+	if (a.n == 1 && a.d == 1)
+		lead[0] = '\0';
+	else
+		snprintf(lead, sizeof(lead), "%lld", a.n);
+	snprintf(buf, sizeof(buf), "%s%s%s", lead, f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -1499,6 +1768,41 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "doubling_time") == 0) {
 		if (nargs == 1)
 			rc = solve_doubling_time(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "arith_seq") == 0) {
+		if (nargs == 3)
+			rc = solve_arith_seq(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "geom_seq") == 0) {
+		if (nargs == 3)
+			rc = solve_geom_seq(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "abs_value_eq") == 0) {
+		if (nargs == 3)
+			rc = solve_abs_value_eq(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "linear_ineq") == 0) {
+		if (nargs == 3)
+			rc = solve_linear_ineq(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "system2") == 0) {
+		if (nargs == 6)
+			rc = solve_system2(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "complete_square") == 0) {
+		if (nargs == 3)
+			rc = solve_complete_square(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "factor_quadratic") == 0) {
+		if (nargs == 3)
+			rc = solve_factor_quadratic(args, out, outlen);
 		else
 			rc = -2;
 	} else {

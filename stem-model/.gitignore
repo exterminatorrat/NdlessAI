@@ -25,4 +25,5 @@ device/*.o
 device/*.elf
 device/*.tns
 device/*.zehn
+device/weights.bin.tns
 runtime/test_guard

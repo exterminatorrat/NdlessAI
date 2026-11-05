@@ -12,8 +12,19 @@
 
 #include "pipeline.h"
 
-#define WEIGHTS_FILE "weights.bin"
 #define SEQ 160
+
+/*
+ * TI's transfer software only accepts files ending in .tns, so the model
+ * ships as weights.bin.tns. The plain name is still tried so the app also
+ * works with a file copied by other means, such as USB mass storage or a
+ * tool that does not filter by extension.
+ */
+static const char *const weight_names[] = {
+	"weights.bin.tns",
+	"weights.bin",
+	NULL
+};
 
 int main(void)
 {
@@ -21,13 +32,18 @@ int main(void)
 	char path[256];
 	char answer[256];
 	char call[256];
+	int found = 0;
 
 	assert_ndless_rev(801);
 
-	if (locate(WEIGHTS_FILE, path, sizeof path) != 0) {
+	for (int i = 0; weight_names[i] && !found; i++)
+		found = locate(weight_names[i], path, sizeof path) == 0;
+
+	if (!found) {
 		show_msgbox("STEM helper",
-		            "weights.bin was not found.\n\n"
-		            "Copy it into the same folder as this program.");
+		            "The model file was not found.\n\n"
+		            "Copy weights.bin.tns into the same\n"
+		            "folder as this program.");
 		return 1;
 	}
 

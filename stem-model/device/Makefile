@@ -20,7 +20,7 @@ OBJS = main.o pipeline.o bpe.o fixed.o infer.o solvers.o
 EXE = stemhelp
 DISTDIR = .
 
-all: $(EXE).tns
+all: $(EXE).tns weights.bin.tns
 
 main.o: main.c
 	$(GCC) $(GCCFLAGS) -c $< -o $@
@@ -36,7 +36,14 @@ $(EXE).tns: $(EXE).elf
 	make-prg $(DISTDIR)/$@.zehn $(DISTDIR)/$@
 	rm $(DISTDIR)/$@.zehn
 
+# TI's transfer software only accepts .tns files, so the model is copied under
+# that extension. The contents are unchanged; only the name matters.
+weights.bin.tns: ../weights.bin
+	cp $< $@
+	@echo "packaged $@ ($(shell wc -c < $<) bytes)"
+
 clean:
 	rm -f *.o $(DISTDIR)/$(EXE).tns $(DISTDIR)/$(EXE).elf $(DISTDIR)/$(EXE).zehn
+	rm -f weights.bin.tns
 
 .PHONY: all clean

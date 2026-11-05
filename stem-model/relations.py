@@ -1082,3 +1082,59 @@ class Average:
     @staticmethod
     def solve(a, b, c, d):
         return dec_exact(sp.Rational(a + b + c + d, 4))
+
+
+@relation("sinusoid", "trig", ["A", "B", "C"], exact=True)
+class Sinusoid:
+    @staticmethod
+    def gen(rng):
+        A = rng.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
+        B = rng.choice([1, 2, 3, 4, 6])
+        C = rng.choice([-90, -60, -45, -30, 0, 30, 45, 60, 90])
+        return [A, B, C], (f"For y = {A} sin({B}x + {C}), find the amplitude, "
+                           f"period and phase shift in degrees.")
+
+    @staticmethod
+    def solve(A, B, C):
+        amp = abs(A)
+        period = sp.Rational(360, abs(B))
+        shift = sp.Rational(-C, B)
+        return f"amp={fmt(amp)}, period={fmt(period)}, shift={fmt(shift)}"
+
+
+@relation("cubic_solve", "algebra", ["a", "b", "c", "d"], exact=True)
+class CubicSolve:
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([1, 1, 1, 2])
+        r1, r2, r3 = (rng.randint(-5, 5) for _ in range(3))
+        b = -a * (r1 + r2 + r3)
+        c = a * (r1 * r2 + r1 * r3 + r2 * r3)
+        d = -a * r1 * r2 * r3
+        return [a, b, c, d], f"Solve {a}x^3+{b}x^2+{c}x+{d} = 0 for x."
+
+    @staticmethod
+    def solve(a, b, c, d):
+        roots = sp.roots(sp.Poly([a, b, c, d], sp.Symbol("x")))
+        vals = []
+        for r, mult in roots.items():
+            vals.extend([r] * mult)
+        vals.sort()
+        return ", ".join(f"x={fmt(v)}" for v in vals)
+
+
+@relation("right_triangle", "trig", ["opp", "adj"], exact=False)
+class RightTriangle:
+    @staticmethod
+    def gen(rng):
+        opp = rng.randint(1, 20)
+        adj = rng.randint(1, 20)
+        return [opp, adj], (f"A right triangle has opposite side {opp} and "
+                            f"adjacent side {adj}. Find the angle and the "
+                            f"hypotenuse.")
+
+    @staticmethod
+    def solve(opp, adj):
+        angle = sp.atan2(opp, adj) * 180 / sp.pi
+        hyp = sp.sqrt(opp ** 2 + adj ** 2)
+        return f"angle={dec(angle)}, hyp={dec(hyp)}"

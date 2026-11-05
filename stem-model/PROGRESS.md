@@ -17,15 +17,8 @@ section done without the gate passing.
 | A5 law_sines | done | | 200/200 exact |
 | A6 law_cosines | done | | 200/200 exact; sqrt at 1e6 scale |
 | A7 arc_length | done | | 200/200 exact |
-| A8 right_triangle | blocked | | needs atan; no helper exists |
-| A9 sinusoid | pending | | multi-value output, deferred |
-| A2 trig_inverse | pending | | |
-| A3 pythagoras | pending | | |
-| A4 right_triangle | pending | | |
-| A5 law_sines | pending | | |
-| A6 law_cosines | pending | | |
-| A7 sinusoid | pending | | |
-| A8 arc_length | pending | | |
+| A8 right_triangle | done | | 200/200 exact; atan_deg9 added |
+| A9 sinusoid | done | | 200/200 exact |
 | B0 log/exp numerics | done | | log_core_9, log10_9, ln_9, exp_9; integer only |
 | B1 log_eval | done | | 200/200 exact |
 | B2 ln_eval | done | | 200/200 exact; replaces log_expand (redundant) |
@@ -34,7 +27,7 @@ section done without the gate passing.
 | B5 continuous_growth | done | | 200/200 exact |
 | B6 half_life | done | | 200/200 exact |
 | B7 doubling_time | done | | 200/200 exact |
-| C1 cubic_solve | blocked | | rational-root deflation; deferred as its own section |
+| C1 cubic_solve | done | | 200/200 exact; rational-root search plus deflation |
 | C2 factor_quadratic | done | | 200/200 exact |
 | C3 complete_square | done | | 200/200 exact |
 | C4 arith_seq | done | | 200/200 exact |

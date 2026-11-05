@@ -2220,6 +2220,221 @@ static int solve_average(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+/*
+ * atan(num/den) in degrees at 1e9 scale, for num, den > 0.
+ * Reduces to the first octant, then applies atan(x) = 2*atan(x/(1+sqrt(1+x^2)))
+ * twice so the Taylor series converges quickly, then converts to degrees.
+ */
+static long long atan_deg9(long long num, long long den, int *rc)
+{
+	long long x9, x2, t9, sum9, root9;
+	int i, k;
+
+	if (num <= 0 || den <= 0) {
+		*rc = -4;
+		return 0;
+	}
+	if (num > den) {
+		long long r = atan_deg9(den, num, rc);
+
+		if (*rc != 0)
+			return 0;
+		return 90000000000LL - r;
+	}
+	if (num > 9000000000000000LL / 1000000000LL) {
+		*rc = -4;
+		return 0;
+	}
+	x9 = num * 1000000000LL / den;
+	for (k = 0; k < 2; k++) {
+		x2 = x9 * x9 / 1000000000LL;
+		if (x2 > 9000000000LL) {
+			*rc = -4;
+			return 0;
+		}
+		root9 = (long long)isqrt64((unsigned long long)(1000000000000000000LL
+		                                              + x2 * 1000000000LL));
+		x9 = x9 * 1000000000LL / (1000000000LL + root9);
+	}
+	x2 = x9 * x9 / 1000000000LL;
+	t9 = x9;
+	sum9 = x9;
+	for (i = 1; i <= 15; i++) {
+		t9 = -t9 * x2 / 1000000000LL;
+		if (t9 == 0)
+			break;
+		sum9 += t9 / (2 * i + 1);
+	}
+	sum9 *= 4;
+	return div_round(sum9 * 180LL * 1000000LL, 3141592653LL) * 1000;
+}
+
+static int solve_sinusoid(const char *const *args, char *out, size_t outlen)
+{
+	rat A, B, C, period, shift;
+	int rc;
+	char f1[48], f2[48], f3[48], buf[192];
+
+	if ((rc = parse_rat(args[0], &A, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &B, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &C, NULL)) != 0)
+		return rc;
+	if (B.n == 0)
+		return -4;
+	period.n = 360 * B.d;
+	period.d = (B.n < 0 ? -B.n : B.n);
+	if ((rc = rat_norm(&period)) != 0)
+		return rc;
+	shift.n = -C.n * B.d;
+	shift.d = C.d * B.n;
+	if (shift.d < 0) {
+		shift.n = -shift.n;
+		shift.d = -shift.d;
+	}
+	if ((rc = rat_norm(&shift)) != 0)
+		return rc;
+	A.n = A.n < 0 ? -A.n : A.n;
+	fmt_rat(&A, f1, sizeof(f1));
+	fmt_rat(&period, f2, sizeof(f2));
+	fmt_rat(&shift, f3, sizeof(f3));
+	snprintf(buf, sizeof(buf), "amp=%s, period=%s, shift=%s", f1, f2, f3);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_cubic_solve(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b, c, d, r, t, qa, qb, qc, disc, s, r2, r3;
+	int rc, found = 0;
+	long long p, q, sq;
+	char f1[48], f2[48], f3[48], buf[192];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &d, NULL)) != 0)
+		return rc;
+	if (a.n == 0 || a.d != 1 || b.d != 1 || c.d != 1 || d.d != 1)
+		return -4;
+	if (d.n == 0) {
+		r.n = 0;
+		r.d = 1;
+		found = 1;
+	}
+	for (p = 1; p <= 60 && !found; p++) {
+		for (q = 1; q <= 6 && !found; q++) {
+			int sign;
+
+			for (sign = -1; sign <= 1; sign += 2) {
+				long long num = sign * p;
+				long long v = a.n * num * num * num
+				            + b.n * num * num * q
+				            + c.n * num * q * q
+				            + d.n * q * q * q;
+
+				if (v == 0) {
+					r.n = num;
+					r.d = q;
+					if ((rc = rat_norm(&r)) != 0)
+						return rc;
+					found = 1;
+					break;
+				}
+			}
+		}
+	}
+	if (!found)
+		return -4;
+	qa = a;
+	if ((rc = rat_mul(&t, &a, &r)) != 0 ||
+	    (rc = rat_add(&qb, &b, &t)) != 0 ||
+	    (rc = rat_mul(&t, &b, &r)) != 0 ||
+	    (rc = rat_add(&qc, &c, &t)) != 0 ||
+	    (rc = rat_mul(&t, &a, &r)) != 0 ||
+	    (rc = rat_mul(&t, &t, &r)) != 0 ||
+	    (rc = rat_add(&qc, &qc, &t)) != 0)
+		return rc;
+	if ((rc = rat_mul(&disc, &qb, &qb)) != 0 ||
+	    (rc = rat_mul(&t, &qa, &qc)) != 0 ||
+	    (rc = rat_mul(&t, &t, &RAT_4)) != 0 ||
+	    (rc = rat_sub(&disc, &disc, &t)) != 0)
+		return rc;
+	if (disc.n < 0)
+		return -4;
+	if (disc.n > WIDE_LIMIT / disc.d)
+		return -4;
+	sq = (long long)isqrt64((unsigned long long)(disc.n * disc.d));
+	if (sq * sq != disc.n * disc.d)
+		return -4;
+	s.n = sq;
+	s.d = disc.d;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	if ((rc = rat_mul(&t, &qa, &RAT_2)) != 0)
+		return rc;
+	if ((rc = rat_sub(&r2, &s, &qb)) != 0 ||
+	    (rc = rat_div(&r2, &r2, &t)) != 0)
+		return rc;
+	if ((rc = rat_add(&r3, &qb, &s)) != 0)
+		return rc;
+	r3.n = -r3.n;
+	if ((rc = rat_div(&r3, &r3, &t)) != 0)
+		return rc;
+	if (rat_cmp(&r2, &r3) > 0) {
+		t = r2;
+		r2 = r3;
+		r3 = t;
+	}
+	if (rat_cmp(&r, &r2) > 0) {
+		t = r;
+		r = r2;
+		r2 = t;
+	}
+	if (rat_cmp(&r2, &r3) > 0) {
+		t = r2;
+		r2 = r3;
+		r3 = t;
+	}
+	fmt_rat(&r, f1, sizeof(f1));
+	fmt_rat(&r2, f2, sizeof(f2));
+	fmt_rat(&r3, f3, sizeof(f3));
+	snprintf(buf, sizeof(buf), "x=%s, x=%s, x=%s", f1, f2, f3);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_right_triangle(const char *const *args, char *out,
+                                size_t outlen)
+{
+	rat opp, adj, s;
+	int rc;
+	long long ang9, s12;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &opp, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &adj, NULL)) != 0)
+		return rc;
+	if (opp.n <= 0 || adj.n <= 0)
+		return -4;
+	ang9 = atan_deg9(opp.n * adj.d, adj.n * opp.d, &rc);
+	if (rc != 0)
+		return rc;
+	s.n = opp.n * opp.n * adj.d * adj.d + adj.n * adj.n * opp.d * opp.d;
+	s.d = opp.d * opp.d * adj.d * adj.d;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	s12 = sqrt12(s.n, s.d, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(ang9, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	if ((rc = dec4_render(s12, 1000000000000LL, f2, sizeof(f2))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "angle=%s, hyp=%s", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -2540,6 +2755,21 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "average") == 0) {
 		if (nargs == 4)
 			rc = solve_average(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "sinusoid") == 0) {
+		if (nargs == 3)
+			rc = solve_sinusoid(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "cubic_solve") == 0) {
+		if (nargs == 4)
+			rc = solve_cubic_solve(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "right_triangle") == 0) {
+		if (nargs == 2)
+			rc = solve_right_triangle(args, out, outlen);
 		else
 			rc = -2;
 	} else {

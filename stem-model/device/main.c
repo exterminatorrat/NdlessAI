@@ -73,9 +73,18 @@ int main(void)
 			            "I could not match the numbers in your\n"
 			            "question, so I will not guess.");
 		} else {
-			show_msgbox("Sorry",
-			            "I could not work that one out.\n\n"
-			            "Try rephrasing it.");
+			/*
+			 * Show what the model produced. A malformed call usually means
+			 * the compiled tokenizer does not match the one the model was
+			 * trained with, and the call text is the only way to see that
+			 * from the calculator.
+			 */
+			char detail[320];
+
+			snprintf(detail, sizeof detail,
+			         "I could not work that one out.\n\n"
+			         "It produced:\n%s", call);
+			show_msgbox("Sorry", detail);
 		}
 	}
 

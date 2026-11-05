@@ -14,7 +14,7 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
-for f in bpe fixed solvers infer pipeline main_device; do
+for f in bpe fixed solvers infer pipeline main_device graph; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -23,7 +23,7 @@ $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
 status=0
-for f in bpe fixed solvers; do
+for f in bpe fixed solvers graph; do
     # qstate_init and the exp_solve log fallback may use soft-float; the
     # per-token loop may not.
     hot=$($CC -print-prog-name=objdump >/dev/null 2>&1 && \

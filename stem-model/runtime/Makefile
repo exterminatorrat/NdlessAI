@@ -4,7 +4,7 @@ LDLIBS = -lm
 
 HEADERS = bpe.h fixed.h infer.h solvers.h pipeline.h
 
-all: infer_host main_device test_solvers test_bpe test_fixed test_guard
+all: infer_host main_device test_solvers test_bpe test_fixed test_guard test_graph
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -24,14 +24,18 @@ test_fixed: test_fixed.c fixed.c infer.c $(HEADERS)
 test_guard: test_guard.c pipeline.c bpe.c fixed.c infer.c solvers.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_guard.c pipeline.c bpe.c fixed.c infer.c solvers.c $(LDLIBS)
 
+test_graph: test_graph.c graph.c graph.h
+	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c $(LDLIBS)
+
 check: all
 	./test_solvers
 	./test_bpe
 	./test_fixed ../weights.bin
 	./test_guard
+	./test_graph
 	sh crosscheck.sh
 
 clean:
-	rm -f infer_host main_device test_solvers test_bpe test_fixed test_guard
+	rm -f infer_host main_device test_solvers test_bpe test_fixed test_guard test_graph
 
 .PHONY: all clean check

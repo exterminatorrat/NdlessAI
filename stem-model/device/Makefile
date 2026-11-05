@@ -17,7 +17,7 @@ else
 	GCCFLAGS += -O0 -g
 endif
 
-OBJS = main.o pipeline.o bpe.o fixed.o infer.o solvers.o
+OBJS = main.o graph_ui.o pipeline.o bpe.o fixed.o infer.o solvers.o graph.o
 EXE = stemhelp
 DISTDIR = .
 
@@ -40,6 +40,14 @@ check-tokenizer:
 		$(DATA)/tokenizer.json $(RUNTIME)/bpe.h
 
 main.o: main.c tokenizer
+	$(GCC) $(GCCFLAGS) -c $< -o $@
+
+graph_ui.o: graph_ui.c graph_ui.h
+	$(GCC) $(GCCFLAGS) -c $< -o $@
+
+# The plotter has no tokenizer dependency, so it does not wait on the
+# generated bpe.h the way the model objects do.
+graph.o: $(RUNTIME)/graph.c $(RUNTIME)/graph.h
 	$(GCC) $(GCCFLAGS) -c $< -o $@
 
 %.o: $(RUNTIME)/%.c tokenizer

@@ -27,3 +27,4 @@ device/*.tns
 device/*.zehn
 device/weights.bin.tns
 runtime/test_guard
+runtime/test_graph

@@ -51,6 +51,19 @@ int main(void)
 
 	expect("CALL quad_solve 1 1 0", "Solve x^2 + x = 0 for x.", 1,
 	       "implicit coefficient and zero constant");
+
+	/* A sign flip is the failure seen on hardware: the model read
+	 * "x^2 - 3x + 2" and emitted coefficients 1, 3, -2. Every digit is
+	 * present in the text, so only a sign-aware check catches it. */
+	expect("CALL quad_solve 1 -3 2", "Solve x^2 - 3x + 2 = 0 for x.", 1,
+	       "correct signs");
+	expect("CALL quad_solve 1 3 -2", "Solve x^2 - 3x + 2 = 0 for x.", 0,
+	       "signs flipped");
+	expect("CALL quad_solve 1 3 2", "Solve x^2 + 3x + 2 = 0 for x.", 1,
+	       "all positive, no minus in text");
+	expect("CALL quad_solve 1 -3 2", "Solve x^2 + 3x + 2 = 0 for x.", 0,
+	       "negative argument but text has no minus");
+
 	expect("CALL ohm_i 12 4", "A 12 V battery is across a 4 ohm resistor.", 1,
 	       "plain two-argument relation");
 	expect("CALL ohm_i 12 5", "A 12 V battery is across a 4 ohm resistor.", 0,

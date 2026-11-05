@@ -79,20 +79,44 @@ static int run_call_text(const char *call, char *answer, int answer_max)
  *    implicitly ("x^3" not "1x^3", "2x^2 - 3" with no x term), so those values
  *    are legitimately absent from the text. The cost is that a wrong 0 or 1
  *    passes; the benefit is that correct answers are not thrown away.
- *  - The sign is ignored when matching, because the text writes "2x - 1" while
- *    the argument is "-1".
+ *  - Signs are matched, not ignored. The text writes "2x - 1" while the
+ *    argument is "-1", so a negative argument looks for a minus before the
+ *    digits, and a positive one requires an occurrence with no minus. Without
+ *    this, a model that flips a sign still passes: "x^2 - 3x + 2" contains a
+ *    3, so an argument of +3 looked grounded when the answer needed -3.
  */
+static int is_digit(char c)
+{
+	return c >= '0' && c <= '9';
+}
+
 static int arg_in_text(const char *arg, const char *question)
 {
-	const char *digits = arg;
+	int negative = (*arg == '-');
+	const char *digits = negative ? arg + 1 : arg;
+	size_t n = strlen(digits);
 
-	if (*digits == '-')
-		digits++;
-	if (!*digits)
+	if (!n)
 		return 0;
 	if (!strcmp(digits, "0") || !strcmp(digits, "1"))
 		return 1;
-	return strstr(question, digits) != NULL;
+
+	for (const char *p = question; (p = strstr(p, digits)) != NULL; p++) {
+		const char *before = p;
+		int has_minus = 0;
+
+		if (is_digit(p[n]))
+			continue;
+		while (before > question && before[-1] == ' ')
+			before--;
+		if (before > question && before[-1] == '-')
+			has_minus = 1;
+		else if (before > question && is_digit(before[-1]))
+			continue;
+		if (has_minus == negative)
+			return 1;
+	}
+	return 0;
 }
 
 int pipeline_args_grounded(const char *call, const char *question)

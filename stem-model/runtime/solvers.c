@@ -2046,6 +2046,180 @@ static int solve_stoichiometry(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_km_to_m(const char *const *args, char *out, size_t outlen)
+{
+	rat km;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &km, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(km.n * 1000, km.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s m", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_m_to_cm(const char *const *args, char *out, size_t outlen)
+{
+	rat m;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(m.n * 100, m.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s cm", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_celsius_to_fahrenheit(const char *const *args, char *out,
+                                       size_t outlen)
+{
+	rat c;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &c, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(9 * c.n + 32 * 5 * c.d, 5 * c.d,
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s F", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_fahrenheit_to_celsius(const char *const *args, char *out,
+                                       size_t outlen)
+{
+	rat f;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &f, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(5 * (f.n - 32 * f.d), 9 * f.d,
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s C", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_kg_to_lb(const char *const *args, char *out, size_t outlen)
+{
+	rat kg;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &kg, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(kg.n * 2205, kg.d * 1000, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s lb", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_liters_to_ml(const char *const *args, char *out,
+                              size_t outlen)
+{
+	rat L;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &L, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(L.n * 1000, L.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mL", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_percent_error(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat measured, accepted, diff;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &measured, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &accepted, NULL)) != 0)
+		return rc;
+	if (accepted.n == 0)
+		return -4;
+	if ((rc = rat_sub(&diff, &measured, &accepted)) != 0)
+		return rc;
+	if (diff.n < 0)
+		diff.n = -diff.n;
+	if ((rc = dec4_render(100 * diff.n * accepted.d,
+	                      diff.d * accepted.n, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s%%", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_scientific_notation(const char *const *args, char *out,
+                                     size_t outlen)
+{
+	rat mant, ex;
+	int rc, i;
+	long long num, den;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &mant, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ex, NULL)) != 0)
+		return rc;
+	if (ex.d != 1 || ex.n < -12 || ex.n > 12)
+		return -4;
+	num = mant.n;
+	den = mant.d;
+	if (ex.n >= 0) {
+		for (i = 0; i < ex.n; i++) {
+			if (num > 9000000000000000LL / 10)
+				return -4;
+			num *= 10;
+		}
+	} else {
+		for (i = 0; i < -ex.n; i++) {
+			if (den > 9000000000000000LL / 10)
+				return -4;
+			den *= 10;
+		}
+	}
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_average(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b, c, d, s, t;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &d, NULL)) != 0)
+		return rc;
+	if ((rc = rat_add(&s, &a, &b)) != 0 ||
+	    (rc = rat_add(&t, &c, &d)) != 0 ||
+	    (rc = rat_add(&s, &s, &t)) != 0)
+		return rc;
+	if ((rc = dec4_render(s.n, 4 * s.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -2321,6 +2495,51 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "stoichiometry") == 0) {
 		if (nargs == 2)
 			rc = solve_stoichiometry(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "km_to_m") == 0) {
+		if (nargs == 1)
+			rc = solve_km_to_m(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "m_to_cm") == 0) {
+		if (nargs == 1)
+			rc = solve_m_to_cm(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "celsius_to_fahrenheit") == 0) {
+		if (nargs == 1)
+			rc = solve_celsius_to_fahrenheit(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "fahrenheit_to_celsius") == 0) {
+		if (nargs == 1)
+			rc = solve_fahrenheit_to_celsius(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "kg_to_lb") == 0) {
+		if (nargs == 1)
+			rc = solve_kg_to_lb(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "liters_to_ml") == 0) {
+		if (nargs == 1)
+			rc = solve_liters_to_ml(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "percent_error") == 0) {
+		if (nargs == 2)
+			rc = solve_percent_error(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "scientific_notation") == 0) {
+		if (nargs == 2)
+			rc = solve_scientific_notation(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "average") == 0) {
+		if (nargs == 4)
+			rc = solve_average(args, out, outlen);
 		else
 			rc = -2;
 	} else {

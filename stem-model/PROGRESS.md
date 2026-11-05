@@ -64,11 +64,16 @@ section done without the gate passing.
 | E8 combined_gas | done | | 200/200 exact |
 | E9 density | done | | 200/200 exact |
 | E10 stoichiometry | done | | 200/200 exact |
-| F1 unit_convert | pending | | |
-| F2 sig_figs | pending | | |
-| F3 percent_error | pending | | |
-| F4 scientific_notation | pending | | |
-| F5 average | pending | | |
+| F1 km_to_m | done | | 200/200 exact; unit_convert split, guard needs numeric args |
+| F1b m_to_cm | done | | 200/200 exact |
+| F1c celsius_to_fahrenheit | done | | 200/200 exact |
+| F1d fahrenheit_to_celsius | done | | 200/200 exact |
+| F1e kg_to_lb | done | | 200/200 exact |
+| F1f liters_to_ml | done | | 200/200 exact |
+| F2 sig_figs | blocked | | needs n-sig-fig formatter; deferred |
+| F3 percent_error | done | | 200/200 exact |
+| F4 scientific_notation | done | | 200/200 exact |
+| F5 average | done | | 200/200 exact |
 | G1 retrain | pending | | after all batches |
 | G2 hardware test | pending | | one question per batch |
 

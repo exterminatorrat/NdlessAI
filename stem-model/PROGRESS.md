@@ -54,16 +54,16 @@ section done without the gate passing.
 | D10 ohm_v | done | | 200/200 exact |
 | D11 ohm_power | done | | 200/200 exact |
 | D12 free_fall | done | | 200/200 exact; sqrt12 |
-| E1 molarity | pending | | |
-| E2 ph | pending | | |
-| E3 poh | pending | | |
-| E4 ph_from_poh | pending | | |
-| E5 percent_yield | pending | | |
-| E6 boyles | pending | | |
-| E7 charles | pending | | |
-| E8 combined_gas | pending | | |
-| E9 density | pending | | |
-| E10 stoichiometry | pending | | |
+| E1 molarity | done | | 200/200 exact |
+| E2 ph | done | | 200/200 exact; log10_9 |
+| E3 poh | done | | 200/200 exact; shares solve_ph |
+| E4 ph_from_poh | done | | 200/200 exact |
+| E5 percent_yield | done | | 200/200 exact |
+| E6 boyles | done | | 200/200 exact |
+| E7 charles | done | | 200/200 exact |
+| E8 combined_gas | done | | 200/200 exact |
+| E9 density | done | | 200/200 exact |
+| E10 stoichiometry | done | | 200/200 exact |
 | F1 unit_convert | pending | | |
 | F2 sig_figs | pending | | |
 | F3 percent_error | pending | | |

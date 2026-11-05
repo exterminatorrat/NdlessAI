@@ -1,16 +1,20 @@
 /*
  * STEM helper for the TI-Nspire CX II under Ndless.
  *
- * Asks for a problem, runs the on-device pipeline (BPE -> fixed-point
- * transformer -> call -> C solver) and shows the answer. The pipeline is the
- * same code the host tests exercise, so behaviour here matches what was
- * measured off-device.
+ * Two modes, chosen at startup:
+ *
+ *   Solve - asks for a problem, runs the on-device pipeline (BPE ->
+ *           fixed-point transformer -> call -> C solver) and shows the
+ *           answer. The pipeline is the same code the host tests exercise,
+ *           so behaviour here matches what was measured off-device.
+ *   Graph - plots y = f(x). Pure C, no model and no weights file.
  */
 #include <libndls.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "pipeline.h"
+#include "graph_ui.h"
 
 #define SEQ 160
 
@@ -19,7 +23,7 @@
  * Bump this whenever behaviour changes; a stale .tns is otherwise
  * indistinguishable from a broken fix.
  */
-#define BUILD_STAMP "stemhelp v5"
+#define BUILD_STAMP "stemhelp v6"
 
 /*
  * TI's transfer software only accepts files ending in .tns, so the model
@@ -33,15 +37,13 @@ static const char *const weight_names[] = {
 	NULL
 };
 
-int main(void)
+static void solve_mode(void)
 {
 	static pipeline_t p;
 	char path[256];
 	char answer[256];
 	char call[256];
 	int found = 0;
-
-	assert_ndless_rev(801);
 
 	for (int i = 0; weight_names[i] && !found; i++)
 		found = locate(weight_names[i], path, sizeof path) == 0;
@@ -51,14 +53,14 @@ int main(void)
 		            "The model file was not found.\n\n"
 		            "Copy weights.bin.tns into the same\n"
 		            "folder as this program.");
-		return 1;
+		return;
 	}
 
 	if (pipeline_init(&p, path, SEQ) < 0) {
 		show_msgbox("STEM helper",
 		            "Could not load the model.\n\n"
 		            "The calculator may be low on memory.");
-		return 1;
+		return;
 	}
 
 	for (;;) {
@@ -98,5 +100,23 @@ int main(void)
 	}
 
 	pipeline_free(&p);
+}
+
+int main(void)
+{
+	assert_ndless_rev(801);
+
+	for (;;) {
+		unsigned choice = show_msgbox_2b(BUILD_STAMP,
+		                                 "What do you want to do?",
+		                                 "Solve", "Graph");
+
+		if (choice == 1)
+			solve_mode();
+		else if (choice == 2)
+			graph_run();
+		else
+			break;
+	}
 	return 0;
 }

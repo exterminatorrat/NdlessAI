@@ -10,7 +10,7 @@ every template for a relation keeps the same numbers in the same roles, so the
 correct call is unchanged.
 """
 
-from relations import poly
+from relations import amp, lin2, poly
 
 TEMPLATES = {
     "sin_eval": [
@@ -206,64 +206,64 @@ TEMPLATES = {
         "Find a_{n} and S_{n} for the geometric sequence with a1 = {a1}, r = {r}, n = {n}.",
     ],
     "abs_value_eq": [
-        "Solve |{a}x+{b}| = {c} for x.",
-        "Find all x satisfying |{a}x+{b}| = {c}.",
-        "What values of x make |{a}x+{b}| equal {c}?",
-        "Solve the absolute value equation |{a}x+{b}| = {c}.",
-        "Determine x if the absolute value of {a}x+{b} is {c}.",
-        "Find the solutions to |{a}x+{b}| = {c}.",
-        "For what x does |{a}x+{b}| = {c} hold?",
-        "Compute the solutions of |{a}x+{b}| = {c}.",
-        "Solve for x: |{a}x+{b}| = {c}.",
-        "Give all x with |{a}x+{b}| = {c}.",
+        "Solve |{p}| = {c} for x.",
+        "Find all x satisfying |{p}| = {c}.",
+        "What values of x make |{p}| equal {c}?",
+        "Solve the absolute value equation |{p}| = {c}.",
+        "Determine x if the absolute value of {p} is {c}.",
+        "Find the solutions to |{p}| = {c}.",
+        "For what x does |{p}| = {c} hold?",
+        "Compute the solutions of |{p}| = {c}.",
+        "Solve for x: |{p}| = {c}.",
+        "Give all x with |{p}| = {c}.",
     ],
     "linear_ineq": [
-        "Solve {a}x+{b} < {c} for x.",
-        "Find the solution set of {a}x+{b} < {c}.",
-        "For what values of x is {a}x+{b} less than {c}?",
-        "Solve the inequality {a}x+{b} < {c}.",
-        "Determine the range of x satisfying {a}x+{b} < {c}.",
-        "What x make {a}x+{b} < {c} true?",
-        "Solve for x: {a}x+{b} < {c}.",
-        "Find all x such that {a}x+{b} < {c}.",
-        "Compute the solution to {a}x+{b} < {c}.",
-        "Give the interval of x for which {a}x+{b} < {c}.",
+        "Solve {p} < {c} for x.",
+        "Find the solution set of {p} < {c}.",
+        "For what values of x is {p} less than {c}?",
+        "Solve the inequality {p} < {c}.",
+        "Determine the range of x satisfying {p} < {c}.",
+        "What x make {p} < {c} true?",
+        "Solve for x: {p} < {c}.",
+        "Find all x such that {p} < {c}.",
+        "Compute the solution to {p} < {c}.",
+        "Give the interval of x for which {p} < {c}.",
     ],
     "system2": [
-        "Solve the system {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.",
-        "Find x and y satisfying {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.",
-        "Solve the simultaneous equations {a1}x+{b1}y={c1}, {a2}x+{b2}y={c2}.",
-        "What are x and y if {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}?",
-        "Determine the solution to the linear system {a1}x+{b1}y={c1} with {a2}x+{b2}y={c2}.",
-        "Solve for x and y: {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.",
-        "Find the point where {a1}x+{b1}y={c1} meets {a2}x+{b2}y={c2}.",
-        "Compute x and y from the pair {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.",
-        "Solve the two equations {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2} together.",
-        "Give the values of x and y that satisfy both {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.",
+        "Solve the system {e1} and {e2}.",
+        "Find x and y satisfying {e1} and {e2}.",
+        "Solve the simultaneous equations {e1}, {e2}.",
+        "What are x and y if {e1} and {e2}?",
+        "Determine the solution to the linear system {e1} with {e2}.",
+        "Solve for x and y: {e1} and {e2}.",
+        "Find the point where {e1} meets {e2}.",
+        "Compute x and y from the pair {e1} and {e2}.",
+        "Solve the two equations {e1} and {e2} together.",
+        "Give the values of x and y that satisfy both {e1} and {e2}.",
     ],
     "complete_square": [
-        "Complete the square for {a}x^2+{b}x+{c} and state the vertex.",
-        "Find the vertex of {a}x^2+{b}x+{c} by completing the square.",
-        "Rewrite {a}x^2+{b}x+{c} in vertex form and give the vertex.",
-        "What is the vertex of the parabola {a}x^2+{b}x+{c}?",
-        "Complete the square on {a}x^2+{b}x+{c} to find its turning point.",
-        "Determine the vertex of y = {a}x^2+{b}x+{c}.",
-        "Put {a}x^2+{b}x+{c} into completed square form and state the vertex.",
-        "Find the minimum or maximum point of {a}x^2+{b}x+{c}.",
-        "Express {a}x^2+{b}x+{c} as a perfect square plus a constant, and give the vertex.",
-        "Locate the vertex of the quadratic {a}x^2+{b}x+{c}.",
+        "Complete the square for {p} and state the vertex.",
+        "Find the vertex of {p} by completing the square.",
+        "Rewrite {p} in vertex form and give the vertex.",
+        "What is the vertex of the parabola {p}?",
+        "Complete the square on {p} to find its turning point.",
+        "Determine the vertex of y = {p}.",
+        "Put {p} into completed square form and state the vertex.",
+        "Find the minimum or maximum point of {p}.",
+        "Express {p} as a perfect square plus a constant, and give the vertex.",
+        "Locate the vertex of the quadratic {p}.",
     ],
     "factor_quadratic": [
-        "Factor {a}x^2+{b}x+{c}.",
-        "Write {a}x^2+{b}x+{c} in factored form.",
-        "Factor the quadratic {a}x^2+{b}x+{c}.",
-        "Express {a}x^2+{b}x+{c} as a product of linear factors.",
-        "Find the factorization of {a}x^2+{b}x+{c}.",
-        "Factor completely: {a}x^2+{b}x+{c}.",
-        "What is {a}x^2+{b}x+{c} factored?",
-        "Break {a}x^2+{b}x+{c} into linear factors.",
-        "Factorise {a}x^2+{b}x+{c}.",
-        "Give the factored form of the quadratic {a}x^2+{b}x+{c}.",
+        "Factor {p}.",
+        "Write {p} in factored form.",
+        "Factor the quadratic {p}.",
+        "Express {p} as a product of linear factors.",
+        "Find the factorization of {p}.",
+        "Factor completely: {p}.",
+        "What is {p} factored?",
+        "Break {p} into linear factors.",
+        "Factorise {p}.",
+        "Give the factored form of the quadratic {p}.",
     ],
     "kinetic_energy": [
         "A {m} kg object moves at {v} m/s. Find its kinetic energy.",
@@ -638,28 +638,28 @@ TEMPLATES = {
         "Find the mean of the set {a}, {b}, {c}, {d}.",
     ],
     "sinusoid": [
-        "For y = {A} sin({B}x + {C}), find the amplitude, period and phase shift in degrees.",
-        "Find the amplitude, period and phase shift of y = {A} sin({B}x + {C}).",
-        "What are the amplitude, period and phase shift of {A} sin({B}x + {C})?",
-        "Determine the amplitude, period and phase shift for y = {A} sin({B}x + {C}).",
-        "Given y = {A} sin({B}x + {C}), state the amplitude, period and phase shift.",
-        "Compute the amplitude, period and phase shift of the sinusoid {A} sin({B}x + {C}).",
-        "For the wave y = {A} sin({B}x + {C}), what are its amplitude, period and phase shift?",
-        "Find amp, period and shift for y = {A} sin({B}x + {C}).",
-        "A sinusoid is written y = {A} sin({B}x + {C}). Find its amplitude, period and phase shift.",
-        "Analyse y = {A} sin({B}x + {C}) and give the amplitude, period and phase shift.",
+        "For y = {a}sin({p}), find the amplitude, period and phase shift in degrees.",
+        "Find the amplitude, period and phase shift of y = {a}sin({p}).",
+        "What are the amplitude, period and phase shift of {a}sin({p})?",
+        "Determine the amplitude, period and phase shift for y = {a}sin({p}).",
+        "Given y = {a}sin({p}), state the amplitude, period and phase shift.",
+        "Compute the amplitude, period and phase shift of the sinusoid {a}sin({p}).",
+        "For the wave y = {a}sin({p}), what are its amplitude, period and phase shift?",
+        "Find amp, period and shift for y = {a}sin({p}).",
+        "A sinusoid is written y = {a}sin({p}). Find its amplitude, period and phase shift.",
+        "Analyse y = {a}sin({p}) and give the amplitude, period and phase shift.",
     ],
     "cubic_solve": [
-        "Solve {a}x^3+{b}x^2+{c}x+{d} = 0 for x.",
-        "Find the roots of {a}x^3+{b}x^2+{c}x+{d}.",
-        "What are the solutions to {a}x^3+{b}x^2+{c}x+{d} = 0?",
-        "Solve the cubic {a}x^3+{b}x^2+{c}x+{d} = 0.",
-        "Determine the roots of {a}x^3+{b}x^2+{c}x+{d}.",
-        "Find all x satisfying {a}x^3+{b}x^2+{c}x+{d} = 0.",
-        "Compute the zeros of {a}x^3+{b}x^2+{c}x+{d}.",
-        "For what values of x does {a}x^3+{b}x^2+{c}x+{d} equal zero?",
-        "Solve for x: {a}x^3+{b}x^2+{c}x+{d} = 0.",
-        "Give the solutions of the cubic {a}x^3+{b}x^2+{c}x+{d} = 0.",
+        "Solve {p} = 0 for x.",
+        "Find the roots of {p}.",
+        "What are the solutions to {p} = 0?",
+        "Solve the cubic {p} = 0.",
+        "Determine the roots of {p}.",
+        "Find all x satisfying {p} = 0.",
+        "Compute the zeros of {p}.",
+        "For what values of x does {p} equal zero?",
+        "Solve for x: {p} = 0.",
+        "Give the solutions of the cubic {p} = 0.",
     ],
     "right_triangle": [
         "A right triangle has opposite side {opp} and adjacent side {adj}. Find the angle and the hypotenuse.",
@@ -718,16 +718,16 @@ TEMPLATES = {
         "Compute the total area of {p} over the range x = {lo} to x = {hi}.",
     ],
     "linear2": [
-        "Solve the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}.",
-        "Find x and y given {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}.",
-        "Two equations: {a1}x + {b1}y = {c1}, {a2}x + {b2}y = {c2}. Solve them.",
-        "Solve simultaneously for x and y: {a1}x + {b1}y = {c1}; {a2}x + {b2}y = {c2}.",
-        "Determine x and y that satisfy {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}.",
-        "Given the simultaneous equations {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}, find x and y.",
-        "What are x and y when {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}?",
-        "Solve this pair of linear equations: {a1}x + {b1}y = {c1}, {a2}x + {b2}y = {c2}.",
-        "Find the intersection of {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}.",
-        "Eliminate to solve {a1}x + {b1}y = {c1} together with {a2}x + {b2}y = {c2}.",
+        "Solve the system {e1} and {e2}.",
+        "Find x and y given {e1} and {e2}.",
+        "Two equations: {e1}, {e2}. Solve them.",
+        "Solve simultaneously for x and y: {e1}; {e2}.",
+        "Determine x and y that satisfy {e1} and {e2}.",
+        "Given the simultaneous equations {e1} and {e2}, find x and y.",
+        "What are x and y when {e1} and {e2}?",
+        "Solve this pair of linear equations: {e1}, {e2}.",
+        "Find the intersection of {e1} and {e2}.",
+        "Eliminate to solve {e1} together with {e2}.",
     ],
     "exp_solve": [
         "Solve {base}^x = {k} for x.",
@@ -885,7 +885,22 @@ _ARG_NAMES = {
     "gas_p": ("n", "T", "V"),
 }
 
-_POLY_COEFFS = {"quad_solve": 3, "deriv_poly3": 4, "integr_poly3": 4}
+_POLY_COEFFS = {
+    "quad_solve": 3,
+    "deriv_poly3": 4,
+    "integr_poly3": 4,
+    "abs_value_eq": 2,
+    "linear_ineq": 2,
+    "complete_square": 3,
+    "factor_quadratic": 3,
+    "cubic_solve": 4,
+}
+
+_POLY_SLICE = {"sinusoid": (1, 3)}
+
+_SYSTEMS = {"linear2", "system2"}
+
+_COEF = {"sinusoid"}
 
 
 def is_held_out(name, index):
@@ -912,6 +927,14 @@ def render(name, params, index):
     fields = dict(zip(_ARG_NAMES[name], params))
     if name in _POLY_COEFFS:
         fields["p"] = poly(list(params[:_POLY_COEFFS[name]]))
+    if name in _POLY_SLICE:
+        lo, hi = _POLY_SLICE[name]
+        fields["p"] = poly(list(params[lo:hi]))
+    if name in _SYSTEMS:
+        fields["e1"] = lin2(*params[:3])
+        fields["e2"] = lin2(*params[3:6])
+    if name in _COEF:
+        fields["a"] = amp(params[0])
     bank = TEMPLATES[name]
     return bank[index % len(bank)].format(**fields)
 

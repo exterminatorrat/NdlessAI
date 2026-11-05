@@ -135,6 +135,34 @@ def poly(coeffs, var="x"):
     return "".join(terms) or "0"
 
 
+def lin2(a, b, c):
+    """Render one equation of a two-variable system, e.g. "4x - 2y = -16"."""
+
+    def term(coef, var):
+        if coef == 0:
+            return None
+        mag = abs(coef)
+        return (("" if mag == 1 else str(mag)) + var, coef < 0)
+
+    parts = [p for p in (term(a, "x"), term(b, "y")) if p]
+    if not parts:
+        body = "0"
+    else:
+        body = ("-" if parts[0][1] else "") + parts[0][0]
+        for text, neg in parts[1:]:
+            body += (" - " if neg else " + ") + text
+    return f"{body} = {c}"
+
+
+def amp(c):
+    """Amplitude prefix for a sinusoid: "5 ", "-", or "" for a magnitude of one."""
+
+    if c == 0:
+        return ""
+    mag = abs(c)
+    return ("-" if c < 0 else "") + ("" if mag == 1 else str(mag) + " ")
+
+
 @relation("quad_solve", "precalc", ["a", "b", "c"])
 class QuadSolve:
     @staticmethod
@@ -195,7 +223,7 @@ class Linear2:
             if a1 * b2 - a2 * b1:
                 break
         c1, c2 = a1 * x + b1 * y, a2 * x + b2 * y
-        q = (f"Solve the system {a1}x + {b1}y = {c1} and {a2}x + {b2}y = {c2}.")
+        q = f"Solve the system {lin2(a1, b1, c1)} and {lin2(a2, b2, c2)}."
         return [a1, b1, c1, a2, b2, c2], q
 
     @staticmethod
@@ -552,7 +580,7 @@ class AbsValueEq:
         a = rng.randint(1, 6)
         b = rng.randint(-10, 10)
         c = rng.randint(1, 20)
-        return [a, b, c], f"Solve |{a}x+{b}| = {c} for x."
+        return [a, b, c], f"Solve |{poly([a, b])}| = {c} for x."
 
     @staticmethod
     def solve(a, b, c):
@@ -569,7 +597,7 @@ class LinearIneq:
         a = rng.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
         b = rng.randint(-10, 10)
         c = rng.randint(-10, 20)
-        return [a, b, c], f"Solve {a}x+{b} < {c} for x."
+        return [a, b, c], f"Solve {poly([a, b])} < {c} for x."
 
     @staticmethod
     def solve(a, b, c):
@@ -590,7 +618,7 @@ class System2:
                 break
         c1, c2 = rng.randint(-10, 10), rng.randint(-10, 10)
         return [a1, b1, c1, a2, b2, c2], (
-            f"Solve the system {a1}x+{b1}y={c1} and {a2}x+{b2}y={c2}.")
+            f"Solve the system {lin2(a1, b1, c1)} and {lin2(a2, b2, c2)}.")
 
     @staticmethod
     def solve(a1, b1, c1, a2, b2, c2):
@@ -607,7 +635,7 @@ class CompleteSquare:
         a = rng.choice([1, 1, 1, 2, 3])
         b = rng.randint(-10, 10)
         c = rng.randint(-10, 10)
-        return [a, b, c], (f"Complete the square for {a}x^2+{b}x+{c} and "
+        return [a, b, c], (f"Complete the square for {poly([a, b, c])} and "
                            f"state the vertex.")
 
     @staticmethod
@@ -626,7 +654,7 @@ class FactorQuadratic:
         r2 = rng.randint(-6, 6)
         b = -a * (r1 + r2)
         c = a * r1 * r2
-        return [a, b, c], f"Factor {a}x^2+{b}x+{c}."
+        return [a, b, c], f"Factor {poly([a, b, c])}."
 
     @staticmethod
     def solve(a, b, c):
@@ -1091,7 +1119,7 @@ class Sinusoid:
         A = rng.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
         B = rng.choice([1, 2, 3, 4, 6])
         C = rng.choice([-90, -60, -45, -30, 0, 30, 45, 60, 90])
-        return [A, B, C], (f"For y = {A} sin({B}x + {C}), find the amplitude, "
+        return [A, B, C], (f"For y = {amp(A)}sin({poly([B, C])}), find the amplitude, "
                            f"period and phase shift in degrees.")
 
     @staticmethod
@@ -1111,7 +1139,7 @@ class CubicSolve:
         b = -a * (r1 + r2 + r3)
         c = a * (r1 * r2 + r1 * r3 + r2 * r3)
         d = -a * r1 * r2 * r3
-        return [a, b, c, d], f"Solve {a}x^3+{b}x^2+{c}x+{d} = 0 for x."
+        return [a, b, c, d], f"Solve {poly([a, b, c, d])} = 0 for x."
 
     @staticmethod
     def solve(a, b, c, d):

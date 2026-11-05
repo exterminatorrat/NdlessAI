@@ -26,13 +26,14 @@ section done without the gate passing.
 | A6 law_cosines | pending | | |
 | A7 sinusoid | pending | | |
 | A8 arc_length | pending | | |
-| B1 log_eval | pending | | |
-| B2 log_expand | pending | | |
-| B3 change_base | pending | | |
-| B4 compound_interest | pending | | |
-| B5 continuous_growth | pending | | |
-| B6 half_life | pending | | |
-| B7 doubling_time | pending | | |
+| B0 log/exp numerics | done | | log_core_9, log10_9, ln_9, exp_9; integer only |
+| B1 log_eval | done | | 200/200 exact |
+| B2 ln_eval | done | | 200/200 exact; replaces log_expand (redundant) |
+| B3 log10_eval | done | | 200/200 exact; replaces change_base (redundant) |
+| B4 compound_interest | done | | 200/200 exact |
+| B5 continuous_growth | done | | 200/200 exact |
+| B6 half_life | done | | 200/200 exact |
+| B7 doubling_time | done | | 200/200 exact |
 | C1 cubic_solve | pending | | |
 | C2 factor_quadratic | pending | | |
 | C3 complete_square | pending | | |

@@ -1067,6 +1067,308 @@ static int solve_arc_length(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+/*
+ * atanh((m-1)/(m+1)) at 1e9 scale, for x = num/den > 0 written as m*10^k
+ * with m in [0.316, 3.163). The series converges in about 20 terms there.
+ * Callers combine k and the returned sum with their own base constant.
+ */
+static long long log_core_9(long long num, long long den, long long *k_out,
+                            int *rc)
+{
+	long long k = 0, x9, z9, z2_9, t9, s9;
+	int i;
+
+	if (num <= 0 || den <= 0 || den > 1000000000LL) {
+		*rc = -4;
+		return 0;
+	}
+	if (num / den > 1000000LL) {
+		*rc = -4;
+		return 0;
+	}
+	x9 = (num / den) * 1000000000LL + ((num % den) * 1000000000LL) / den;
+	if (x9 <= 0) {
+		*rc = -4;
+		return 0;
+	}
+	while (x9 >= 10000000000LL) {
+		x9 /= 10;
+		k++;
+	}
+	while (x9 < 1000000000LL) {
+		x9 *= 10;
+		k--;
+	}
+	if (x9 >= 3162277660LL) {
+		x9 /= 10;
+		k++;
+	}
+	z9 = (x9 - 1000000000LL) * 1000000000LL / (x9 + 1000000000LL);
+	z2_9 = z9 * z9 / 1000000000LL;
+	t9 = z9;
+	s9 = z9;
+	for (i = 3; i <= 41; i += 2) {
+		t9 = t9 * z2_9 / 1000000000LL;
+		if (t9 == 0)
+			break;
+		s9 += t9 / i;
+	}
+	*k_out = k;
+	return s9;
+}
+
+static long long log10_9(long long num, long long den, int *rc)
+{
+	long long k = 0, s9 = log_core_9(num, den, &k, rc);
+
+	if (*rc != 0)
+		return 0;
+	return k * 1000000000LL + s9 * 868588964LL / 1000000000LL;
+}
+
+static long long ln_9(long long num, long long den, int *rc)
+{
+	long long k = 0, s9 = log_core_9(num, den, &k, rc);
+
+	if (*rc != 0)
+		return 0;
+	return k * 2302585093LL + 2 * s9;
+}
+
+/*
+ * e^x at 1e9 scale for x = x9/1e9.
+ * Splits into an integer part and a fraction in [-0.5, 0.5]; the fraction
+ * uses a Taylor series that converges in about 12 terms there.
+ */
+static long long exp_9(long long x9, int *rc)
+{
+	long long n, f9, t9, s9, r9;
+	int i;
+
+	if (x9 > 20000000000LL || x9 < -20000000000LL) {
+		*rc = -4;
+		return 0;
+	}
+	n = x9 / 1000000000LL;
+	f9 = x9 - n * 1000000000LL;
+	if (f9 > 500000000LL) {
+		f9 -= 1000000000LL;
+		n++;
+	} else if (f9 < -500000000LL) {
+		f9 += 1000000000LL;
+		n--;
+	}
+	t9 = 1000000000LL;
+	s9 = 1000000000LL;
+	for (i = 1; i <= 20; i++) {
+		t9 = t9 * f9 / 1000000000LL / i;
+		if (t9 == 0)
+			break;
+		s9 += t9;
+	}
+	r9 = 1000000000LL;
+	if (n > 0) {
+		for (i = 0; i < n; i++) {
+			if (r9 > 3000000000000000LL) {
+				*rc = -4;
+				return 0;
+			}
+			r9 = r9 * 2718281828LL / 1000000000LL;
+		}
+	} else {
+		for (i = 0; i < -n; i++)
+			r9 = r9 * 1000000000LL / 2718281828LL;
+	}
+	if (r9 == 0 || s9 > 9000000000000000000LL / r9) {
+		*rc = -4;
+		return 0;
+	}
+	return s9 * r9 / 1000000000LL;
+}
+
+static int solve_log_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat base, x;
+	int rc;
+	long long lb, lx;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &base, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &x, NULL)) != 0)
+		return rc;
+	if (base.n <= 0 || x.n <= 0 || base.n == base.d)
+		return -4;
+	lb = log10_9(base.n, base.d, &rc);
+	if (rc != 0)
+		return rc;
+	lx = log10_9(x.n, x.d, &rc);
+	if (rc != 0)
+		return rc;
+	if (lb == 0)
+		return -4;
+	if (lb < 0) {
+		lx = -lx;
+		lb = -lb;
+	}
+	if ((rc = dec4_render(lx, lb, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_ln_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat x;
+	int rc;
+	long long l;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &x, NULL)) != 0)
+		return rc;
+	if (x.n <= 0)
+		return -4;
+	l = ln_9(x.n, x.d, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(l, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_log10_eval(const char *const *args, char *out, size_t outlen)
+{
+	rat x;
+	int rc;
+	long long l;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &x, NULL)) != 0)
+		return rc;
+	if (x.n <= 0)
+		return -4;
+	l = log10_9(x.n, x.d, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(l, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_compound_interest(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat P, r, n, t;
+	int rc;
+	long long lb, x9, e9, num;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &P, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &n, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &t, NULL)) != 0)
+		return rc;
+	if (P.n <= 0 || r.n < 0 || n.n <= 0 || t.n <= 0)
+		return -4;
+	if (n.d != 1 || t.d != 1 || r.d != 1)
+		return -4;
+	lb = ln_9(100 * n.n + r.n, 100 * n.n, &rc);
+	if (rc != 0)
+		return rc;
+	x9 = n.n * t.n * lb;
+	e9 = exp_9(x9, &rc);
+	if (rc != 0)
+		return rc;
+	if (P.n > 9000000000000000LL / e9)
+		return -4;
+	num = P.n * e9 / P.d;
+	if ((rc = dec4_render(num, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_continuous_growth(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat P, r, t;
+	int rc;
+	long long x9, e9, num;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &P, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &t, NULL)) != 0)
+		return rc;
+	if (P.n <= 0 || r.n < 0 || t.n <= 0)
+		return -4;
+	if (r.d != 1 || t.d != 1)
+		return -4;
+	x9 = r.n * t.n * 10000000LL;
+	e9 = exp_9(x9, &rc);
+	if (rc != 0)
+		return rc;
+	if (P.n > 9000000000000000LL / e9)
+		return -4;
+	num = P.n * e9 / P.d;
+	if ((rc = dec4_render(num, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_half_life(const char *const *args, char *out, size_t outlen)
+{
+	rat init, hl, t;
+	int rc;
+	long long x9, e9, num;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &init, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &hl, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &t, NULL)) != 0)
+		return rc;
+	if (init.n <= 0 || hl.n <= 0 || t.n < 0)
+		return -4;
+	if (hl.d != 1 || t.d != 1)
+		return -4;
+	x9 = -(t.n * 693147181LL) / hl.n;
+	e9 = exp_9(x9, &rc);
+	if (rc != 0)
+		return rc;
+	if (e9 <= 0)
+		return -4;
+	num = init.n * e9 / init.d;
+	if ((rc = dec4_render(num, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_doubling_time(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat r;
+	int rc;
+	long long l;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &r, NULL)) != 0)
+		return rc;
+	if (r.n <= 0 || r.d != 1)
+		return -4;
+	l = ln_9(100 + r.n, 100, &rc);
+	if (rc != 0)
+		return rc;
+	if (l <= 0)
+		return -4;
+	if ((rc = dec4_render(693147181LL, l, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -1162,6 +1464,41 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "arc_length") == 0) {
 		if (nargs == 2)
 			rc = solve_arc_length(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "log_eval") == 0) {
+		if (nargs == 2)
+			rc = solve_log_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ln_eval") == 0) {
+		if (nargs == 1)
+			rc = solve_ln_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "log10_eval") == 0) {
+		if (nargs == 1)
+			rc = solve_log10_eval(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "compound_interest") == 0) {
+		if (nargs == 4)
+			rc = solve_compound_interest(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "continuous_growth") == 0) {
+		if (nargs == 3)
+			rc = solve_continuous_growth(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "half_life") == 0) {
+		if (nargs == 3)
+			rc = solve_half_life(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "doubling_time") == 0) {
+		if (nargs == 1)
+			rc = solve_doubling_time(args, out, outlen);
 		else
 			rc = -2;
 	} else {

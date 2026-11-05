@@ -21,12 +21,17 @@ OBJS = main.o pipeline.o bpe.o fixed.o infer.o solvers.o
 EXE = stemhelp
 DISTDIR = .
 
-all: $(EXE).tns weights.bin.tns
+all: tokenizer $(EXE).tns weights.bin.tns
 
 # The tokenizer is compiled into the app, so it must be the one the model was
 # trained with. A stale bpe.h compiles fine and produces garbage calls, which
-# is indistinguishable from a broken model. Regenerate it every build.
-$(RUNTIME)/bpe.h: $(DATA)/tokenizer.json
+# is indistinguishable from a broken model.
+#
+# This is phony on purpose. A file-timestamp rule does not work here: git
+# checkout gives bpe.h a fresh mtime, so it looks newer than tokenizer.json and
+# the rule never fires. The exporter is a no-op when the content already
+# matches, so running it every build costs nothing and cannot go stale.
+tokenizer:
 	uv run --with sympy python ../export_tokenizer.py \
 		--tokenizer $(DATA)/tokenizer.json --header $(RUNTIME)/bpe.h
 
@@ -34,10 +39,10 @@ check-tokenizer:
 	uv run --with sympy python ../check_tokenizer_sync.py \
 		$(DATA)/tokenizer.json $(RUNTIME)/bpe.h
 
-main.o: main.c $(RUNTIME)/bpe.h
+main.o: main.c tokenizer
 	$(GCC) $(GCCFLAGS) -c $< -o $@
 
-%.o: $(RUNTIME)/%.c $(RUNTIME)/bpe.h
+%.o: $(RUNTIME)/%.c tokenizer
 	$(GCC) $(GCCFLAGS) -c $< -o $@
 
 $(EXE).elf: $(OBJS)
@@ -58,4 +63,4 @@ clean:
 	rm -f *.o $(DISTDIR)/$(EXE).tns $(DISTDIR)/$(EXE).elf $(DISTDIR)/$(EXE).zehn
 	rm -f weights.bin.tns
 
-.PHONY: all clean check-tokenizer
+.PHONY: all clean check-tokenizer tokenizer

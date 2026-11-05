@@ -64,6 +64,12 @@ def main():
     if e < b:
         raise ValueError("bpe.h data markers out of order")
     content = content[:b] + "/* BPE_DATA_BEGIN */\n" + block + "\n" + content[e:]
+    with open(path) as f:
+        unchanged = f.read() == content
+    if unchanged:
+        print("bpe.h already matches %s (sha %s); not rewritten"
+              % (os.path.basename(args.tokenizer), digest))
+        return
     with open(path, "w") as f:
         f.write(content)
     print("wrote %d data bytes (%d merges, %d specials, FIRST_MERGE=%d, sha %s) "

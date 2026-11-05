@@ -79,11 +79,13 @@ int main(void)
 			 * trained with, and the call text is the only way to see that
 			 * from the calculator.
 			 */
-			char detail[320];
+			char detail[384];
 
 			snprintf(detail, sizeof detail,
 			         "I could not work that one out.\n\n"
-			         "It produced:\n%s", call);
+			         "It produced:\n%s\n\n"
+			         "saturations: %lu",
+			         call, (unsigned long)fixed_sat_count);
 			show_msgbox("Sorry", detail);
 		}
 	}

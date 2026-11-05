@@ -21,3 +21,9 @@ weights2.bin
 data_v2/
 model_v2.pt
 model3.pt
+device/*.o
+device/*.elf
+device/*.tns
+device/*.zehn
+device/weights.bin.tns
+runtime/test_guard

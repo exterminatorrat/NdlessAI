@@ -36,11 +36,18 @@ phase() {
     fi
 }
 
-# Count of build artefacts written so far. The count only rises as compilation
-# proceeds, and unlike mtime formatting it behaves identically under BSD and
-# GNU tools, so the delta between ticks is honest evidence of progress.
+# Count of build artefacts written so far, across every component's build tree.
+# Each stage builds in its own directory (build for binutils, build-gcc for
+# GCC), so counting one directory would freeze the line at the wrong number for
+# hours. The delta between ticks is the honest progress signal.
 objects() {
-    find "$TC/build" -type f 2>/dev/null | wc -l | tr -d ' '
+    total=0
+    for d in "$TC"/build "$TC"/build-*; do
+        [ -d "$d" ] || continue
+        n=$(find "$d" -type f 2>/dev/null | wc -l | tr -d ' ')
+        total=$((total + ${n:-0}))
+    done
+    echo "$total"
 }
 
 running() {

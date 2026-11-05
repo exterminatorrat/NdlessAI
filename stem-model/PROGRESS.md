@@ -74,8 +74,8 @@ section done without the gate passing.
 | F3 percent_error | done | | 200/200 exact |
 | F4 scientific_notation | done | | 200/200 exact |
 | F5 average | done | | 200/200 exact |
-| G1 retrain | pending | | after all batches |
-| G2 hardware test | pending | | one question per batch |
+| G1 retrain | in-progress | | 1500/6000 steps; held-out 64% exact, 18% wrong relation |
+| G2 hardware test | pending | | blocked on G1 meeting the gate |
 
 Status values: `pending`, `in-progress`, `blocked`, `done`.
 

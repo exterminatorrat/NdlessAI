@@ -17,15 +17,30 @@ BPE merges for text.
 
 ## Where it stands
 
-11 relations, 5.25 MB of weights, 96.7% correct on held-out phrasing, verified
-on a CX II running OS 6.4.0.74.
+63 relations across six subjects, all verified byte-identical between the
+Python reference and the C solvers (12,735 generated assertions). The model
+has not yet been retrained on the expanded set; see `PROGRESS.md` for the
+per-relation state and `TIER1_PLAN.md` for the design.
 
 | Subject | Relations |
 |---|---|
 | Calculus | derivative of a cubic at a point; definite integral of a cubic |
 | Precalc | quadratic roots; 2x2 linear system; `b^x = k` |
-| Physics | `v = v0 + at`; projectile range; Ohm's law |
-| Chemistry | moles from mass; dilution; ideal gas pressure |
+| Trig | sin, cos, tan; Pythagoras; law of sines; law of cosines; arc length |
+| Logs | log base b; ln; log10; compound interest; continuous growth; half-life; doubling time |
+| Algebra | arithmetic and geometric sequences; absolute value; linear inequality; 2x2 system; completing the square; factoring |
+| Physics | kinetic and potential energy; work; power; momentum; Newton's second law; centripetal acceleration; wave speed; specific heat; Ohm's law (V and P); free fall; kinematics; projectile range |
+| Chemistry | molarity; pH; pOH; pH from pOH; percent yield; Boyle; Charles; combined gas; density; stoichiometry; moles; dilution; ideal gas |
+| Units | km/m; m/cm; Celsius/Fahrenheit both ways; kg/lb; L/mL; percent error; scientific notation; mean |
+
+### Deferred, with reasons
+
+| Relation | Why |
+|---|---|
+| `right_triangle` | needs `atan`; no inverse-trig helper exists |
+| `sinusoid` | returns three values; needs a multi-value output format |
+| `cubic_solve` | rational-root deflation plus quadratic remainder |
+| `sig_figs` | needs an n-significant-figure formatter; `dec4_render` is fixed at four |
 
 ## Tier 1: breadth (weeks, model unchanged)
 

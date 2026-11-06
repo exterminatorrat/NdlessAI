@@ -36,7 +36,7 @@ The grounding check is deliberately conservative. If the model copies a number t
 | Target | TI-Nspire CX II, ARM926EJ-S; hardware cost measured with `int8bench` |
 | Artifacts | `weights.bin` (5.91 MB, NSM1 format) and an embedded BPE header |
 | Subjects | Precalculus, calculus, physics, and chemistry |
-| Status | Research preview; host-verified, not yet a calculator application |
+| Status | Research preview; host-verified and builds a `.tns` for the calculator |
 
 ## Supported relations
 
@@ -135,6 +135,6 @@ flowchart TB
 
 ## Ndless and licensing
 
-NdlessAI leaves the upstream Ndless loader, installers, and SDK in place; the only addition under `ndless-sdk/` is the `int8bench` sample. Installing Ndless on a calculator works exactly as it does upstream; see [docs/upstream-ndless.md](docs/upstream-ndless.md) or the [Ndless user guide](https://tiplanet.org/ndless). NdlessAI does not yet ship a `.tns` build of the solver.
+NdlessAI leaves the upstream Ndless loader, installers, and SDK in place; the only addition under `ndless-sdk/` is the `int8bench` sample. Installing Ndless on a calculator works exactly as it does upstream; see [docs/upstream-ndless.md](docs/upstream-ndless.md) or the [Ndless user guide](https://tiplanet.org/ndless). `make -C stem-model/device` builds `stemhelp.tns` and packages the weights as `weights.bin.tns`; both are build outputs and are not committed.
 
 This repository is a derivative of Ndless and retains its licensing: most work is covered by the Mozilla Public License 1.1, and components with their own `LICENSE.txt` or `LICENSE.html` keep those terms. Read [`Mozilla-Public-License-v1.1.html`](Mozilla-Public-License-v1.1.html) before redistributing any part of the repository. Upstream links: [website](http://ndless.me), [source](https://github.com/ndless-nspire/Ndless), [wiki](https://hackspire.org), [developer guide](https://ndlessly.wordpress.com/ndless-for-developers/).

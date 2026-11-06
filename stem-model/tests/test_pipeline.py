@@ -68,17 +68,30 @@ def test_poly_renders_naturally():
 def test_all_relations_roundtrip_and_answers_computable():
     import random
 
-    implicit = {"quad_solve", "deriv_poly3", "integr_poly3"}
+    from surface import _COEF, _POLY_COEFFS, _POLY_SLICE, _SYSTEMS
+
+    def implicit_indices(name):
+        extra = {0} if name in _COEF else set()
+        if name in _POLY_COEFFS:
+            return set(range(_POLY_COEFFS[name])) | extra
+        if name in _POLY_SLICE:
+            lo, hi = _POLY_SLICE[name]
+            return set(range(lo, hi)) | extra
+        if name in _SYSTEMS:
+            return set(range(6)) | extra
+        return extra
+
     for seed in range(6):
         rng = random.Random(seed)
         for name, rel in RELATIONS.items():
+            implicit = implicit_indices(name)
             for _ in range(20):
                 params, question = rel.gen(rng)
                 assert isinstance(question, str) and question
                 call = render_call(name, params)
                 assert run_call(call) == rel.solve(*params)
-                if name not in implicit:
-                    for p in params:
+                for i, p in enumerate(params):
+                    if i not in implicit:
                         assert str(p) in question, f"{name}: arg {p} missing from question"
 
 
@@ -120,18 +133,32 @@ def test_held_out_phrasing_is_never_trained_on():
 def test_surface_render_keeps_arguments(monkeypatch):
     import random
 
-    from surface import TEMPLATES as SURFACE, count, render
-    from relations import poly
+    from surface import (TEMPLATES as SURFACE, _COEF, _POLY_COEFFS,
+                         _POLY_SLICE, _SYSTEMS, count, render)
+    from relations import amp, lin2, poly
 
-    polyc = {"quad_solve": 3, "deriv_poly3": 4, "integr_poly3": 4}
     rng = random.Random(11)
     for name in RELATIONS:
         for index in range(count(name)):
             params, _ = RELATIONS[name].gen(rng)
             text = render(name, params, index)
-            if name in polyc:
-                assert poly(list(params[:polyc[name]])) in text
-                rest = params[polyc[name]:]
+            if name in _COEF:
+                lo, hi = _POLY_SLICE[name]
+                assert amp(params[0]) in text
+                assert poly(list(params[lo:hi])) in text
+                rest = params[hi:]
+            elif name in _POLY_COEFFS:
+                n = _POLY_COEFFS[name]
+                assert poly(list(params[:n])) in text
+                rest = params[n:]
+            elif name in _POLY_SLICE:
+                lo, hi = _POLY_SLICE[name]
+                assert poly(list(params[lo:hi])) in text
+                rest = list(params[:lo]) + list(params[hi:])
+            elif name in _SYSTEMS:
+                assert lin2(*params[:3]) in text
+                assert lin2(*params[3:6]) in text
+                rest = []
             else:
                 rest = params
             for value in rest:
@@ -234,8 +261,10 @@ def test_pack_never_straddles_rows():
 
 def test_pack_rejects_empty_input():
     from train import pack
+    from tokenizer import FIRST_MERGE
 
-    tok = train_tokenizer(["Solve 2x = 4 <sep> CALL quad_solve 0 2 -4"], 300)
+    tok = train_tokenizer(["Solve 2x = 4 <sep> CALL quad_solve 0 2 -4"],
+                          FIRST_MERGE + 10)
     with pytest.raises(SystemExit):
         pack([], tok, 64)
 

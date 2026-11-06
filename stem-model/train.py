@@ -268,6 +268,8 @@ def main():
             print(f"step {step + 1:5d} loss {loss.item():.4f} val {vloss.item():.4f} "
                   f"lr {lr_at(step):.2e} {time.time() - start:.0f}s", flush=True)
             model.train()
+            torch.save({"model": {k: v.cpu() for k, v in model.state_dict().items()},
+                        "config": vars(cfg)}, args.out)
         if args.max_minutes and time.time() - start > args.max_minutes * 60:
             print(f"stopping at {step + 1} steps (time limit)")
             break

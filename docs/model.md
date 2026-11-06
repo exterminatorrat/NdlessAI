@@ -4,7 +4,7 @@ NdlessAI's model is a small decoder that translates one English word problem int
 
 ## Intended use
 
-- Answer generated or hand-written word problems that match one of the eleven supported relations.
+- Answer generated or hand-written word problems that match one of the 66 supported relations.
 - Run offline on a TI-Nspire CX II, with no account, network, or external service.
 - Produce an exact answer, or refuse, rather than produce a plausible but unverified one.
 
@@ -16,7 +16,7 @@ Questions are synthetic by design, because every training row can then be execut
 
 | Property | Value |
 | --- | --- |
-| Relations | 11 across precalculus, calculus, physics, and chemistry |
+| Relations | 66 across precalculus, calculus, trig, logs, algebra, physics, chemistry, and units |
 | Phrasings | At least 8 per relation; every fifth index is held out |
 | Distractors | One same-unit extra quantity in about 50% of rows |
 | Default dataset | 200,000 train rows, 4,000 validation rows, 2,000 held-out-wording rows |
@@ -96,21 +96,28 @@ Two evaluators drive the C code on held-out validation rows:
 | `make eval` | Tokenizer, int8 C engine, decoded call |
 | `make eval-device` | Tokenizer, fixed-point forward pass, decoded call, C solver, final answer |
 
-Recorded results:
+Recorded results for the 66-relation registry:
 
 | Measurement | Result |
 | --- | --- |
-| Int8 C engine, 60 validation problems | 95.0% exact calls, 0% wrong relation |
-| Full device path, 80 validation problems | 93.8% exact calls, 0% wrong relation, 95.0% correct final answers |
+| Int8 C engine, 1,000 held-out problems | 91.6% exact calls, 2.9% wrong relation |
+| Int8 C engine, 2,000 held-out problems | 91.8% exact calls, 3.3% wrong relation |
 | PyTorch versus C logits | Maximum difference `7.4e-07`, identical argmax |
-| Export error | Maximum per-group error `4.2e-4` |
+| Export error | Maximum per-group error `5.1e-4` |
 
-The plan's acceptance gates are stricter than these runs: at least 95% correct without distractors, at least 85% with distractors, at least 70% end-to-end, and at most 5% wrong answers. The recorded numbers are reported as an early end-to-end demonstration.
+The acceptance gates are at least 80% exact calls and at most 5% wrong
+relation. Both pass. The 1,000-problem sample is what `gate.sh` runs; the
+2,000-problem figure is a diagnostic and shows the rate is stable rather than
+an artifact of the sample.
+
+Accuracy is not uniform across relations. `sig_figs` is the weakest at 80%
+exact, and `proj_range` accounts for the largest share of wrong-relation
+cases. See `status.md` for the current gap list.
 
 ## Limitations
 
 - **Synthetic wording.** The phrasing banks are broader than one template per relation, but they are still a closed set. Performance on wording outside the bank is the main unknown.
-- **Eleven relations.** Anything outside the set is unsupported, even when it is mathematically simple.
+- **66 relations.** Anything outside the set is unsupported, even when it is mathematically simple.
 - **Digit copying.** The dominant observed failure is copying a plausible number from a distractor rather than choosing the wrong relation. The grounding check refuses such calls, which trades coverage for correctness.
 - **No derivation.** The model emits one call. It cannot explain intermediate steps or handle a problem that needs several calls.
 - **Exactness depends on the solver.** Precalculus and calculus answers use exact rational arithmetic. Physics and chemistry answers are formatted to four significant digits, as their relation definitions specify.

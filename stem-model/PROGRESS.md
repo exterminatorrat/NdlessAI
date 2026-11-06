@@ -1,0 +1,90 @@
+# Progress ledger
+
+The single source of truth for where Tier 1 stands. Any agent resuming this
+work reads this file first, then runs `sh stem-model/gate.sh` to confirm the
+recorded state is real.
+
+Update this file in the same commit that completes a section. Never mark a
+section done without the gate passing.
+
+| Section | Status | Commit | Notes |
+|---|---|---|---|
+| S0 infrastructure | done | | ledger, gate script, batch template |
+| A1 sin_eval | done | | 200/200 C cases exact; cos/tan split out as A1b/A1c |
+| A2 cos_eval | done | | 200/200 exact |
+| A3 tan_eval | done | | 200/200 exact; 90 excluded (undefined) |
+| A4 pythagoras | done | | 200/200 exact; uses sqrt12 |
+| A5 law_sines | done | | 200/200 exact |
+| A6 law_cosines | done | | 200/200 exact; sqrt at 1e6 scale |
+| A7 arc_length | done | | 200/200 exact |
+| A8 right_triangle | done | | 200/200 exact; atan_deg9 added |
+| A9 sinusoid | done | | 200/200 exact |
+| B0 log/exp numerics | done | | log_core_9, log10_9, ln_9, exp_9; integer only |
+| B1 log_eval | done | | 200/200 exact |
+| B2 ln_eval | done | | 200/200 exact; replaces log_expand (redundant) |
+| B3 log10_eval | done | | 200/200 exact; replaces change_base (redundant) |
+| B4 compound_interest | done | | 200/200 exact |
+| B5 continuous_growth | done | | 200/200 exact |
+| B6 half_life | done | | 200/200 exact |
+| B7 doubling_time | done | | 200/200 exact |
+| C1 cubic_solve | done | | 200/200 exact; rational-root search plus deflation |
+| C2 factor_quadratic | done | | 200/200 exact |
+| C3 complete_square | done | | 200/200 exact |
+| C4 arith_seq | done | | 200/200 exact |
+| C5 geom_seq | done | | 200/200 exact |
+| C6 system2 | removed | | duplicate of linear2; deleted from registry, templates, C solver |
+| C7 abs_value_eq | done | | 200/200 exact |
+| C8 linear_ineq | done | | 200/200 exact |
+| D1 kinetic_energy | done | | 200/200 exact |
+| D2 potential_energy | done | | 200/200 exact; uses dec_exact |
+| D3 work | done | | 200/200 exact; cos via sin9 shift |
+| D4 power | done | | 200/200 exact |
+| D5 momentum | done | | 200/200 exact |
+| D6 newton2 | done | | 200/200 exact |
+| D7 circular_accel | done | | 200/200 exact |
+| D8 wave_speed | done | | 200/200 exact |
+| D9 specific_heat | done | | 200/200 exact; uses dec_exact |
+| D10 ohm_v | done | | 200/200 exact |
+| D11 ohm_power | done | | 200/200 exact |
+| D12 free_fall | done | | 200/200 exact; sqrt12 |
+| E1 molarity | done | | 200/200 exact |
+| E2 ph | done | | 200/200 exact; log10_9 |
+| E3 poh | done | | 200/200 exact; shares solve_ph |
+| E4 ph_from_poh | done | | 200/200 exact |
+| E5 percent_yield | done | | 200/200 exact |
+| E6 boyles | done | | 200/200 exact |
+| E7 charles | done | | 200/200 exact |
+| E8 combined_gas | done | | 200/200 exact |
+| E9 density | done | | 200/200 exact |
+| E10 stoichiometry | done | | 200/200 exact |
+| F1 km_to_m | done | | 200/200 exact; unit_convert split, guard needs numeric args |
+| F1b m_to_cm | done | | 200/200 exact |
+| F1c celsius_to_fahrenheit | done | | 200/200 exact |
+| F1d fahrenheit_to_celsius | done | | 200/200 exact |
+| F1e kg_to_lb | done | | 200/200 exact |
+| F1f liters_to_ml | done | | 200/200 exact |
+| F2 sig_figs | done | | 200/200 exact; sig_render rounds half to even, plain decimal |
+| F3 percent_error | done | | 200/200 exact |
+| F4 scientific_notation | done | | 200/200 exact |
+| F5 average | done | | 200/200 exact |
+| G1 retrain | done | | 66 relations; held-out 91.6% exact, 2.9% wrong relation (1000) |
+| G2 hardware test | pending | | needs Ndless toolchain; not runnable in this sandbox |
+
+Status values: `pending`, `in-progress`, `blocked`, `done`.
+
+## Resuming after context loss
+
+1. Read this file.
+2. Run `sh stem-model/gate.sh`. It prints PASS or FAIL per gate.
+3. If a section is marked `done` but its gate fails, the record is wrong:
+   set it back to `pending` and fix it before continuing.
+4. Take the first `pending` section and follow its entry in
+   `TIER1_SECTIONS.md`.
+
+## Why a ledger
+
+This project lost time three times to artifacts that were assumed current but
+were not: a checkpoint paired with the wrong tokenizer, a `bpe.h` that `make`
+never rebuilt, and a `.tns` that was never replaced on the calculator. A
+written record plus a gate command makes "assumed done" impossible to confuse
+with "verified done".

@@ -68,7 +68,7 @@ flowchart TB
 | `runtime/infer.c` | Loads and validates `NSM1`, and provides a float reference forward pass used for parity checks. |
 | `runtime/fixed.c` | The device forward pass: int8 dot products, Q12 activations, table-based exp and reciprocal, integer softmax, and Q14 RoPE. |
 | `runtime/bpe.c` | Byte-level BPE encode and decode with the embedded tables. |
-| `runtime/solvers.c` | Exact rational solvers for all eleven relations, plus decimal formatting for non-exact subjects. |
+| `runtime/solvers.c` | Exact rational solvers for all 66 relations, plus decimal formatting for non-exact subjects. |
 | `runtime/main_device.c` | The end-to-end device path: prompt suffix, BPE encode, greedy decode, grounding check, solver dispatch, and answer formatting. |
 | `runtime/main_host.c` | Host-only generation entry point used by the Python evaluators and parity tests. |
 | `ndless-sdk/samples/int8bench/` | Measures int8 dot-product cost and the real clock on the calculator. It is not part of the solver. |
@@ -184,4 +184,4 @@ These are early measurements, not acceptance-gate results. The plan's gates sepa
 - Static device buffers for `qwork_t`; `qwork_alloc` is a host convenience, and a device port must supply fixed-size storage.
 - A full-model benchmark on physical hardware. `int8bench` measures the kernel cost, and the runtime has been cross-compiled, but the complete pipeline has not been timed on a calculator.
 - Power, thermal, and long-session behavior.
-- Relations beyond the eleven listed in the README.
+- Relations beyond the 66 listed in the README.

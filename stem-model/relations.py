@@ -114,6 +114,47 @@ def dec_exact(value):
     return ("-" if neg else "") + s
 
 
+def sig_render(value, n):
+    """Round an exact decimal to n significant figures, plain decimal form.
+
+    Zeros that carry magnitude are kept, so 12345 to 3 figures is 12300, while
+    zeros after the decimal point are dropped, so 3.14159 to 4 is 3.142.
+    Rounding is half to even on the exact value, matching the C renderer.
+    """
+
+    r = _exact(value)
+    if r == 0:
+        return "0"
+    neg = r < 0
+    r = abs(r)
+    num, den = r.p, r.q
+    if num >= den:
+        e = len(str(num // den)) - 1
+    else:
+        e = 0
+        t = num
+        while t < den:
+            t *= 10
+            e -= 1
+    p = e - n + 1
+    if p >= 0:
+        a, b = num, den * 10 ** p
+    else:
+        a, b = num * 10 ** (-p), den
+    q, rem = divmod(a, b)
+    if 2 * rem > b or (2 * rem == b and q % 2):
+        q += 1
+    if p >= 0:
+        s = str(q * 10 ** p)
+    else:
+        k = -p
+        digits = str(q)
+        if len(digits) <= k:
+            digits = "0" * (k - len(digits) + 1) + digits
+        s = (digits[:-k] + "." + digits[-k:]).rstrip("0").rstrip(".")
+    return ("-" if neg else "") + s
+
+
 def poly(coeffs, var="x"):
     terms = []
     deg = len(coeffs) - 1
@@ -439,7 +480,7 @@ class ArcLength:
 class LogEval:
     @staticmethod
     def gen(rng):
-        base = rng.choice([2, 3, 4, 5, 10])
+        base = rng.choice([2, 3, 4, 5])
         x = rng.choice([2, 3, 4, 5, 6, 8, 9, 10, 12, 16, 20, 25, 27,
                         32, 36, 49, 64, 81, 100, 125, 128, 243, 1000])
         return [base, x], f"What is log base {base} of {x}?"
@@ -1088,6 +1129,28 @@ class Average:
     @staticmethod
     def solve(a, b, c, d):
         return dec_exact(sp.Rational(a + b + c + d, 4))
+
+
+@relation("sig_figs", "units", ["value", "n"], exact=True)
+class SigFigs:
+    @staticmethod
+    def gen(rng):
+        while True:
+            digits = rng.randint(3, 5)
+            v = rng.randint(10 ** (digits - 1), 10 ** digits - 1)
+            if v % 10 == 0:
+                continue
+            k = rng.choice([0, 0, 1, 2, 3])
+            n = rng.randint(1, digits - 1)
+            value = v if k == 0 else v / 10 ** k
+            text = str(value)
+            if "e" in text or "E" in text:
+                continue
+            return [value, n], (f"Round {text} to {n} significant figures.")
+
+    @staticmethod
+    def solve(value, n):
+        return sig_render(value, n)
 
 
 @relation("sinusoid", "trig", ["A", "B", "C"], exact=True)

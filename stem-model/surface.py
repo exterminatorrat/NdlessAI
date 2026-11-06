@@ -89,6 +89,9 @@ TEMPLATES = {
         "Sides {a} and {b} form an angle of {C} degrees. Find the side across from that angle.",
         "Apply the law of cosines to a triangle with sides {a} and {b} and included angle {C} degrees.",
         "A triangle has two sides of {a} and {b} meeting at {C} degrees. What is the third side?",
+        "Two sides {a} and {b} of a triangle enclose {C} degrees. What is the length of the third side?",
+        "A triangle has sides {a} and {b} with {C} degrees between them. Find the side opposite that angle.",
+        "Use the law of cosines to find the third side of a triangle with sides {a}, {b} and included angle {C} degrees.",
     ],
     "arc_length": [
         "A circle of radius {r} has an arc subtending {theta} degrees. Find the arc length.",
@@ -272,6 +275,9 @@ TEMPLATES = {
         "Break {p} into linear factors.",
         "Factorise {p}.",
         "Give the factored form of the quadratic {p}.",
+        "What is the factorization of {p}?",
+        "Write down the factorization of {p}.",
+        "Determine the factorization of {p}.",
     ],
     "kinetic_energy": [
         "A {m} kg object moves at {v} m/s. Find its kinetic energy.",
@@ -332,6 +338,9 @@ TEMPLATES = {
         "Find p for m = {m} kg and v = {v} m/s.",
         "A {m} kg cart rolls at {v} m/s. What is its momentum?",
         "Determine the momentum of an object of mass {m} kg with velocity {v} m/s.",
+        "What momentum does a {m} kg object have at {v} m/s?",
+        "A {m} kg object travelling at {v} m/s carries how much momentum?",
+        "Compute the momentum p for {m} kg at {v} m/s.",
     ],
     "newton2": [
         "A net force acts on a {m} kg mass, giving it an acceleration of {a} m/s^2. Find the force.",
@@ -435,6 +444,9 @@ TEMPLATES = {
         "Find M for n = {n} mol and V = {V} L.",
         "A {V} L solution contains {n} mol of solute. What is its molarity?",
         "Determine the concentration in mol/L for {n} mol in {V} L.",
+        "What is the molarity of a solution with {n} mol in {V} L?",
+        "A solution of {n} mol in {V} L has what molarity?",
+        "Find the molar concentration when {n} mol is dissolved in {V} L.",
     ],
     "ph": [
         "A solution has a hydrogen ion concentration of {H} mol/L. Find its pH.",
@@ -583,6 +595,9 @@ TEMPLATES = {
         "Rewrite {c} degrees Celsius as Fahrenheit.",
         "Give {c} C in Fahrenheit.",
         "Determine the Fahrenheit value for {c} degrees Celsius.",
+        "What Fahrenheit temperature corresponds to {c} degrees Celsius?",
+        "The temperature {c} C equals how many degrees Fahrenheit?",
+        "Find the Fahrenheit reading for {c} degrees Celsius.",
     ],
     "fahrenheit_to_celsius": [
         "Convert {f} degrees Fahrenheit to Celsius.",
@@ -656,6 +671,20 @@ TEMPLATES = {
         "Give the average of {a}, {b}, {c} and {d}.",
         "Compute the average of {a}, {b}, {c} and {d}.",
         "Find the mean of the set {a}, {b}, {c}, {d}.",
+    ],
+    "sig_figs": [
+        "Round {value} to {n} significant {figs}.",
+        "Give {value} correct to {n} significant {figs}.",
+        "Express {value} to {n} significant {figs}.",
+        "Write {value} rounded to {n} significant {figs}.",
+        "Round the number {value} to {n} significant {figs}.",
+        "Approximate {value} to {n} significant {figs}.",
+        "What is {value} to {n} significant {figs}?",
+        "State {value} to {n} significant {figs}.",
+        "Round {value} to {n} sig figs.",
+        "Round off {value} to {n} significant {figs}.",
+        "Give the value of {value} to {n} significant {figs}.",
+        "Express {value} with {n} significant {figs}.",
     ],
     "sinusoid": [
         "For y = {a}sin({p}), find the amplitude, period and phase shift in degrees.",
@@ -792,6 +821,9 @@ TEMPLATES = {
         "Compute the horizontal distance covered by a projectile with initial speed {v0} m/s at {theta} degrees, g = {g}.",
         "An arrow is shot at {v0} m/s, {theta} degrees to the ground, g = {g}. What distance does it reach?",
         "Find the range given launch velocity {v0} m/s, elevation {theta} degrees, and gravity {g} m/s^2.",
+        "A projectile launched at {v0} m/s and {theta} degrees has what horizontal range, with g = {g}?",
+        "With g = {g}, how far horizontally does a projectile launched at {v0} m/s and {theta} degrees travel?",
+        "Compute the horizontal range of a projectile with launch speed {v0} m/s, angle {theta} degrees, and g = {g}.",
     ],
     "ohm_i": [
         "A {R} ohm resistor has {V} V across it. What current flows?",
@@ -913,6 +945,7 @@ _ARG_NAMES = {
     "moles": ("mass", "mm"),
     "dilution": ("c1", "v1", "v2"),
     "gas_p": ("n", "T", "V"),
+    "sig_figs": ("value", "n"),
 }
 
 _POLY_COEFFS = {
@@ -965,6 +998,8 @@ def render(name, params, index):
         fields["e2"] = lin2(*params[3:6])
     if name in _COEF:
         fields["a"] = amp(params[0])
+    if name == "sig_figs":
+        fields["figs"] = "figure" if params[1] == 1 else "figures"
     bank = TEMPLATES[name]
     return bank[index % len(bank)].format(**fields)
 

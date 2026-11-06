@@ -66,6 +66,7 @@ TEMPLATES = {
     "moles": "The same shelf holds a second sample, {n} g of a different compound.",
     "dilution": "The cupboard also holds a volumetric flask of {n} mL.",
     "gas_p": "A second cylinder in the same rack is rated {n} L.",
+    "sig_figs": "A second value in the same set is {n}.",
 }
 
 POOLS = {

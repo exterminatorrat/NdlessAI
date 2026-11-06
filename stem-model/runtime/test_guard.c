@@ -69,6 +69,18 @@ int main(void)
 	expect("CALL ohm_i 12 5", "A 12 V battery is across a 4 ohm resistor.", 0,
 	       "wrong resistance");
 
+	/* sig_figs is the first relation whose argument is a decimal, so the
+	 * guard has to match the whole token rather than a digit run. */
+	expect("CALL sig_figs 0.004567 2",
+	       "Round 0.004567 to 2 significant figures.", 1,
+	       "decimal argument present");
+	expect("CALL sig_figs 0.004567 3",
+	       "Round 0.004567 to 2 significant figures.", 0,
+	       "wrong figure count");
+	expect("CALL sig_figs 0.0046 2",
+	       "Round 0.004567 to 2 significant figures.", 0,
+	       "rounded value is not the given value");
+
 	if (failures) {
 		printf("%d guard case(s) failed\n", failures);
 		return 1;

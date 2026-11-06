@@ -61,10 +61,10 @@ if [ "$QUICK" = "quick" ]; then
     skip "wrong relation (quick mode)"
 elif [ -f weights.bin ] && [ -f data/held_out.jsonl ]; then
     out=$(uv run --with numpy --with sympy python evaluate.py \
-          --data data/held_out.jsonl --limit 100 2>/dev/null | tail -4)
+          --data data/held_out.jsonl --limit 1000 2>/dev/null | tail -4)
     echo "$out" | sed 's/^/      /'
-    exact=$(echo "$out" | awk '/exact call/{print $3}' | tr -d '%')
-    wrong=$(echo "$out" | awk '/wrong relation/{print $3}' | tr -d '%')
+    exact=$(echo "$out" | awk '/exact call/{print $4}' | tr -d '%')
+    wrong=$(echo "$out" | awk '/wrong relation/{print $4}' | tr -d '%')
     if [ -n "$exact" ] && [ "${exact%.*}" -ge 80 ]; then
         pass "held-out phrasing >= 80%"
     else

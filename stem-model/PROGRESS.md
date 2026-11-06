@@ -63,11 +63,11 @@ section done without the gate passing.
 | F1d fahrenheit_to_celsius | done | | 200/200 exact |
 | F1e kg_to_lb | done | | 200/200 exact |
 | F1f liters_to_ml | done | | 200/200 exact |
-| F2 sig_figs | blocked | | needs n-sig-fig formatter; deferred |
+| F2 sig_figs | done | | 200/200 exact; sig_render rounds half to even, plain decimal |
 | F3 percent_error | done | | 200/200 exact |
 | F4 scientific_notation | done | | 200/200 exact |
 | F5 average | done | | 200/200 exact |
-| G1 retrain | done | | 6000 steps; held-out 93% exact, 2% wrong relation (100); 94%/2.5% (400) |
+| G1 retrain | done | | 66 relations; held-out 91.6% exact, 2.9% wrong relation (1000) |
 | G2 hardware test | pending | | needs Ndless toolchain; not runnable in this sandbox |
 
 Status values: `pending`, `in-progress`, `blocked`, `done`.

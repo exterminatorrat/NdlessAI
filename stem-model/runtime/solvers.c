@@ -326,7 +326,7 @@ int solvers_dec4(long long num, long long den, char *out, size_t outlen)
 	if (rc != 0)
 		out_clear(out, outlen);
 	return rc;
-}
+	}
 
 static void fmt_rat(const rat *r, char *out, size_t outlen)
 {
@@ -2395,6 +2395,130 @@ static int solve_right_triangle(const char *const *args, char *out,
 	return 0;
 }
 
+/*
+ * n significant digits of the exact rational num/den (den > 0), round half
+ * to even on the exact value, written as a plain decimal. Zeros that carry
+ * magnitude are kept (12345 to 3 is 12300); zeros after the decimal point
+ * are dropped (3.14159 to 4 is 3.142).
+ */
+static int sig_render(long long num, long long den, int sig, char *out,
+                      size_t outlen)
+{
+	char digits[24], buf[48], *w;
+	long long un, a, b, q, rem, t;
+	size_t g, nd;
+	int neg = 0, e, p, k, i;
+
+	if (den <= 0 || sig < 1 || sig > 9)
+		return -4;
+	if (num == 0) {
+		out_set(out, outlen, "0");
+		return 0;
+	}
+	if (num < 0) {
+		neg = 1;
+		un = -num;
+	} else {
+		un = num;
+	}
+	g = (size_t)gcd_ll(un, den);
+	un /= (long long)g;
+	den /= (long long)g;
+
+	if (un >= den) {
+		q = un / den;
+		e = 0;
+		while (q >= 10) {
+			q /= 10;
+			e++;
+		}
+	} else {
+		t = un;
+		e = 0;
+		while (t < den) {
+			if (t > WIDE_LIMIT / 10)
+				return -4;
+			t *= 10;
+			e--;
+		}
+	}
+	p = e - sig + 1;
+	if (p >= 0) {
+		if (p > 18 || den > WIDE_LIMIT / P10[p])
+			return -4;
+		a = un;
+		b = den * P10[p];
+	} else {
+		if (-p > 18 || un > WIDE_LIMIT / P10[-p])
+			return -4;
+		a = un * P10[-p];
+		b = den;
+	}
+	q = a / b;
+	rem = a % b;
+	if (2 * rem > b || (2 * rem == b && (q & 1)))
+		q++;
+
+	if (p >= 0) {
+		if (p > 0) {
+			if (q > WIDE_LIMIT / P10[p])
+				return -4;
+			q *= P10[p];
+		}
+		snprintf(buf, sizeof(buf), "%lld", q);
+	} else {
+		k = -p;
+		snprintf(digits, sizeof(digits), "%lld", q);
+		nd = strlen(digits);
+		w = buf;
+		if (nd <= (size_t)k) {
+			*w++ = '0';
+			*w++ = '.';
+			for (i = 0; i < k - (int)nd; i++)
+				*w++ = '0';
+			for (i = 0; i < (int)nd; i++)
+				*w++ = digits[i];
+		} else {
+			for (i = 0; i < (int)(nd - (size_t)k); i++)
+				*w++ = digits[i];
+			*w++ = '.';
+			for (i = (int)(nd - (size_t)k); i < (int)nd; i++)
+				*w++ = digits[i];
+		}
+		*w = '\0';
+		w = buf + strlen(buf);
+		while (w > buf && w[-1] == '0')
+			*--w = '\0';
+		if (w > buf && w[-1] == '.')
+			*--w = '\0';
+	}
+	if (neg) {
+		w = digits;
+		*w++ = '-';
+		for (i = 0; buf[i] != '\0'; i++)
+			*w++ = buf[i];
+		*w = '\0';
+		out_set(out, outlen, digits);
+	} else {
+		out_set(out, outlen, buf);
+	}
+	return 0;
+}
+
+static int solve_sig_figs(const char *const *args, char *out, size_t outlen)
+{
+	rat v, n;
+	int rc;
+
+	if ((rc = parse_rat(args[0], &v, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n, NULL)) != 0)
+		return rc;
+	if (n.d != 1 || n.n < 1 || n.n > 9)
+		return -4;
+	return sig_render(v.n, v.d, (int)n.n, out, outlen);
+}
+
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -2710,6 +2834,11 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "average") == 0) {
 		if (nargs == 4)
 			rc = solve_average(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "sig_figs") == 0) {
+		if (nargs == 2)
+			rc = solve_sig_figs(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "sinusoid") == 0) {

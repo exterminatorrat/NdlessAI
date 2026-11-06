@@ -1,6 +1,6 @@
 # Tier 1 plan: breadth
 
-Everything needed to take the system from 11 relations to 65, covering
+Everything needed to take the system from 11 relations to 66, covering
 a high-school curriculum, without changing the model architecture.
 
 ## 1. What a relation costs
@@ -27,7 +27,7 @@ an expression parser exists.
 
 **One model, more tools.** The model classifies among relations. Going from 11
 to 60 is a harder classification problem but not a different one. Vocabulary
-has room: 65 relations leaves 186 BPE merges for text.
+has room: 66 relations leaves 185 BPE merges for text.
 
 **Exact where possible.** Relations that can return exact rationals do
 (`exact=True`); physical quantities use `dec()` at four significant digits.
@@ -120,11 +120,11 @@ Six batches. Each is independently shippable and independently verifiable.
 | `scientific_notation` | mantissa, exponent | decimal form |
 | `average` | a, b, c, d | mean of up to four values |
 
-**Total: 54 new relations, 65 overall.**
+**Total: 55 new relations, 66 overall.**
 
 ## 4. Training data
 
-**Volume.** 200,000 rows per full build, as now. With 65 relations that is
+**Volume.** 200,000 rows per full build, as now. With 66 relations that is
 about 3,300 rows per relation, which is enough: the current 11 relations train
 on about 18,000 each and converge in 6,000 steps. If accuracy drops, raise to
 400,000 rather than adding steps.
@@ -209,7 +209,7 @@ parent re-running a check the subagent said had passed.
 
 ## 9. Known risks
 
-**Classification gets harder.** 65 relations means more confusable pairs
+**Classification gets harder.** 66 relations means more confusable pairs
 (`kinetic_energy` vs `potential_energy`, `ph` vs `poh`). If wrong-relation
 rate exceeds 5%, the fix is more distinctive phrasings, not a bigger model.
 
@@ -217,16 +217,16 @@ rate exceeds 5%, the fix is more distinctive phrasings, not a bigger model.
 `dec()` rounding and rational formatting are the usual source of mismatch.
 Generate the C test cases from Python; never hand-write expected values.
 
-**Vocabulary pressure.** 65 relations uses 70 special ids, leaving 186 merges.
+**Vocabulary pressure.** 66 relations uses 71 special ids, leaving 185 merges.
 Fine. At 200 relations it would be 51 merges, which is too few — that is the
 point to reconsider the tokenizer.
 
-**Training time.** 200k rows at 65 relations is the same token count as now,
+**Training time.** 200k rows at 66 relations is the same token count as now,
 so training stays under an hour on a laptop GPU.
 
 ## 10. Definition of done
 
-- 65 relations, all gates green
+- 66 relations, all gates green
 - Held-out phrasing >= 80%, wrong relation <= 5%
 - One `.tns` that answers a question from every batch on hardware
 - `ROADMAP.md` updated with what was actually achieved

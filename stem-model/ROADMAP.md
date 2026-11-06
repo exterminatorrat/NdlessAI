@@ -17,10 +17,11 @@ BPE merges for text.
 
 ## Where it stands
 
-63 relations across six subjects, all verified byte-identical between the
-Python reference and the C solvers (12,735 generated assertions). The model
-has not yet been retrained on the expanded set; see `PROGRESS.md` for the
-per-relation state and `TIER1_PLAN.md` for the design.
+66 relations across six subjects, all verified byte-identical between the
+Python reference and the C solvers (13,335 generated assertions). The model is
+retrained on the expanded set and passes the held-out phrasing (91.6% exact)
+and wrong-relation (2.9%) gates over 1,000 held-out problems; see
+`PROGRESS.md` for the per-relation state and `TIER1_PLAN.md` for the design.
 
 | Subject | Relations |
 |---|---|
@@ -31,16 +32,12 @@ per-relation state and `TIER1_PLAN.md` for the design.
 | Algebra | arithmetic and geometric sequences; absolute value; linear inequality; 2x2 system; completing the square; factoring |
 | Physics | kinetic and potential energy; work; power; momentum; Newton's second law; centripetal acceleration; wave speed; specific heat; Ohm's law (V and P); free fall; kinematics; projectile range |
 | Chemistry | molarity; pH; pOH; pH from pOH; percent yield; Boyle; Charles; combined gas; density; stoichiometry; moles; dilution; ideal gas |
-| Units | km/m; m/cm; Celsius/Fahrenheit both ways; kg/lb; L/mL; percent error; scientific notation; mean |
+| Units | km/m; m/cm; Celsius/Fahrenheit both ways; kg/lb; L/mL; percent error; scientific notation; mean; significant figures |
 
-### Deferred, with reasons
-
-| Relation | Why |
-|---|---|
-| `right_triangle` | needs `atan`; no inverse-trig helper exists |
-| `sinusoid` | returns three values; needs a multi-value output format |
-| `cubic_solve` | rational-root deflation plus quadratic remainder |
-| `sig_figs` | needs an n-significant-figure formatter; `dec4_render` is fixed at four |
+Nothing from the Tier 1 catalogue is deferred. `right_triangle`, `sinusoid`,
+`cubic_solve` and `sig_figs` were each blocked on a missing helper (`atan`, a
+multi-value output, rational-root deflation, an n-significant-figure
+formatter); all four helpers now exist.
 
 ## Tier 1: breadth (weeks, model unchanged)
 

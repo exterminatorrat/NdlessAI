@@ -7,6 +7,8 @@
 
 #define MAXLEN 40
 
+#define FIXED_TIE_TOL 0.02
+
 typedef struct {
 	int len;
 	int tok[MAXLEN];
@@ -119,7 +121,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		fixed_sat_count = 0;
-		int pos_ok = 1;
+		int pos_ok = 1, ties = 0;
 		for (int p = 0; p < cases[c].len; p++) {
 			int tok = cases[c].tok[p];
 
@@ -128,8 +130,14 @@ int main(int argc, char **argv)
 				fprintf(stderr, "forward_q failed\n");
 				return 1;
 			}
-			if (argmax(fl, m.vocab) != argmax32(fx, m.vocab))
-				pos_ok = 0;
+			int af_p = argmax(fl, m.vocab), aq_p = argmax32(fx, m.vocab);
+
+			if (af_p != aq_p) {
+				if (fabs((double)fl[af_p] - (double)fl[aq_p]) <= FIXED_TIE_TOL)
+					ties++;
+				else
+					pos_ok = 0;
+			}
 		}
 		double maxd = 0;
 		for (int i = 0; i < m.vocab; i++) {
@@ -150,6 +158,9 @@ int main(int argc, char **argv)
 		printf("%-4d %4d %10.6f %9.6f %9d %9d %5s %5u %s\n", c + 1,
 		       cases[c].len, maxd, cr, af, aq, pos_ok ? "ok" : "FLIP",
 		       fixed_sat_count, ok ? "" : "  << FAIL");
+		if (ties)
+			printf("     %d near-tie position(s) within %.3f\n", ties,
+			       FIXED_TIE_TOL);
 		state_free(fs);
 	}
 

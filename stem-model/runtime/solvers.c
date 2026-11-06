@@ -1486,46 +1486,6 @@ static int solve_linear_ineq(const char *const *args, char *out,
 	return 0;
 }
 
-static int solve_system2(const char *const *args, char *out, size_t outlen)
-{
-	rat a1, b1, c1, a2, b2, c2, det, x, y;
-	int rc;
-	char f1[48], f2[48], buf[112];
-
-	if ((rc = parse_rat(args[0], &a1, NULL)) != 0 ||
-	    (rc = parse_rat(args[1], &b1, NULL)) != 0 ||
-	    (rc = parse_rat(args[2], &c1, NULL)) != 0 ||
-	    (rc = parse_rat(args[3], &a2, NULL)) != 0 ||
-	    (rc = parse_rat(args[4], &b2, NULL)) != 0 ||
-	    (rc = parse_rat(args[5], &c2, NULL)) != 0)
-		return rc;
-	if ((rc = rat_mul(&det, &a1, &b2)) != 0 ||
-	    (rc = rat_mul(&x, &a2, &b1)) != 0 ||
-	    (rc = rat_sub(&det, &det, &x)) != 0)
-		return rc;
-	if (det.n == 0)
-		return -4;
-	if ((rc = rat_mul(&x, &c1, &b2)) != 0 ||
-	    (rc = rat_mul(&y, &c2, &b1)) != 0 ||
-	    (rc = rat_sub(&x, &x, &y)) != 0 ||
-	    (rc = rat_div(&x, &x, &det)) != 0)
-		return rc;
-	if ((rc = rat_mul(&y, &a1, &c2)) != 0 ||
-	    (rc = rat_mul(&det, &a2, &c1)) != 0 ||
-	    (rc = rat_sub(&y, &y, &det)) != 0)
-		return rc;
-	if ((rc = rat_mul(&det, &a1, &b2)) != 0 ||
-	    (rc = rat_mul(&c1, &a2, &b1)) != 0 ||
-	    (rc = rat_sub(&det, &det, &c1)) != 0 ||
-	    (rc = rat_div(&y, &y, &det)) != 0)
-		return rc;
-	fmt_rat(&x, f1, sizeof(f1));
-	fmt_rat(&y, f2, sizeof(f2));
-	snprintf(buf, sizeof(buf), "x=%s, y=%s", f1, f2);
-	out_set(out, outlen, buf);
-	return 0;
-}
-
 static int solve_complete_square(const char *const *args, char *out,
                                  size_t outlen)
 {
@@ -2585,11 +2545,6 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 	} else if (strcmp(name, "linear_ineq") == 0) {
 		if (nargs == 3)
 			rc = solve_linear_ineq(args, out, outlen);
-		else
-			rc = -2;
-	} else if (strcmp(name, "system2") == 0) {
-		if (nargs == 6)
-			rc = solve_system2(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "complete_square") == 0) {

@@ -19,7 +19,6 @@ TEMPLATES = {
     "geom_seq": "A second sequence in the same exercise has first term {n}.",
     "abs_value_eq": "A second equation in the same set has right side {n}.",
     "linear_ineq": "A second inequality in the same set has right side {n}.",
-    "system2": "A second system in the same section has constant {n}.",
     "complete_square": "A second parabola in the same exercise has constant {n}.",
     "factor_quadratic": "A second expression in the same set has constant {n}.",
     "kinetic_energy": "A second object in the same problem has mass {n} kg.",

@@ -24,6 +24,7 @@ TEMPLATES = {
         "Determine sin({a}).",
         "Find the sine of an angle of {a} degrees.",
         "What does sin({a}) equal?",
+        "What does the sine of {a} degrees equal?",
     ],
     "cos_eval": [
         "What is cos({a})?",
@@ -36,6 +37,7 @@ TEMPLATES = {
         "Determine cos({a}).",
         "Find the cosine of an angle of {a} degrees.",
         "What does cos({a}) equal?",
+        "What does the cosine of {a} degrees equal?",
     ],
     "tan_eval": [
         "What is tan({a})?",
@@ -48,6 +50,7 @@ TEMPLATES = {
         "Determine tan({a}).",
         "Find the tangent of an angle of {a} degrees.",
         "What does tan({a}) equal?",
+        "What does the tangent of {a} degrees equal?",
     ],
     "pythagoras": [
         "A right triangle has legs {a} and {b}. Find the hypotenuse.",
@@ -72,6 +75,8 @@ TEMPLATES = {
         "A triangle has angles {A} and {B} degrees with side {a} opposite the first. Find the side opposite the second.",
         "Apply the law of sines to a triangle with side {a}, opposite angle {A} degrees, and angle {B} degrees.",
         "Side {a} is opposite {A} degrees in a triangle. What is the side opposite {B} degrees?",
+        "In a triangle, the side opposite {A} degrees is {a}. Find the side opposite {B} degrees.",
+        "A side of {a} faces {A} degrees. What side faces {B} degrees?",
     ],
     "law_cosines": [
         "A triangle has sides {a} and {b} with an included angle of {C} degrees. Find the third side.",
@@ -96,6 +101,8 @@ TEMPLATES = {
         "What is the length of the arc cut off by {theta} degrees on a circle of radius {r}?",
         "Calculate the arc length when the radius is {r} and the angle is {theta} degrees.",
         "A circle of radius {r} is divided by an angle of {theta} degrees. Find the arc length.",
+        "An arc of {theta} degrees on a circle of radius {r} has what length?",
+        "Find the arc length for a circle of radius {r} cut by {theta} degrees.",
     ],
     "log_eval": [
         "What is log base {base} of {x}?",
@@ -108,6 +115,7 @@ TEMPLATES = {
         "Determine log base {base} of {x}.",
         "Find the exponent to which {base} must be raised to get {x}.",
         "What does log base {base} of {x} equal?",
+        "What does the logarithm of {x} to base {base} equal?",
     ],
     "ln_eval": [
         "What is ln({x})?",
@@ -120,6 +128,8 @@ TEMPLATES = {
         "Determine the natural logarithm of {x}.",
         "Find the natural log of {x}.",
         "What does ln({x}) equal?",
+        "What does the natural log of {x} equal?",
+        "What is the value of ln({x})?",
     ],
     "log10_eval": [
         "What is log({x})?",
@@ -132,6 +142,7 @@ TEMPLATES = {
         "Determine the common log of {x}.",
         "Find log base 10 of {x}.",
         "What does log({x}) equal?",
+        "What does the common log of {x} equal?",
     ],
     "compound_interest": [
         "{P} dollars is invested at {r}% annual interest compounded {n} times per year for {t} years. Find the balance.",
@@ -168,6 +179,8 @@ TEMPLATES = {
         "What mass remains after {t} years if {initial} g decays with a half life of {hl} years?",
         "Find the leftover amount from {initial} g after {t} years, half life {hl} years.",
         "{initial} g of a substance with half life {hl} years decays for {t} years. How much is left?",
+        "A {initial} g sample with a half life of {hl} years decays for {t} years. How much is left?",
+        "How much of {initial} g remains after {t} years if the half life is {hl} years?",
     ],
     "doubling_time": [
         "An investment grows at {r}% per year. How many years does it take to double?",
@@ -192,6 +205,8 @@ TEMPLATES = {
         "What is the {n}th term and the sum of the first {n} terms of the arithmetic sequence starting at {a1} with difference {d}?",
         "An arithmetic sequence begins at {a1} and has common difference {d}. Calculate its {n}th term and the sum of its first {n} terms.",
         "Find a_{n} and S_{n} for the arithmetic sequence with a1 = {a1}, d = {d}, n = {n}.",
+        "For an arithmetic sequence with a1 = {a1}, d = {d} and n = {n}, find a_n and S_n.",
+        "An arithmetic sequence has a1 = {a1} and d = {d}. Find a_{n} and S_{n} for n = {n}.",
     ],
     "geom_seq": [
         "A geometric sequence starts at {a1} with common ratio {r}. Find the {n}th term and the sum of the first {n} terms.",
@@ -204,6 +219,8 @@ TEMPLATES = {
         "What is the {n}th term and the sum of the first {n} terms of the geometric sequence starting at {a1} with ratio {r}?",
         "A geometric sequence begins at {a1} and has common ratio {r}. Calculate its {n}th term and the sum of its first {n} terms.",
         "Find a_{n} and S_{n} for the geometric sequence with a1 = {a1}, r = {r}, n = {n}.",
+        "For a geometric sequence with a1 = {a1}, r = {r} and n = {n}, find a_n and S_n.",
+        "A geometric sequence has a1 = {a1} and r = {r}. Find a_{n} and S_{n} for n = {n}.",
     ],
     "abs_value_eq": [
         "Solve |{p}| = {c} for x.",
@@ -216,6 +233,9 @@ TEMPLATES = {
         "Compute the solutions of |{p}| = {c}.",
         "Solve for x: |{p}| = {c}.",
         "Give all x with |{p}| = {c}.",
+        "Determine x if {p} has absolute value {c}.",
+        "If the absolute value of {p} equals {c}, what is x?",
+        "Find x when |{p}| is {c}.",
     ],
     "linear_ineq": [
         "Solve {p} < {c} for x.",
@@ -228,18 +248,6 @@ TEMPLATES = {
         "Find all x such that {p} < {c}.",
         "Compute the solution to {p} < {c}.",
         "Give the interval of x for which {p} < {c}.",
-    ],
-    "system2": [
-        "Solve the system {e1} and {e2}.",
-        "Find x and y satisfying {e1} and {e2}.",
-        "Solve the simultaneous equations {e1}, {e2}.",
-        "What are x and y if {e1} and {e2}?",
-        "Determine the solution to the linear system {e1} with {e2}.",
-        "Solve for x and y: {e1} and {e2}.",
-        "Find the point where {e1} meets {e2}.",
-        "Compute x and y from the pair {e1} and {e2}.",
-        "Solve the two equations {e1} and {e2} together.",
-        "Give the values of x and y that satisfy both {e1} and {e2}.",
     ],
     "complete_square": [
         "Complete the square for {p} and state the vertex.",
@@ -348,6 +356,8 @@ TEMPLATES = {
         "Find a_c for v = {v} m/s and r = {r} m.",
         "A body moves at {v} m/s along a circle of radius {r} m. What is its centripetal acceleration?",
         "Determine the centripetal acceleration of an object with speed {v} m/s and radius {r} m.",
+        "A particle travels a {r} m radius circle at {v} m/s. Find the centripetal acceleration.",
+        "For a circle of radius {r} m and a speed of {v} m/s, compute the centripetal acceleration.",
     ],
     "wave_speed": [
         "A wave has frequency {f} Hz and wavelength {lam} m. Find its speed.",
@@ -384,6 +394,9 @@ TEMPLATES = {
         "Find V for I = {I} A and R = {R} ohm.",
         "A current of {I} A passes through {R} ohm. What is the voltage?",
         "Determine the voltage needed to drive {I} A through {R} ohm.",
+        "A {R} ohm resistor carrying {I} A has what potential difference?",
+        "Determine the potential difference across {R} ohms carrying {I} A.",
+        "What potential difference is needed for {I} A through {R} ohms?",
     ],
     "ohm_power": [
         "A device draws {I} A at {V} V. Find the power it dissipates.",
@@ -396,6 +409,8 @@ TEMPLATES = {
         "Find P for I = {I} A and V = {V} V.",
         "An appliance draws {I} A from a {V} V supply. What is its power?",
         "Determine the power rating of a device drawing {I} A at {V} V.",
+        "A device operating at {V} V draws {I} A. Determine its power.",
+        "Determine the power of a device that uses {I} A from a {V} V supply.",
     ],
     "free_fall": [
         "An object is dropped from {h} m. Find its speed on impact using g = {g}.",
@@ -480,6 +495,8 @@ TEMPLATES = {
         "Find P2 for P1 = {P1} atm, V1 = {V1} L, V2 = {V2} L.",
         "A sample at {P1} atm occupies {V1} L and is squeezed to {V2} L. What is its new pressure?",
         "Determine the pressure of a gas compressed from {V1} L to {V2} L, starting at {P1} atm.",
+        "A gas compressed from {V1} L to {V2} L began at {P1} atm. What is the new pressure?",
+        "Starting from {V1} L at {P1} atm, a gas is squeezed to {V2} L. Find the pressure.",
     ],
     "charles": [
         "A gas occupies {V1} L at {T1} K. It is heated to {T2} K at constant pressure. Find the new volume.",
@@ -492,6 +509,8 @@ TEMPLATES = {
         "Find V2 for V1 = {V1} L, T1 = {T1} K, T2 = {T2} K.",
         "A sample of {V1} L at {T1} K is warmed to {T2} K. What is its new volume?",
         "Determine the volume of a gas heated from {T1} K to {T2} K, starting at {V1} L.",
+        "A gas heated from {T1} K to {T2} K began at {V1} L. What volume does it reach?",
+        "Starting at {V1} L, a gas is warmed from {T1} K to {T2} K. Find the new volume.",
     ],
     "combined_gas": [
         "A gas at {P1} atm occupies {V1} L at {T1} K. It changes to {P2} atm at {T2} K. Find the new volume.",
@@ -612,6 +631,7 @@ TEMPLATES = {
         "Find the error percentage for measured {measured} and accepted {accepted}.",
         "A result of {measured} is compared with {accepted}. What is the percent error?",
         "Determine the percent error of {measured} relative to {accepted}.",
+        "Determine the percent error of {measured} against {accepted}.",
     ],
     "scientific_notation": [
         "Write {mantissa} x 10^{exponent} in decimal form.",
@@ -672,6 +692,8 @@ TEMPLATES = {
         "Use SOH CAH TOA on opposite {opp} and adjacent {adj} to find the angle and hypotenuse.",
         "A right triangle has opposite side {opp} and adjacent side {adj}. Determine its angle and hypotenuse.",
         "Calculate the angle and hypotenuse for opposite {opp} and adjacent {adj}.",
+        "A right triangle has legs {opp} and {adj}. Find the angle opposite the first leg and the hypotenuse.",
+        "The two legs of a right triangle are {opp} and {adj}. Determine the angle opposite {opp} and the hypotenuse.",
     ],
     "quad_solve": [
         "Solve {p} = 0 for x.",
@@ -683,7 +705,7 @@ TEMPLATES = {
         "Determine the roots of {p}.",
         "{p} = 0. Solve for x.",
         "What value or values of x make {p} zero?",
-        "Factor {p} and state the solutions.",
+        "Give the solution set of {p} = 0.",
         "Find all x satisfying {p} = 0.",
         "Compute the zeros of {p}.",
         "Where does the curve y = {p} cross the x axis?",
@@ -716,6 +738,8 @@ TEMPLATES = {
         "Evaluate the integral of {p} dx from {lo} to {hi}.",
         "Find the accumulated change of {p} across the interval {lo} to {hi}.",
         "Compute the total area of {p} over the range x = {lo} to x = {hi}.",
+        "Find the integral of {p} between {lo} and {hi}.",
+        "What is the accumulated change of {p} from {lo} to {hi}?",
     ],
     "linear2": [
         "Solve the system {e1} and {e2}.",
@@ -728,6 +752,8 @@ TEMPLATES = {
         "Solve this pair of linear equations: {e1}, {e2}.",
         "Find the intersection of {e1} and {e2}.",
         "Eliminate to solve {e1} together with {e2}.",
+        "Find x and y that satisfy both {e1} and {e2}.",
+        "Which x and y satisfy {e1} and {e2} together?",
     ],
     "exp_solve": [
         "Solve {base}^x = {k} for x.",
@@ -752,6 +778,8 @@ TEMPLATES = {
         "Velocity starts at {v0} m/s and changes by {a} m/s^2 each second for {t} s. What is it now?",
         "A cyclist rides at {v0} m/s and accelerates at {a} m/s^2 for {t} s. Determine the final speed.",
         "Find the velocity after {t} s of something starting at {v0} m/s with acceleration {a} m/s^2.",
+        "After {t} s, what is the velocity of an object that began at {v0} m/s and accelerated at {a} m/s^2?",
+        "An object accelerates at {a} m/s^2 for {t} s from {v0} m/s. Find its final velocity.",
     ],
     "proj_range": [
         "A projectile is launched at {v0} m/s at {theta} degrees above the horizontal. What horizontal range does it cover with g = {g} m/s^2?",
@@ -776,6 +804,9 @@ TEMPLATES = {
         "Determine the amperage in a circuit with {V} V across {R} ohms.",
         "A {R} ohm load is connected to {V} V. How much current does it draw?",
         "Calculate the current through {R} ohms given a supply of {V} volts.",
+        "A voltage of {V} volts across {R} ohms gives what current?",
+        "Find the current through {R} ohms when the supply is {V} volts.",
+        "A supply of {V} volts drives current through {R} ohms. What is the current?",
     ],
     "moles": [
         "How many moles are in {mass} g of a substance with molar mass {mm} g/mol?",
@@ -835,7 +866,6 @@ _ARG_NAMES = {
     "geom_seq": ("a1", "r", "n"),
     "abs_value_eq": ("a", "b", "c"),
     "linear_ineq": ("a", "b", "c"),
-    "system2": ("a1", "b1", "c1", "a2", "b2", "c2"),
     "complete_square": ("a", "b", "c"),
     "factor_quadratic": ("a", "b", "c"),
     "kinetic_energy": ("m", "v"),
@@ -898,7 +928,7 @@ _POLY_COEFFS = {
 
 _POLY_SLICE = {"sinusoid": (1, 3)}
 
-_SYSTEMS = {"linear2", "system2"}
+_SYSTEMS = {"linear2"}
 
 _COEF = {"sinusoid"}
 

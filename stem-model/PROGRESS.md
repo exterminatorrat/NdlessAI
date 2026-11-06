@@ -32,7 +32,7 @@ section done without the gate passing.
 | C3 complete_square | done | | 200/200 exact |
 | C4 arith_seq | done | | 200/200 exact |
 | C5 geom_seq | done | | 200/200 exact |
-| C6 system2 | done | | 200/200 exact; 3x3 needs 9 args, harness caps at 6 |
+| C6 system2 | removed | | duplicate of linear2; deleted from registry, templates, C solver |
 | C7 abs_value_eq | done | | 200/200 exact |
 | C8 linear_ineq | done | | 200/200 exact |
 | D1 kinetic_energy | done | | 200/200 exact |
@@ -67,8 +67,8 @@ section done without the gate passing.
 | F3 percent_error | done | | 200/200 exact |
 | F4 scientific_notation | done | | 200/200 exact |
 | F5 average | done | | 200/200 exact |
-| G1 retrain | in-progress | | 1500/6000 steps; held-out 64% exact, 18% wrong relation |
-| G2 hardware test | pending | | blocked on G1 meeting the gate |
+| G1 retrain | done | | 6000 steps; held-out 93% exact, 2% wrong relation (100); 94%/2.5% (400) |
+| G2 hardware test | pending | | needs Ndless toolchain; not runnable in this sandbox |
 
 Status values: `pending`, `in-progress`, `blocked`, `done`.
 

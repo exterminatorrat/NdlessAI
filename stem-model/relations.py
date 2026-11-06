@@ -606,28 +606,6 @@ class LinearIneq:
         return f"x {op} {fmt(bound)}"
 
 
-@relation("system2", "algebra", ["a1", "b1", "c1", "a2", "b2", "c2"],
-          exact=True)
-class System2:
-    @staticmethod
-    def gen(rng):
-        while True:
-            a1, b1 = rng.randint(-5, 5), rng.randint(-5, 5)
-            a2, b2 = rng.randint(-5, 5), rng.randint(-5, 5)
-            if a1 * b2 - a2 * b1 != 0:
-                break
-        c1, c2 = rng.randint(-10, 10), rng.randint(-10, 10)
-        return [a1, b1, c1, a2, b2, c2], (
-            f"Solve the system {lin2(a1, b1, c1)} and {lin2(a2, b2, c2)}.")
-
-    @staticmethod
-    def solve(a1, b1, c1, a2, b2, c2):
-        det = a1 * b2 - a2 * b1
-        x = sp.Rational(c1 * b2 - c2 * b1, det)
-        y = sp.Rational(a1 * c2 - a2 * c1, det)
-        return f"x={fmt(x)}, y={fmt(y)}"
-
-
 @relation("complete_square", "algebra", ["a", "b", "c"], exact=True)
 class CompleteSquare:
     @staticmethod

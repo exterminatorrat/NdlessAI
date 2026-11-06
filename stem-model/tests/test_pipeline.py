@@ -133,16 +133,21 @@ def test_held_out_phrasing_is_never_trained_on():
 def test_surface_render_keeps_arguments(monkeypatch):
     import random
 
-    from surface import (TEMPLATES as SURFACE, _POLY_COEFFS, _POLY_SLICE,
-                         _SYSTEMS, count, render)
-    from relations import lin2, poly
+    from surface import (TEMPLATES as SURFACE, _COEF, _POLY_COEFFS,
+                         _POLY_SLICE, _SYSTEMS, count, render)
+    from relations import amp, lin2, poly
 
     rng = random.Random(11)
     for name in RELATIONS:
         for index in range(count(name)):
             params, _ = RELATIONS[name].gen(rng)
             text = render(name, params, index)
-            if name in _POLY_COEFFS:
+            if name in _COEF:
+                lo, hi = _POLY_SLICE[name]
+                assert amp(params[0]) in text
+                assert poly(list(params[lo:hi])) in text
+                rest = params[hi:]
+            elif name in _POLY_COEFFS:
                 n = _POLY_COEFFS[name]
                 assert poly(list(params[:n])) in text
                 rest = params[n:]

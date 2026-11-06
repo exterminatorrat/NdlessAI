@@ -35,19 +35,23 @@ The grounding check is deliberately conservative. If the model copies a number t
 | Runtime | C11; int8 weights, Q12 fixed-point activations, no FPU in the hot path |
 | Target | TI-Nspire CX II, ARM926EJ-S; hardware cost measured with `int8bench` |
 | Artifacts | `weights.bin` (5.91 MB, NSM1 format) and an embedded BPE header |
-| Subjects | Precalculus, calculus, physics, and chemistry |
+| Subjects | Precalculus, calculus, trig, logs, algebra, physics, chemistry, and units |
 | Status | Research preview; host-verified and builds a `.tns` for the calculator |
 
 ## Supported relations
 
 Every relation has a fixed arity, a generator, an exact solver, and at least eight phrasings. Every fifth phrasing is reserved for held-out wording tests.
 
-| Subject | Relations |
-| --- | --- |
-| Precalculus | `quad_solve`, `linear2`, `exp_solve` |
-| Calculus | `deriv_poly3`, `integr_poly3` |
-| Physics | `kinematic_v`, `proj_range`, `ohm_i` |
-| Chemistry | `moles`, `dilution`, `gas_p` |
+| Subject | Count | Relations |
+| --- | --- | --- |
+| Precalculus | 3 | `quad_solve`, `linear2`, `exp_solve` |
+| Calculus | 2 | `deriv_poly3`, `integr_poly3` |
+| Trig | 9 | `sin_eval`, `cos_eval`, `tan_eval`, `pythagoras`, `law_sines`, `law_cosines`, `arc_length`, `right_triangle`, `sinusoid` |
+| Logs | 7 | `log_eval`, `ln_eval`, `log10_eval`, `compound_interest`, `continuous_growth`, `half_life`, `doubling_time` |
+| Algebra | 7 | `arith_seq`, `geom_seq`, `abs_value_eq`, `linear_ineq`, `complete_square`, `factor_quadratic`, `cubic_solve` |
+| Physics | 15 | `kinetic_energy`, `potential_energy`, `work`, `power`, `momentum`, `newton2`, `circular_accel`, `wave_speed`, `specific_heat`, `ohm_v`, `ohm_i`, `ohm_power`, `free_fall`, `kinematic_v`, `proj_range` |
+| Chemistry | 13 | `molarity`, `ph`, `poh`, `ph_from_poh`, `percent_yield`, `boyles`, `charles`, `combined_gas`, `density`, `stoichiometry`, `moles`, `dilution`, `gas_p` |
+| Units | 10 | `km_to_m`, `m_to_cm`, `celsius_to_fahrenheit`, `fahrenheit_to_celsius`, `kg_to_lb`, `liters_to_ml`, `percent_error`, `scientific_notation`, `average`, `sig_figs` |
 
 ## Quickstart
 
@@ -128,6 +132,7 @@ flowchart TB
 
 ## Documentation
 
+- [Status](docs/status.md): where the project stands, what is planned, and what is left.
 - [Architecture](docs/architecture.md): boundaries, call contract, fixed-point formats, and failure behavior.
 - [Model](docs/model.md): data generation, training, quantization, measured results, and limitations.
 - [Development](docs/development.md): host workflow, tests, cross-compilation, and adding a relation.

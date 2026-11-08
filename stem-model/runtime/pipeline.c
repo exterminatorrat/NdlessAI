@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "callmask.h"
 #include "pipeline.h"
 #include "solvers.h"
 
 #define PROMPT_SUFFIX " <sep>"
 #define MAX_GEN 20
 #define MAX_PROMPT 256
+#define MAX_VOCAB 1024
 
 static int argmax32(const int32_t *v, int n)
 {
@@ -35,6 +37,29 @@ static int ids_to_text(const bpe_tok *tok, const uint16_t *ids, int n,
 	}
 	out[used] = '\0';
 	return used;
+}
+
+/*
+ * Constrained decoding: the mask decides which tokens the next step may pick,
+ * so a call the parser would reject is never generated in the first place.
+ * Masked entries become INT32_MIN rather than being skipped, so argmax32 stays
+ * the only chooser and the model's own ranking decides among the legal ones.
+ *
+ * Only the header is constrained. Forcing the argument count, or the end of a
+ * number, would need a completion signal the runtime does not have, and
+ * guessing it would truncate valid values.
+ */
+static int mask_logits(pipeline_t *p, const char *sofar)
+{
+	unsigned char allow[MAX_VOCAB];
+
+	if (p->model.vocab <= 0 || p->model.vocab > MAX_VOCAB)
+		return -1;
+	callmask_next(sofar, allow, p->model.vocab);
+	for (int i = 0; i < p->model.vocab; i++)
+		if (!allow[i])
+			p->logits[i] = INT32_MIN;
+	return 0;
 }
 
 static int run_call_text(const char *call, char *answer, int answer_max)
@@ -209,7 +234,14 @@ int pipeline_answer(pipeline_t *p, const char *question,
 			return PIPELINE_ERR;
 
 	for (int i = 0; i < MAX_GEN && pos < p->seq; i++) {
-		int next = argmax32(p->logits, p->model.vocab);
+		char sofar[MAX_PROMPT + 1];
+		int next;
+
+		if (ids_to_text(&p->tok, ids + n, gen, sofar, (int)sizeof sofar) < 0)
+			return PIPELINE_ERR;
+		if (mask_logits(p, sofar) < 0)
+			return PIPELINE_ERR;
+		next = argmax32(p->logits, p->model.vocab);
 
 		if (next == 258 || next == 256)
 			break;

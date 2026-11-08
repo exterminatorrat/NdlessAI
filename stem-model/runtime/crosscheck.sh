@@ -14,7 +14,7 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
-for f in bpe fixed solvers infer pipeline main_device graph; do
+for f in bpe fixed solvers infer pipeline callmask main_device graph; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done

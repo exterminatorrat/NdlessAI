@@ -40,4 +40,4 @@ make test
 
 The data contract, tokenizer, training, quantization, C inference engine, fixed-point path, and evaluation harness are implemented. The model is 5,246,208 parameters; the exported weights are 5.91 MB; recorded validation results are 95.0% exact calls for the int8 engine over 60 problems and 93.8% exact calls for the full device path over 80 problems.
 
-The runtime is not yet packaged as a `.tns` application, and no checkpoint or weights file is committed.
+The runtime builds to `stemhelp.tns` through `device/Makefile`; it has not been run on hardware, and no checkpoint or weights file is committed.

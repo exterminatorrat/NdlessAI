@@ -134,6 +134,7 @@ flowchart TB
 
 - [Status](docs/status.md): where the project stands, what is planned, and what is left.
 - [Expansion](docs/expansion.md): every candidate addition, ranked by value per unit of work.
+- [Waves](docs/waves.md): the execution plan of record — wave order, workstreams, file ownership, and what done means.
 - [Architecture](docs/architecture.md): boundaries, call contract, fixed-point formats, and failure behavior.
 - [Model](docs/model.md): data generation, training, quantization, measured results, and limitations.
 - [Development](docs/development.md): host workflow, tests, cross-compilation, and adding a relation.

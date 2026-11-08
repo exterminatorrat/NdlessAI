@@ -40,6 +40,12 @@ jobs:
           for t in test_*; do
             case "$t" in *.c) continue ;; esac
             [ -x "$t" ] || continue
+            # The parity binary needs the exported weights, which this lane has
+            # no way to build; gate.sh skips the same check for the same reason.
+            if [ "$t" = test_fixed ] && [ ! -f ../weights.bin ]; then
+              echo "== $t (skipped: no weights.bin)"
+              continue
+            fi
             echo "== $t"
             ./"$t"
           done

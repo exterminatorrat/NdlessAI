@@ -106,16 +106,35 @@ on master. Nothing here is called done before it is merged.
 | --- | --- | --- |
 | Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | open, CI failing on the ARM lane until the crosscheck list was fixed | #15 |
 | 0.1 split the solver and formula tables by subject | open, move-only, tests byte-identical | #19 |
-| 0.2 build the artifacts | running | — |
-| 0.3 record the baseline | blocked on 0.2 | — |
+| 0.2 build the artifacts | done on the build machine: dataset, 6,000-step checkpoint, `weights.bin` 5.91 MB, fixed-point parity 6/6 | — |
+| 0.3 record the baseline | done, numbers below | — |
 | 1.1 invalid output blocking | open, review fixes applied | #20 |
 | 1.2 faster multiply-accumulate | open, honest size of win is ~3% per MAC | #21 |
 | 1.3 vocabulary 1,024 | open, plumbing closed in the same branch | #18 |
 | 1.4 typed maths without the weights file | open, unbuildable here so unverified | #17 |
 
-All five code pulls verified together: the combined tree builds, every C test
-passes, the Python suite is 36 passed and 1 skipped, and `gate.sh` reports
-`ALL GATES PASS`.
+All five code pulls verified together, with the trained weights present: the
+combined tree builds, every C test passes, fixed-point parity is 6/6, the
+tokenizer header matches, the Python suite is 36 passed and 1 skipped, and
+`gate.sh` reports `ALL GATES PASS` including both accuracy gates.
+
+## Baseline measured on the build machine
+
+The first time the recorded accuracy could be re-run rather than quoted, on the
+pre-wave-1 tree (512-token vocabulary, single `solvers.c`), 1,000 held-out rows
+through the whole on-device path:
+
+| Measurement | Result |
+| --- | --- |
+| Exact call | 92.4% |
+| Right relation, bad arguments | 5.6% |
+| Wrong relation | 2.0% |
+| Correct final answer | 92.5% |
+
+The recorded figures were 91.6% exact and 2.9% wrong relation, so the claim
+reproduces. On the wave-1 tree the same 1,000 rows give 92.5% exact and 1.9%
+wrong relation, which says the decode mask does not cost accuracy — the
+difference is inside the noise of a single sample.
 
 ## What the process has already taught us
 

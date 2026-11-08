@@ -52,6 +52,7 @@ if [ -d runtime ]; then
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
     run "graph"                  sh -c 'cd runtime && make -s test_graph >/dev/null 2>&1 && ./test_graph | grep -q "all checks passed"'
+    run "typed answers"          sh -c 'cd runtime && ./test_typed | grep -q "all cases passed"'
     if [ -f weights.bin ]; then
         run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'
     else

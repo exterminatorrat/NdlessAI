@@ -46,6 +46,14 @@ int pipeline_answer(pipeline_t *p, const char *question,
                     char *call, int call_max);
 
 /*
+ * Answers text that is already an expression rather than a word problem, with
+ * no model involved: "sqrt(50)+ln(2)" evaluates here in microseconds. Text
+ * containing x has no single value and is refused, so it falls back to the
+ * model path. Returns PIPELINE_OK on success, PIPELINE_ERR otherwise.
+ */
+int pipeline_typed_answer(const char *text, char *answer, int answer_max);
+
+/*
  * Exposed for testing: true when every argument in `call` is a number that
  * appears in `question`, allowing for implicit polynomial coefficients.
  */

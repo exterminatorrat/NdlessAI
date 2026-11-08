@@ -101,3 +101,98 @@ fortnight.
 
 If the goal is AP exam coverage as a catalogue, the order is **6, then 11-15**.
 Nothing there is research; it is formula writing against a solved architecture.
+
+---
+
+# The full catalogue, in tables
+
+Two kinds of work appear below, and the difference decides the cost:
+
+- **Engine** work adds a mathematical ability to the C code. No retraining, no new data, and it runs in microseconds on the calculator. The model does not need to learn anything.
+- **Coverage** work adds formulas the router can recognise from English. Each batch needs a dataset regeneration and a retrain, and it spends vocabulary.
+
+The model is not where mathematics lives. It never has been.
+
+## Mathematics
+
+| P | Capability | What the student can do | Impact | Time | Retrain |
+| --- | --- | --- | --- | --- | --- |
+| 1 | **Expression evaluation** — type `3x^2-5x+6` or `sqrt(50)+ln(2)` | Get an exact answer instantly, no wording needed | Very high: the most common action on any calculator | 1-2 w | no |
+| 1 | **Solve for any variable** — one equation, any unknown | `V=IR` answers for V, I, or R instead of three separate formulas | Very high: multiplies every subject at once | 2-3 w | yes |
+| 1 | **Symbolic differentiation** — product, quotient, chain, higher order, implicit | `d/dx(3x^2 sin x)` exactly, not numerically | Very high: all of AP Calc AB differentiation | 2 w | no |
+| 1 | **Curve analysis** — roots, extrema, inflection, increasing/decreasing, asymptotes | "Find the critical points of…" answered from the expression | High | 1 w | no |
+| 2 | **Numeric integration** — definite integrals, area, volume, arc length, average value | AP Calc AB integration applications | High | 1 w | no |
+| 2 | **Exact linear algebra** — n×n systems, determinant, inverse, rank, matrix ops | Systems of equations, Kirchhoff circuits, chemistry balancing | High | 1 w | no |
+| 2 | **Complex numbers** — rectangular, polar, roots | Quadratic roots that are complex, AC impedance | Medium | 1 w | no |
+| 2 | **Trigonometry depth** — exact values, identities, inverse trig, solving trig equations | The whole precalc and trig strand, exactly | Medium | 2 w | no |
+| 2 | **Limits** — one-sided, at infinity, via series | Calc AB limits without a table of special cases | Medium | 2 w | no |
+| 2 | **Statistics and distributions** — sd, regression, normal/t/binomial/Poisson, intervals | AP Stats, plus error bars in every lab subject | Medium | 1 w | no |
+| 2 | **Vectors and 3D geometry** — dot, cross, projections, lines, planes | AP Physics C and linear algebra | Medium | 1 w | no |
+| 3 | **Series and Taylor** — convergence tests, Maclaurin, error bounds | The remaining BC unit | Medium | 3 w | no |
+| 3 | **Symbolic integration** — table, substitution, by parts, partial fractions | Indefinite integrals, which numeric methods cannot give | High | 4-6 w | no |
+| 3 | **Differential equations** — separable, first-order linear, logistic, RK4 numeric | Cooling, kinetics, RC circuits, population models | Medium | 2 w | no |
+| 3 | **Parametric and polar calculus** | BC's parametric and polar unit | Medium | 2 w | no |
+| 4 | **Multivariable calculus** — partial derivatives, multiple integrals | University-level work | Low now | m | no |
+| 4 | **Full CAS** — arbitrary simplification, limits by algebra, proof | A different product | Low now | m | no |
+
+## Physics
+
+| P | Capability | What the student can do | Impact | Time | Retrain |
+| --- | --- | --- | --- | --- | --- |
+| 1 | **If it is not in the question, refuse** — abstention from the model's own confidence | A near miss becomes "not sure" instead of a wrong answer | Very high: trust is the product | 3 d | yes |
+| 1 | **AP Physics 1 mechanics** — friction, inclines, Atwood, circular force, energy, collisions, torque, rotational inertia, SHM, waves, Doppler, lenses | A full AP 1 mechanics course (28 formulas) | Very high | 1-2 w | yes |
+| 1 | **Multi-step physics as one formula** — e.g. "block slides down an incline with friction, find the speed" | Problems that need three steps answered in one call | Very high: this is what exam questions look like | 1 w | yes |
+| 2 | **Thermodynamics** — calorimetry, latent heat, gas processes, first law, Carnot, COP, entropy, conduction, radiation, kinetic theory | The thermo unit of AP Physics 2 and every engineering course | High | 1-2 w | yes |
+| 2 | **Electricity and magnetism** — Coulomb, Gauss, potential, capacitors, RC, Kirchhoff, magnetism, induction, LC | AP Physics C E&M (about 30 formulas) | High | 2 w | yes |
+| 3 | **Waves, optics, fluids** — standing waves, beats, interference, diffraction, pressure, buoyancy, Bernoulli | AP Physics 2 breadth | Medium | 1 w | yes |
+| 3 | **Modern physics** — photoelectric, de Broglie, atomic levels, decay chains, binding energy, relativity factors | AP Physics 2 modern unit | Medium | 1 w | yes |
+| 3 | **Units as a type** — dimensions on every quantity, full SI conversion graph | One formula works in any unit system, and a unit mistake is caught | High | 2-3 w | yes |
+
+## Chemistry
+
+| P | Capability | What the student can do | Impact | Time | Retrain |
+| --- | --- | --- | --- | --- | --- |
+| 1 | **Stoichiometry depth** — limiting reagent, percent yield, empirical and molecular formula, gas volumes | The core of AP Chem unit 4 | Very high | 1 w | yes |
+| 1 | **Solutions** — molarity, dilution, titration, molality, colligative properties | Unit 3 and every lab titration | High | 1 w | yes |
+| 2 | **Equilibrium** — ICE tables, Kc, Kp, Ksp, Ka, Kb, buffers | Units 7 and 8, the largest AP Chem block | High | 1-2 w | yes |
+| 2 | **Kinetics** — rate laws, order, half-lives, Arrhenius, activation energy | Unit 5 | Medium | 1 w | yes |
+| 2 | **Thermochemistry** — Hess's law, formation enthalpies, bond energies, entropy, Gibbs | Units 6 and 9 | High | 1-2 w | yes |
+| 3 | **Electrochemistry** — cell potentials, Nernst, electrolysis, Faraday | Unit 9 | Medium | 1 w | yes |
+| 3 | **Structure and bonding** — VSEPR shapes, formal charge, hybridization, periodic trends | Units 1 and 2, mostly table lookups | Medium | 1-2 w | yes |
+| 3 | **Property tables** — saturated water, heat capacities, standard enthalpies, reduction potentials | Turns formulas into real answers | Medium | 1-2 w | yes |
+
+## Other fields
+
+| P | Capability | What the student can do | Impact | Time | Retrain |
+| --- | --- | --- | --- | --- | --- |
+| 3 | **Finance** — compound interest, annuities, NPV, depreciation | Business and personal finance courses | Medium | 3 d | yes |
+| 3 | **Number theory** — gcd, primes, modular arithmetic, base conversion | Discrete maths and CS | Low-medium | 3 d | no |
+| 4 | **Proof and symbolic algebra** — simplify, factor, expand, rearrange | A CAS, not a calculator | Low now | m | no |
+
+## Efficiency
+
+The measured facts that bound these: 43.9-token prompt prefill at 182 ms/token is 8.0 s of a 9.4 s answer; the int8 kernel is 5 instructions per multiply-accumulate against a memory-bound floor of about 74 ms/token; weights are 5.9 MB inside a 27 MiB heap; and flash reads at 1.46 MB/s.
+
+| P | Change | Effect | Time | Risk |
+| --- | --- | --- | --- | --- |
+| 1 | **Bypass the model for typed maths** | Expression input answers in microseconds instead of 9 s, which removes inference from the common path entirely | 1 w | none |
+| 1 | **Optimise the int8 dot product** — unroll, 4-way accumulator, `smlabb` scheduling | 182 ms/token is 2.5x the 74 ms memory floor, so there is real headroom: up to 2x faster prefill and decode, no retrain | 1-2 w | low, parity tests catch it |
+| 1 | **Vocabulary 1024 and more merges** | Shorter prompts and room for 300 formulas; more merges is directly less prefill | 3 d | low |
+| 1 | **Constrained decoding** — a trie that makes an invalid call impossible | Removes a whole failure class with no accuracy trade | 3 d | none |
+| 2 | **Run the CPU at 198 MHz during inference** | About 1.4x on everything, then restore | 2 d | low: thermal |
+| 2 | **A d=128 variant** (1.6M parameters) | 3.2x faster (57 ms/token) and less heap, at about 2.5 points on grounded accuracy per the recorded width ladder | 1 w | medium: accuracy |
+| 2 | **KV cache trimming** — sequence 160 to 96 | Frees about 0.4 MB of heap; no speed gain | 2 d | none |
+| 3 | **int4 weights** | Halves the re-read per token, moving toward the memory floor; accuracy risk needs measurement | 2 w | medium |
+| 3 | **Group-16 quantization** | Better accuracy at the same speed, 12.5% to 50% scale overhead | 1 w | low |
+| 4 | **Layer streaming from flash** | Rejected: 1.46 MB/s makes a layer read slower than keeping it in the 27 MiB heap | — | do not build |
+| 4 | **Early exit by layer** | Rejected for now: saves tokens, costs accuracy, hard to bound | — | do not build |
+| 4 | **A wider model** | Rejected: 4x the latency for a routing job that does not need width | — | do not build |
+
+## The priority ladder
+
+| Wave | What lands | Why this order | Time |
+| --- | --- | --- | --- |
+| 1 | Typed-expression fast path, constrained decoding, int8 kernel work, vocabulary 1024 | Makes it fast, correct, and able to answer without inference. Nothing else is worth doing on a 9 s calculator | 3-5 w |
+| 2 | Solve-for-any-variable, differentiation, curve analysis, AP Physics 1 mechanics, stoichiometry | The multiply-everything change, plus the two largest unserved subjects | 4-6 w |
+| 3 | Numeric integration, linear algebra, thermodynamics, equilibrium, E&M, real wording data | Fills the remaining large subjects and fixes accuracy on real text | 6-8 w |
+| 4 | Series, symbolic integration, differential equations, waves and optics, modern physics | The deep end, once the base is in use | 8-12 w |

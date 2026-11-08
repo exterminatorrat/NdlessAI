@@ -9,7 +9,7 @@ from distractors import add_distractor
 from gen_traces import render_call, run_call
 from relations import RELATIONS
 from surface import held_out_indices, render as render_phrasing, train_indices
-from tokenizer import Tokenizer, train as train_tokenizer
+from tokenizer import Tokenizer, VOCAB_SIZE, train as train_tokenizer
 
 def build(relations, n, seed, distractor_rate, max_phrasings=None):
     return _build(relations, n, seed, distractor_rate, held_out=False,
@@ -65,7 +65,8 @@ def main():
     ap.add_argument("--val", type=int, default=4000)
     ap.add_argument("--held-out", type=int, default=2000,
                     help="rows using phrasings reserved from training")
-    ap.add_argument("--vocab", type=int, default=512)
+    ap.add_argument("--vocab", type=int, default=VOCAB_SIZE,
+                    help="vocabulary size (default %(default)s)")
     ap.add_argument("--tokenizer-rows", type=int, default=20000,
                     help="rows used to learn the BPE merges; more is slower "
                          "and changes the vocabulary almost not at all")

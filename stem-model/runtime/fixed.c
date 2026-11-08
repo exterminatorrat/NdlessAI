@@ -47,6 +47,89 @@ static int msb32(uint32_t v)
 	return b;
 }
 
+/* The body below covers exactly one int8 weight group; a wider group would
+ * silently contribute only its first 32 weights. */
+_Static_assert(QT_GROUP == 32, "dot_group is written out for 32 weights");
+
+/* One int8 weight group against Q12 activations.
+ *
+ * Exactness: |w| <= 128 and |x| <= 32768, so one term is at most 2^22 and an
+ * n-element sum stays inside int32 for n <= 511.  No partial sum can leave the
+ * range, so this is exact integer arithmetic and not arithmetic mod 2^32:
+ * splitting a sum across four accumulators and adding them at the end cannot
+ * change the result.  The group width is QT_GROUP and the widest row anyone
+ * passes is 768, so the margin is large.  test_fixed.c proves the claim
+ * against an int64 reference instead of assuming it.
+ *
+ * Four accumulators give the core four independent smlabb chains, so a 16-bit
+ * multiply-add never waits on the previous one.
+ *
+ * All QT_GROUP terms are written out instead of looped.  The recorded device
+ * build spends five instructions per MAC (ldrsb, ldrsh, cmp, smlabb, bne) --
+ * that is a runtime-count loop that its compiler chose not to unroll -- and
+ * whether a compiler unrolls a constant-count loop is a heuristic no source
+ * file can bind.  Written out, every MAC is exactly its two loads and one
+ * smlabb on every compiler, which is the floor for this data layout: 3
+ * instructions per MAC instead of 5. */
+static int32_t dot_group(const int8_t *w, const int16_t *x)
+{
+	int32_t p0 = 0, p1 = 0, p2 = 0, p3 = 0;
+
+	p0 += (int32_t)w[0] * x[0];
+	p1 += (int32_t)w[1] * x[1];
+	p2 += (int32_t)w[2] * x[2];
+	p3 += (int32_t)w[3] * x[3];
+	p0 += (int32_t)w[4] * x[4];
+	p1 += (int32_t)w[5] * x[5];
+	p2 += (int32_t)w[6] * x[6];
+	p3 += (int32_t)w[7] * x[7];
+	p0 += (int32_t)w[8] * x[8];
+	p1 += (int32_t)w[9] * x[9];
+	p2 += (int32_t)w[10] * x[10];
+	p3 += (int32_t)w[11] * x[11];
+	p0 += (int32_t)w[12] * x[12];
+	p1 += (int32_t)w[13] * x[13];
+	p2 += (int32_t)w[14] * x[14];
+	p3 += (int32_t)w[15] * x[15];
+	p0 += (int32_t)w[16] * x[16];
+	p1 += (int32_t)w[17] * x[17];
+	p2 += (int32_t)w[18] * x[18];
+	p3 += (int32_t)w[19] * x[19];
+	p0 += (int32_t)w[20] * x[20];
+	p1 += (int32_t)w[21] * x[21];
+	p2 += (int32_t)w[22] * x[22];
+	p3 += (int32_t)w[23] * x[23];
+	p0 += (int32_t)w[24] * x[24];
+	p1 += (int32_t)w[25] * x[25];
+	p2 += (int32_t)w[26] * x[26];
+	p3 += (int32_t)w[27] * x[27];
+	p0 += (int32_t)w[28] * x[28];
+	p1 += (int32_t)w[29] * x[29];
+	p2 += (int32_t)w[30] * x[30];
+	p3 += (int32_t)w[31] * x[31];
+	return (p0 + p1) + (p2 + p3);
+}
+
+/* sum(w[i] * x[i]) over [0, n).  The shipping call is one weight group, taken
+ * whole by dot_group; the trailing loop is the contract for any other length,
+ * which is what test_fixed.c drives to prove the tiling has no off-by-one.
+ *
+ * Non-static so test_fixed.c can check it bit-exactly against a scalar
+ * reference and bench_kernel.c can time it; both declare the prototype
+ * locally rather than through fixed.h, which exists only for the device ABI.
+ */
+int32_t fixed_dot_q7_q12(const int8_t *w, const int16_t *x, int n)
+{
+	int32_t acc = 0;
+	int i = 0;
+
+	for (; i + QT_GROUP <= n; i += QT_GROUP)
+		acc += dot_group(w + i, x + i);
+	for (; i < n; i++)
+		acc += (int32_t)w[i] * x[i];
+	return acc;
+}
+
 static int64_t row_acc(const int8_t *w, const int32_t *s, const int16_t *x,
                        int cols)
 {
@@ -54,13 +137,11 @@ static int64_t row_acc(const int8_t *w, const int32_t *s, const int16_t *x,
 	int groups = cols / QT_GROUP;
 
 	for (int g = 0; g < groups; g++) {
-		int32_t part = 0;
-		const int8_t *wr = w + (size_t)g * QT_GROUP;
-		const int16_t *xr = x + (size_t)g * QT_GROUP;
+		int32_t sc = s[g];
 
-		for (int i = 0; i < QT_GROUP; i++)
-			part += (int32_t)wr[i] * xr[i];
-		acc += (int64_t)part * s[g];
+		acc += (int64_t)fixed_dot_q7_q12(w + (size_t)g * QT_GROUP,
+		                                 x + (size_t)g * QT_GROUP,
+		                                 QT_GROUP) * sc;
 	}
 	return acc;
 }
@@ -68,19 +149,25 @@ static int64_t row_acc(const int8_t *w, const int32_t *s, const int16_t *x,
 void matvec_q(const int8_t *w, const int32_t *s, const int16_t *x, int16_t *y,
               int rows, int cols)
 {
-	for (int r = 0; r < rows; r++)
-		y[r] = sat16((row_acc(w + (size_t)r * cols,
-		                     s + (size_t)r * (cols / QT_GROUP),
-		                     x, cols) + (1 << 23)) >> 24);
+	int gpr = cols / QT_GROUP;
+
+	for (int r = 0; r < rows; r++) {
+		y[r] = sat16((row_acc(w, s, x, cols) + (1 << 23)) >> 24);
+		w += cols;
+		s += gpr;
+	}
 }
 
 void matvec_q32(const int8_t *w, const int32_t *s, const int16_t *x, int32_t *y,
                 int rows, int cols)
 {
-	for (int r = 0; r < rows; r++)
-		y[r] = sat32((row_acc(w + (size_t)r * cols,
-		                      s + (size_t)r * (cols / QT_GROUP),
-		                      x, cols) + (1 << 23)) >> 24);
+	int gpr = cols / QT_GROUP;
+
+	for (int r = 0; r < rows; r++) {
+		y[r] = sat32((row_acc(w, s, x, cols) + (1 << 23)) >> 24);
+		w += cols;
+		s += gpr;
+	}
 }
 
 void rmsnorm_q(int16_t *o, const int16_t *x, const int16_t *w, int n,

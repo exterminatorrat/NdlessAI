@@ -35,19 +35,23 @@ void callmask_next(const char *sofar, unsigned char *allow, int vocab)
 		return;
 	}
 
-	if (strncmp(sofar, "CALL", 4) == 0) {
+	if (strncmp(sofar, "CALL", 4) == 0 && spaces_only(sofar + 4)) {
 		const char *rest = sofar + 4;
 
-		/* One separator after the header, so the parser still sees two
-		 * fields; the second and later spaces would only stall the decode. */
-		if (*rest == '\0' && SPACE_ID < vocab)
-			allow[SPACE_ID] = 1;
-		if (spaces_only(rest)) {
+		if (*rest == '\0') {
+			/* The header is not finished until the separator is out: a
+			 * relation chosen here would fuse into "CALLquad_solve",
+			 * which the parser reads as one unknown field. */
+			if (SPACE_ID < vocab)
+				allow[SPACE_ID] = 1;
+		} else {
+			/* Separator already present, so a second one would only
+			 * stall the decode instead of naming a relation. */
 			for (int i = 0; i < REL_NUM_RELATIONS; i++)
 				if (rel_rows[i].id < vocab)
 					allow[rel_rows[i].id] = 1;
-			return;
 		}
+		return;
 	}
 
 	memset(allow, 1, (size_t)vocab);

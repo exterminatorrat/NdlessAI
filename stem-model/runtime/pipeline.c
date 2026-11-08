@@ -49,17 +49,19 @@ static int ids_to_text(const bpe_tok *tok, const uint16_t *ids, int n,
  * number, would need a completion signal the runtime does not have, and
  * guessing it would truncate valid values.
  */
-static int mask_logits(pipeline_t *p, const char *sofar)
+static void mask_logits(pipeline_t *p, const char *sofar)
 {
 	unsigned char allow[MAX_VOCAB];
 
+	/* A vocabulary outside this buffer decodes unconstrained, exactly as it
+	 * did before the mask existed. Masking is an improvement, never a
+	 * precondition for answering, so it must not turn into an outage. */
 	if (p->model.vocab <= 0 || p->model.vocab > MAX_VOCAB)
-		return -1;
+		return;
 	callmask_next(sofar, allow, p->model.vocab);
 	for (int i = 0; i < p->model.vocab; i++)
 		if (!allow[i])
 			p->logits[i] = INT32_MIN;
-	return 0;
 }
 
 static int run_call_text(const char *call, char *answer, int answer_max)
@@ -239,8 +241,7 @@ int pipeline_answer(pipeline_t *p, const char *question,
 
 		if (ids_to_text(&p->tok, ids + n, gen, sofar, (int)sizeof sofar) < 0)
 			return PIPELINE_ERR;
-		if (mask_logits(p, sofar) < 0)
-			return PIPELINE_ERR;
+		mask_logits(p, sofar);
 		next = argmax32(p->logits, p->model.vocab);
 
 		if (next == 258 || next == 256)

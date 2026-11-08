@@ -11,10 +11,10 @@
  * the call text decoded so far.
  *
  *   "" or spaces only     -> CALL alone
- *   "CALL"                -> the relations, plus the one space that separates
- *                            the header from the relation name (run_call_text
- *                            splits fields on it, so "CALLohm_i" would be
- *                            rejected as an unknown word)
+ *   "CALL"                -> the separator byte alone, so the header cannot
+ *                            fuse onto the relation name: run_call_text splits
+ *                            a call on spaces and would read "CALLquad_solve"
+ *                            as one unknown field
  *   "CALL" plus spaces    -> the relations
  *   anything longer       -> everything except CALL and the relations, so the
  *                            model cannot restart the header or swap in a

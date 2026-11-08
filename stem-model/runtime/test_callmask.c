@@ -172,44 +172,49 @@ int main(void)
 	logits[call] = 1;
 	expect_choice("", call, "step 0 forces CALL over the preferred digit");
 
-	/* (b) Step 1. A space or digit is the model's preference; only a
-	 * relation may follow the header. */
+	/* (b) Step 1. The header is not finished until its separator is out: a
+	 * relation chosen here would fuse into "CALLquad_solve", which
+	 * run_call_text reads as one unknown field. So the separator is the only
+	 * thing the model may choose, whatever it would prefer. */
+	reset_logits();
+	logits[ohm_i] = 900;
+	logits[quad] = 800;
+	logits[(int)'7'] = 700;
+	logits[(int)' '] = 100;
+	expect_choice("CALL", (int)' ', "step 1 forces the separator, not a relation");
+	expect_count("CALL", 1, "bare CALL allows the separator alone");
+	expect_allowed("CALL", ohm_i, 0, "bare CALL blocks relations");
+	expect_allowed("CALL", quad, 0, "bare CALL blocks every relation");
+	expect_allowed("CALL", (int)'7', 0, "bare CALL blocks digits");
+	expect_allowed("CALL", call, 0, "bare CALL blocks a second CALL");
+
+	/* (b2) Step 2, separator out: the relations, and only them. */
 	reset_logits();
 	logits[(int)'7'] = 900;
-	logits[(int)' '] = 650;
+	logits[(int)' '] = 850;
 	logits[ohm_i] = 700;
 	logits[quad] = 100;
-	expect_choice("CALL", ohm_i, "step 1 picks a relation, not the digit");
-	expect_count("CALL", REL_NUM_RELATIONS + 1,
-		     "step 1 allows the relations and one separator");
+	expect_choice("CALL ", ohm_i, "step 2 picks a relation, not the digit");
+	expect_count("CALL ", REL_NUM_RELATIONS, "step 2 allows only relations");
 	expect_count("CALL   ", REL_NUM_RELATIONS,
 		     "trailing spaces do not end the header");
-	expect_allowed("CALL", (int)'7', 0, "step 1 blocks digits");
-	expect_allowed("CALL", call, 0, "step 1 blocks a second CALL");
-
-	/* The separator is what keeps "CALL" and the relation name as two words:
-	 * run_call_text() splits on spaces, so a decode that jams them together
-	 * is rejected no matter how good the rest of the call is. */
-	expect_allowed("CALL", (int)' ', 1, "separator after the header");
 	expect_allowed("CALL ", (int)' ', 0, "only one separator");
-	reset_logits();
-	logits[(int)' '] = 600;
-	logits[quad] = 100;
-	expect_choice("CALL", (int)' ', "the trained separator survives step 1");
+	expect_allowed("CALL ", (int)'7', 0, "step 2 blocks digits");
+	expect_allowed("CALL ", call, 0, "step 2 blocks a second CALL");
 
-	/* (c) Step 2. Arguments start here, so CALL and every relation id are
+	/* (c) Step 3. Arguments start here, so CALL and every relation id are
 	 * gone: the header cannot be restarted or renamed mid-call. */
 	reset_logits();
 	logits[ohm_i] = 900;
 	logits[call] = 890;
 	logits[(int)'1'] = 100;
 	expect_choice("CALL ohm_i", (int)'1',
-		      "step 2 cannot repeat the relation or restart the call");
-	expect_allowed("CALL ohm_i", call, 0, "step 2 blocks CALL");
-	expect_allowed("CALL ohm_i", ohm_i, 0, "step 2 blocks the relation again");
-	expect_allowed("CALL ohm_i", quad, 0, "step 2 blocks any relation");
+		      "step 3 cannot repeat the relation or restart the call");
+	expect_allowed("CALL ohm_i", call, 0, "step 3 blocks CALL");
+	expect_allowed("CALL ohm_i", ohm_i, 0, "step 3 blocks the relation again");
+	expect_allowed("CALL ohm_i", quad, 0, "step 3 blocks any relation");
 	expect_count("CALL ohm_i", VOCAB - REL_NUM_RELATIONS - 1,
-		     "step 2 blocks exactly CALL and the relations");
+		     "step 3 blocks exactly CALL and the relations");
 
 	/* (d) Numbers are untouched by the blacklist: digits, sign, decimal
 	 * point and space all stay legal for every argument token. */
@@ -223,8 +228,8 @@ int main(void)
 	expect_allowed("CALL ohm_i 1", (int)' ', 1, "separator stays legal");
 	expect_allowed("CALL ohm_i 1", (int)'.', 1, "decimal point stays legal");
 
-	/* A header that already went wrong is not reopened: only the exact
-	 * "CALL" prefix gets the relation whitelist. */
+	/* A header that already went wrong is not reopened: only "CALL" plus
+	 * its separator gets the relation whitelist. */
 	expect_count("CALLS", VOCAB - REL_NUM_RELATIONS - 1,
 		     "a longer word is not the header");
 	expect_count("CALL ohm_i 12", VOCAB - REL_NUM_RELATIONS - 1,

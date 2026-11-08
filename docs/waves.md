@@ -99,13 +99,41 @@ trust before any breadth.
 
 ## Status
 
-| Wave | State | Notes |
+`open` means a pull request exists and is verified locally; `merged` means it is
+on master. Nothing here is called done before it is merged.
+
+| Workstream | State | Pull request |
 | --- | --- | --- |
-| 0 | not started | de-collision, artifacts, baseline |
-| 1 | in progress | 1.1-1.4 pending; typed-expression path already landed in #15 |
-| 2 | not started | |
-| 3 | not started | |
-| 4 | not started | |
+| Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | open, CI failing on the ARM lane until the crosscheck list was fixed | #15 |
+| 0.1 split the solver and formula tables by subject | open, move-only, tests byte-identical | #19 |
+| 0.2 build the artifacts | running | — |
+| 0.3 record the baseline | blocked on 0.2 | — |
+| 1.1 invalid output blocking | open, review fixes applied | #20 |
+| 1.2 faster multiply-accumulate | open, honest size of win is ~3% per MAC | #21 |
+| 1.3 vocabulary 1,024 | open, plumbing closed in the same branch | #18 |
+| 1.4 typed maths without the weights file | open, unbuildable here so unverified | #17 |
+
+All five code pulls verified together: the combined tree builds, every C test
+passes, the Python suite is 36 passed and 1 skipped, and `gate.sh` reports
+`ALL GATES PASS`.
+
+## What the process has already taught us
+
+- **`pr_create` commits untracked files**, so a `make` in the worktree sweeps a
+  compiled binary into the pull request. Both the typed-answers and the kernel
+  branch did this. Run `make clean` first, or add the binary to
+  `stem-model/.gitignore`, which now lists every test binary and `bench_kernel`.
+- **The CI ARM lane compiles a fixed file list** in `runtime/crosscheck.sh`. A
+  new source file on the device path must be added there or the link fails with
+  undefined references. This is how `expr.c` was caught, and it is why the
+  script now says so in a comment.
+- **Every workstream touches the Makefiles.** It is the one file no ownership
+  split can keep apart, so the merge that matters is always the object list.
+  Resolve it once, at integration, by taking the union.
+- **A measured win can be much smaller than the model of it.** The kernel floor
+  argued for up to 2x; the measurement says the loop was already near its
+  instruction count per MAC, so the real gain is about 3% per MAC and 1.12x on
+  host timing. Quote the measurement, never the model.
 
 ## Agent configuration
 

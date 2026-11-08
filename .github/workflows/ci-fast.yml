@@ -1,0 +1,61 @@
+name: Fast checks
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'stem-model/**'
+      - '.github/workflows/ci-fast.yml'
+  pull_request:
+    paths:
+      - 'stem-model/**'
+      - '.github/workflows/ci-fast.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fast-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  c-runtime:
+    name: C runtime
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install the ARM cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi libnewlib-arm-none-eabi libnewlib-dev
+      - name: Host tests
+        working-directory: stem-model/runtime
+        run: |
+          make -s
+          ./test_solvers
+          ./test_bpe
+          ./test_guard
+          ./test_graph
+      - name: ARM cross-compile
+        working-directory: stem-model/runtime
+        run: sh crosscheck.sh
+
+  python:
+    name: Python pipeline
+    runs-on: ubuntu-24.04
+    env:
+      UV_TORCH_BACKEND: cpu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: stem-model/Makefile
+      - name: Tests
+        working-directory: stem-model
+        run: make test

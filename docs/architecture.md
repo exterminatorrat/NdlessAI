@@ -102,7 +102,7 @@ The solver is the only component that produces an answer. The model produces a c
 ```mermaid
 sequenceDiagram
   actor Student
-  participant App as Ndless app (future .tns)
+  participant App as "Ndless app (stemhelp.tns)"
   participant Main as main_device.c
   participant BPE as bpe.c
   participant Net as fixed.c + infer.c
@@ -121,7 +121,7 @@ sequenceDiagram
   Main-->>App: answer and call
 ```
 
-`main_device.c` is a host-runnable program today. It is compiled for `arm926ej-s` in CI-style checks with `runtime/crosscheck.sh`, but no Ndless `.tns` wrapper or on-calculator UI exists yet.
+`main_device.c` is a host-runnable program, and `device/` wraps the same `pipeline.c` in a Ndless app that asks for a problem and shows the answer. `make -C device` builds `stemhelp.tns` and packages `weights.bin` beside it. The app is cross-compiled for `arm926ej-s` and checked with `runtime/crosscheck.sh`, but it has not been started on a calculator.
 
 ## Quantization and fixed point
 
@@ -180,8 +180,8 @@ These are early measurements, not acceptance-gate results. The plan's gates sepa
 
 ## What is not built yet
 
-- A `.tns` application that loads `weights.bin` from the calculator filesystem and presents a question-and-answer UI.
-- Static device buffers for `qwork_t`; `qwork_alloc` is a host convenience, and a device port must supply fixed-size storage.
+- A run on physical hardware. `stemhelp.tns` cross-compiles, links, and carries a valid Zehn header, but nothing in the repository records it starting on a CX II, so the UI, timing, and allocator pressure are unmeasured.
+- Static device buffers for `qwork_t`. `pipeline_init` reaches `qwork_alloc`, which `malloc`s each activation buffer at startup; that works, but the peak demand has not been checked against the calculator's heap.
 - A full-model benchmark on physical hardware. `int8bench` measures the kernel cost, and the runtime has been cross-compiled, but the complete pipeline has not been timed on a calculator.
 - Power, thermal, and long-session behavior.
 - Relations beyond the 66 listed in the README.

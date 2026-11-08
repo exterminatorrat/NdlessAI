@@ -2,7 +2,7 @@
 
 NdlessAI is an on-device STEM solver for TI-Nspire calculators, built as a fork of [Ndless](https://github.com/ndless-nspire/Ndless). A small int8 transformer reads a word problem and emits one exact solver call; the calculator computes the answer in integer and rational arithmetic. There is no network, no floating point in the hot path, and the model never writes the answer itself.
 
-> **Status: developer research preview.** The data contract, training and export pipeline, C inference engine, and ARM cross-compile checks are implemented and exercised on the host. The runtime is not yet packaged as a `.tns` application, and no trained checkpoint or release artifact is committed.
+> **Status: developer research preview.** The data contract, training and export pipeline, C inference engine, and ARM cross-compile checks are implemented and exercised on the host. The app builds as `stemhelp.tns`, but it has never been run on a physical calculator, and no trained checkpoint or release artifact is committed.
 
 ## How it works
 
@@ -118,7 +118,7 @@ flowchart TB
   H -. compiled into .-> BPE
   Solv -. cross-compiled with .-> SDK
   Bench -. sizes the model .-> Train
-  Loader -. future host for .-> Main
+  Loader -. hosts .-> Main
 ```
 
 | Path | Contents |

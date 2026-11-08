@@ -14,7 +14,8 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
-for f in bpe fixed solvers infer pipeline main_device graph; do
+for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+         solvers_chem solvers_units infer pipeline main_device graph; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -23,13 +24,16 @@ $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
 status=0
-for f in bpe fixed solvers graph; do
+for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+         solvers_chem solvers_units graph; do
     # qstate_init and the exp_solve log fallback may use soft-float; the
-    # per-token loop may not.
+    # per-token loop may not. solve_exp is static and single-caller, so it is
+    # inlined into solvers_math_solve, and the exclusion has to follow it
+    # there.
     hot=$($CC -print-prog-name=objdump >/dev/null 2>&1 && \
           arm-none-eabi-objdump -dr "$OUT/$f.o" | \
           awk '/^[0-9a-f]+ <.*>:/{fn=$2} /__aeabi_[fd]/{print fn}' | \
-          grep -vE 'qstate_init|solvers_solve' | sort -u || true)
+          grep -vE 'qstate_init|solvers_solve|solvers_math_solve' | sort -u || true)
     if [ -n "$hot" ]; then
         echo "FAIL $f.o: soft-float in hot path: $hot"
         status=1

@@ -17,7 +17,9 @@ else
 	GCCFLAGS += -O0 -g
 endif
 
-OBJS = main.o graph_ui.o pipeline.o bpe.o fixed.o infer.o solvers.o graph.o
+OBJS = main.o graph_ui.o pipeline.o bpe.o fixed.o infer.o solvers.o \
+       solvers_math.o solvers_trig.o solvers_physics.o solvers_chem.o \
+       solvers_units.o graph.o
 EXE = stemhelp
 DISTDIR = .
 

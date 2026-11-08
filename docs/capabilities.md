@@ -17,7 +17,7 @@ Additions only make sense against a true baseline. Today the project has:
 | Model | 5.25M-parameter int8 decoder, 6 layers, d=256, 512-token BPE, greedy decode, 20-token call budget |
 | Contract | 66 fixed-arity relations, `CALL <name> <args>`, every argument must appear in the question |
 | Solvers | Integer and exact-rational C for all 66 relations, four-significant-digit rendering |
-| Parser | Q16 expression parser for graphs: `+ - * / ^`, `sin cos tan`, unary minus, decimals, `x`, 48 nodes |
+| Parser | Q16 expression parser for graphs: `+ - * / ^`, `sin cos tan sqrt abs ln exp`, `pi` and `e`, unary minus, decimals, `x`, 48 nodes |
 | Graphing | Autoscale, pan, zoom, trace, root and extremum detection on a 320x240 framebuffer |
 | Evaluation | Held-out wording 91.6% exact, 2.9% wrong relation, C/PyTorch logit parity, ARM cross-compile check |
 | Platform | `.tns` build, weight file loading, msgbox UI, BPE and pipeline shared with host tests |

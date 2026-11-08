@@ -120,6 +120,42 @@ static void test_parse(void)
 	check(gexpr_parse("x^-1", &e, err, sizeof err) == 0, "parse negative exponent");
 	near_q16(gexpr_eval(&e, q(4)), 0.25, 1e-4, "x^-1 at 4");
 
+	check(gexpr_parse("sqrt(x)", &e, err, sizeof err) == 0, "parse sqrt");
+	near_q16(gexpr_eval(&e, q(9)), 3.0, 1e-4, "sqrt(x) at 9");
+	near_q16(gexpr_eval(&e, q(2)), 1.4142136, 1e-4, "sqrt(2) via x");
+
+	check(gexpr_parse("ln(exp(x))", &e, err, sizeof err) == 0, "parse ln of exp");
+	near_q16(gexpr_eval(&e, q(2)), 2.0, 1e-3, "ln(exp(2))");
+	near_q16(gexpr_eval(&e, q(-1)), -1.0, 1e-3, "ln(exp(-1))");
+
+	check(gexpr_parse("exp(x)", &e, err, sizeof err) == 0, "parse exp");
+	near_q16(gexpr_eval(&e, q(0)), 1.0, 1e-4, "exp(0)");
+	near_q16(gexpr_eval(&e, q(1)), 2.7182818, 1e-2, "exp(1)");
+
+	check(gexpr_parse("abs(-3x)", &e, err, sizeof err) == 0, "parse abs");
+	near_q16(gexpr_eval(&e, q(2)), 6.0, 1e-4, "abs(-3x) at 2");
+	near_q16(gexpr_eval(&e, q(-2)), 6.0, 1e-4, "abs(-3x) at -2");
+
+	check(gexpr_parse("2^0.5", &e, err, sizeof err) == 0, "parse fractional power");
+	near_q16(gexpr_eval(&e, q(0)), 1.4142136, 1e-3, "2^0.5");
+
+	check(gexpr_parse("x^10", &e, err, sizeof err) == 0, "parse large power");
+	near_q16(gexpr_eval(&e, q(1.1)), 2.5937425, 5e-3, "x^10 at 1.1");
+
+	check(gexpr_parse("pi", &e, err, sizeof err) == 0, "parse pi");
+	near_q16(gexpr_eval(&e, q(0)), 3.1415927, 1e-3, "pi");
+
+	check(gexpr_parse("e^2", &e, err, sizeof err) == 0, "parse e squared");
+	near_q16(gexpr_eval(&e, q(0)), 7.3890561, 1e-2, "e^2");
+
+	check(gexpr_parse("2pi", &e, err, sizeof err) == 0, "parse implicit constant");
+	near_q16(gexpr_eval(&e, q(0)), 6.2831853, 1e-3, "2pi");
+
+	check(gexpr_parse("sqrt(-1)", &e, err, sizeof err) == 0, "parse sqrt of negative");
+	check(gexpr_eval(&e, q(0)) == Q16_MAX, "sqrt of a negative has no value");
+	check(gexpr_parse("ln(0)", &e, err, sizeof err) == 0, "parse ln of zero");
+	check(gexpr_eval(&e, q(0)) == Q16_MAX, "ln of zero has no value");
+
 	check(gexpr_parse("", &e, err, sizeof err) < 0, "reject empty");
 	check(gexpr_parse("x+", &e, err, sizeof err) < 0, "reject trailing op");
 	check(gexpr_parse("sin x", &e, err, sizeof err) < 0, "reject sin without paren");

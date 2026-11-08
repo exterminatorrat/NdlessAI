@@ -32,7 +32,8 @@ typedef int32_t q16_t;
 #define Q16_MIN ((q16_t)(-0x7FFFFFFF))
 
 enum {
-	G_NUM, G_X, G_ADD, G_SUB, G_MUL, G_DIV, G_POW, G_SIN, G_COS, G_TAN, G_NEG
+	G_NUM, G_X, G_ADD, G_SUB, G_MUL, G_DIV, G_POW, G_SIN, G_COS, G_TAN, G_NEG,
+	G_SQRT, G_ABS, G_LN, G_EXP
 };
 
 typedef struct {
@@ -79,7 +80,11 @@ q16_t gq_tan(q16_t x);
 
 /*
  * Parses an expression in x. Supports + - * / ^, parentheses, decimal
- * numbers, sin/cos/tan, and implicit multiplication ("2x", "3sin(x)").
+ * numbers, the functions sin/cos/tan/sqrt/abs/ln/exp, the constants pi and e,
+ * and implicit multiplication ("2x", "3sin(x)", "2pi"). Powers accept
+ * fractional and large exponents. A value with no real result (a negative
+ * square root, the logarithm of a non-positive number, an overflow) saturates,
+ * which the callers treat as "no sample here".
  * Returns 0 on success; on failure returns -1 and writes a short message
  * into err.
  */

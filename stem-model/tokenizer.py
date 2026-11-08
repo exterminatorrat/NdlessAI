@@ -7,6 +7,13 @@ PAD, BOS, EOS, CALL, SEP = 256, 257, 258, 259, 260
 REL_BASE = 261
 FIRST_MERGE = REL_BASE + len(RELATIONS)
 
+# Id layout of a VOCAB_SIZE vocabulary: 0-255 byte fallbacks, 256-260 the
+# specials, 261 and up one reserved id per sorted relation name, then learned
+# merges to the end. Relations and merges share the ids past REL_BASE, so the
+# relation count and the merge count trade off one for one: at 1024 the last
+# relation id is 1023, which caps the relation set at 1024 - 261 = 763.
+VOCAB_SIZE = 1024
+
 SPECIALS = {"<pad>": PAD, "<bos>": BOS, "<eos>": EOS, "CALL": CALL, "<sep>": SEP}
 SPECIALS.update({name: REL_BASE + i for i, name in enumerate(sorted(RELATIONS))})
 SPECIAL_PIECES = sorted(SPECIALS, key=len, reverse=True)
@@ -83,7 +90,7 @@ def count_pairs(ids_list):
     return counts
 
 
-def train(texts, vocab_size=512):
+def train(texts, vocab_size=VOCAB_SIZE):
     if vocab_size < FIRST_MERGE:
         raise ValueError(
             f"vocab_size {vocab_size} below the {FIRST_MERGE} reserved ids; "
@@ -124,7 +131,7 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--traces", default="traces.jsonl")
-    ap.add_argument("--vocab", type=int, default=512)
+    ap.add_argument("--vocab", type=int, default=VOCAB_SIZE)
     ap.add_argument("--out", default="tokenizer.json")
     args = ap.parse_args()
 

@@ -14,7 +14,7 @@ Additions only make sense against a true baseline. Today the project has:
 
 | Surface | Already built |
 | --- | --- |
-| Model | 5.25M-parameter int8 decoder, 6 layers, d=256, 512-token BPE, greedy decode, 20-token call budget |
+| Model | 5.38M-parameter int8 decoder, 6 layers, d=256, 1024-token BPE, greedy decode, 20-token call budget |
 | Contract | 66 fixed-arity relations, `CALL <name> <args>`, every argument must appear in the question |
 | Solvers | Integer and exact-rational C for all 66 relations, four-significant-digit rendering |
 | Parser | Q16 expression parser for graphs: `+ - * / ^`, `sin cos tan sqrt abs ln exp`, `pi` and `e`, unary minus, decimals, `x`, 48 nodes |
@@ -23,6 +23,8 @@ Additions only make sense against a true baseline. Today the project has:
 | Platform | `.tns` build, weight file loading, msgbox UI, BPE and pipeline shared with host tests |
 
 The catalogue below assumes all of that stays.
+
+The vocabulary and parameter counts are the 1024-token configuration the pipeline now builds by default; the checkpoint and weights on disk are still the 512-token ones until the retrain.
 
 ## A. Model and inference
 

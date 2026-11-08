@@ -34,18 +34,22 @@ The three splits are disjoint by seed and by phrasing:
 
 ## Tokenizer
 
-The tokenizer is byte-level BPE with a 512-token vocabulary:
+The tokenizer is byte-level BPE with a 1024-token vocabulary:
 
 | IDs | Contents |
 | --- | --- |
 | 0-255 | Byte fallback |
 | 256-260 | `<pad>`, `<bos>`, `<eos>`, `CALL`, `<sep>` |
-| 261-271 | One reserved id per relation name |
-| 272-511 | Learned merges |
+| 261-326 | One reserved id per relation name, 66 today |
+| 327-1023 | Learned merges |
+
+Relation names and merges share every id from 261 up, so the vocabulary size is also the ceiling on the relation set. With no merges left, 512 reserved `512 - 261 = 251` relation ids and 1024 reserves `1024 - 261 = 763`. At today's 66 relations `FIRST_MERGE` is 327, which leaves `512 - 327 = 185` merges at 512 and `1024 - 327 = 697` at 1024. The merges are what buy latency: every merge shortens the prompt, and prefill is most of the on-device answer time.
+
+The retrained checkpoint and the regenerated `bpe.h` that go with 1024 are a separate change, so the token counts below are still the 512-token ones and nothing here has been measured at 1024.
 
 The checkpoint and the C header must come from the same `tokenizer.json`. `export_tokenizer.py` embeds a SHA-256 fingerprint of the source tokenizer in `bpe.h`, and `check_tokenizer_sync.py` verifies it. A previous run scored 0/40 because a checkpoint and header came from different dataset runs; matching them fixed it.
 
-Measured on 12,000 traces: 43.9 tokens per question, 7.4 tokens per call, and 12,000/12,000 exact tokenizer round-trips.
+Measured on 12,000 traces with the 512-token vocabulary: 43.9 tokens per question, 7.4 tokens per call, and 12,000/12,000 exact tokenizer round-trips. More merges are expected to cut the per-question count; that is the reason for the wider vocabulary and it has not been measured.
 
 ## Architecture and training
 
@@ -57,9 +61,9 @@ The model is a Llama-2-style decoder:
 | Width | 256 |
 | Heads | 8 |
 | Feed-forward width | 768 |
-| Vocabulary | 512 |
+| Vocabulary | 1024 |
 | Sequence length | 512 by default; the `make train` target uses 128-token windows |
-| Parameters | 5,246,208 |
+| Parameters | 5,377,280 |
 | Positional encoding | RoPE, theta 10000 |
 | Normalization | RMSNorm |
 | Activation | SwiGLU |
@@ -69,7 +73,7 @@ The model is a Llama-2-style decoder:
 
 The loss is masked to the call tokens. Training on the whole sequence taught the model to recite the question and then repeat `CALL`; call-only loss produced correct relation names on held-out samples.
 
-The recorded run trained at `d=256` and reached validation loss `1.068` at step 100 and `0.066` at step 500. It took 834 seconds on two CPU cores, and all three sampled validation problems matched exactly. These are early-run numbers, not a full 8,000-step result.
+The recorded run trained at `d=256` with the 512-token vocabulary and reached validation loss `1.068` at step 100 and `0.066` at step 500. It took 834 seconds on two CPU cores, and all three sampled validation problems matched exactly. These are early-run numbers, not a full 8,000-step result.
 
 ## Quantization and export
 

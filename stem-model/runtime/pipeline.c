@@ -222,6 +222,10 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	 * answered with the derivative before any arithmetic is attempted. */
 	if (gexpr_derivative_answer(text, answer, answer_max) == 0)
 		return PIPELINE_OK;
+	/* A definite integral is not an expression either: the parser has no
+	 * "integrate" or "int" function, so the form is recognised first. */
+	if (gexpr_integral_answer(text, answer, answer_max) == 0)
+		return PIPELINE_OK;
 	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
 		return PIPELINE_ERR;
 	if (gexpr_has_x(&e))

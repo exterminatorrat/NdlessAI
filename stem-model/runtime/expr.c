@@ -1202,6 +1202,210 @@ int gexpr_unparse(const gexpr_t *e, char *out, int outlen)
 	return 0;
 }
 
+/* ---- definite integrals ---- */
+
+/*
+ * Simpson's rule over one panel: with width = b-a in Q16 units and s the
+ * weighted sample sum in Q16 units, the value in Q16 units is
+ * width*s/(6*65536). Both factors can be large, so the product is range
+ * checked instead of wrapped, and a panel that leaves Q16 is a failure: a
+ * saturated panel would make a divergent integral look answerable.
+ */
+static int simpson_panel(int64_t width, int64_t s, q16_t *out)
+{
+	const int64_t den = 6 * (int64_t)Q16_ONE;
+	int64_t w = width < 0 ? -width : width;
+	int64_t v = s < 0 ? -s : s;
+	int64_t num, q;
+
+	if (w != 0 && v > INT64_MAX / w)
+		return -1;
+	num = width * s;
+	q = (num >= 0 ? num + den / 2 : num - den / 2) / den;
+	if (q > Q16_MAX || q < Q16_MIN)
+		return -1;
+	*out = (q16_t)q;
+	return 0;
+}
+
+/*
+ * The work budget. Simpson converges quadratically on a smooth function and
+ * barely at all on an endpoint singularity, so an unbounded loop is not an
+ * option either way. 2000 samples is far more than any closed-form case in
+ * test_expr uses - the worst is 117, over six periods of sin - while a
+ * genuine singularity exhausts it and fails. The depth limit is the second
+ * guard: a panel narrower than four Q16 steps cannot be halved onto
+ * representable midpoints, so twenty levels reach that width from any Q16
+ * interval.
+ */
+#define INT_MAX_EVALS 2000
+#define INT_MAX_DEPTH 20
+
+typedef struct {
+	const gexpr_t *f;
+	int evals;
+} it_t;
+
+/*
+ * One sample. gexpr_eval reports "no value here" by saturating, which is the
+ * only signal a singularity gives; an integral of a function that is not
+ * finite across the interval cannot be bounded, so a saturated sample fails
+ * the whole call rather than entering the sum as a clamp.
+ */
+static int isample(it_t *g, q16_t x, q16_t *out)
+{
+	q16_t v;
+
+	if (g->evals >= INT_MAX_EVALS)
+		return -1;
+	g->evals++;
+	v = gexpr_eval(g->f, x);
+	if (v == Q16_MAX || v == Q16_MIN)
+		return -1;
+	*out = v;
+	return 0;
+}
+
+/* The midpoint in Q16, exact enough that it always lies between a and b. */
+static q16_t imid(q16_t a, q16_t b)
+{
+	return (q16_t)(((int64_t)a + b) / 2);
+}
+
+/*
+ * Refines [a, b] until the two-panel Simpson sum agrees with the one-panel
+ * estimate to `tol`. The split runs down the tree instead of in an explicit
+ * stack, so the budget is one frame per active level; the panel value and both
+ * sample sets travel by value.
+ *
+ * Failing to reach `tol` inside the depth or evaluation budget is reported as
+ * failure. A number with an error estimate larger than what the answer needs
+ * is exactly the kind of answer this engine refuses to give, and the caller
+ * has no way to tell it from a good one.
+ */
+static int adapt(it_t *g, q16_t a, q16_t b, q16_t fa, q16_t fm, q16_t fb,
+                 q16_t whole, int64_t tol, int depth, q16_t *out)
+{
+	q16_t m = imid(a, b);
+	q16_t lm = imid(a, m);
+	q16_t rm = imid(m, b);
+	q16_t flm, frm, left, right, lv, rv;
+	int64_t width = (int64_t)b - a;
+	int64_t total, d, err;
+
+	/*
+	 * A panel under four Q16 steps has no pair of half-panels with
+	 * representable midpoints: imid() would return an endpoint, the "half"
+	 * panel would be empty and the other lopsided, and the two-panel test
+	 * would compare against a rule that cannot converge. Its estimate is
+	 * already the best this grid can carry, so it is accepted as it stands.
+	 */
+	if (width < 4) {
+		*out = whole;
+		return 0;
+	}
+	if (depth <= 0 || g->evals + 2 > INT_MAX_EVALS)
+		return -1;
+	if (isample(g, lm, &flm) < 0 || isample(g, rm, &frm) < 0)
+		return -1;
+	if (simpson_panel((int64_t)m - a,
+	                  (int64_t)fa + 4 * (int64_t)flm + fm, &left) < 0 ||
+	    simpson_panel((int64_t)b - m,
+	                  (int64_t)fm + 4 * (int64_t)frm + fb, &right) < 0)
+		return -1;
+	total = (int64_t)left + right;
+	if (total > Q16_MAX || total < Q16_MIN)
+		return -1;
+	d = total - whole;
+	/*
+	 * The two-panel and one-panel sums differ by about fifteen times the
+	 * remaining error when the function is smooth, which is the usual
+	 * |d|/15 test. This code uses |d| itself. That is deliberate: on a kink
+	 * or near an endpoint where a derivative blows up, the fifteen-to-one
+	 * factor is not a bound but an underestimate, and a panel accepted on it
+	 * left sqrt(x) over [0,1] at 0.6665 instead of 0.6667. Demanding the two
+	 * sums agree to the answer's own tolerance on every panel costs about a
+	 * third more samples on the smooth cases and fixed every such case
+	 * measured.
+	 */
+	err = d < 0 ? -d : d;
+	if (err <= tol) {
+		/* Richardson: the refined sum plus the error it is expected to
+		 * carry. In Q16 the correction is often under one step, so it
+		 * rounds to nothing rather than biasing the answer. */
+		total += d / 15;
+		if (total > Q16_MAX || total < Q16_MIN)
+			return -1;
+		*out = (q16_t)total;
+		return 0;
+	}
+	/* Halving the allowance per side keeps the total error under tol. It
+	 * stops halving at two Q16 steps: below that, integer noise in the
+	 * samples makes the panel test unsatisfiable, which would refine a
+	 * smooth function forever and then fail it. */
+	if (tol > 2)
+		tol /= 2;
+	if (adapt(g, a, m, fa, flm, fm, left, tol, depth - 1, &lv) < 0 ||
+	    adapt(g, m, b, fm, frm, fb, right, tol, depth - 1, &rv) < 0)
+		return -1;
+	total = (int64_t)lv + rv;
+	if (total > Q16_MAX || total < Q16_MIN)
+		return -1;
+	*out = (q16_t)total;
+	return 0;
+}
+
+int gexpr_integrate(const gexpr_t *f, q16_t a, q16_t b, q16_t *out)
+{
+	it_t g;
+	q16_t fa, fb, fm, whole, total;
+	int64_t width, tol, est;
+
+	if (!f || !out || f->root < 0 || f->root >= f->n)
+		return GEXPR_INT_UNBOUNDED;
+	if (a == b) {
+		*out = 0;
+		return GEXPR_INT_OK;
+	}
+	/* Out of order is the negated integral; integrating the other way round
+	 * also keeps every panel's width non-negative. */
+	if (b < a) {
+		q16_t v;
+		int r = gexpr_integrate(f, b, a, &v);
+
+		if (r != GEXPR_INT_OK || v == Q16_MIN)
+			return GEXPR_INT_UNBOUNDED;
+		*out = gq_sat(-(int64_t)v);
+		return GEXPR_INT_OK;
+	}
+	g.f = f;
+	g.evals = 0;
+	width = (int64_t)b - a;
+	fm = 0;
+	if (isample(&g, a, &fa) < 0 || isample(&g, b, &fb) < 0 ||
+	    isample(&g, imid(a, b), &fm) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	if (simpson_panel(width, (int64_t)fa + 4 * (int64_t)fm + fb,
+	                  &whole) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	/*
+	 * The tolerance has two parts, both measured from things the engine knows
+	 * before it refines. The first is relative to the estimate: 1/16384 is
+	 * about an eighth of the last of the four significant digits
+	 * gexpr_format prints, so a panel that passes cannot move that digit on
+	 * its own. The second is the absolute floor a fixed-point sample imposes:
+	 * one Q16 step of error in f across this width moves the integral by
+	 * width/65536 Q16 units, and 1/8192 allows eight such steps for the
+	 * functions whose own series are a few steps off.
+	 */
+	est = whole < 0 ? -(int64_t)whole : whole;
+	tol = est / 16384 + width / 8192 + 4;
+	if (adapt(&g, a, b, fa, fm, fb, whole, tol, INT_MAX_DEPTH, &total) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	*out = total;
+	return GEXPR_INT_OK;
+}
+
 /* ---- typed derivative answers ---- */
 
 #define EXPR_TEXT_MAX 256
@@ -1255,6 +1459,146 @@ int gexpr_derivative_answer(const char *text, char *out, int outlen)
 		if (gexpr_derive(&f, &d) != GEXPR_DIFF_OK)
 			continue;
 		return gexpr_unparse(&d, out, outlen);
+	}
+	return -1;
+}
+
+/* ---- typed integral answers ---- */
+
+/*
+ * Splits "f, a, b" at the commas that are not inside brackets. Returns 0 only
+ * for exactly three non-empty parts with balanced brackets, so an extra comma,
+ * a stray bracket or trailing text cannot be read as part of the bounds.
+ */
+static int split_three(const char *s, int n, const char **part, int *plen)
+{
+	int depth = 0, k = 0;
+
+	part[0] = s;
+	for (int i = 0; i < n; i++) {
+		if (s[i] == '(') {
+			depth++;
+		} else if (s[i] == ')') {
+			if (--depth < 0)
+				return -1;
+		} else if (s[i] == ',' && depth == 0) {
+			if (k == 2)
+				return -1;
+			plen[k] = (int)(s + i - part[k]);
+			part[++k] = s + i + 1;
+		}
+	}
+	if (depth != 0 || k != 2)
+		return -1;
+	plen[2] = (int)(s + n - part[2]);
+	for (int i = 0; i < 3; i++)
+		if (plen[i] <= 0)
+			return -1;
+	return 0;
+}
+
+/*
+ * A bound is any constant expression gexpr_parse accepts: "0", "-1", "0.5",
+ * "pi", "2*pi", "1/2", "sqrt(2)". It is parsed like the integrand and then
+ * evaluated once at x = 0, which is how the typed path already decides that an
+ * expression is a number.
+ *
+ * That quantises the bound to Q16 before the integral runs, so pi is 3.14159
+ * and 2*pi is 6.28317 rather than the real constants. The answer is the
+ * integral over the quantised interval, which is why integrate(x,0,pi) prints
+ * 4.935 (4.93478...) rather than 4.9348: the difference is the bound, not the
+ * quadrature.
+ *
+ * A bound that depends on x has no single value as a limit, and one that fails
+ * to parse or has no finite Q16 value refuses the whole call rather than
+ * quietly integrating over something else.
+ */
+static int parse_bound(const char *s, int n, q16_t *out)
+{
+	char text[EXPR_TEXT_MAX];
+	char err[48];
+	gexpr_t e;
+	q16_t v;
+	int i = 0;
+
+	while (i < n && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	while (n > i && (s[n - 1] == ' ' || s[n - 1] == '\t'))
+		n--;
+	if (n <= i || n - i >= (int)sizeof text)
+		return -1;
+	memcpy(text, s + i, (size_t)(n - i));
+	text[n - i] = 0;
+	if (gexpr_parse(text, &e, err, sizeof err) < 0 || gexpr_has_x(&e))
+		return -1;
+	v = gexpr_eval(&e, 0);
+	if (v == Q16_MAX || v == Q16_MIN)
+		return -1;
+	*out = v;
+	return 0;
+}
+
+int gexpr_integral_answer(const char *text, char *out, int outlen)
+{
+	static const char *const forms[] = { "integrate", "int" };
+	char inner[EXPR_TEXT_MAX];
+	char expr_text[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[3];
+	int plen[3];
+	gexpr_t f;
+	const char *p;
+	size_t n, room;
+	q16_t a, b, v;
+	int k;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+	for (k = 0; k < (int)(sizeof forms / sizeof forms[0]); k++) {
+		size_t flen = strlen(forms[k]);
+		size_t inner_len;
+		const char *open;
+		int i;
+
+		/* Keyword, then a bracket, then three parts whose brackets balance
+		 * and a closing bracket as the last character, so
+		 * "integrate(x^2,0,3)+1" is not an answer about x^2. */
+		if (room < flen + 2 || text[n - 1] != ')')
+			continue;
+		if (strncmp(p, forms[k], flen) != 0)
+			continue;
+		open = p + flen;
+		while (*open == ' ' || *open == '\t')
+			open++;
+		if (*open != '(')
+			continue;
+		inner_len = (size_t)(text + n - 1 - (open + 1));
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			continue;
+		memcpy(inner, open + 1, inner_len);
+		inner[inner_len] = 0;
+		if (split_three(inner, (int)inner_len, part, plen) < 0)
+			continue;
+		if (parse_bound(part[1], plen[1], &a) < 0 ||
+		    parse_bound(part[2], plen[2], &b) < 0)
+			continue;
+		for (i = 0; i < plen[0]; i++)
+			expr_text[i] = part[0][i];
+		expr_text[i] = 0;
+		if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
+			continue;
+		if (gexpr_integrate(&f, a, b, &v) != GEXPR_INT_OK)
+			continue;
+		return gexpr_format(v, out, outlen);
 	}
 	return -1;
 }

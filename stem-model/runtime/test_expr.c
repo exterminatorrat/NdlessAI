@@ -1,6 +1,6 @@
 /*
- * Host tests for symbolic differentiation: the rules, the simplifier, the
- * printed form and the typed-answer path.
+ * Host tests for symbolic differentiation and definite integration: the rules,
+ * the simplifier, the printed forms and the typed-answer paths.
  *
  * A table of expected strings only pins down the cases the author thought of,
  * so the real check is numeric. For every expression, hand-picked or drawn
@@ -418,6 +418,292 @@ static void test_generated(void)
 	       tries, rejected);
 }
 
+/* ---- definite integrals ---- */
+
+/*
+ * Expected values are the closed forms evaluated by sympy at the Q16 bounds the
+ * engine actually receives, rounded to the nearest Q16 step. That way the table
+ * measures the integrator and not the bounds' own quantisation: a student who
+ * types integrate(1/x,0.001,1) is asking about 65/65536, because that is the
+ * nearest value Q16 holds.
+ *
+ * The error is reported in millionths of max(1, |value|), which is the
+ * derivative checks' permille with three more digits: integration is accurate
+ * enough that a whole permille would round most of the table to zero. The worst
+ * disagreement measured over this table is 107 ppm, at sin(x) over [0,20] -
+ * twenty is more than six periods, so the grid is dense and the residual is the
+ * samples' own error. The assertion sits at 1000 ppm, about nine times that,
+ * which is still far below what a wrong rule makes: a dropped panel or a sign
+ * flip is hundreds of thousands of ppm. Every case is checked against a value
+ * derived independently, so the table pins the number and not a shape.
+ */
+#define INT_TOL_PPM 1000
+
+static int worst_int;
+static char worst_int_where[128];
+
+/* |a - b| as millionths of max(1, |a|), the integral counterpart of permille(). */
+static int ppm(q16_t a, q16_t b)
+{
+	int64_t d = (int64_t)a - b;
+	int64_t s = a < 0 ? -(int64_t)a : a;
+
+	if (d < 0)
+		d = -d;
+	if (s < Q16_ONE)
+		s = Q16_ONE;
+	return (int)(d * 1000000 / s);
+}
+
+static const struct {
+	const char *text;
+	q16_t a;
+	q16_t b;
+	q16_t want;
+} integrals[] = {
+	{ "x^2", 0, 3 * Q16_ONE, 589824 },
+	{ "x^3+2x", 0, 2 * Q16_ONE, 524288 },
+	{ "2x^3-5x^2+3x-1", -Q16_ONE, 2 * Q16_ONE, -393216 },
+	{ "3x^2-4x+1", -2 * Q16_ONE, 2 * Q16_ONE, 1310720 },
+	{ "x^10", -Q16_ONE, Q16_ONE, 11916 },
+	{ "sin(x)", 0, 205887, 131072 },
+	{ "cos(x)", 0, Q16_ONE, 55147 },
+	{ "sin(x)^2", 0, 3 * Q16_ONE, 102882 },
+	{ "sin(3x)", 0, 2 * Q16_ONE, 870 },
+	{ "tan(x)", 0, Q16_ONE, 40346 },
+	{ "exp(x)", 0, Q16_ONE, 112609 },
+	{ "exp(-x^2)", 0, Q16_ONE, 48944 },
+	{ "exp(-x)", 0, 10 * Q16_ONE, 65533 },
+	{ "exp(x)", 0, 5 * Q16_ONE, 9660869 },
+	{ "ln(x)", Q16_ONE, 3 * Q16_ONE, 84924 },
+	{ "ln(x^2+1)", 0, Q16_ONE, 17298 },
+	{ "1/x", Q16_ONE, 4 * Q16_ONE, 90852 },
+	{ "1/(1+x)", 0, Q16_ONE, 45426 },
+	{ "1/(1+x)", 0, 100 * Q16_ONE, 302457 },
+	/* 1/x with the lower bound at 65/65536: a steep endpoint that is not a
+	 * singularity, the case a fixed grid is worst at. */
+	{ "1/x", 65, Q16_ONE, 453245 },
+	{ "sqrt(x)", 0, Q16_ONE, 43691 },
+	{ "sqrt(x)", Q16_ONE, 4 * Q16_ONE, 305835 },
+	{ "sqrt(1-x^2)", 0, Q16_ONE, 51472 },
+	/* A kink the panel grid does not land on. */
+	{ "abs(x-0.5)", 0, Q16_ONE, 16384 },
+	{ "abs(x-0.3)", 0, Q16_ONE, 19005 },
+	{ "abs(x)", -2 * Q16_ONE, 3 * Q16_ONE, 425984 },
+	{ "1/(1+x^2)", 0, 4 * Q16_ONE, 86889 },
+	{ "1/(1+x^2)", 0, 10 * Q16_ONE, 96412 },
+	/* A singularity just outside the interval. */
+	{ "1/(x-1)", 0, Q16_ONE / 2, -45426 },
+	{ "1/(x-1)", 26214, 58982, -117421 },
+	{ "x*sin(x)", 0, 205887, 205887 },
+	{ "x^2*exp(-x)", 0, 2 * Q16_ONE, 42379 },
+	/* Nearly constant curves, and twenty panels of one. */
+	{ "1", 0, 5 * Q16_ONE, 327680 },
+	{ "0.5", -2 * Q16_ONE, 2 * Q16_ONE, 131072 },
+	{ "1+0.0625x", 0, 8 * Q16_ONE, 655360 },
+	{ "sin(x)", 0, 20 * Q16_ONE, 38792 },
+};
+
+static void test_integrals(void)
+{
+	for (size_t i = 0; i < sizeof integrals / sizeof integrals[0]; i++) {
+		gexpr_t f;
+		char err[48];
+		q16_t got = 0;
+		int p;
+
+		if (gexpr_parse(integrals[i].text, &f, err, sizeof err) < 0) {
+			printf("FAIL %s does not parse: %s\n", integrals[i].text,
+			       err);
+			failures++;
+			continue;
+		}
+		if (gexpr_integrate(&f, integrals[i].a, integrals[i].b,
+		                    &got) != GEXPR_INT_OK) {
+			printf("FAIL %s over [%ld,%ld]: refused\n",
+			       integrals[i].text, (long)integrals[i].a,
+			       (long)integrals[i].b);
+			failures++;
+			continue;
+		}
+		p = ppm(got, integrals[i].want);
+		if (p > worst_int) {
+			worst_int = p;
+			snprintf(worst_int_where, sizeof worst_int_where,
+			         "%s over [%ld,%ld]", integrals[i].text,
+			         (long)integrals[i].a, (long)integrals[i].b);
+		}
+		if (p > INT_TOL_PPM) {
+			printf("FAIL %s over [%ld,%ld]: %d, wanted %d (%d ppm)\n",
+			       integrals[i].text,
+			       (long)integrals[i].a, (long)integrals[i].b,
+			       (int)got, (int)integrals[i].want, p);
+			failures++;
+		}
+	}
+}
+
+/* ---- integrals that must fail, and the three cases that are answers ---- */
+
+static void expect_refused_integral(const char *text, q16_t a, q16_t b)
+{
+	gexpr_t f;
+	char err[48];
+	q16_t got = 12345;
+
+	if (gexpr_parse(text, &f, err, sizeof err) < 0) {
+		printf("FAIL %s does not parse: %s\n", text, err);
+		failures++;
+		return;
+	}
+	if (gexpr_integrate(&f, a, b, &got) != GEXPR_INT_UNBOUNDED) {
+		printf("FAIL %s over [%ld,%ld]: answered %d\n", text, (long)a,
+		       (long)b, (int)got);
+		failures++;
+		return;
+	}
+	/* A refused integral must not leave half an answer behind. */
+	if (got != 12345) {
+		printf("FAIL %s: refused but wrote %d\n", text, (int)got);
+		failures++;
+	}
+}
+
+static void test_integral_edges(void)
+{
+	gexpr_t f, empty = { .n = 0, .root = -1 };
+	char err[48];
+	q16_t up = 0, down = 0, zero = 777;
+
+	if (gexpr_parse("x^2+1", &f, err, sizeof err) < 0) {
+		printf("FAIL setup for the integral edge cases\n");
+		failures++;
+		return;
+	}
+
+	/* a == b is zero, and a zero-width interval is not an error even where
+	 * the function has no value there: integrating over a point adds
+	 * nothing. */
+	if (gexpr_integrate(&f, 2 * Q16_ONE, 2 * Q16_ONE, &zero) !=
+	        GEXPR_INT_OK || zero != 0) {
+		printf("FAIL a == b is not 0\n");
+		failures++;
+	}
+	if (gexpr_parse("1/x", &f, err, sizeof err) < 0 ||
+	    gexpr_integrate(&f, 0, 0, &zero) != GEXPR_INT_OK || zero != 0) {
+		printf("FAIL 1/x over [0,0] is not 0\n");
+		failures++;
+	}
+
+	/* Out of order is the negated integral, not a refusal and not zero. */
+	if (gexpr_parse("x^2+1", &f, err, sizeof err) < 0 ||
+	    gexpr_integrate(&f, 0, 2 * Q16_ONE, &up) != GEXPR_INT_OK ||
+	    gexpr_integrate(&f, 2 * Q16_ONE, 0, &down) != GEXPR_INT_OK ||
+	    (int64_t)up != -(int64_t)down || up == 0) {
+		printf("FAIL reversed bounds: %d and %d\n", (int)up,
+		       (int)down);
+		failures++;
+	}
+
+	/* An empty tree has no integral. */
+	if (gexpr_integrate(&empty, 0, Q16_ONE, &zero) != GEXPR_INT_UNBOUNDED ||
+	    gexpr_integrate(NULL, 0, Q16_ONE, &zero) != GEXPR_INT_UNBOUNDED) {
+		printf("FAIL an empty tree was integrated\n");
+		failures++;
+	}
+
+	/* A singularity inside the interval has no finite integral, whether it
+	 * lands on a sample or only shows up as the refinement closes in. */
+	expect_refused_integral("1/x", -Q16_ONE, Q16_ONE);
+	expect_refused_integral("1/(x-1)", 0, 2 * Q16_ONE);
+	expect_refused_integral("1/(x-1)", 13107, 98304);
+	/* A domain where the function has no value. */
+	expect_refused_integral("sqrt(x)", -Q16_ONE, Q16_ONE);
+	/* The result, not the samples, leaves Q16. */
+	expect_refused_integral("x^2", 0, 300 * Q16_ONE);
+	expect_refused_integral("exp(x)", 0, 50 * Q16_ONE);
+}
+
+/* ---- the typed integral form ---- */
+
+static void expect_integral_typed(const char *text, const char *want)
+{
+	char got[64];
+
+	if (gexpr_integral_answer(text, got, sizeof got) < 0) {
+		printf("FAIL typed %s -> refused, wanted %s\n", text, want);
+		failures++;
+		return;
+	}
+	if (strcmp(got, want)) {
+		printf("FAIL typed %s -> %s, wanted %s\n", text, got, want);
+		failures++;
+	}
+}
+
+static void test_integral_typed(void)
+{
+	expect_integral_typed("integrate(x^2,0,3)", "9");
+	expect_integral_typed("integrate(x^2, 0, 3)", "9");
+	expect_integral_typed("int(x^2,0,3)", "9");
+	expect_integral_typed("int (x^2 , 0 , 3)", "9");
+	expect_integral_typed("integrate( sin(x) , 0 , 3.14159 )", "2");
+	expect_integral_typed("int(sqrt(x),0,1)", "0.6667");
+	expect_integral_typed("integrate(1/x,1,4)", "1.386");
+	expect_integral_typed("integrate(abs(x),-2,3)", "6.5");
+	expect_integral_typed("integrate(x^2,3,0)", "-9");
+	expect_integral_typed("integrate(-x^2,0,3)", "-9");
+	expect_integral_typed("integrate(x^2,0.5,1.5)", "1.083");
+	expect_integral_typed("integrate(x^2,-1.5,-0.5)", "1.083");
+	expect_integral_typed("integrate(5,0,2)", "10");
+	expect_integral_typed("integrate((x+1)^2,0,2)", "8.667");
+
+	/* A bound is a constant expression, evaluated once in Q16 before the
+	 * integral runs. pi therefore means 3.14159, not pi: integrate(x,0,pi)
+	 * is 4.93478... and prints 4.935. */
+	expect_integral_typed("integrate(x,0,pi)", "4.935");
+	expect_integral_typed("integrate(sin(x),0,pi)", "2");
+	expect_integral_typed("integrate(x,0,2*pi)", "19.74");
+	expect_integral_typed("integrate(x,0,2pi)", "19.74");
+	expect_integral_typed("integrate(x,0,pi/2)", "1.234");
+	expect_integral_typed("integrate(x^2,0,3/2)", "1.125");
+	expect_integral_typed("integrate(1/x,1,exp(1))", "1");
+	expect_integral_typed("integrate(cos(x),0,pi/2)", "1");
+}
+
+static void test_integral_typed_refusals(void)
+{
+	static const char *const refused[] = {
+		/* the whole text has to be the call */
+		"integrate(x^2,0,3)+1", "2*int(x^2,0,3)", "integrate (x^2,0,3)junk",
+		/* not three parts */
+		"integrate(x^2,0)", "integrate(x^2,0,3,4)", "int(x^2)", "",
+		/* brackets that do not balance */
+		"integrate(x^2,0,3", "integrate(x^2,0,3))", "integrate(x^2,0,3,",
+		/* bounds that are not constant expressions, depend on x, have no
+		 * finite Q16 value, or do not fit */
+		"integrate(x^2,a,b)", "integrate(x^2,0,2^)",
+		"integrate(x,0,x)", "integrate(x,0,x^2+1)", "integrate(x,0,1/0)",
+		"integrate(x,0,exp(50))", "integrate(x^2,0,40000)",
+		/* not the call */
+		"integr(x^2,0,3)", "integratex(x^2,0,3)", "intx(x^2,0,3)",
+		/* a real integral the engine cannot bound */
+		"integrate(1/x,-1,1)", "integrate(1/(x-1),0,2)",
+	};
+	char got[64];
+
+	for (size_t i = 0; i < sizeof refused / sizeof refused[0]; i++) {
+		if (gexpr_integral_answer(refused[i], got, sizeof got) == 0) {
+			printf("FAIL typed %s -> %s, wanted no answer\n",
+			       refused[i], got);
+			failures++;
+		}
+	}
+	/* Two bounds that are the same Q16 value are a zero-width interval,
+	 * which is an answer rather than a refusal. */
+	expect_integral_typed("integrate(x^2,0.000001,0.000002)", "0");
+}
+
 /* ---- failures that must stay failures ---- */
 
 static void expect_derive(const char *text, int want)
@@ -533,6 +819,10 @@ int main(void)
 	test_abs_sides();
 	test_in_place();
 	test_generated();
+	test_integrals();
+	test_integral_edges();
+	test_integral_typed();
+	test_integral_typed_refusals();
 	test_failures();
 	test_typed();
 
@@ -542,11 +832,13 @@ int main(void)
 	       worst_print, worst_print ? worst_print_where : "none");
 	printf("printed forms past the %d node parse limit: %d (round trip not "
 	       "checked)\n", EXPR_MAX_NODES, too_big_to_print);
+	printf("worst definite-integral disagreement: %d ppm (%s)\n",
+	       worst_int, worst_int ? worst_int_where : "none");
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;
 	}
-	printf("expression differentiation: all checks passed\n");
+	printf("expression differentiation and integration: all checks passed\n");
 	return 0;
 }

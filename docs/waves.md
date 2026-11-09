@@ -104,19 +104,36 @@ on master. Nothing here is called done before it is merged.
 
 | Workstream | State | Pull request |
 | --- | --- | --- |
-| Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | open, CI failing on the ARM lane until the crosscheck list was fixed | #15 |
+| Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | open, green once the crosscheck fix reached the integration base | #15 |
 | 0.1 split the solver and formula tables by subject | open, move-only, tests byte-identical | #19 |
 | 0.2 build the artifacts | done on the build machine: dataset, 6,000-step checkpoint, `weights.bin` 5.91 MB, fixed-point parity 6/6 | — |
 | 0.3 record the baseline | done, numbers below | — |
 | 1.1 invalid output blocking | open, review fixes applied | #20 |
 | 1.2 faster multiply-accumulate | open, honest size of win is ~3% per MAC | #21 |
-| 1.3 vocabulary 1,024 | open, plumbing closed in the same branch | #18 |
-| 1.4 typed maths without the weights file | open, unbuildable here so unverified | #17 |
+| 1.3 vocabulary 1,024 | **closed as a measured regression**: 87.9% exact against 92.5% at 512 on the same 2,000 rows. The capacity bug it exposed is a separate open pull | #18 closed, #23 open |
+| 1.4 typed maths without the weights file | open, stacked on #15 | #17 |
+| 2.1 solve for any variable (equation engine) | open; three math relations routed through it with `test_solvers` byte-identical | #25 |
+| 2.2 differentiation | open; typed `d/dx`, `diff`, `derivative`, worst finite-difference disagreement 15 permille | #27 |
+| 2.3 curve analysis | **not started**, and the wave closed without it — see below | — |
+| 2.4 AP Physics 1 mechanics | 8 relations landed with the retrain; the solver/relation parity gate shipped separately, because a checker is reviewable without a vocabulary rebuild | #24, #29 |
+| 3.1 pulled forward: definite integrals | open; `integrate(x^2,0,3)` answers 9, worst relative error 1.08e-4 | #30 |
+| 3.3 and 3.4 pulled forward: chemistry and thermodynamics | 10 relations landed with the retrain | #29 |
+| Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
 
-All five code pulls verified together, with the trained weights present: the
+Wave 1's six code pulls verified together, with the trained weights present: the
 combined tree builds, every C test passes, fixed-point parity is 6/6, the
 tokenizer header matches, the Python suite is 36 passed and 1 skipped, and
-`gate.sh` reports `ALL GATES PASS` including both accuracy gates.
+`gate.sh` reports `ALL GATES PASS` including both accuracy gates. That tree is
+the branch `capy/wave1-integrated`, and every wave 2 pull is based on it,
+because master cannot take wave 2 until wave 1 merges.
+
+**2.3 was dropped deliberately.** Curve analysis in `graph.c` is the one slice of
+this wave that adds no answering power: extrema and roots already appear on the
+plot, and inflection points and monotonicity intervals are a display feature on a
+calculator screen that already shows the curve. The same agent-day bought
+differentiation and definite integrals, which answer questions the device
+previously could not answer at all. If curve analysis comes back, it should come
+back with a student-facing reason attached.
 
 ## Baseline measured on the build machine
 
@@ -136,6 +153,25 @@ reproduces. On the wave-1 tree the same 1,000 rows give 92.5% exact and 1.9%
 wrong relation, which says the decode mask does not cost accuracy — the
 difference is inside the noise of a single sample.
 
+## Catalogue v2 measured
+
+84 relations — the 66 of wave 0 plus 8 mechanics and 10 chemistry and
+thermodynamics — rebuilt as one atomic step with its own tokenizer, dataset and
+retrain, on the same recipe (200,000 train rows, 6,000 steps, 512-token
+vocabulary). Held-out rows through the whole on-device path:
+
+| Measurement | 66 relations | 84 relations |
+| --- | --- | --- |
+| 2,000 rows, exact call | 92.5% | 92.9% |
+| 2,000 rows, wrong relation | 2.2% | 2.5% |
+| 2,000 rows, correct final answer | — | 93.0% |
+| 1,000 rows, exact call (the gate) | 92.5% | 92.7% |
+
+The exact-call difference is two questions in 2,000, inside run-to-run noise.
+The honest reading is that eighteen more formulas answer at the accuracy the
+catalogue already had, not that the model improved. Vocabulary: 167 merges from
+`FIRST_MERGE=345`, weights still 5.91 MB, `reltable.h` and `bpe.h` regenerated.
+
 ## What the process has already taught us
 
 - **`pr_create` commits untracked files**, so a `make` in the worktree sweeps a
@@ -149,6 +185,29 @@ difference is inside the noise of a single sample.
 - **Every workstream touches the Makefiles.** It is the one file no ownership
   split can keep apart, so the merge that matters is always the object list.
   Resolve it once, at integration, by taking the union.
+- **A relation name is a numbered token, and the merge table starts right after
+  the last one.** `FIRST_MERGE = REL_BASE + len(RELATIONS)`, so inserting a
+  single relation name renumbers every BPE merge, invalidates `bpe.h` and makes
+  the trained weights decode to nonsense. Growing the catalogue is therefore
+  atomic with rebuilding the tokenizer, regenerating `data/`, retraining and
+  regenerating both headers: one pull per batch, never one pull per relation.
+  Regenerating `reltable.h` alone is worse than leaving it stale, because it
+  then names merge ids as relations.
+- **Three generated artefacts go stale, not one.** `bpe.h` (checked by
+  `check_tokenizer_sync.py`), `reltable.h` (checked by
+  `export_relations.py --check`) and the tokenizer fixture
+  `runtime/fixtures/bpe_cases.txt` (checked by `gen_bpe_cases.py --check`, added
+  in wave 2). The fixture is the nastiest: a stale one still passes on the old
+  vocabulary and fails on the new one with a message that reads like a broken
+  encoder, so it looks like a bug in the code rather than in the fixture.
+- **A gate exemption that names an entry point rots silently.** `crosscheck.sh`
+  exempted the runtime's one `double` by the old single entry point
+  `solvers_solve`. The wave-0 split renamed that to `solvers_math_solve`, so the
+  exemption stopped matching and the ARM lane began failing on code nobody had
+  touched — invisibly on any machine without `arm-none-eabi-gcc`, which is every
+  machine here. It now names `solve_exp` and marks it `noinline`. An exemption
+  should name the narrowest thing that exists, not the widest thing that
+  happens to contain it.
 - **A measured win can be much smaller than the model of it.** The kernel floor
   argued for up to 2x; the measurement says the loop was already near its
   instruction count per MAC, so the real gain is about 3% per MAC and 1.12x on

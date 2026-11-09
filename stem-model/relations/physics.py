@@ -266,7 +266,12 @@ class EnergyFriction:
 
     @staticmethod
     def solve(m, v0, f, d):
+        # Friction cannot remove more kinetic energy than the block has: when
+        # the work it would do exceeds mv0^2/2 the block stops before the end
+        # of the distance and the final speed is zero, not undefined.
         left = sp.Rational(m * v0 * v0 - 2 * f * d, m)
+        if left <= 0:
+            return "0 m/s"
         return f"{dec(sp.sqrt(sp.Float(left)))} m/s"
 
 @relation("impulse", "physics", ["F", "t"], exact=False)

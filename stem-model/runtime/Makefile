@@ -19,7 +19,7 @@ SOLVERS = solvers.c solvers_math.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_units.c
 
 all: infer_host main_device test_solvers test_bpe test_fixed test_guard \
-     test_graph test_typed test_callmask bench_kernel
+     test_graph test_typed test_callmask test_expr bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -48,6 +48,9 @@ test_graph: test_graph.c graph.c expr.c $(HEADERS)
 test_typed: test_typed.c pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c callmask.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c callmask.c $(LDLIBS)
 
+test_expr: test_expr.c expr.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_expr.c expr.c $(LDLIBS)
+
 # Host-only microbenchmark for the int8 MAC kernel. bench_kernel.c includes
 # fixed.c rather than linking it, so the kernel inlines into the row loop the
 # way it does on the device; it is never part of the device build, which is
@@ -67,6 +70,6 @@ check: all
 
 clean:
 	rm -f infer_host main_device test_solvers test_bpe test_fixed test_guard \
-	      test_graph test_typed test_callmask bench_kernel
+	      test_graph test_typed test_callmask test_expr bench_kernel
 
 .PHONY: all clean check

@@ -52,9 +52,17 @@ int main(void)
 	expect("2pi", "6.283");
 	expect("2^0.5", "1.414");
 
+	/* A derivative of an expression is answered as an expression. */
+	expect("d/dx(x^3+2x)", "3x^2+2");
+	expect("diff(x^2)", "2x");
+	expect("derivative(sin(x))", "cos(x)");
+	expect("d/dx(5)", "0");
+
 	/* x has no single value, and a word problem is not an expression. */
 	expect_refused("x^2+1");
 	expect_refused("A 5 kg block slides down a ramp");
+	expect_refused("d/dx(2^x)");
+	expect_refused("d/dx(x^");
 	expect_refused("");
 
 	if (failures) {

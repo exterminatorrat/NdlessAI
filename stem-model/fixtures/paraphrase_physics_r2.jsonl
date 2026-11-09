@@ -78,3 +78,83 @@
 {"relation": "spring_energy", "args": [180, 0.25], "question": "A spring of stiffness 180 newtons per metre is squeezed by 0.25 metres; how much energy is held in it?", "split": "eval"}
 {"relation": "spring_energy", "args": [600, 0.22], "question": "A 600 N/m spring in the rig is compressed 0.22 m, and the gauge reports the energy stored; what does it report?", "split": "eval"}
 {"relation": "spring_energy", "args": [100, 0.55], "question": "Take a 100 N/m spring and extend it by 0.55 m, then give the energy it stores.", "split": "eval"}
+{"relation": "pendulum_period", "args": [1.2, 9.81], "question": "How long for one complete swing? The thread runs 1.2 m and g is 9.81 m/s^2.", "split": "train"}
+{"relation": "pendulum_period", "args": [3, 9.8], "question": "The clock in the hall has a 3 m rod swinging under g = 9.8 m/s^2; the timing gate reports one period, so what does it report?", "split": "train"}
+{"relation": "pendulum_period", "args": [2.8, 10], "question": "L = 2.8 m, g = 10 m/s^2, find T.", "split": "train"}
+{"relation": "pendulum_period", "args": [0.7, 10], "question": "A pupil says a 0.7 m pendulum under g = 10 m/s^2 swings slower than once a second. Compute the period and judge the claim.", "split": "train"}
+{"relation": "pendulum_period", "args": [0.8, 9.8], "question": "A pendulum 0.8 metres long is set swinging where gravity is 9.8 metres per second squared; what is its period?", "split": "train"}
+{"relation": "pendulum_period", "args": [2.5, 10], "question": "Take a 2.5 m pendulum on a world where g = 10 m/s^2 and give the time of one oscillation.", "split": "train"}
+{"relation": "pendulum_period", "args": [0.15, 9.8], "question": "A thread is only 0.15 m long, the lab's g is 9.8 m/s^2, and the value the worksheet leaves blank is the period of small swings.", "split": "eval"}
+{"relation": "pendulum_period", "args": [1.6, 9.81], "question": "Under g = 9.81 m/s^2, what period does a 1.6 m suspension give?", "split": "eval"}
+{"relation": "pendulum_period", "args": [0.45, 9.8], "question": "A small brass bob hangs on a thread 0.45 m long in a room where g = 9.8 m/s^2. The stopwatch question is the time for one complete swing.", "split": "eval"}
+{"relation": "pendulum_period", "args": [5, 9.81], "question": "A 5 m pendulum hangs from a beam 6 m above the floor, with g = 9.81 m/s^2. Find its period.", "split": "eval"}
+{"relation": "torque", "args": [260, 0.9, 80], "question": "A 260 N force is applied 0.9 m along a spanner at 80 degrees. The spanner is 12 mm thick. Find the torque.", "split": "train"}
+{"relation": "torque", "args": [33, 2.2, 55], "question": "A 33 N force at 2.2 m and 55 degrees, says a classmate, gives less than 60 N m. Check that.", "split": "train"}
+{"relation": "torque", "args": [140, 1.1, 100], "question": "The torque wrench reads 140 N at 1.1 m from the nut, angled 100 degrees to the handle; the gauge shows the moment, so what does it show?", "split": "train"}
+{"relation": "torque", "args": [200, 0.6, 40], "question": "A crowbar is levered against a crate 0.6 m from the fulcrum. The hand pushes with 200 N at 40 degrees to the bar, and the number the worksheet wants is the turning effect.", "split": "train"}
+{"relation": "torque", "args": [42, 4, 65], "question": "What torque does the pivot feel? A 42 N pull is applied 4 m out at 65 degrees to the arm.", "split": "train"}
+{"relation": "torque", "args": [7, 0.5, 90], "question": "A tiny 7 N weight hangs at the end of a 0.5 m arm, the arm being square to the force at 90 degrees, and the last blank on the sheet is the torque.", "split": "train"}
+{"relation": "torque", "args": [500, 1.6, 30], "question": "Take 500 N applied 1.6 m from a pivot at 30 degrees to the arm and state the turning moment.", "split": "eval"}
+{"relation": "torque", "args": [95, 1.4, 110], "question": "r = 1.4 m, F = 95 N, theta = 110 degrees. Turning moment?", "split": "eval"}
+{"relation": "torque", "args": [55, 6, 145], "question": "At 145 degrees to the arm, 6 m from the axis, a 55 N force is applied. Give the torque.", "split": "eval"}
+{"relation": "torque", "args": [16, 5, 25], "question": "A 16 newton force acts 5 metres from the hinge at 25 degrees to the arm; what turning effect does it produce?", "split": "eval"}
+{"relation": "specific_heat", "args": [750, 4.18, 8], "question": "A 750 g bath of water at c = 4.18 J/(g C) is heated by 8 degrees. A plumber says that takes under 20 000 J. Check it.", "split": "train"}
+{"relation": "specific_heat", "args": [150, 0.13, 80], "question": "How much heat does it take to warm a 150 g lead block, c = 0.13 J/(g C), through 80 degrees?", "split": "train"}
+{"relation": "specific_heat", "args": [200, 2.1, 24], "question": "A 200 g can of oil with c = 2.1 J/(g C) rises 24 degrees in a 30 degree room. Find the heat it took in.", "split": "train"}
+{"relation": "specific_heat", "args": [400, 0.84, 55], "question": "A 400 g pane of glass, specific heat 0.84 joule per gram per degree, is warmed by 55 degrees; what energy does that absorb?", "split": "train"}
+{"relation": "specific_heat", "args": [1000, 4.2, 12], "question": "Take 1000 g of liquid with c = 4.2 J/(g C), warm it 12 degrees, and report the heat required.", "split": "train"}
+{"relation": "specific_heat", "args": [300, 0.38, 22], "question": "300 g, c = 0.38 J/(g C), 22 degree rise: heat needed?", "split": "train"}
+{"relation": "specific_heat", "args": [50, 0.45, 48], "question": "A 50 g iron weight sits in a bath, c = 0.45 J/(g C), and over the hour its temperature climbs by 48 degrees, so the energy it gained is the last thing to work out.", "split": "eval"}
+{"relation": "specific_heat", "args": [250, 4.2, 45], "question": "A 250 g drum of coolant with c = 4.2 J/(g C) is warmed through 45 degrees on the dyno. The heat the radiator has to dump is the figure the engineer needs.", "split": "eval"}
+{"relation": "specific_heat", "args": [100, 0.24, 65], "question": "A 100 g silver bar of c = 0.24 J/(g C) goes into the furnace and comes out 65 degrees warmer; the calorimeter logs the heat taken, so what is it?", "split": "eval"}
+{"relation": "specific_heat", "args": [500, 0.9, 35], "question": "Through 35 degrees goes a 500 g aluminium casting, c = 0.9 J/(g C). How much heat is absorbed?", "split": "eval"}
+{"relation": "ohm_i", "args": [5, 4], "question": "A 4 ohm resistor has 5 volts across it; how many amperes pass through it?", "split": "train"}
+{"relation": "ohm_i", "args": [45, 9], "question": "A 45 V rail feeds a 9 ohm heater through 2 m of cable. What current does the heater draw?", "split": "train"}
+{"relation": "ohm_i", "args": [7, 2], "question": "What current will flow? 7 V is applied across 2 ohms.", "split": "train"}
+{"relation": "ohm_i", "args": [100, 20], "question": "The insulation tester puts 100 V across a 20 ohm element and the meter shows the current; what does it show?", "split": "train"}
+{"relation": "ohm_i", "args": [27, 3], "question": "Take 27 V and drive it through 3 ohms, then state the current.", "split": "train"}
+{"relation": "ohm_i", "args": [2.5, 5], "question": "A 2.5 V cell across 5 ohms: a pupil claims the current is over 0.6 A. Check the claim.", "split": "train"}
+{"relation": "ohm_i", "args": [8, 4], "question": "A coil of 4 ohms is connected to an 8 V source, and the last line of the table asks for the current through it.", "split": "eval"}
+{"relation": "ohm_i", "args": [14, 7], "question": "Across 7 ohms sits 14 V. Give the current.", "split": "eval"}
+{"relation": "ohm_i", "args": [60, 15], "question": "V = 60 V, R = 15 ohms. I = ?", "split": "eval"}
+{"relation": "ohm_i", "args": [30, 5], "question": "A bench supply is set to 30 V and the coil it feeds measures 5 ohms. The ammeter reading is the number the student must record.", "split": "eval"}
+{"relation": "ohm_v", "args": [0.15, 60], "question": "A 60 ohm winding carries 0.15 amperes; what potential difference sits across it?", "split": "train"}
+{"relation": "ohm_v", "args": [0.4, 30], "question": "A 30 ohm coil carries 0.4 A from a bench supply. The voltage across the coil is what the table needs.", "split": "train"}
+{"relation": "ohm_v", "args": [1.8, 12], "question": "1.8 A through 12 ohms, a student writes, needs more than 24 V. Check that.", "split": "train"}
+{"relation": "ohm_v", "args": [7, 6], "question": "A 7 A current runs in a 6 ohm wire that is 3 m long. What voltage drop appears across it?", "split": "train"}
+{"relation": "ohm_v", "args": [2.5, 8], "question": "What voltage appears? 2.5 A is pushed through 8 ohms.", "split": "train"}
+{"relation": "ohm_v", "args": [12, 5], "question": "I = 12 A, R = 5 ohms, V = ?", "split": "train"}
+{"relation": "ohm_v", "args": [3.5, 4], "question": "A 4 ohm load takes 3.5 A, and the value the label leaves blank is the voltage across it.", "split": "eval"}
+{"relation": "ohm_v", "args": [0.5, 24], "question": "The shunt reads 0.5 A and the element is 24 ohms; the voltmeter displays what?", "split": "eval"}
+{"relation": "ohm_v", "args": [0.9, 50], "question": "Take 0.9 A through 50 ohms and give the voltage.", "split": "eval"}
+{"relation": "ohm_v", "args": [20, 2.5], "question": "With 2.5 ohms in the circuit and 20 A flowing, the voltage is what?", "split": "eval"}
+{"relation": "ohm_power", "args": [1.8, 22], "question": "Take 1.8 A at 22 V and state the power.", "split": "train"}
+{"relation": "ohm_power", "args": [3.5, 14], "question": "The bench meter shows 3.5 A at 14 V for the lamp; the wattmeter reports what?", "split": "train"}
+{"relation": "ohm_power", "args": [7, 4], "question": "I = 7 A, V = 4 V. P = ?", "split": "train"}
+{"relation": "ohm_power", "args": [0.4, 50], "question": "At 50 V the device takes 0.4 A. Give the power it uses.", "split": "train"}
+{"relation": "ohm_power", "args": [0.6, 36], "question": "A 36 V supply pushes 0.6 A through a motor that weighs 3 kg. Find the power drawn.", "split": "train"}
+{"relation": "ohm_power", "args": [2.2, 18], "question": "An 18 volt supply drives 2.2 amperes into a heater; at what rate does it deliver energy?", "split": "train"}
+{"relation": "ohm_power", "args": [12, 6], "question": "A relay coil holds 12 A at 6 V, and the last box on the form wants the power it dissipates.", "split": "eval"}
+{"relation": "ohm_power", "args": [0.25, 120], "question": "0.25 A at 120 V - what do the watts come to?", "split": "eval"}
+{"relation": "ohm_power", "args": [1.5, 6], "question": "A small fan on a 6 V supply pulls 1.5 A. The power it consumes is the figure the datasheet lacks.", "split": "eval"}
+{"relation": "ohm_power", "args": [9, 8], "question": "9 A at 8 V, says a technician, is over 75 W. Check it.", "split": "eval"}
+{"relation": "circular_accel", "args": [50, 10], "question": "v = 50 m/s, r = 10 m. a_c = ?", "split": "train"}
+{"relation": "circular_accel", "args": [45, 15], "question": "On a 15 m radius, at 45 m/s, the inward acceleration is what?", "split": "train"}
+{"relation": "circular_accel", "args": [4, 0.5], "question": "A toy train takes a 0.5 m curve at 4 m/s, and the last line of the lab report is the centripetal acceleration.", "split": "train"}
+{"relation": "circular_accel", "args": [9, 1.2], "question": "A drone circles a 1.2 m radius on a tether at 9 m/s. The acceleration pointing at the centre is what the operator wants.", "split": "train"}
+{"relation": "circular_accel", "args": [33, 11], "question": "At 33 m/s on an 11 m radius a rider claims the acceleration is over 100 m/s^2. Check it.", "split": "train"}
+{"relation": "circular_accel", "args": [14, 7], "question": "An object keeps 14 metres per second around a circle of 7 metres radius; what acceleration pulls it inward?", "split": "train"}
+{"relation": "circular_accel", "args": [28, 7], "question": "Take 28 m/s on a 7 m radius and give the centripetal acceleration.", "split": "eval"}
+{"relation": "circular_accel", "args": [6, 0.8], "question": "A 6 m/s cart goes round a 0.8 m bend; the track is 2 m wide. Find the centripetal acceleration.", "split": "eval"}
+{"relation": "circular_accel", "args": [20, 4], "question": "20 m/s on a 4 m radius - what acceleration does the centre supply?", "split": "eval"}
+{"relation": "circular_accel", "args": [22, 2], "question": "The test rig spins a mass at 22 m/s on a 2 m arm, and the accelerometer reads the inward acceleration; what does it read?", "split": "eval"}
+{"relation": "proj_range", "args": [18, 55, 9.81], "question": "How far away does it come down? A shell leaves at 18 m/s and 55 degrees, with g = 9.81 m/s^2.", "split": "train"}
+{"relation": "proj_range", "args": [28, 35, 9.8], "question": "A ball is struck off the tee at 28 m/s and climbs away at 35 degrees to the level pitch. With g = 9.8 m/s^2 and no air, the distance to the first bounce is the figure the coach wants.", "split": "train"}
+{"relation": "proj_range", "args": [50, 30, 9.81], "question": "A launcher fires at 50 m/s at 30 degrees with g = 9.81 m/s^2. The launcher stands 2 m tall. What horizontal range does the projectile get?", "split": "train"}
+{"relation": "proj_range", "args": [25, 15, 9.8], "question": "The rig fires at 25 m/s, 15 degrees up, with g = 9.8 m/s^2, and the tape measure gives the range; what does it give?", "split": "train"}
+{"relation": "proj_range", "args": [36, 20, 10], "question": "v0 = 36 m/s, theta = 20 degrees, g = 10. Range?", "split": "train"}
+{"relation": "proj_range", "args": [7, 40, 10], "question": "A 7 m/s throw at 40 degrees on a world with g = 10 m/s^2 lands, says a pupil, beyond 5 m. Check it.", "split": "train"}
+{"relation": "proj_range", "args": [13, 50, 10], "question": "A firework shell leaves at 13 m/s angled 50 degrees to the ground, g being 10 m/s^2, and the last thing to find is how far downrange it bursts.", "split": "eval"}
+{"relation": "proj_range", "args": [30, 45, 9.8], "question": "Take 30 m/s at 45 degrees with g = 9.8 m/s^2 and state the horizontal range.", "split": "eval"}
+{"relation": "proj_range", "args": [11, 65, 9.8], "question": "Thrown at 11 metres per second, 65 degrees above the flat, with g = 9.8 m/s^2, how far does the stone travel?", "split": "eval"}
+{"relation": "proj_range", "args": [45, 60, 9.81], "question": "At 60 degrees and 45 m/s, with g = 9.81 m/s^2, the projectile covers what horizontal distance?", "split": "eval"}

@@ -18,8 +18,8 @@ HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 SOLVERS = solvers.c solvers_math.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_units.c
 
-all: infer_host main_device test_solvers test_bpe test_fixed test_guard \
-     test_graph test_typed test_callmask bench_kernel
+all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
+     test_guard test_graph test_typed test_callmask bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)

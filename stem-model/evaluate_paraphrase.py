@@ -20,6 +20,7 @@ says which artifact is missing. Pass --check-corpus to stop there.
 """
 
 import argparse
+import glob
 import json
 import os
 import subprocess
@@ -29,7 +30,7 @@ from relations import RELATIONS
 from stress_cases import CASES
 from tokenizer import EOS, Tokenizer
 
-CORPUS = os.path.join("fixtures", "paraphrase_cases.jsonl")
+CORPUS = os.path.join("fixtures", "paraphrase_*.jsonl")
 
 
 def is_digit(c):
@@ -107,6 +108,23 @@ def load_corpus(path):
     return rows
 
 
+def load_corpora(pattern):
+    """Every corpus file matching the pattern, validated row by row.
+
+    One file per authoring stream keeps parallel work from colliding in one
+    file; the evaluator reads them as one corpus, so the split and the totals
+    are still computed over everything.
+    """
+    paths = sorted(glob.glob(pattern))
+    if not paths:
+        raise SystemExit(f"{pattern} matched no corpus files")
+    rows = []
+    for path in paths:
+        rows.extend(load_corpus(path))
+    print(f"corpus files: {', '.join(paths)}")
+    return rows
+
+
 def run_case(binary, weights, tok, seq, max_new, name, params, question):
     """One question through the binary; returns (kind, expected, got)."""
 
@@ -159,9 +177,9 @@ def main():
                     help="skip the 24 hand-written stress cases")
     args = ap.parse_args()
 
-    corpus = load_corpus(args.corpus)
+    corpus = load_corpora(args.corpus)
     splits = [s for s in ("train", "eval") if any(r["split"] == s for r in corpus)]
-    print(f"{args.corpus}: {len(corpus)} cases over {len(RELATIONS)} relations")
+    print(f"{len(corpus)} cases over {len(RELATIONS)} relations")
     for split in splits:
         print(f"  {split:<6}{sum(1 for r in corpus if r['split'] == split):5d}")
     print("  every row solves and every argument is grounded in its question")

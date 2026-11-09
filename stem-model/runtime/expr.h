@@ -108,4 +108,36 @@ int gexpr_unparse(const gexpr_t *e, char *out, int outlen);
  */
 int gexpr_derivative_answer(const char *text, char *out, int outlen);
 
+enum {
+	GEXPR_INT_OK = 0,
+	GEXPR_INT_UNBOUNDED = -1
+};
+
+/*
+ * The definite integral of f from a to b, in Q16.16, by adaptive Simpson that
+ * only ever calls gexpr_eval.
+ *
+ * Three cases are answers rather than failures: a == b is 0, bounds given out
+ * of order are the negated integral, and bounds that are the same Q16 value
+ * are a zero-width interval. Everything else must be bounded to be reported.
+ * That is the hard part at this precision: a sample that saturates means f has
+ * no finite value there (or overflowed), a panel that cannot be made accurate
+ * inside the depth, sample or range budget means the error is unknown, and a
+ * result outside Q16 cannot be held. All of those return GEXPR_INT_UNBOUNDED
+ * and leave out untouched, rather than printing a number the engine cannot
+ * stand behind.
+ */
+int gexpr_integrate(const gexpr_t *f, q16_t a, q16_t b, q16_t *out);
+
+/*
+ * The typed-answer form of a definite integral: "integrate(<expr>, <a>, <b>)"
+ * or "int(<expr>, <a>, <b>)", where the bounds are decimal literals (sign and
+ * fraction allowed). Matched on the raw text, like the derivative form,
+ * because the function name is not part of the expression grammar. The whole
+ * text must be the call, so "integrate(x^2,0,3)+1" is refused. Writes the
+ * answer to four significant digits and returns 0, or returns -1 when the
+ * text is not one of those forms or the integral cannot be bounded.
+ */
+int gexpr_integral_answer(const char *text, char *out, int outlen);
+
 #endif

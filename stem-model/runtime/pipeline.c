@@ -217,6 +217,11 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	gexpr_t e;
 	char err[48];
 
+	/* A derivative request is not an expression: "d/dx" carries a slash the
+	 * parser would read as division, so it is recognised on the raw text and
+	 * answered with the derivative before any arithmetic is attempted. */
+	if (gexpr_derivative_answer(text, answer, answer_max) == 0)
+		return PIPELINE_OK;
 	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
 		return PIPELINE_ERR;
 	if (gexpr_has_x(&e))

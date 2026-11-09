@@ -13,13 +13,13 @@ VEC_OFF := $(shell $(CC) -fno-vectorize -fno-slp-vectorize -x c -c /dev/null \
 BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
 HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
-	  graph.h expr.h callmask.h reltable.h
+	  graph.h expr.h equation.h callmask.h reltable.h
 
-SOLVERS = solvers.c solvers_math.c solvers_trig.c solvers_physics.c \
+SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_units.c
 
 all: infer_host main_device test_solvers test_bpe test_fixed test_guard \
-     test_graph test_typed test_callmask bench_kernel
+     test_graph test_typed test_equation test_callmask bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -29,6 +29,9 @@ main_device: main_device.c pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c e
 
 test_solvers: test_solvers.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_solvers.c $(SOLVERS) $(LDLIBS)
+
+test_equation: test_equation.c expr.c $(SOLVERS) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_equation.c expr.c $(SOLVERS) $(LDLIBS)
 
 test_bpe: test_bpe.c bpe.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_bpe.c bpe.c
@@ -63,10 +66,11 @@ check: all
 	./test_callmask
 	./test_graph
 	./test_typed
+	./test_equation
 	sh crosscheck.sh
 
 clean:
 	rm -f infer_host main_device test_solvers test_bpe test_fixed test_guard \
-	      test_graph test_typed test_callmask bench_kernel
+	      test_graph test_typed test_equation test_callmask bench_kernel
 
 .PHONY: all clean check

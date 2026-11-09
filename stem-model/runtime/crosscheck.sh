@@ -16,7 +16,7 @@ command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 mkdir -p "$OUT"
 # Every source file on the device path. A new one must be added here or the
 # link below fails with undefined references, which is how expr.c was caught.
-for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
          solvers_chem solvers_units infer pipeline main_device graph expr \
          callmask; do
     # shellcheck disable=SC2086
@@ -27,7 +27,7 @@ $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
 status=0
-for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
          solvers_chem solvers_units graph expr callmask; do
     # Two named functions own their soft-float, and nothing else may: qstate_init
     # builds the rope and activation tables once at startup, and solve_exp's

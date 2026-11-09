@@ -131,12 +131,15 @@ int gexpr_integrate(const gexpr_t *f, q16_t a, q16_t b, q16_t *out);
 
 /*
  * The typed-answer form of a definite integral: "integrate(<expr>, <a>, <b>)"
- * or "int(<expr>, <a>, <b>)", where the bounds are decimal literals (sign and
- * fraction allowed). Matched on the raw text, like the derivative form,
+ * or "int(<expr>, <a>, <b>)". A bound is any constant expression the parser
+ * accepts (decimals, pi, 2*pi, 1/2, sqrt(2)) that does not depend on x; it is
+ * evaluated once in Q16, so pi is 3.14159 and the answer is the integral over
+ * that quantised interval. Matched on the raw text, like the derivative form,
  * because the function name is not part of the expression grammar. The whole
  * text must be the call, so "integrate(x^2,0,3)+1" is refused. Writes the
- * answer to four significant digits and returns 0, or returns -1 when the
- * text is not one of those forms or the integral cannot be bounded.
+ * answer to four significant digits and returns 0, or returns -1 when the text
+ * is not one of those forms, a bound is not a constant, or the integral cannot
+ * be bounded.
  */
 int gexpr_integral_answer(const char *text, char *out, int outlen);
 

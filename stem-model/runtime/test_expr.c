@@ -654,8 +654,21 @@ static void test_integral_typed(void)
 	expect_integral_typed("integrate(x^2,3,0)", "-9");
 	expect_integral_typed("integrate(-x^2,0,3)", "-9");
 	expect_integral_typed("integrate(x^2,0.5,1.5)", "1.083");
+	expect_integral_typed("integrate(x^2,-1.5,-0.5)", "1.083");
 	expect_integral_typed("integrate(5,0,2)", "10");
 	expect_integral_typed("integrate((x+1)^2,0,2)", "8.667");
+
+	/* A bound is a constant expression, evaluated once in Q16 before the
+	 * integral runs. pi therefore means 3.14159, not pi: integrate(x,0,pi)
+	 * is 4.93478... and prints 4.935. */
+	expect_integral_typed("integrate(x,0,pi)", "4.935");
+	expect_integral_typed("integrate(sin(x),0,pi)", "2");
+	expect_integral_typed("integrate(x,0,2*pi)", "19.74");
+	expect_integral_typed("integrate(x,0,2pi)", "19.74");
+	expect_integral_typed("integrate(x,0,pi/2)", "1.234");
+	expect_integral_typed("integrate(x^2,0,3/2)", "1.125");
+	expect_integral_typed("integrate(1/x,1,exp(1))", "1");
+	expect_integral_typed("integrate(cos(x),0,pi/2)", "1");
 }
 
 static void test_integral_typed_refusals(void)
@@ -665,15 +678,17 @@ static void test_integral_typed_refusals(void)
 		"integrate(x^2,0,3)+1", "2*int(x^2,0,3)", "integrate (x^2,0,3)junk",
 		/* not three parts */
 		"integrate(x^2,0)", "integrate(x^2,0,3,4)", "int(x^2)", "",
-		/* brackets that do not balance, or bounds that are not decimals */
+		/* brackets that do not balance */
 		"integrate(x^2,0,3", "integrate(x^2,0,3))", "integrate(x^2,0,3,",
-		"integrate(x^2,pi,3)", "integrate(x^2,0,1/2)", "integrate(x^2,a,b)",
-		"integrate(x^2,0,40000)",
+		/* bounds that are not constant expressions, depend on x, have no
+		 * finite Q16 value, or do not fit */
+		"integrate(x^2,a,b)", "integrate(x^2,0,2^)",
+		"integrate(x,0,x)", "integrate(x,0,x^2+1)", "integrate(x,0,1/0)",
+		"integrate(x,0,exp(50))", "integrate(x^2,0,40000)",
 		/* not the call */
 		"integr(x^2,0,3)", "integratex(x^2,0,3)", "intx(x^2,0,3)",
 		/* a real integral the engine cannot bound */
 		"integrate(1/x,-1,1)", "integrate(1/(x-1),0,2)",
-		"integrate(x,0,1e3)",
 	};
 	char got[64];
 

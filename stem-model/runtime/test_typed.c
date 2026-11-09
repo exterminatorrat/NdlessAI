@@ -69,6 +69,10 @@ int main(void)
 	expect("int(sqrt(x),0,1)", "0.6667");
 	expect("integrate(abs(x),-2,3)", "6.5");
 	expect("integrate(x^2,3,0)", "-9");
+	/* A bound is a constant expression in Q16, so pi is 3.14159 here. */
+	expect("integrate(x,0,pi)", "4.935");
+	expect("integrate(sin(x),0,pi)", "2");
+	expect("integrate(x,0,2*pi)", "19.74");
 
 	/* x has no single value, and a word problem is not an expression. */
 	expect_refused("x^2+1");
@@ -79,7 +83,7 @@ int main(void)
 	 * a divergent one is refused rather than approximated. */
 	expect_refused("integrate(x^2,0,3)+1");
 	expect_refused("integrate(x^2,0)");
-	expect_refused("integrate(x^2,pi,3)");
+	expect_refused("integrate(x,0,x)");
 	expect_refused("integrate(1/x,-1,1)");
 	expect_refused("");
 

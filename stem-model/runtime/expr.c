@@ -1498,55 +1498,43 @@ static int split_three(const char *s, int n, const char **part, int *plen)
 }
 
 /*
- * A bound is a decimal literal, not an expression: an optional sign, digits,
- * and an optional fraction. "pi" or "1/2" are refused rather than guessed at,
- * and a value Q16 cannot hold is refused rather than saturated, because a
- * saturated bound would silently integrate over a different interval.
+ * A bound is any constant expression gexpr_parse accepts: "0", "-1", "0.5",
+ * "pi", "2*pi", "1/2", "sqrt(2)". It is parsed like the integrand and then
+ * evaluated once at x = 0, which is how the typed path already decides that an
+ * expression is a number.
+ *
+ * That quantises the bound to Q16 before the integral runs, so pi is 3.14159
+ * and 2*pi is 6.28317 rather than the real constants. The answer is the
+ * integral over the quantised interval, which is why integrate(x,0,pi) prints
+ * 4.935 (4.93478...) rather than 4.9348: the difference is the bound, not the
+ * quadrature.
+ *
+ * A bound that depends on x has no single value as a limit, and one that fails
+ * to parse or has no finite Q16 value refuses the whole call rather than
+ * quietly integrating over something else.
  */
 static int parse_bound(const char *s, int n, q16_t *out)
 {
-	int i = 0, neg = 0, any = 0, fdig = 0;
-	int64_t ip = 0, frac = 0, v;
+	char text[EXPR_TEXT_MAX];
+	char err[48];
+	gexpr_t e;
+	q16_t v;
+	int i = 0;
 
 	while (i < n && (s[i] == ' ' || s[i] == '\t'))
 		i++;
-	if (i < n && (s[i] == '-' || s[i] == '+'))
-		neg = s[i++] == '-';
-	while (i < n && s[i] >= '0' && s[i] <= '9') {
-		if (ip > 100000)
-			return -1;
-		ip = ip * 10 + (s[i] - '0');
-		i++;
-		any = 1;
-	}
-	if (i < n && s[i] == '.') {
-		i++;
-		while (i < n && s[i] >= '0' && s[i] <= '9') {
-			if (fdig < 9) {
-				frac = frac * 10 + (s[i] - '0');
-				fdig++;
-			}
-			i++;
-			any = 1;
-		}
-	}
-	while (i < n && (s[i] == ' ' || s[i] == '\t'))
-		i++;
-	if (!any || i != n || ip > 32767)
+	while (n > i && (s[n - 1] == ' ' || s[n - 1] == '\t'))
+		n--;
+	if (n <= i || n - i >= (int)sizeof text)
 		return -1;
-	v = ip << 16;
-	if (fdig) {
-		int64_t den = 1;
-
-		for (int k = 0; k < fdig; k++)
-			den *= 10;
-		v += (frac << 16) / den;
-	}
-	if (neg)
-		v = -v;
-	if (v > Q16_MAX || v < Q16_MIN)
+	memcpy(text, s + i, (size_t)(n - i));
+	text[n - i] = 0;
+	if (gexpr_parse(text, &e, err, sizeof err) < 0 || gexpr_has_x(&e))
 		return -1;
-	*out = (q16_t)v;
+	v = gexpr_eval(&e, 0);
+	if (v == Q16_MAX || v == Q16_MIN)
+		return -1;
+	*out = v;
 	return 0;
 }
 

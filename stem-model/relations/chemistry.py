@@ -184,3 +184,151 @@ class Stoichiometry:
     @staticmethod
     def solve(moles_given, ratio):
         return f"{dec_exact(_exact(moles_given) * ratio)} mol"
+
+
+def _num(value):
+    """A derived quantity as the int or decimal token the question shows."""
+
+    r = _exact(value)
+    return int(r) if r.q == 1 else float(r)
+
+@relation("dilution_v1", "chemistry", ["m1", "m2", "v2"], exact=False)
+class DilutionV1:
+    @staticmethod
+    def gen(rng):
+        m1 = rng.choice([0.5, 1, 2, 4, 5])
+        m2 = rng.choice([0.1, 0.2, 0.25, 0.5, 1])
+        v2 = rng.choice([50, 100, 200, 250, 500])
+        q = (f"What volume of {m1} M stock solution is needed to prepare "
+             f"{v2} mL of {m2} M solution?")
+        return [m1, m2, v2], q
+
+    @staticmethod
+    def solve(m1, m2, v2):
+        return f"{dec_exact(_exact(m2) * _exact(v2) / _exact(m1))} mL"
+
+@relation("molality", "chemistry", ["n", "kg"], exact=False)
+class Molality:
+    @staticmethod
+    def gen(rng):
+        n = rng.choice([0.1, 0.2, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3])
+        kg = rng.choice([0.25, 0.5, 1, 2, 2.5, 4, 5])
+        return [n, kg], (f"{n} mol of solute is dissolved in {kg} kg of "
+                         f"solvent. Find the molality.")
+
+    @staticmethod
+    def solve(n, kg):
+        return f"{dec_exact(_exact(n) / _exact(kg))} mol/kg"
+
+@relation("h_from_ph", "chemistry", ["ph"], exact=False)
+class HFromPh:
+    @staticmethod
+    def gen(rng):
+        ph = rng.randint(1, 13)
+        return [ph], (f"A solution has a pH of {ph}. Find its hydrogen ion "
+                      f"concentration.")
+
+    @staticmethod
+    def solve(ph):
+        return f"{dec_exact(sp.Rational(10) ** -int(ph))} mol/L"
+
+@relation("buffer_ph", "chemistry", ["pka", "base", "acid"], exact=False)
+class BufferPh:
+    @staticmethod
+    def gen(rng):
+        pka = rng.choice([3.75, 4.76, 5, 7.2, 9.25, 10.5])
+        base = rng.choice([0.1, 0.2, 0.5, 1])
+        acid = rng.choice([0.1, 0.2, 0.5, 1])
+        return [pka, base, acid], (
+            f"A buffer contains {base} M conjugate base and {acid} M weak "
+            f"acid with pKa {pka}. Find the pH.")
+
+    @staticmethod
+    def solve(pka, base, acid):
+        return dec(_exact(pka) + sp.log(_exact(base) / _exact(acid), 10))
+
+@relation("calorimetry_mass", "chemistry", ["q", "c", "dT"], exact=False)
+class CalorimetryMass:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([2, 3, 4, 5, 8, 10, 15, 20, 25, 50])
+        c = rng.choice([0.45, 0.9, 1, 2.1, 2.4, 4.18, 4.2])
+        dT = rng.choice([5, 10, 15, 20, 25, 30, 40, 50])
+        q = _num(_exact(m) * _exact(c) * dT)
+        return [q, c, dT], (f"{q} J of heat raises a sample of specific heat "
+                            f"{c} J/(g C) by {dT} degrees. Find its mass.")
+
+    @staticmethod
+    def solve(q, c, dT):
+        return f"{dec_exact(_exact(q) / (_exact(c) * _exact(dT)))} g"
+
+@relation("calorimetry_c", "chemistry", ["q", "m", "dT"], exact=False)
+class CalorimetryC:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([5, 10, 20, 25, 40, 50, 100, 200])
+        c = rng.choice([0.13, 0.24, 0.385, 0.45, 0.9, 2.1, 4.18])
+        dT = rng.choice([5, 10, 15, 20, 25, 30, 40, 50])
+        q = _num(_exact(m) * _exact(c) * dT)
+        return [q, m, dT], (f"{m} g of material absorbs {q} J as it warms by "
+                            f"{dT} degrees. Find its specific heat.")
+
+    @staticmethod
+    def solve(q, m, dT):
+        return f"{dec_exact(_exact(q) / (_exact(m) * _exact(dT)))} J/(g C)"
+
+@relation("latent_heat", "chemistry", ["m", "L"], exact=False)
+class LatentHeat:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([5, 10, 20, 25, 40, 50, 100, 200])
+        L = rng.choice([334, 2260])
+        return [m, L], (f"{m} g of a substance with latent heat {L} J/g "
+                        f"changes phase completely. Find the energy required.")
+
+    @staticmethod
+    def solve(m, L):
+        return f"{dec_exact(_exact(m) * _exact(L))} J"
+
+@relation("first_law", "chemistry", ["q", "w"], exact=False)
+class FirstLaw:
+    @staticmethod
+    def gen(rng):
+        q = rng.choice([-200, -100, 0, 100, 150, 200, 250, 300, 500])
+        w = rng.choice([-100, -50, 0, 50, 100, 150, 200])
+        return [q, w], (f"The heat added to a system is {q} J and the work "
+                        f"done on it is {w} J. Find the change in internal "
+                        f"energy.")
+
+    @staticmethod
+    def solve(q, w):
+        return f"{dec_exact(_exact(q) + _exact(w))} J"
+
+@relation("gibbs", "chemistry", ["dH", "T", "dS"], exact=False)
+class Gibbs:
+    @staticmethod
+    def gen(rng):
+        dH = rng.choice([-600, -500, -300, -200, -100, 0, 100, 200, 400])
+        T = rng.choice([200, 250, 298, 300, 350, 400, 500])
+        dS = rng.choice([-400, -300, -250, -200, -150, -100, 50, 100, 150,
+                         200, 250, 300, 400])
+        return [dH, T, dS], (f"A reaction has an enthalpy change of {dH} kJ "
+                             f"and an entropy change of {dS} J/K at {T} K. "
+                             f"Find the change in Gibbs free energy.")
+
+    @staticmethod
+    def solve(dH, T, dS):
+        return f"{dec_exact(_exact(dH) - _exact(dS) * _exact(T) / 1000)} kJ"
+
+@relation("carnot", "chemistry", ["t_hot", "t_cold"], exact=False)
+class Carnot:
+    @staticmethod
+    def gen(rng):
+        t_cold = rng.choice([200, 250, 300, 350, 400, 500])
+        t_hot = t_cold + rng.choice([100, 150, 200, 300, 400, 500])
+        return [t_hot, t_cold], (f"A Carnot engine operates between {t_hot} K "
+                                 f"and {t_cold} K. Find its efficiency.")
+
+    @staticmethod
+    def solve(t_hot, t_cold):
+        return f"{dec_exact(sp.Rational(100 * (t_hot - t_cold), t_hot))}%"

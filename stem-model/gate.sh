@@ -51,6 +51,7 @@ if [ -d runtime ]; then
     run "solvers match Python"   sh -c 'cd runtime && ./test_solvers | grep -q "0 mismatches"'
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
+    run "call mask"              sh -c "cd runtime && ./test_callmask | grep -q 'all cases passed' && cd .. && $PY export_relations.py --check >/dev/null"
     run "graph"                  sh -c 'cd runtime && make -s test_graph >/dev/null 2>&1 && ./test_graph | grep -q "all checks passed"'
     run "typed answers"          sh -c 'cd runtime && ./test_typed | grep -q "all cases passed"'
     if [ -f weights.bin ]; then

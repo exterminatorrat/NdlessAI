@@ -155,10 +155,10 @@ class WaveSpeed:
 class SpecificHeat:
     @staticmethod
     def gen(rng):
-        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 20, 50])
+        m = rng.choice([50, 100, 150, 200, 250, 300, 400, 500, 750, 1000])
         c = rng.choice([0.9, 1, 2.1, 4.18, 4.2])
         dT = rng.choice([5, 10, 15, 20, 25, 30, 40, 50])
-        return [m, c, dT], (f"Find the heat needed to raise {m} kg of a "
+        return [m, c, dT], (f"Find the heat needed to raise {m} g of a "
                             f"substance with specific heat {c} J/(g C) by "
                             f"{dT} degrees.")
 
@@ -266,7 +266,12 @@ class EnergyFriction:
 
     @staticmethod
     def solve(m, v0, f, d):
+        # Friction cannot remove more kinetic energy than the block has: when
+        # the work it would do exceeds mv0^2/2 the block stops before the end
+        # of the distance and the final speed is zero, not undefined.
         left = sp.Rational(m * v0 * v0 - 2 * f * d, m)
+        if left <= 0:
+            return "0 m/s"
         return f"{dec(sp.sqrt(sp.Float(left)))} m/s"
 
 @relation("impulse", "physics", ["F", "t"], exact=False)

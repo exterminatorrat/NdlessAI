@@ -23,7 +23,7 @@
  * Bump this whenever behaviour changes; a stale .tns is otherwise
  * indistinguishable from a broken fix.
  */
-#define BUILD_STAMP "stemhelp v6"
+#define BUILD_STAMP "stemhelp v7"
 
 /*
  * TI's transfer software only accepts files ending in .tns, so the model
@@ -36,6 +36,33 @@ static const char *const weight_names[] = {
 	"weights.bin",
 	NULL
 };
+
+/*
+ * Without the weights file there is no model, but typed arithmetic never
+ * needed one: the expression evaluator answers it directly and cheaply.
+ * Anything else is refused here rather than pushed through a pipeline that
+ * was never initialised.
+ */
+static void typed_mode(void)
+{
+	char answer[256];
+
+	for (;;) {
+		char *input = NULL;
+		int len = show_msg_user_input(BUILD_STAMP, "Enter an expression:", "", &input);
+
+		if (len < 0 || !input)
+			break;
+		if (pipeline_typed_answer(input, answer, (int)sizeof answer) == PIPELINE_OK)
+			show_msgbox("Answer", answer);
+		else
+			show_msgbox("No model file",
+			            "I can only evaluate arithmetic without\n"
+			            "the model. Word problems need\n"
+			            "weights.bin.tns beside this program.");
+		free(input);
+	}
+}
 
 static void solve_mode(void)
 {
@@ -51,8 +78,10 @@ static void solve_mode(void)
 	if (!found) {
 		show_msgbox("STEM helper",
 		            "The model file was not found.\n\n"
-		            "Copy weights.bin.tns into the same\n"
-		            "folder as this program.");
+		            "Arithmetic still works. Word problems\n"
+		            "need weights.bin.tns beside this\n"
+		            "program.");
+		typed_mode();
 		return;
 	}
 

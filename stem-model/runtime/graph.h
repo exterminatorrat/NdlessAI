@@ -3,14 +3,15 @@
 
 #include <stdint.h>
 
+#include "expr.h"
+
 /*
  * Function plotting for the calculator: parse y = f(x), map it onto the
  * 320x240 framebuffer, and drive pan, zoom and trace.
  *
- * Everything here is integer-only. The CPU has no FPU, so coordinates and
- * function values are Q16.16 fixed point and the per-column evaluation loop
- * never touches a float. Nothing in this file depends on Ndless, so the host
- * tests exercise the same transform, clipping and rendering code the
+ * The parser and evaluator live in expr.h; this module owns the view, the
+ * clipper, the analysis and the renderer. Nothing here depends on Ndless, so
+ * the host tests exercise the same transform, clipping and rendering code the
  * calculator runs.
  */
 
@@ -21,33 +22,8 @@
 #define G_STATUS_Y 224
 
 #define G_TEXT_MAX    64
-#define G_MAX_NODES   48
 #define G_MAX_ROOTS   8
 #define G_MAX_EXTREMA 4
-
-typedef int32_t q16_t;
-
-#define Q16_ONE ((q16_t)0x00010000)
-#define Q16_MAX ((q16_t)0x7FFFFFFF)
-#define Q16_MIN ((q16_t)(-0x7FFFFFFF))
-
-enum {
-	G_NUM, G_X, G_ADD, G_SUB, G_MUL, G_DIV, G_POW, G_SIN, G_COS, G_TAN, G_NEG,
-	G_SQRT, G_ABS, G_LN, G_EXP
-};
-
-typedef struct {
-	int16_t op;
-	int16_t a;
-	int16_t b;
-	int32_t num;
-} gnode_t;
-
-typedef struct {
-	gnode_t node[G_MAX_NODES];
-	int n;
-	int root;
-} gexpr_t;
 
 typedef struct {
 	q16_t xmin, xmax, ymin, ymax;
@@ -70,26 +46,6 @@ typedef struct {
 	q16_t ext_y[G_MAX_EXTREMA];
 	int nextrema;
 } gstate_t;
-
-/* Q16.16 arithmetic. mul and div saturate instead of wrapping. */
-q16_t gq_mul(q16_t a, q16_t b);
-q16_t gq_div(q16_t a, q16_t b);
-q16_t gq_sin(q16_t x);
-q16_t gq_cos(q16_t x);
-q16_t gq_tan(q16_t x);
-
-/*
- * Parses an expression in x. Supports + - * / ^, parentheses, decimal
- * numbers, the functions sin/cos/tan/sqrt/abs/ln/exp, the constants pi and e,
- * and implicit multiplication ("2x", "3sin(x)", "2pi"). Powers accept
- * fractional and large exponents. A value with no real result (a negative
- * square root, the logarithm of a non-positive number, an overflow) saturates,
- * which the callers treat as "no sample here".
- * Returns 0 on success; on failure returns -1 and writes a short message
- * into err.
- */
-int gexpr_parse(const char *text, gexpr_t *e, char *err, int errlen);
-q16_t gexpr_eval(const gexpr_t *e, q16_t x);
 
 /* Picks a view that contains the curve over x in [-10, 10]. */
 void gview_autoscale(gview_t *v, const gexpr_t *e);

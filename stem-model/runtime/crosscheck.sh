@@ -14,7 +14,11 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
-for f in bpe fixed solvers infer pipeline main_device graph; do
+# Every source file on the device path. A new one must be added here or the
+# link below fails with undefined references, which is how expr.c was caught.
+for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+         solvers_chem solvers_units infer pipeline main_device graph expr \
+         callmask; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -23,13 +27,18 @@ $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
 status=0
-for f in bpe fixed solvers graph; do
-    # qstate_init and the exp_solve log fallback may use soft-float; the
-    # per-token loop may not.
+for f in bpe fixed solvers solvers_math solvers_trig solvers_physics \
+         solvers_chem solvers_units graph expr callmask; do
+    # Two named functions own their soft-float, and nothing else may: qstate_init
+    # builds the rope and activation tables once at startup, and solve_exp's
+    # fallback for an exponent that is not a rational power of the base renders
+    # four significant digits after the integer path has already failed. The
+    # per-token loop may not. solve_exp is marked noinline so it cannot be folded
+    # into solvers_math_solve and hide there under another name.
     hot=$($CC -print-prog-name=objdump >/dev/null 2>&1 && \
           arm-none-eabi-objdump -dr "$OUT/$f.o" | \
           awk '/^[0-9a-f]+ <.*>:/{fn=$2} /__aeabi_[fd]/{print fn}' | \
-          grep -vE 'qstate_init|solvers_solve' | sort -u || true)
+          grep -vE 'qstate_init|solve_exp' | sort -u || true)
     if [ -n "$hot" ]; then
         echo "FAIL $f.o: soft-float in hot path: $hot"
         status=1

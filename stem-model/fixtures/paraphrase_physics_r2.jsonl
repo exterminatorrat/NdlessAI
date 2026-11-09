@@ -3,7 +3,7 @@
 {"relation": "kinematic_v", "args": [16, 2.5, 6], "question": "A delivery van was already rolling. Through the timed gate it goes in at 16 m/s and gains 2.5 m/s^2 for the 6 s the clock runs; what does the speed read as it leaves?", "split": "train"}
 {"relation": "kinematic_v", "args": [9, 3, 15], "question": "v0 = 9 m/s, a = 3 m/s^2, t = 15 s, find v.", "split": "train"}
 {"relation": "kinematic_v", "args": [0, 4.9, 5], "question": "A parachutist steps out of a hovering balloon and thereafter speeds up by 4.9 metres per second every second; 5 s on, how fast is she falling?", "split": "train"}
-{"relation": "kinematic_v", "args": [2.5, 8, 4], "question": "Take a rollerblader coasting at 2.5 m/s, add 8 m/s^2 for 4 s, and state the speed at the end.", "split": "train"}
+{"relation": "kinematic_v", "args": [2.5, 8, 4], "question": "A rollerblader coasting at 2.5 m/s gains 8 m/s^2 over 4 s. Speed at the end?", "split": "train"}
 {"relation": "kinematic_v", "args": [35, -9.5, 3], "question": "A landing aircraft rolls onto the runway at 35 m/s; with a = -9.5 m/s^2 the brakes hold for 3 s before it turns off, so the airspeed indicator shows what?", "split": "eval"}
 {"relation": "kinematic_v", "args": [24, -5, 2], "question": "A forklift is doing 24 m/s when the load shifts and it slows at -5 m/s^2. The aisle runs 30 m and the truck is 2 s into the skid, so what speed is left?", "split": "eval"}
 {"relation": "kinematic_v", "args": [6, 6, 7], "question": "Run 4 in the logbook: entry speed 6 m/s, acceleration 6 m/s^2, duration 7 s. What speed closes the row?", "split": "eval"}
@@ -51,39 +51,39 @@
 {"relation": "power_force", "args": [450, 20], "question": "Moving at 20 m/s under a 450 N thrust, the craft needs what power?", "split": "train"}
 {"relation": "power_force", "args": [60, 7], "question": "A rower pulls with 60 newtons while the boat keeps 7 metres per second; find the power delivered.", "split": "train"}
 {"relation": "power_force", "args": [2200, 15], "question": "F = 2200 N, v = 15 m/s. P = ?", "split": "train"}
+{"relation": "power_force", "args": [1000, 40], "question": "A student has 1000 N of thrust and 40 m/s of speed, and needs the power. What should they write?", "split": "train"}
 {"relation": "power_force", "args": [900, 11], "question": "A winch pulls at 900 N and the load rises at 11 m/s, which a hand says is over 9 kW. Check the power.", "split": "train"}
 {"relation": "power_force", "args": [35, 1.5], "question": "At what rate is work being done? A 35 N pull moves the crate along at 1.5 m/s.", "split": "train"}
-{"relation": "power_force", "args": [12, 3], "question": "The treadmill motor reads 12 N of drag while the belt runs at 3 m/s; what power does the motor supply?", "split": "train"}
+{"relation": "power_force", "args": [12, 3], "question": "The treadmill motor reads 12 N of drag while the belt runs at 3 m/s; what power does the motor supply?", "split": "eval"}
 {"relation": "power_force", "args": [80, 2.5], "question": "An electric scooter holds 80 N of drive force up the incline at a steady 2.5 m/s, and the last question on the sheet asks for the power output.", "split": "eval"}
 {"relation": "power_force", "args": [150, 0.5], "question": "A 150 N force moves a pallet at 0.5 m/s. The pallet carries 12 boxes. What power is going in?", "split": "eval"}
-{"relation": "power_force", "args": [1000, 40], "question": "Take a 1000 N thrust at 40 m/s and give the power.", "split": "eval"}
 {"relation": "power_force", "args": [500, 8], "question": "A tractor drags a plough through a field. The drawbar pull is 500 N and the rig keeps 8 m/s, and the figure the farmer needs is the rate at which work is being done.", "split": "eval"}
 {"relation": "energy_friction", "args": [0.8, 22, 45, 3], "question": "A 0.8 kg ball is bowled at 22 metres per second into 3 metres of rough turf, where 45 newtons of friction act; what speed is left?", "split": "train"}
 {"relation": "energy_friction", "args": [12, 9, 15, 6], "question": "m = 12 kg, v0 = 9 m/s, friction 15 N, run 6 m, find v.", "split": "train"}
-{"relation": "energy_friction", "args": [9, 12, 40, 2], "question": "Take a 9 kg cart doing 12 m/s, put 40 N of friction on it for 2 m, and report the speed it leaves with.", "split": "train"}
 {"relation": "energy_friction", "args": [3, 18, 12, 7], "question": "A 3 kg block is timed at 18 m/s entering a 7 m rough patch where friction is 12 N. A lab partner writes that it emerges at under 16 m/s; check that.", "split": "train"}
 {"relation": "energy_friction", "args": [5, 14, 20, 5], "question": "A 5 kg puck is already sliding at 14 m/s when it hits the rough end of the rink, where 20 N of friction acts over the last 5 m. The speed as it crosses the line is what the coach wants.", "split": "train"}
 {"relation": "energy_friction", "args": [2.5, 16, 30, 4], "question": "How fast is the sled still going? It starts at 16 m/s, weighs 2.5 kg and loses 30 N to friction over 4 m.", "split": "train"}
-{"relation": "energy_friction", "args": [7, 13, 20, 10], "question": "Over 10 m against 20 N of friction, a 7 kg mass that started at 13 m/s ends up at what speed?", "split": "eval"}
+{"relation": "energy_friction", "args": [7, 13, 20, 10], "question": "Over 10 m against 20 N of friction, a 7 kg mass that started at 13 m/s ends up at what speed?", "split": "train"}
+{"relation": "energy_friction", "args": [9, 12, 40, 2], "question": "A 9 kg cart doing 12 m/s meets 40 N of friction over 2 m. What speed does it come out at?", "split": "eval"}
 {"relation": "energy_friction", "args": [40, 10, 50, 6], "question": "The test track records a 40 kg cart entering the friction section at 10 m/s; the brake applies 50 N for the 6 m of the section, and the exit gate prints the speed.", "split": "eval"}
 {"relation": "energy_friction", "args": [1.2, 30, 60, 5], "question": "A 1.2 kg ball bearing skims into 5 m of oil, where it meets 60 N of drag having arrived at 30 m/s, and the last thing the apparatus logs is the speed on exit.", "split": "eval"}
 {"relation": "energy_friction", "args": [20, 11, 25, 8], "question": "A 20 kg crate leaves the ramp at 11 m/s and grinds 8 m over gravel with 25 N of friction. The ramp itself is 4 m tall. Find the speed it keeps.", "split": "eval"}
+{"relation": "spring_energy", "args": [100, 0.55], "question": "A spring rated 100 N/m is extended 0.55 m. What energy does that put in it?", "split": "train"}
 {"relation": "spring_energy", "args": [1200, 0.05], "question": "k = 1200 N/m, x = 0.05 m. Stored energy?", "split": "train"}
 {"relation": "spring_energy", "args": [300, 0.12], "question": "A spring on the launcher is rated 300 N/m and the arm pulls it back 0.12 m before release. The energy the launcher can give the ball is what the test asks for.", "split": "train"}
 {"relation": "spring_energy", "args": [90, 0.45], "question": "Drawn out to 0.45 m, a 90 N/m spring holds how much energy?", "split": "train"}
 {"relation": "spring_energy", "args": [240, 0.09], "question": "Within a 240 N/m spring squashed 0.09 m sits what amount of energy?", "split": "train"}
 {"relation": "spring_energy", "args": [350, 0.15], "question": "A 350 N/m spring is stretched 0.15 m. It hangs from a hook 2 m above the bench. How much energy is tucked away in it?", "split": "train"}
-{"relation": "spring_energy", "args": [55, 0.6], "question": "A 55 N/m spring pulled 0.6 m stores, according to a pupil, more than 12 J. Work it out and say if that is right.", "split": "train"}
+{"relation": "spring_energy", "args": [55, 0.6], "question": "A 55 N/m spring pulled 0.6 m stores, according to a pupil, more than 12 J. Work it out and say if that is right.", "split": "eval"}
 {"relation": "spring_energy", "args": [450, 0.16], "question": "A buffer spring of 450 N/m takes the impact and is driven back 0.16 m, and the quantity the report lists is the elastic energy it absorbed.", "split": "eval"}
 {"relation": "spring_energy", "args": [180, 0.25], "question": "A spring of stiffness 180 newtons per metre is squeezed by 0.25 metres; how much energy is held in it?", "split": "eval"}
 {"relation": "spring_energy", "args": [600, 0.22], "question": "A 600 N/m spring in the rig is compressed 0.22 m, and the gauge reports the energy stored; what does it report?", "split": "eval"}
-{"relation": "spring_energy", "args": [100, 0.55], "question": "Take a 100 N/m spring and extend it by 0.55 m, then give the energy it stores.", "split": "eval"}
 {"relation": "pendulum_period", "args": [1.2, 9.81], "question": "How long for one complete swing? The thread runs 1.2 m and g is 9.81 m/s^2.", "split": "train"}
 {"relation": "pendulum_period", "args": [3, 9.8], "question": "The clock in the hall has a 3 m rod swinging under g = 9.8 m/s^2; the timing gate reports one period, so what does it report?", "split": "train"}
 {"relation": "pendulum_period", "args": [2.8, 10], "question": "L = 2.8 m, g = 10 m/s^2, find T.", "split": "train"}
 {"relation": "pendulum_period", "args": [0.7, 10], "question": "A pupil says a 0.7 m pendulum under g = 10 m/s^2 swings slower than once a second. Compute the period and judge the claim.", "split": "train"}
 {"relation": "pendulum_period", "args": [0.8, 9.8], "question": "A pendulum 0.8 metres long is set swinging where gravity is 9.8 metres per second squared; what is its period?", "split": "train"}
-{"relation": "pendulum_period", "args": [2.5, 10], "question": "Take a 2.5 m pendulum on a world where g = 10 m/s^2 and give the time of one oscillation.", "split": "train"}
+{"relation": "pendulum_period", "args": [2.5, 10], "question": "A 2.5 m pendulum swings where g = 10 m/s^2; what is the time of one oscillation?", "split": "train"}
 {"relation": "pendulum_period", "args": [0.15, 9.8], "question": "A thread is only 0.15 m long, the lab's g is 9.8 m/s^2, and the value the worksheet leaves blank is the period of small swings.", "split": "eval"}
 {"relation": "pendulum_period", "args": [1.6, 9.81], "question": "Under g = 9.81 m/s^2, what period does a 1.6 m suspension give?", "split": "eval"}
 {"relation": "pendulum_period", "args": [0.45, 9.8], "question": "A small brass bob hangs on a thread 0.45 m long in a room where g = 9.8 m/s^2. The stopwatch question is the time for one complete swing.", "split": "eval"}
@@ -92,17 +92,17 @@
 {"relation": "torque", "args": [33, 2.2, 55], "question": "A 33 N force at 2.2 m and 55 degrees, says a classmate, gives less than 60 N m. Check that.", "split": "train"}
 {"relation": "torque", "args": [140, 1.1, 100], "question": "The torque wrench reads 140 N at 1.1 m from the nut, angled 100 degrees to the handle; the gauge shows the moment, so what does it show?", "split": "train"}
 {"relation": "torque", "args": [200, 0.6, 40], "question": "A crowbar is levered against a crate 0.6 m from the fulcrum. The hand pushes with 200 N at 40 degrees to the bar, and the number the worksheet wants is the turning effect.", "split": "train"}
+{"relation": "torque", "args": [500, 1.6, 30], "question": "500 N applied 1.6 m out at 30 degrees to the arm: what turning moment does the pivot see?", "split": "train"}
 {"relation": "torque", "args": [42, 4, 65], "question": "What torque does the pivot feel? A 42 N pull is applied 4 m out at 65 degrees to the arm.", "split": "train"}
-{"relation": "torque", "args": [7, 0.5, 90], "question": "A tiny 7 N weight hangs at the end of a 0.5 m arm, the arm being square to the force at 90 degrees, and the last blank on the sheet is the torque.", "split": "train"}
-{"relation": "torque", "args": [500, 1.6, 30], "question": "Take 500 N applied 1.6 m from a pivot at 30 degrees to the arm and state the turning moment.", "split": "eval"}
+{"relation": "torque", "args": [7, 0.5, 90], "question": "A tiny 7 N weight hangs at the end of a 0.5 m arm, the arm being square to the force at 90 degrees, and the last blank on the sheet is the torque.", "split": "eval"}
 {"relation": "torque", "args": [95, 1.4, 110], "question": "r = 1.4 m, F = 95 N, theta = 110 degrees. Turning moment?", "split": "eval"}
 {"relation": "torque", "args": [55, 6, 145], "question": "At 145 degrees to the arm, 6 m from the axis, a 55 N force is applied. Give the torque.", "split": "eval"}
 {"relation": "torque", "args": [16, 5, 25], "question": "A 16 newton force acts 5 metres from the hinge at 25 degrees to the arm; what turning effect does it produce?", "split": "eval"}
+{"relation": "specific_heat", "args": [1000, 4.2, 12], "question": "1000 g of liquid at c = 4.2 J/(g C), warmed 12 degrees - the heat needed is what?", "split": "train"}
 {"relation": "specific_heat", "args": [750, 4.18, 8], "question": "A 750 g bath of water at c = 4.18 J/(g C) is heated by 8 degrees. A plumber says that takes under 20 000 J. Check it.", "split": "train"}
 {"relation": "specific_heat", "args": [150, 0.13, 80], "question": "How much heat does it take to warm a 150 g lead block, c = 0.13 J/(g C), through 80 degrees?", "split": "train"}
 {"relation": "specific_heat", "args": [200, 2.1, 24], "question": "A 200 g can of oil with c = 2.1 J/(g C) rises 24 degrees in a 30 degree room. Find the heat it took in.", "split": "train"}
 {"relation": "specific_heat", "args": [400, 0.84, 55], "question": "A 400 g pane of glass, specific heat 0.84 joule per gram per degree, is warmed by 55 degrees; what energy does that absorb?", "split": "train"}
-{"relation": "specific_heat", "args": [1000, 4.2, 12], "question": "Take 1000 g of liquid with c = 4.2 J/(g C), warm it 12 degrees, and report the heat required.", "split": "train"}
 {"relation": "specific_heat", "args": [300, 0.38, 22], "question": "300 g, c = 0.38 J/(g C), 22 degree rise: heat needed?", "split": "train"}
 {"relation": "specific_heat", "args": [50, 0.45, 48], "question": "A 50 g iron weight sits in a bath, c = 0.45 J/(g C), and over the hour its temperature climbs by 48 degrees, so the energy it gained is the last thing to work out.", "split": "eval"}
 {"relation": "specific_heat", "args": [250, 4.2, 45], "question": "A 250 g drum of coolant with c = 4.2 J/(g C) is warmed through 45 degrees on the dyno. The heat the radiator has to dump is the figure the engineer needs.", "split": "eval"}
@@ -111,8 +111,8 @@
 {"relation": "ohm_i", "args": [5, 4], "question": "A 4 ohm resistor has 5 volts across it; how many amperes pass through it?", "split": "train"}
 {"relation": "ohm_i", "args": [45, 9], "question": "A 45 V rail feeds a 9 ohm heater through 2 m of cable. What current does the heater draw?", "split": "train"}
 {"relation": "ohm_i", "args": [7, 2], "question": "What current will flow? 7 V is applied across 2 ohms.", "split": "train"}
+{"relation": "ohm_i", "args": [27, 3], "question": "Only two things are known, 27 V and 3 ohms. So what current follows?", "split": "train"}
 {"relation": "ohm_i", "args": [100, 20], "question": "The insulation tester puts 100 V across a 20 ohm element and the meter shows the current; what does it show?", "split": "train"}
-{"relation": "ohm_i", "args": [27, 3], "question": "Take 27 V and drive it through 3 ohms, then state the current.", "split": "train"}
 {"relation": "ohm_i", "args": [2.5, 5], "question": "A 2.5 V cell across 5 ohms: a pupil claims the current is over 0.6 A. Check the claim.", "split": "train"}
 {"relation": "ohm_i", "args": [8, 4], "question": "A coil of 4 ohms is connected to an 8 V source, and the last line of the table asks for the current through it.", "split": "eval"}
 {"relation": "ohm_i", "args": [14, 7], "question": "Across 7 ohms sits 14 V. Give the current.", "split": "eval"}
@@ -126,9 +126,9 @@
 {"relation": "ohm_v", "args": [12, 5], "question": "I = 12 A, R = 5 ohms, V = ?", "split": "train"}
 {"relation": "ohm_v", "args": [3.5, 4], "question": "A 4 ohm load takes 3.5 A, and the value the label leaves blank is the voltage across it.", "split": "eval"}
 {"relation": "ohm_v", "args": [0.5, 24], "question": "The shunt reads 0.5 A and the element is 24 ohms; the voltmeter displays what?", "split": "eval"}
-{"relation": "ohm_v", "args": [0.9, 50], "question": "Take 0.9 A through 50 ohms and give the voltage.", "split": "eval"}
+{"relation": "ohm_v", "args": [0.9, 50], "question": "With 0.9 A in 50 ohms, what voltage do you get?", "split": "eval"}
 {"relation": "ohm_v", "args": [20, 2.5], "question": "With 2.5 ohms in the circuit and 20 A flowing, the voltage is what?", "split": "eval"}
-{"relation": "ohm_power", "args": [1.8, 22], "question": "Take 1.8 A at 22 V and state the power.", "split": "train"}
+{"relation": "ohm_power", "args": [1.8, 22], "question": "The card reads 1.8 A and 22 V; the power is what?", "split": "train"}
 {"relation": "ohm_power", "args": [3.5, 14], "question": "The bench meter shows 3.5 A at 14 V for the lamp; the wattmeter reports what?", "split": "train"}
 {"relation": "ohm_power", "args": [7, 4], "question": "I = 7 A, V = 4 V. P = ?", "split": "train"}
 {"relation": "ohm_power", "args": [0.4, 50], "question": "At 50 V the device takes 0.4 A. Give the power it uses.", "split": "train"}
@@ -143,8 +143,8 @@
 {"relation": "circular_accel", "args": [4, 0.5], "question": "A toy train takes a 0.5 m curve at 4 m/s, and the last line of the lab report is the centripetal acceleration.", "split": "train"}
 {"relation": "circular_accel", "args": [9, 1.2], "question": "A drone circles a 1.2 m radius on a tether at 9 m/s. The acceleration pointing at the centre is what the operator wants.", "split": "train"}
 {"relation": "circular_accel", "args": [33, 11], "question": "At 33 m/s on an 11 m radius a rider claims the acceleration is over 100 m/s^2. Check it.", "split": "train"}
-{"relation": "circular_accel", "args": [14, 7], "question": "An object keeps 14 metres per second around a circle of 7 metres radius; what acceleration pulls it inward?", "split": "train"}
-{"relation": "circular_accel", "args": [28, 7], "question": "Take 28 m/s on a 7 m radius and give the centripetal acceleration.", "split": "eval"}
+{"relation": "circular_accel", "args": [28, 7], "question": "28 m/s on a 7 m radius: name the centripetal acceleration.", "split": "train"}
+{"relation": "circular_accel", "args": [14, 7], "question": "An object keeps 14 metres per second around a circle of 7 metres radius; what acceleration pulls it inward?", "split": "eval"}
 {"relation": "circular_accel", "args": [6, 0.8], "question": "A 6 m/s cart goes round a 0.8 m bend; the track is 2 m wide. Find the centripetal acceleration.", "split": "eval"}
 {"relation": "circular_accel", "args": [20, 4], "question": "20 m/s on a 4 m radius - what acceleration does the centre supply?", "split": "eval"}
 {"relation": "circular_accel", "args": [22, 2], "question": "The test rig spins a mass at 22 m/s on a 2 m arm, and the accelerometer reads the inward acceleration; what does it read?", "split": "eval"}
@@ -155,6 +155,76 @@
 {"relation": "proj_range", "args": [36, 20, 10], "question": "v0 = 36 m/s, theta = 20 degrees, g = 10. Range?", "split": "train"}
 {"relation": "proj_range", "args": [7, 40, 10], "question": "A 7 m/s throw at 40 degrees on a world with g = 10 m/s^2 lands, says a pupil, beyond 5 m. Check it.", "split": "train"}
 {"relation": "proj_range", "args": [13, 50, 10], "question": "A firework shell leaves at 13 m/s angled 50 degrees to the ground, g being 10 m/s^2, and the last thing to find is how far downrange it bursts.", "split": "eval"}
-{"relation": "proj_range", "args": [30, 45, 9.8], "question": "Take 30 m/s at 45 degrees with g = 9.8 m/s^2 and state the horizontal range.", "split": "eval"}
 {"relation": "proj_range", "args": [11, 65, 9.8], "question": "Thrown at 11 metres per second, 65 degrees above the flat, with g = 9.8 m/s^2, how far does the stone travel?", "split": "eval"}
 {"relation": "proj_range", "args": [45, 60, 9.81], "question": "At 60 degrees and 45 m/s, with g = 9.81 m/s^2, the projectile covers what horizontal distance?", "split": "eval"}
+{"relation": "proj_range", "args": [30, 45, 9.8], "question": "30 m/s at 45 degrees, g = 9.8 m/s^2 - how far downrange?", "split": "eval"}
+{"relation": "kinetic_energy", "args": [5, 9], "question": "A 5 kg block is timed at 9 m/s at the bottom of the chute, and the last line of the sheet is its kinetic energy.", "split": "train"}
+{"relation": "kinetic_energy", "args": [0.05, 300], "question": "A 0.05 kg bullet leaves a 60 cm barrel at 300 m/s. How much energy does it carry?", "split": "train"}
+{"relation": "kinetic_energy", "args": [2, 6], "question": "A 2 kg weight swings on a cord and passes the bottom at 6 m/s. The energy tied up in that motion is what the lab asks for.", "split": "train"}
+{"relation": "kinetic_energy", "args": [8, 13], "question": "The rig measures an 8 kg trolley at 13 m/s and prints its kinetic energy; what does it print?", "split": "train"}
+{"relation": "kinetic_energy", "args": [50, 8], "question": "m = 50 kg, v = 8 m/s, KE = ?", "split": "train"}
+{"relation": "kinetic_energy", "args": [0.6, 20], "question": "A 0.6 kg ball at 20 m/s: kinetic energy, please.", "split": "train"}
+{"relation": "kinetic_energy", "args": [0.3, 40], "question": "How much energy of motion does it carry? A 0.3 kg ball thrown at 40 m/s.", "split": "eval"}
+{"relation": "kinetic_energy", "args": [1000, 12], "question": "At 12 m/s a 1000 kg car carries how much kinetic energy?", "split": "eval"}
+{"relation": "kinetic_energy", "args": [30, 2], "question": "A 30 kg crate sliding at 2 m/s - a porter says its kinetic energy is more than 70 J. Check that.", "split": "eval"}
+{"relation": "kinetic_energy", "args": [15, 10], "question": "A 15 kg sack is moving at 10 metres per second; what kinetic energy does it have?", "split": "eval"}
+{"relation": "potential_energy", "args": [4, 8, 9.81], "question": "m = 4 kg, h = 8 m, g = 9.81 m/s^2, PE = ?", "split": "train"}
+{"relation": "potential_energy", "args": [35, 2, 10], "question": "A 35 kg weight is winched 2 m on a site where g = 10 m/s^2, and the last box on the form is the energy gained.", "split": "train"}
+{"relation": "potential_energy", "args": [60, 4, 10], "question": "What energy is stored? A 60 kg sack is lifted 4 m with g = 10 m/s^2.", "split": "train"}
+{"relation": "potential_energy", "args": [90, 1.8, 10], "question": "A 90 kg crate lifted 1.8 m with g = 10 m/s^2 gains, says a foreman, under 1800 J. Check it.", "split": "train"}
+{"relation": "potential_energy", "args": [0.8, 15, 9.8], "question": "0.8 kg raised 15 m at g = 9.8 m/s^2 gives what potential energy?", "split": "train"}
+{"relation": "potential_energy", "args": [0.25, 40, 9.8], "question": "Carrying 0.25 kg up 40 metres, with gravity at 9.8 metres per second squared, stores how much energy?", "split": "train"}
+{"relation": "potential_energy", "args": [7, 11, 9.8], "question": "The winch drum records a 7 kg load raised 11 m where g = 9.8 m/s^2; the gauge shows the stored energy, so what does it show?", "split": "eval"}
+{"relation": "potential_energy", "args": [1.2, 25, 9.8], "question": "A 1.2 kg lamp is hoisted 25 m up a stairwell, and with g = 9.8 m/s^2 the energy it has gained against gravity is the figure the fitter needs.", "split": "eval"}
+{"relation": "potential_energy", "args": [18, 3.5, 9.81], "question": "An 18 kg case goes up 3.5 m in a lift rated for 8 people, g = 9.81 m/s^2. What potential energy does it gain?", "split": "eval"}
+{"relation": "potential_energy", "args": [2.5, 6, 9.81], "question": "With g = 9.81 m/s^2, raising 2.5 kg through 6 m stores what energy?", "split": "eval"}
+{"relation": "work", "args": [500, 3, 75], "question": "A 500 N push at 75 degrees over 3 m gives, claims a porter, over 400 J of work. Check him.", "split": "train"}
+{"relation": "work", "args": [22, 9, 15], "question": "A force meter reads 22 N along a string at 15 degrees to the trolley's track, and the trolley runs 9 m; the joulemeter logs the work, so what does it log?", "split": "train"}
+{"relation": "work", "args": [200, 7, 25], "question": "A barrow is pushed across a yard with 200 N at 25 degrees to the path. It moves 7 m, and the work the pusher did is the quantity the sheet asks for.", "split": "train"}
+{"relation": "work", "args": [85, 12, 65], "question": "An 85 N rope hauls a sledge 12 m, held 65 degrees off the direction of travel, and the last line of the table is the work done by the rope.", "split": "train"}
+{"relation": "work", "args": [60, 8, 160], "question": "60 N at 160 degrees over 8 m - the work is what?", "split": "train"}
+{"relation": "work", "args": [48, 10, 40], "question": "d = 10 m, F = 48 N, theta = 40 degrees -> work?", "split": "train"}
+{"relation": "work", "args": [120, 4, 150], "question": "What work is done? 120 N applied 150 degrees away from a 4 m displacement.", "split": "eval"}
+{"relation": "work", "args": [36, 15, 110], "question": "A 36 N force drags a 4 kg bag 15 m at 110 degrees to its motion. The bag is 40 cm wide. Find the work.", "split": "eval"}
+{"relation": "work", "args": [75, 6, 55], "question": "A 75 newton pull acts at 55 degrees to the travel while the crate moves 6 metres; how much work does it do?", "split": "eval"}
+{"relation": "work", "args": [140, 5, 100], "question": "At 100 degrees to a 5 m movement, a 140 N force does what work?", "split": "eval"}
+{"relation": "power", "args": [1800, 6], "question": "An escalator does 1800 J of work in 6 s, and the last thing on the plate is the power rating.", "split": "train"}
+{"relation": "power", "args": [5000, 25], "question": "A crane does 5000 J of work in 25 s while lifting a load 3 m. Find the power.", "split": "train"}
+{"relation": "power", "args": [1100, 5.5], "question": "W = 1100 J, t = 5.5 s, P = ?", "split": "train"}
+{"relation": "power", "args": [150, 2], "question": "A torch battery delivers 150 J in 2 s, which a pupil says is under 80 W. Check that.", "split": "train"}
+{"relation": "power", "args": [260, 13], "question": "Over 13 s a motor expends 260 J. Give its power.", "split": "train"}
+{"relation": "power", "args": [7200, 60], "question": "What power is delivered? 7200 J is transferred over 60 s.", "split": "train"}
+{"relation": "power", "args": [300, 4], "question": "A pump shifts 300 J of water energy in the 4 s of one stroke. The power it is working at is what the test asks for.", "split": "eval"}
+{"relation": "power", "args": [2000, 16], "question": "The dynamometer logs 2000 J transferred in 16 s; the wattmeter shows the rate, so what does it show?", "split": "eval"}
+{"relation": "power", "args": [96, 4], "question": "Two figures, one answer: 96 J over 4 s. What is the power?", "split": "eval"}
+{"relation": "power", "args": [45, 9], "question": "45 joules of work done across 9 seconds - at what rate is the work being done?", "split": "eval"}
+{"relation": "newton2", "args": [0.8, 25], "question": "What force is needed? 0.8 kg must be given 25 m/s^2.", "split": "train"}
+{"relation": "newton2", "args": [9, 11], "question": "At 11 m/s^2 a 9 kg body needs what net force?", "split": "train"}
+{"relation": "newton2", "args": [38, 2], "question": "A 38 kg sledge is pushed to 2 m/s^2 on the ice, and the last box on the sheet is the net force.", "split": "train"}
+{"relation": "newton2", "args": [14, 4], "question": "A 14 kg suitcase is pulled along the concourse and gains speed at 4 m/s^2. The net force behind that is what the handler needs.", "split": "train"}
+{"relation": "newton2", "args": [120, 3.5], "question": "A 120 kg crate is accelerated at 3.5 m/s^2 along a 6 m ramp. Find the net force.", "split": "train"}
+{"relation": "newton2", "args": [0.35, 40], "question": "The test stand reports 0.35 kg and 40 m/s^2 for the specimen; the load cell gives the force, so what does it give?", "split": "train"}
+{"relation": "newton2", "args": [70, 2.5], "question": "m = 70 kg, a = 2.5 m/s^2, F = ?", "split": "eval"}
+{"relation": "newton2", "args": [22, 6], "question": "A 22 kg trolley at 6 m/s^2 needs, claims a student, more than 140 N. Check it.", "split": "eval"}
+{"relation": "newton2", "args": [5, 8], "question": "A 5 kg mass is given 8 metres per second squared of acceleration; what net force acts?", "split": "eval"}
+{"relation": "newton2", "args": [150, 4.5], "question": "How much push does a 150 kg body need for 4.5 m/s^2?", "split": "eval"}
+{"relation": "wave_speed", "args": [18, 9], "question": "A wave repeats 18 times a second and its crests sit 9 metres apart; at what speed does the wavefront move?", "split": "train"}
+{"relation": "wave_speed", "args": [220, 4.5], "question": "A sound of 220 Hz repeats every 4.5 m in the pipe, and the last line of the report is its speed.", "split": "train"}
+{"relation": "wave_speed", "args": [700, 0.25], "question": "The signal generator holds 700 Hz and the probe finds crests 0.25 m apart; the scope reads off the speed, so what does it read?", "split": "train"}
+{"relation": "wave_speed", "args": [1000, 0.34], "question": "f = 1000 Hz, lambda = 0.34 m, v = ?", "split": "train"}
+{"relation": "wave_speed", "args": [60, 3.5], "question": "A ripple tank is driven at 60 Hz and the crests measure 3.5 m apart on the model. The speed the pattern travels at is what the class must record.", "split": "train"}
+{"relation": "wave_speed", "args": [15, 20], "question": "Working from 15 Hz and 20 m of wavelength, what speed do you get?", "split": "train"}
+{"relation": "wave_speed", "args": [90, 0.6], "question": "A 90 Hz wave has 0.6 m between crests in a tank 2 m long. Find its speed.", "split": "eval"}
+{"relation": "wave_speed", "args": [5, 44], "question": "A 5 Hz vibration with 44 m between crests - a pupil says the wavefront goes over 250 m/s. Check it.", "split": "eval"}
+{"relation": "wave_speed", "args": [250, 1.2], "question": "How fast does the disturbance travel? 250 Hz, wavelength 1.2 m.", "split": "eval"}
+{"relation": "wave_speed", "args": [45, 2], "question": "With 2 m between crests at 45 Hz, the speed is what?", "split": "eval"}
+{"relation": "friction_force", "args": [0.42, 130], "question": "So 130 N of normal force at 0.42 coefficient - what friction does that give?", "split": "train"}
+{"relation": "friction_force", "args": [0.22, 700], "question": "With a coefficient of 0.22 under a 700 N load, the friction is what?", "split": "train"}
+{"relation": "friction_force", "args": [0.72, 180], "question": "mu = 0.72, N = 180 N. Friction = ?", "split": "train"}
+{"relation": "friction_force", "args": [0.35, 240], "question": "A pallet presses on the loading bay with 240 N and the two surfaces have a coefficient of 0.35. The force that resists sliding is what the rigger needs.", "split": "train"}
+{"relation": "friction_force", "args": [0.05, 2000], "question": "A 2000 N girder rests on nylon of coefficient 0.05, and the last figure in the note is the friction force.", "split": "train"}
+{"relation": "friction_force", "args": [0.1, 1100], "question": "A 1100 N press rests on a pad of coefficient 0.1 and the pad is 4 cm thick. What friction force acts?", "split": "train"}
+{"relation": "friction_force", "args": [0.6, 480], "question": "The sled rig loads 480 N onto a track of coefficient 0.6, and the force gauge shows the friction; what does it show?", "split": "eval"}
+{"relation": "friction_force", "args": [0.45, 95], "question": "A 95 newton load sits on a surface whose coefficient is 0.45; how much friction does the surface give?", "split": "eval"}
+{"relation": "friction_force", "args": [0.38, 350], "question": "A drawer of 350 N on a runner with mu = 0.38, says a joiner, needs under 120 N to shift. Check that.", "split": "eval"}
+{"relation": "friction_force", "args": [0.18, 600], "question": "What friction force comes out? 600 N normal with a coefficient of 0.18.", "split": "eval"}

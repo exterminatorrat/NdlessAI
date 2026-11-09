@@ -87,6 +87,36 @@ trust before any breadth.
 | 3.5 | **Electricity and magnetism** — Coulomb, Gauss, potential, capacitors, RC, Kirchhoff, induction | AP Physics C E&M | `relations/em.py`, `runtime/solvers_em.c` |
 | 3.6 | **Real wording data** — hand-written and paraphrased questions in training, adversarial distractors, and `stress_cases.py` promoted to a gate | The measured 91.6% is on generated phrasings; this is the accuracy lever | `data/`, `evaluate_*.py` |
 
+## Wording, measured — the number that changes the plan
+
+Every accuracy figure recorded above was measured on generated questions: the
+same templates the training data is built from, with different numbers. On
+hand-written questions the same model scores far worse, and that is the number a
+student experiences.
+
+| Measurement, 588 hand-written rows | Generated phrasings | Hand-written, before | Hand-written, after the wording retrain |
+| --- | --- | --- | --- |
+| Exact call | 92.9% | 43.4% | **61.2%** |
+| Right relation, wrong arguments | 4.7% | 22.8% | 19.7% |
+| Wrong relation | 2.5% | 33.8% | **19.0%** |
+| Generated-set exact call, after | — | 92.9% | 89.5% |
+
+The wording retrain put 1,260 hand-written questions over all 84 relations into
+the corpus, split six train and four eval per relation by a hash of the
+question, and made a fifth of the training set those training rows. The eval
+rows are unreadable by `make_dataset`, so the before-and-after is on wording no
+version of the model has seen.
+
+The cost is real and belongs in the same table: generated-phrasing accuracy fell
+3.4 points and the wrong-relation rate on generated rows rose 2.1% to 3.9%. That
+is capacity moved off template recall and onto natural wording. A student types
+natural wording, so the trade is right, but a plan that quotes only 61% would be
+hiding the price.
+
+**The lesson, in one line:** a generated held-out set measures phrasing recall,
+not understanding, and any accuracy claim in this project has to name which set
+it came from.
+
 ## Wave 4 — the deep end
 
 | # | Workstream | What it does | Owns |

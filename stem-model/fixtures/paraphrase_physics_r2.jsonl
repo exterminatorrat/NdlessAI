@@ -1,0 +1,80 @@
+{"relation": "kinematic_v", "args": [12, 1.2, 10], "question": "Starting at 12 m/s, a scooter holds 1.2 m/s^2 for 10 s down a test straight. The examiner's last box on the sheet is the final velocity.", "split": "train"}
+{"relation": "kinematic_v", "args": [50, -12, 4], "question": "The rocket sled enters the arrestor at 50 m/s. Deceleration is -12 m/s^2 and the burn lasts 4 s; what speed remains when it stops firing? The rails run for 300 m.", "split": "train"}
+{"relation": "kinematic_v", "args": [16, 2.5, 6], "question": "A delivery van was already rolling. Through the timed gate it goes in at 16 m/s and gains 2.5 m/s^2 for the 6 s the clock runs; what does the speed read as it leaves?", "split": "train"}
+{"relation": "kinematic_v", "args": [9, 3, 15], "question": "v0 = 9 m/s, a = 3 m/s^2, t = 15 s, find v.", "split": "train"}
+{"relation": "kinematic_v", "args": [0, 4.9, 5], "question": "A parachutist steps out of a hovering balloon and thereafter speeds up by 4.9 metres per second every second; 5 s on, how fast is she falling?", "split": "train"}
+{"relation": "kinematic_v", "args": [2.5, 8, 4], "question": "Take a rollerblader coasting at 2.5 m/s, add 8 m/s^2 for 4 s, and state the speed at the end.", "split": "train"}
+{"relation": "kinematic_v", "args": [35, -9.5, 3], "question": "A landing aircraft rolls onto the runway at 35 m/s; with a = -9.5 m/s^2 the brakes hold for 3 s before it turns off, so the airspeed indicator shows what?", "split": "eval"}
+{"relation": "kinematic_v", "args": [24, -5, 2], "question": "A forklift is doing 24 m/s when the load shifts and it slows at -5 m/s^2. The aisle runs 30 m and the truck is 2 s into the skid, so what speed is left?", "split": "eval"}
+{"relation": "kinematic_v", "args": [6, 6, 7], "question": "Run 4 in the logbook: entry speed 6 m/s, acceleration 6 m/s^2, duration 7 s. What speed closes the row?", "split": "eval"}
+{"relation": "kinematic_v", "args": [45, -7, 3], "question": "How fast is the train still going? It was doing 45 m/s when the brakes went on at -7 m/s^2, and 3 s later the driver lifts off.", "split": "eval"}
+{"relation": "free_fall", "args": [75, 9.8], "question": "A lift cable snaps at 75 m and the car drops in free fall; taking g = 9.8 m/s^2, and ignoring the guide rails and any air, find the speed the car has at the pit floor.", "split": "train"}
+{"relation": "free_fall", "args": [2, 9.81], "question": "With g = 9.81 m/s^2, what speed does a pebble released from 2 m reach just before it touches down?", "split": "train"}
+{"relation": "free_fall", "args": [4.5, 9.8], "question": "A diver in training steps off a 4.5 m board. Ignoring air resistance and taking g = 9.8 m/s^2, the figure the coach is waiting for is her entry speed.", "split": "train"}
+{"relation": "free_fall", "args": [30, 9.8], "question": "The drop rig holds its weight 30 m up and lets go. With g = 9.8 m/s^2, what speed does the contact pad print?", "split": "train"}
+{"relation": "free_fall", "args": [60, 9.8], "question": "A stone leaves the lip of a 60 m cliff and falls freely. With 9.8 metres per second squared as gravity, how fast is it going at the bottom?", "split": "train"}
+{"relation": "free_fall", "args": [20, 9.81], "question": "A lifeguard drops a buoy 20 m from a gantry over the water; the gantry stands 3 m back from the edge. With g = 9.81 m/s^2, what speed does the buoy reach the surface at?", "split": "train"}
+{"relation": "free_fall", "args": [15, 9.81], "question": "How fast is a dropped toolbox moving at the ground? It leaves a 15 m scaffold and g there is 9.81 m/s^2.", "split": "eval"}
+{"relation": "free_fall", "args": [6.4, 10], "question": "A spanner slips off a ledge 6.4 m up, and a bystander says it hits at more than 15 m/s. Take g = 10 m/s^2 and check that.", "split": "eval"}
+{"relation": "free_fall", "args": [0.5, 10], "question": "A ball bearing is let go 0.5 m above a sensor plate. The plate logs the speed at contact, and g = 10 m/s^2, so what does it log?", "split": "eval"}
+{"relation": "free_fall", "args": [1.2, 10], "question": "h = 1.2 m, g = 10 m/s^2, release from rest. Impact speed?", "split": "eval"}
+{"relation": "momentum", "args": [18, 5], "question": "An 18 kg parcel rides the conveyor at 5 m/s. What momentum does it hold?", "split": "train"}
+{"relation": "momentum", "args": [7, 14], "question": "Two players warm up on the field. One, a 7 kg medicine ball, is thrown downfield at 14 m/s, and the coach asks for the momentum.", "split": "train"}
+{"relation": "momentum", "args": [45, 2], "question": "At 2 m/s a trolley carrying 45 kg of cement rolls across the yard. How much momentum is in that motion?", "split": "train"}
+{"relation": "momentum", "args": [0.25, 24], "question": "The launcher fires a 0.25 kg slug and the chronograph shows 24 m/s; what momentum does the slug leave with?", "split": "train"}
+{"relation": "momentum", "args": [75, 6], "question": "m = 75 kg, v = 6 m/s. p = ?", "split": "train"}
+{"relation": "momentum", "args": [3, 9], "question": "A 3 kg shot is released at 9 m/s. It was swung for 2 s on a 1.5 m wire, so how much momentum leaves the hand?", "split": "train"}
+{"relation": "momentum", "args": [0.06, 55], "question": "A golf ball of 0.06 kg is struck and leaves the tee at 55 metres per second; how much momentum does it carry away?", "split": "eval"}
+{"relation": "momentum", "args": [1500, 18], "question": "What momentum does a loaded van have? It weighs 1500 kg and the dash shows 18 m/s.", "split": "eval"}
+{"relation": "momentum", "args": [850, 12], "question": "A bobsleigh of 850 kg is clocked at 12 m/s and the crew says that is under 10 000 kg m/s. Is the momentum figure they quote right?", "split": "eval"}
+{"relation": "momentum", "args": [0.4, 32], "question": "A hockey puck leaves the stick and skips down the ice. Its mass is 0.4 kg, it is measured at 32 m/s crossing the blue line, and the stat sheet wants the momentum.", "split": "eval"}
+{"relation": "impulse", "args": [18, 4], "question": "F = 18 N, t = 4 s. Impulse?", "split": "train"}
+{"relation": "impulse", "args": [5, 60], "question": "Over 60 s a 5 N thrust acts on the satellite. Give the impulse.", "split": "train"}
+{"relation": "impulse", "args": [90, 1.2], "question": "A steady 90 N is applied to the handle for 1.2 s, and the question at the end of the practical is the impulse delivered.", "split": "train"}
+{"relation": "impulse", "args": [250, 2], "question": "A jack pushes with 250 newtons for 2 seconds; what impulse does it pass on?", "split": "train"}
+{"relation": "impulse", "args": [600, 0.03], "question": "How much impulse goes into the nail? The hammer delivers 600 N for 0.03 s.", "split": "train"}
+{"relation": "impulse", "args": [25, 0.5], "question": "A blocker's hands are on the volleyball for 0.5 s while the force averages 25 N. The stat sheet wants the impulse.", "split": "train"}
+{"relation": "impulse", "args": [320, 0.15], "question": "Punch data: 320 N applied for 0.15 s. Impulse, please.", "split": "eval"}
+{"relation": "impulse", "args": [120, 0.8], "question": "A goalkeeper holds 120 N against the ball for 0.8 s. A coach claims the impulse is under 90 N s; work it out and say if she is right.", "split": "eval"}
+{"relation": "impulse", "args": [40, 3.5], "question": "Forces are logged by the plate under the runner. It records a steady 40 N for 3.5 s, so what impulse does the runner take?", "split": "eval"}
+{"relation": "impulse", "args": [7, 12], "question": "A 7 N toy motor runs for 12 s and the car travels 4 m. What impulse does the motor give the car?", "split": "eval"}
+{"relation": "work_energy", "args": [55, 12, 18], "question": "On the test rig a 55 kg crash dummy is accelerated from 12 m/s to 18 m/s. The load cell integrates the net work, so what does it read?", "split": "train"}
+{"relation": "work_energy", "args": [900, 5, 25], "question": "A 900 kg dragster climbs from 5 metres per second to 25 metres per second over the run; how much net work goes in?", "split": "train"}
+{"relation": "work_energy", "args": [6, 4, 8], "question": "A 6 kg weight goes from 4 m/s to 8 m/s and the trainer says the net work is more than 150 J. Check the number.", "split": "train"}
+{"relation": "work_energy", "args": [4, 2, 10], "question": "A sledge is shoved along the ice and its speed rises over a short push. It weighs 4 kg, starts the push at 2 m/s and is doing 10 m/s when the pusher lets go; the work the pusher did is the answer.", "split": "train"}
+{"relation": "work_energy", "args": [10, 6, 11], "question": "A 10 kg sack quickens, 6 m/s becoming 11 m/s. Net work?", "split": "train"}
+{"relation": "work_energy", "args": [150, 3, 12], "question": "A go-kart of 150 kg is timed at 3 m/s out of the corner and 12 m/s at the end of the straight, so the net work on it over that stretch is what?", "split": "train"}
+{"relation": "work_energy", "args": [35, 8, 15], "question": "v0 = 8 m/s, v = 15 m/s, m = 35 kg. Net work done?", "split": "eval"}
+{"relation": "work_energy", "args": [0.2, 0, 30], "question": "A 0.2 kg dart is fired from a standstill up to 30 m/s. What net work went into it?", "split": "eval"}
+{"relation": "work_energy", "args": [1.5, 3, 7], "question": "A 1.5 kg ball is accelerated from 3 m/s to 7 m/s by a racket that is 68 cm long. What net work was done on the ball?", "split": "eval"}
+{"relation": "work_energy", "args": [0.05, 0, 400], "question": "Starting from rest, take a 0.05 kg bullet and bring it to 400 m/s; the net work required is what?", "split": "eval"}
+{"relation": "power_force", "args": [450, 20], "question": "Moving at 20 m/s under a 450 N thrust, the craft needs what power?", "split": "train"}
+{"relation": "power_force", "args": [60, 7], "question": "A rower pulls with 60 newtons while the boat keeps 7 metres per second; find the power delivered.", "split": "train"}
+{"relation": "power_force", "args": [2200, 15], "question": "F = 2200 N, v = 15 m/s. P = ?", "split": "train"}
+{"relation": "power_force", "args": [900, 11], "question": "A winch pulls at 900 N and the load rises at 11 m/s, which a hand says is over 9 kW. Check the power.", "split": "train"}
+{"relation": "power_force", "args": [35, 1.5], "question": "At what rate is work being done? A 35 N pull moves the crate along at 1.5 m/s.", "split": "train"}
+{"relation": "power_force", "args": [12, 3], "question": "The treadmill motor reads 12 N of drag while the belt runs at 3 m/s; what power does the motor supply?", "split": "train"}
+{"relation": "power_force", "args": [80, 2.5], "question": "An electric scooter holds 80 N of drive force up the incline at a steady 2.5 m/s, and the last question on the sheet asks for the power output.", "split": "eval"}
+{"relation": "power_force", "args": [150, 0.5], "question": "A 150 N force moves a pallet at 0.5 m/s. The pallet carries 12 boxes. What power is going in?", "split": "eval"}
+{"relation": "power_force", "args": [1000, 40], "question": "Take a 1000 N thrust at 40 m/s and give the power.", "split": "eval"}
+{"relation": "power_force", "args": [500, 8], "question": "A tractor drags a plough through a field. The drawbar pull is 500 N and the rig keeps 8 m/s, and the figure the farmer needs is the rate at which work is being done.", "split": "eval"}
+{"relation": "energy_friction", "args": [0.8, 22, 45, 3], "question": "A 0.8 kg ball is bowled at 22 metres per second into 3 metres of rough turf, where 45 newtons of friction act; what speed is left?", "split": "train"}
+{"relation": "energy_friction", "args": [12, 9, 15, 6], "question": "m = 12 kg, v0 = 9 m/s, friction 15 N, run 6 m, find v.", "split": "train"}
+{"relation": "energy_friction", "args": [9, 12, 40, 2], "question": "Take a 9 kg cart doing 12 m/s, put 40 N of friction on it for 2 m, and report the speed it leaves with.", "split": "train"}
+{"relation": "energy_friction", "args": [3, 18, 12, 7], "question": "A 3 kg block is timed at 18 m/s entering a 7 m rough patch where friction is 12 N. A lab partner writes that it emerges at under 16 m/s; check that.", "split": "train"}
+{"relation": "energy_friction", "args": [5, 14, 20, 5], "question": "A 5 kg puck is already sliding at 14 m/s when it hits the rough end of the rink, where 20 N of friction acts over the last 5 m. The speed as it crosses the line is what the coach wants.", "split": "train"}
+{"relation": "energy_friction", "args": [2.5, 16, 30, 4], "question": "How fast is the sled still going? It starts at 16 m/s, weighs 2.5 kg and loses 30 N to friction over 4 m.", "split": "train"}
+{"relation": "energy_friction", "args": [7, 13, 20, 10], "question": "Over 10 m against 20 N of friction, a 7 kg mass that started at 13 m/s ends up at what speed?", "split": "eval"}
+{"relation": "energy_friction", "args": [40, 10, 50, 6], "question": "The test track records a 40 kg cart entering the friction section at 10 m/s; the brake applies 50 N for the 6 m of the section, and the exit gate prints the speed.", "split": "eval"}
+{"relation": "energy_friction", "args": [1.2, 30, 60, 5], "question": "A 1.2 kg ball bearing skims into 5 m of oil, where it meets 60 N of drag having arrived at 30 m/s, and the last thing the apparatus logs is the speed on exit.", "split": "eval"}
+{"relation": "energy_friction", "args": [20, 11, 25, 8], "question": "A 20 kg crate leaves the ramp at 11 m/s and grinds 8 m over gravel with 25 N of friction. The ramp itself is 4 m tall. Find the speed it keeps.", "split": "eval"}
+{"relation": "spring_energy", "args": [1200, 0.05], "question": "k = 1200 N/m, x = 0.05 m. Stored energy?", "split": "train"}
+{"relation": "spring_energy", "args": [300, 0.12], "question": "A spring on the launcher is rated 300 N/m and the arm pulls it back 0.12 m before release. The energy the launcher can give the ball is what the test asks for.", "split": "train"}
+{"relation": "spring_energy", "args": [90, 0.45], "question": "Drawn out to 0.45 m, a 90 N/m spring holds how much energy?", "split": "train"}
+{"relation": "spring_energy", "args": [240, 0.09], "question": "Within a 240 N/m spring squashed 0.09 m sits what amount of energy?", "split": "train"}
+{"relation": "spring_energy", "args": [350, 0.15], "question": "A 350 N/m spring is stretched 0.15 m. It hangs from a hook 2 m above the bench. How much energy is tucked away in it?", "split": "train"}
+{"relation": "spring_energy", "args": [55, 0.6], "question": "A 55 N/m spring pulled 0.6 m stores, according to a pupil, more than 12 J. Work it out and say if that is right.", "split": "train"}
+{"relation": "spring_energy", "args": [450, 0.16], "question": "A buffer spring of 450 N/m takes the impact and is driven back 0.16 m, and the quantity the report lists is the elastic energy it absorbed.", "split": "eval"}
+{"relation": "spring_energy", "args": [180, 0.25], "question": "A spring of stiffness 180 newtons per metre is squeezed by 0.25 metres; how much energy is held in it?", "split": "eval"}
+{"relation": "spring_energy", "args": [600, 0.22], "question": "A 600 N/m spring in the rig is compressed 0.22 m, and the gauge reports the energy stored; what does it report?", "split": "eval"}
+{"relation": "spring_energy", "args": [100, 0.55], "question": "Take a 100 N/m spring and extend it by 0.55 m, then give the energy it stores.", "split": "eval"}

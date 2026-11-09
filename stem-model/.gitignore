@@ -12,7 +12,6 @@ runtime/main_device
 runtime/test_solvers
 runtime/test_bpe
 runtime/test_fixed
-runtime/bench_kernel
 pytest_cache/
 __pycache__/
 model2.pt
@@ -30,3 +29,5 @@ device/weights.bin.tns
 runtime/test_guard
 runtime/test_graph
 runtime/test_typed
+runtime/test_callmask
+runtime/bench_kernel

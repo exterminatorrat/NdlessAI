@@ -3,20 +3,23 @@
 
 #include <string.h>
 
+#define BPE_KEY_PAIR(a, b) \
+    ((((uint64_t)(a)) << BPE_KEY_ID_BITS) | (uint64_t)(b))
+
 static int bpe_rank_of(const bpe_tok *tok, uint16_t a, uint16_t b)
 {
-    uint32_t key = ((uint32_t)a << 9) | (uint32_t)b;
+    uint64_t key = BPE_KEY_PAIR(a, b);
     int lo = 0;
     int hi = BPE_NUM_MERGES - 1;
     while (lo <= hi) {
         int mid = lo + (hi - lo) / 2;
-        uint32_t cur = tok->keys[mid] >> 8;
+        uint64_t cur = tok->keys[mid] >> BPE_KEY_ID_BITS;
         if (cur < key) {
             lo = mid + 1;
         } else if (cur > key) {
             hi = mid - 1;
         } else {
-            return (int)(tok->keys[mid] & 0xFFu);
+            return (int)(tok->keys[mid] & BPE_KEY_ID_MAX);
         }
     }
     return -1;
@@ -24,13 +27,16 @@ static int bpe_rank_of(const bpe_tok *tok, uint16_t a, uint16_t b)
 
 int bpe_init(bpe_tok *tok)
 {
-    if (BPE_NUM_MERGES > 256) {
+    /* The key carries 12 bits per id and 12 for the rank; refuse to build a
+     * table the encoding cannot represent rather than pack it silently wrong. */
+    if (BPE_NUM_MERGES > (BPE_KEY_ID_MAX + 1) ||
+        BPE_VOCAB_SIZE > (BPE_KEY_ID_MAX + 1)) {
         return -1;
     }
     int n = 0;
     for (int i = 0; i < BPE_NUM_MERGES; i++) {
-        uint32_t entry = (((uint32_t)bpe_merges[i][0] << 9) | (uint32_t)bpe_merges[i][1]) << 8
-                         | (uint32_t)i;
+        uint64_t entry = BPE_KEY_PAIR(bpe_merges[i][0], bpe_merges[i][1]) << BPE_KEY_ID_BITS
+                         | (uint64_t)i;
         int lo = 0;
         int hi = n;
         while (lo < hi) {
@@ -41,7 +47,7 @@ int bpe_init(bpe_tok *tok)
                 hi = mid;
             }
         }
-        memmove(&tok->keys[lo + 1], &tok->keys[lo], (size_t)(n - lo) * sizeof(uint32_t));
+        memmove(&tok->keys[lo + 1], &tok->keys[lo], (size_t)(n - lo) * sizeof(tok->keys[0]));
         tok->keys[lo] = entry;
         n++;
     }

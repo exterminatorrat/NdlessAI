@@ -51,8 +51,18 @@ extern const uint16_t bpe_special_ids[BPE_NUM_SPECIALS];
 #endif
 /* BPE_DATA_END */
 
+/*
+ * One sorted key per merge, packing the pair and its rank into 64 bits:
+ * pair_a << 24 | pair_b << 12 | rank. Twelve bits each allows token ids and
+ * ranks up to 4095, which covers a vocabulary of 4096; the previous uint32
+ * packing gave nine bits to each id and eight to the rank, so it silently
+ * capped the tokenizer at 512 tokens and 256 merges.
+ */
+#define BPE_KEY_ID_BITS 12
+#define BPE_KEY_ID_MAX  4095
+
 typedef struct {
-    uint32_t keys[BPE_NUM_MERGES];
+    uint64_t keys[BPE_NUM_MERGES];
 } bpe_tok;
 
 int bpe_init(bpe_tok *tok);

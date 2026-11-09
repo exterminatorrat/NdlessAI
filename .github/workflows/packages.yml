@@ -1,6 +1,23 @@
 name: SDK packages
 
-on: [ push, pull_request, workflow_dispatch ]
+# Packaging is a release and nightly concern, not a pull-request check.
+#
+# This used to run on every push and pull request, including changes that only
+# touch stem-model/. Ten jobs (and four macOS jobs that queue for hours on this
+# repository before ever starting) reported on every commit while building a
+# distribution package the commit could not have changed.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+  push:
+    tags: [ 'v*' ]
+
+# Never cancel a packaging run that is already building: these produce
+# artifacts, and a cancelled release build is worse than a queued one.
+concurrency:
+  group: packages-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -9,6 +26,7 @@ jobs:
   package:
     name: ${{ matrix.distro }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -74,6 +92,7 @@ jobs:
   macos:
     name: ${{ matrix.manager }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

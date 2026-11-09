@@ -382,9 +382,12 @@ static int solve_energy_friction(const char *const *args, char *out,
 	s.d = v0.d * v0.d * f.d * d.d * m.n;
 	if ((rc = rat_norm(&s)) != 0)
 		return rc;
-	if (s.n < 0)
-		return -4;
-	if (s.n == 0) {
+	/*
+	 * Friction cannot remove more kinetic energy than the block has. A
+	 * negative radicand is the block stopping before the end of the distance,
+	 * so the final speed is zero rather than an error.
+	 */
+	if (s.n <= 0) {
 		out_set(out, outlen, "0 m/s");
 		return 0;
 	}

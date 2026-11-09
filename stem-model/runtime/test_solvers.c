@@ -9055,6 +9055,12 @@ static const tcase POWER_FORCE[] = {
 };
 
 static const tcase ENERGY_FRICTION[] = {
+	/* Friction that removes all of the kinetic energy stops the block; these
+	 * used to raise in Python and refuse on the device. */
+	{ { "2", "1", "1", "1", "", "" }, "0 m/s" },
+	{ { "2", "1", "10", "1", "", "" }, "0 m/s" },
+	{ { "1", "2", "50", "1", "", "" }, "0 m/s" },
+	{ { "4", "3", "1000", "10", "", "" }, "0 m/s" },
 	{ { "15", "6", "5", "8", "", "" }, "5.538 m/s" },
 	{ { "15", "12", "25", "10", "", "" }, "10.52 m/s" },
 	{ { "3", "6", "5", "10", "", "" }, "1.633 m/s" },

@@ -230,6 +230,12 @@ class HFromPh:
 
     @staticmethod
     def solve(ph):
+        # The device path refuses a non-integer pH rather than answering it, so
+        # the reference must refuse too. int(ph) would turn pH 2.5 into 10^-2
+        # and 0.01 mol/L where the answer is 0.00316, and a corpus row written
+        # from that would teach the model a wrong answer.
+        if sp.Rational(ph).q != 1:
+            raise ValueError("h_from_ph takes an integer pH")
         return f"{dec_exact(sp.Rational(10) ** -int(ph))} mol/L"
 
 @relation("buffer_ph", "chemistry", ["pka", "base", "acid"], exact=False)

@@ -245,7 +245,14 @@ static int solve_linear2(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
-static int solve_exp(const char *const *args, char *out, size_t outlen)
+/*
+ * noinline is load-bearing, not a hint: the fallback below is the one place in
+ * the runtime that uses a double, and crosscheck.sh allows it only under this
+ * function's name. Inlined into solvers_math_solve it would look like a
+ * soft-float call in the per-token path.
+ */
+static int __attribute__((noinline))
+solve_exp(const char *const *args, char *out, size_t outlen)
 {
 	rat base, k, p;
 	int rc, m;

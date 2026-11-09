@@ -249,6 +249,223 @@ static int solve_stoichiometry(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_dilution_v1(const char *const *args, char *out,
+                             size_t outlen)
+{
+	rat m1, m2, v2, t, q;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &m2, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v2, NULL)) != 0)
+		return rc;
+	if (m1.n == 0)
+		return -4;
+	if ((rc = rat_mul(&t, &m2, &v2)) != 0 ||
+	    (rc = rat_div(&q, &t, &m1)) != 0)
+		return rc;
+	if ((rc = dec4_render(q.n, q.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mL", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_molality(const char *const *args, char *out, size_t outlen)
+{
+	rat n, kg, q;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &n, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &kg, NULL)) != 0)
+		return rc;
+	if (kg.n == 0)
+		return -4;
+	if ((rc = rat_div(&q, &n, &kg)) != 0)
+		return rc;
+	if ((rc = dec4_render(q.n, q.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/kg", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_h_from_ph(const char *const *args, char *out, size_t outlen)
+{
+	rat ph;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &ph, NULL)) != 0)
+		return rc;
+	if (ph.d != 1 || ph.n < 0 || ph.n > 17)
+		return -4;
+	if ((rc = dec4_render(1, P10[ph.n], f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_buffer_ph(const char *const *args, char *out, size_t outlen)
+{
+	rat pka, base, acid, ratio;
+	long long l9, num, den;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &pka, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &base, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &acid, NULL)) != 0)
+		return rc;
+	if (base.n <= 0 || acid.n <= 0)
+		return -4;
+	if ((rc = rat_div(&ratio, &base, &acid)) != 0)
+		return rc;
+	l9 = log10_9(ratio.n, ratio.d, &rc);
+	if (rc != 0)
+		return rc;
+	num = pka.n * 1000000000LL + pka.d * l9;
+	den = pka.d * 1000000000LL;
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_calorimetry_mass(const char *const *args, char *out,
+                                  size_t outlen)
+{
+	rat q, c, dT, t, m;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &q, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &dT, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&t, &c, &dT)) != 0)
+		return rc;
+	if (t.n == 0)
+		return -4;
+	if ((rc = rat_div(&m, &q, &t)) != 0)
+		return rc;
+	if ((rc = dec4_render(m.n, m.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s g", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_calorimetry_c(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat q, m, dT, t, c;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &q, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &m, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &dT, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&t, &m, &dT)) != 0)
+		return rc;
+	if (t.n == 0)
+		return -4;
+	if ((rc = rat_div(&c, &q, &t)) != 0)
+		return rc;
+	if ((rc = dec4_render(c.n, c.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s J/(g C)", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_latent_heat(const char *const *args, char *out, size_t outlen)
+{
+	rat m, L, q;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &L, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&q, &m, &L)) != 0)
+		return rc;
+	if ((rc = dec4_render(q.n, q.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s J", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_first_law(const char *const *args, char *out, size_t outlen)
+{
+	rat q, w, du;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &q, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &w, NULL)) != 0)
+		return rc;
+	if ((rc = rat_add(&du, &q, &w)) != 0)
+		return rc;
+	if ((rc = dec4_render(du.n, du.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s J", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_gibbs(const char *const *args, char *out, size_t outlen)
+{
+	rat dh, t, ds, thousand, p, g;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &dh, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &t, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &ds, NULL)) != 0)
+		return rc;
+	thousand.n = 1000;
+	thousand.d = 1;
+	if ((rc = rat_mul(&p, &t, &ds)) != 0 ||
+	    (rc = rat_div(&p, &p, &thousand)) != 0 ||
+	    (rc = rat_sub(&g, &dh, &p)) != 0)
+		return rc;
+	if ((rc = dec4_render(g.n, g.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s kJ", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_carnot(const char *const *args, char *out, size_t outlen)
+{
+	rat th, tc, d, hundred, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &th, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &tc, NULL)) != 0)
+		return rc;
+	if (th.n == 0)
+		return -4;
+	hundred.n = 100;
+	hundred.d = 1;
+	if ((rc = rat_sub(&d, &th, &tc)) != 0 ||
+	    (rc = rat_mul(&p, &d, &hundred)) != 0 ||
+	    (rc = rat_div(&p, &p, &th)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s%%", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -317,6 +534,56 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "stoichiometry") == 0) {
 		if (nargs == 2)
 			rc = solve_stoichiometry(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "dilution_v1") == 0) {
+		if (nargs == 3)
+			rc = solve_dilution_v1(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "molality") == 0) {
+		if (nargs == 2)
+			rc = solve_molality(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "h_from_ph") == 0) {
+		if (nargs == 1)
+			rc = solve_h_from_ph(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "buffer_ph") == 0) {
+		if (nargs == 3)
+			rc = solve_buffer_ph(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "calorimetry_mass") == 0) {
+		if (nargs == 3)
+			rc = solve_calorimetry_mass(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "calorimetry_c") == 0) {
+		if (nargs == 3)
+			rc = solve_calorimetry_c(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "latent_heat") == 0) {
+		if (nargs == 2)
+			rc = solve_latent_heat(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "first_law") == 0) {
+		if (nargs == 2)
+			rc = solve_first_law(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "gibbs") == 0) {
+		if (nargs == 3)
+			rc = solve_gibbs(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "carnot") == 0) {
+		if (nargs == 2)
+			rc = solve_carnot(args, out, outlen);
 		else
 			rc = -2;
 	} else {

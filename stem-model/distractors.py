@@ -67,6 +67,14 @@ TEMPLATES = {
     "dilution": "The cupboard also holds a volumetric flask of {n} mL.",
     "gas_p": "A second cylinder in the same rack is rated {n} L.",
     "sig_figs": "A second value in the same set is {n}.",
+    "friction_force": "A second crate in the same problem has normal force {n} N.",
+    "work_energy": "A second cart in the same problem has mass {n} kg.",
+    "power_force": "A second motor in the same problem pulls with {n} N.",
+    "energy_friction": "A second block in the same problem has mass {n} kg.",
+    "impulse": "A second ball in the same problem feels {n} N.",
+    "spring_energy": "A second spring in the same problem has constant {n} N/m.",
+    "pendulum_period": "A second pendulum in the same problem is {n} m long.",
+    "torque": "A second force in the same problem is {n} N.",
 }
 
 POOLS = {

@@ -1,0 +1,560 @@
+{"relation": "abs_value_eq", "args": [2, -7, 9], "question": "A quality check allows a 9 mm error on a rod whose reading is modelled as |2x - 7|; the bench is 90 cm wide and 3 rods are measured. Solve |2x - 7| = 9 for x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [3, 4, 15], "question": "15 is the tolerance and 3x + 4 is the reading; solve |3x + 4| = 15 for both values of x.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [5, 5, 20], "question": "Sheet 4 of the set: |5x + 5| = 20. Give both solutions and say which is larger.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [6, -30, 12], "question": "The x coefficient is 6, the tolerance quoted is 12, and the two solutions straddle 5. Solve |6x - 30| = 12.", "split": "train"}
+{"relation": "abs_value_eq", "args": [4, 3, 13], "question": "A robot arm's error is |4x + 3| mm and the pass mark is 13; the cell is 2 m wide and 6 arms run. Solve |4x + 3| = 13.", "split": "train"}
+{"relation": "abs_value_eq", "args": [8, -6, 20], "question": "20 units from zero is where |8x - 6| must sit; solve it for both x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [2, -9, 11], "question": "A thermometer reads 2x - 9. Its reading may sit 11 away from zero. Solve |2x - 9| = 11.", "split": "train"}
+{"relation": "abs_value_eq", "args": [10, 4, 30], "question": "A tolerance of 30 applies to |10x + 4|; the jig is 45 mm long and holds 3 parts. Solve for x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [3, 6, 15], "question": "Question 6: the x coefficient is twice the leading 3 and the constant on the right is 15. Solve |3x + 6| = 15.", "split": "train"}
+{"relation": "abs_value_eq", "args": [5, -2, 18], "question": "Half of a class writes x; their score is 5x - 2 and its size must be 18. Solve |5x - 2| = 18.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [9, -3, 21], "question": "A gauge error is |9x - 3| and the limit is 21; the shop measures 12 panels in 2 shifts. Solve for x.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [6, 10, 26], "question": "26 is the allowed distance and |6x + 10| is the reading; solve for both values of x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [4, -4, 16], "question": "|4x - 4| = 16 sits on a sheet that also quotes 4 as a tolerance; give both solutions.", "split": "train"}
+{"relation": "abs_value_eq", "args": [7, 3, 14], "question": "The tolerance is twice the leading 7, so solve |7x + 3| = 14 for x.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [2, 5, 7], "question": "A spring's extension is 2x + 5 mm and the bench allows it to be 7 mm from zero. The spring is 30 cm long and 4 are tested; solve |2x + 5| = 7.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [12, -8, 4], "question": "A tolerance of 4 applies to |12x - 8|; the sheet lists 16 samples and 2 operators. Solve for x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [3, -12, 9], "question": "9 away from zero is |3x - 12|; solve for both x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [5, 10, 25], "question": "Team A's model is 5x + 10 and the acceptable band is 25 either way. Solve |5x + 10| = 25.", "split": "train"}
+{"relation": "abs_value_eq", "args": [8, 4, 12], "question": "Question 12(b): solve |8x + 4| = 12 and state both roots.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [9, 9, 18], "question": "|9x + 9| = 18: give both solutions, smallest first.", "split": "eval"}
+{"relation": "arith_seq", "args": [17, -6, 9], "question": "A delivery van's odometer reads 17 km on the Monday of a 9-day stretch and the daily change is -6 km; the depot is 18 km away and the driver rests on day 2. Final reading on day 9, and the total of the 9 daily readings?", "split": "eval"}
+{"relation": "arith_seq", "args": [23, 4, 12], "question": "12 terms, each 4 more than the one before, opening at 23: give the last of them and what the 12 add to.", "split": "eval"}
+{"relation": "arith_seq", "args": [11, 11, 6], "question": "A sequence opens at 11 and climbs by 11 each step; it runs 6 steps. Give the 6th term and the sum of the first 6.", "split": "train"}
+{"relation": "arith_seq", "args": [13, 6, 10], "question": "Question 10 carries 6 marks: a sequence opens at 13, its 2nd term is 19, and it runs to the term the question numbers. Give a_10 and S_10.", "split": "train"}
+{"relation": "arith_seq", "args": [28, -5, 14], "question": "A ledger opens the year at 28 thousand. Each month it falls by 5 thousand, entered as -5. After 14 months the audit asks for the closing figure and for the running total across those months.", "split": "train"}
+{"relation": "arith_seq", "args": [8, 3, 20], "question": "A brick wall rises from 8 bricks in the bottom course by 3 a course; the pallet holds 12 bricks and the wall reaches 20 courses on day 4. Bricks in the top course, and bricks across all 20 courses?", "split": "train"}
+{"relation": "arith_seq", "args": [19, -2, 7], "question": "7 terms are listed for a share price that opens at 19 and slips 2 a day, entered as -2. Give the last close and the sum of the 7 closes.", "split": "eval"}
+{"relation": "arith_seq", "args": [30, -4, 13], "question": "A tank drains from 30 litres by 4 litres an hour, entered as -4, over 13 hours; the tanker that collects the water holds 45 litres and calls at 2 pm. Level at hour 13, and the total of the 13 hourly readings?", "split": "train"}
+{"relation": "arith_seq", "args": [24, 5, 15], "question": "Start at 24. Each day adds 5. After 15 days the group wants the current tally and the sum of all the daily tallies.", "split": "train"}
+{"relation": "arith_seq", "args": [9, -9, 11], "question": "A counter opens at 9 and each tick subtracts 9, so the step is -9; 11 ticks later, report the reading and the running total.", "split": "train"}
+{"relation": "arith_seq", "args": [21, 21, 5], "question": "An offer opens at 21 and the same 21 is added every round for 5 rounds; give the round-5 figure and the sum of the five.", "split": "eval"}
+{"relation": "arith_seq", "args": [35, -3, 6], "question": "Paper 2, question 7: a ferry log opens at 35 cars, falls by 3 a crossing (so -3) over 6 crossings, and the ramp takes 12 cars. Cars on the last crossing, and the total over the six?", "split": "train"}
+{"relation": "arith_seq", "args": [12, 8, 9], "question": "A sequence's first term is 12 and its third term is 28; every step adds the same amount, worth 8 marks, and the run is 9 steps. Give a_9 and S_9.", "split": "eval"}
+{"relation": "arith_seq", "args": [27, -6, 12], "question": "The meter reads 27 at the start. It drops 6 a week, recorded as -6. After 12 weeks, what does it read, and what did the 12 readings add up to?", "split": "train"}
+{"relation": "arith_seq", "args": [18, 3, 16], "question": "A tower of crates starts at 18 and each layer adds 3; the drawing shows 16 layers, the forklift lifts 2 at a time, and a crate is 40 cm tall. Crates in the top layer, and crates in the whole tower?", "split": "train"}
+{"relation": "arith_seq", "args": [31, -5, 8], "question": "8 stops, starting at 31 passengers with 5 getting off at each, logged as -5. Passengers on the bus at the last stop, and the sum of the 8 counts?", "split": "eval"}
+{"relation": "arith_seq", "args": [22, 6, 7], "question": "A jogger runs 22 km in week 1 and adds 6 km each week after. At week 7, give the week-7 distance and the total distance over the 7 weeks.", "split": "eval"}
+{"relation": "arith_seq", "args": [40, -8, 13], "question": "(b) A battery reads 40 percent at the start and falls 8 points a day, entered as -8, for 13 days; the phone is 2 years old and the case is 15 cm long. Charge on day 13, and the sum of the 13 readings?", "split": "eval"}
+{"relation": "arith_seq", "args": [25, 4, 11], "question": "Question 4(b): the fourth term of a sequence is 37 and the first is 25; the step never changes and the run is 11 terms. Give a_11 and S_11.", "split": "train"}
+{"relation": "arith_seq", "args": [14, -3, 19], "question": "An account starts at 14 thousand and the monthly change is -3 thousand for 19 months; the bank charges 5 dollars a statement and posts 2 letters. Closing balance, and the total of the 19 monthly balances?", "split": "train"}
+{"relation": "complete_square", "args": [2, -8, 5], "question": "Complete the square on 2x^2 - 8x + 5 and read off the vertex; the grid runs 20 units wide and 4 curves are drawn.", "split": "train"}
+{"relation": "complete_square", "args": [3, 0, 5], "question": "Sketch y = 3x^2 + 5 by completing the square and report where its lowest point sits.", "split": "train"}
+{"relation": "complete_square", "args": [3, 4, -7], "question": "The constant is -7, the x term is 4x, the leading term 3x^2; complete the square, then state the turning point.", "split": "eval"}
+{"relation": "complete_square", "args": [2, 4, 4], "question": "2x^2 + 4x + 4 should go into completed square form, then say where its turning point sits.", "split": "train"}
+{"relation": "complete_square", "args": [2, -4, 4], "question": "2x^2 - 4x + 4 needs its vertex; complete the square first.", "split": "eval"}
+{"relation": "complete_square", "args": [1, 12, 7], "question": "Complete the square for x^2 + 12x + 7; the class of 30 hands in 2 sheets.", "split": "eval"}
+{"relation": "complete_square", "args": [5, -20, 9], "question": "A path follows 5x^2 - 20x + 9. The surveyor wants the lowest point, so complete the square.", "split": "train"}
+{"relation": "complete_square", "args": [1, -4, -12], "question": "-12 is added to x^2 - 4x; finish the square and read off the vertex.", "split": "eval"}
+{"relation": "complete_square", "args": [1, 4, 0], "question": "A curve y = x^2 + 4x has one turning point; find it by completing the square.", "split": "eval"}
+{"relation": "complete_square", "args": [3, -6, 3], "question": "Take out the 3 first, then complete the square on 3x^2 - 6x + 3 and give the vertex.", "split": "train"}
+{"relation": "complete_square", "args": [1, -2, -3], "question": "A ball follows y = x^2 - 2x - 3. When does it reach its lowest point? Complete the square first.", "split": "train"}
+{"relation": "complete_square", "args": [3, -9, 6], "question": "6 is the constant, -9 multiplies x, 3 multiplies x^2: complete the square and report where the vertex lands.", "split": "train"}
+{"relation": "complete_square", "args": [1, 14, 40], "question": "Complete the square for x^2 + 14x + 40; the lab has 6 benches and 2 fume hoods.", "split": "eval"}
+{"relation": "complete_square", "args": [2, -16, 20], "question": "The height of a drone is 2x^2 - 16x + 20 metres. Find its minimum by completing the square.", "split": "eval"}
+{"relation": "complete_square", "args": [1, -8, 9], "question": "Rewrite x^2 - 8x + 9 in vertex form; the exam runs 90 minutes with 12 questions.", "split": "train"}
+{"relation": "complete_square", "args": [1, 8, -9], "question": "Work up from the constant -9: complete the square on x^2 + 8x - 9 and give the vertex.", "split": "eval"}
+{"relation": "complete_square", "args": [4, 12, 11], "question": "A cost curve is 4x^2 + 12x + 11. Where is its minimum? Show the completed square.", "split": "train"}
+{"relation": "complete_square", "args": [1, -12, 32], "question": "Complete the square for x^2 - 12x + 32; a marker is 15 mm wide and 3 are used.", "split": "train"}
+{"relation": "complete_square", "args": [2, -4, -6], "question": "The coefficient of x^2 is 2, the constant -6 and the x term -4x; complete the square.", "split": "train"}
+{"relation": "complete_square", "args": [3, 18, 20], "question": "Fencing cost follows 3x^2 + 18x + 20. Complete the square to locate the cheapest point.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -6, 11, -6], "question": "The cubic x^3 - 6x^2 + 11x - 6 appears in question 2, worth 18 marks. Find its three roots.", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, -7, 6, 0], "question": "Where does x^3 - 7x^2 + 6x vanish? Give every root.", "split": "train"}
+{"relation": "cubic_solve", "args": [2, -10, 12, 0], "question": "2x^3 - 10x^2 + 12x equals zero at three values; find them.", "split": "eval"}
+{"relation": "cubic_solve", "args": [2, -2, -10, -6], "question": "The cubic 2x^3 - 2x^2 - 10x - 6 is zero at three values of x; list them.", "split": "train"}
+{"relation": "cubic_solve", "args": [3, 3, -12, -12], "question": "3x^3 + 3x^2 - 12x - 12 = 0 has three roots; give them all.", "split": "train"}
+{"relation": "cubic_solve", "args": [2, -6, 6, -2], "question": "List the three values of x at which 2x^3 - 6x^2 + 6x - 2 is zero.", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, -1, -4, 4], "question": "Solve x^3 - x^2 - 4x + 4 = 0; the sheet is 4 pages and the room holds 25.", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, 3, -4, 0], "question": "A volume is x^3 + 3x^2 - 4x. Set it to zero and find the three roots.", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, -9, 26, -24], "question": "The constant is -24, the x coefficient 26, -9 on x^2 and 1 on x^3: solve the cubic.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -4, 3, 0], "question": "x^3 - 4x^2 + 3x: name every x that makes it zero.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -2, -5, 6], "question": "Solve x^3 - 2x^2 - 5x + 6 = 0; the workshop has 14 tools and 2 shifts.", "split": "train"}
+{"relation": "cubic_solve", "args": [2, -8, 2, 12], "question": "A tank's level follows 2x^3 - 8x^2 + 2x + 12. Where does it hit zero?", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, 0, -7, 6], "question": "The constant is 6, the x coefficient -7, there is no x^2 term and x^3 leads: solve.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -12, 47, -60], "question": "Solve x^3 - 12x^2 + 47x - 60 = 0; the sheet holds 20 rows in 3 columns.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, 1, -6, 0], "question": "x^3 + x^2 - 6x is the model; set it to zero and give the roots.", "split": "eval"}
+{"relation": "cubic_solve", "args": [2, -6, -2, 6], "question": "Solve 2x^3 - 6x^2 - 2x + 6 = 0; the graph paper is 30 cm and 4 colours are used.", "split": "eval"}
+{"relation": "cubic_solve", "args": [4, 8, -12, 0], "question": "0 is the constant, -12 the x coefficient, 8 the x^2 coefficient, 4 the leading one: solve.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -5, 6, 0], "question": "A card reads x^3 - 5x^2 + 6x = 0; the class is 30 strong and the test runs 45 minutes. Find the roots.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -4, -7, 10], "question": "A profit is x^3 - 4x^2 - 7x + 10. Find where it is zero.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, 3, -4, -12], "question": "Solve x^3 + 3x^2 - 4x - 12 = 0; the audit covers 9 sites over 6 weeks.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, -7, 12], "question": "Factor x^2 - 7x + 12; the class has 30 students and the sheet runs 2 pages.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [3, 6, -24], "question": "A student moved the 24 across and wrote 3x^2 + 6x - 24; factor it.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [2, -9, 4], "question": "4 on the end, -9 in the middle, 2 up front: factor that quadratic.", "split": "train"}
+{"relation": "factor_quadratic", "args": [2, 2, -4], "question": "Factor 2x^2 + 2x - 4 and check by expanding.", "split": "train"}
+{"relation": "factor_quadratic", "args": [3, -3, -18], "question": "Take out the common 3 from 3x^2 - 3x - 18 and give the two linear factors.", "split": "train"}
+{"relation": "factor_quadratic", "args": [4, -4, -8], "question": "Factor 4x^2 - 4x - 8; give the product form only.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, -9, 8], "question": "Factor x^2 - 9x + 8; the printer has 40 sheets and runs 3 jobs.", "split": "train"}
+{"relation": "factor_quadratic", "args": [2, 7, 3], "question": "2x^2 + 7x + 3 needs writing as two linear factors; check by expanding.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, 3, -10], "question": "-10 is the constant and 3 the middle coefficient; factor x^2 + 3x - 10.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [1, -5, 0], "question": "x^2 - 5x has two linear factors; write them down.", "split": "train"}
+{"relation": "factor_quadratic", "args": [3, -15, 12], "question": "Factor 3x^2 - 15x + 12; the van holds 9 boxes and leaves at 6.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [1, -1, -6], "question": "A rectangle's area is x^2 - x - 6. Factor it to get the side lengths.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [2, -3, 1], "question": "1 is the constant, -3 the x coefficient, 2 the leading coefficient; factor it.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, 8, 15], "question": "Factor x^2 + 8x + 15; the grid is 12 squares by 20.", "split": "train"}
+{"relation": "factor_quadratic", "args": [5, -30, 25], "question": "A cost is 5x^2 - 30x + 25 dollars. Factor it to find the break-even points.", "split": "train"}
+{"relation": "factor_quadratic", "args": [2, 10, 8], "question": "Factor 2x^2 + 10x + 8; the team has 11 players and 3 coaches.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, -4, -12], "question": "-12 is the constant; factor x^2 - 4x - 12.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [3, 9, 6], "question": "3x^2 + 9x + 6 factors: the sheet wants the product form and one line of working.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [1, 0, -16], "question": "Write x^2 - 16 as a product of two binomials; the poster is 45 cm wide and the class has 28.", "split": "train"}
+{"relation": "factor_quadratic", "args": [6, -5, 1], "question": "1 on the end, -5 in the middle, 6 up front: factor that quadratic.", "split": "eval"}
+{"relation": "geom_seq", "args": [5, 2, 7], "question": "Question 2 carries 6 marks: a colony starts at 5 cells and doubles each day; the plate sits in a 37 degree incubator and is checked for 7 days. Cells on day 7, and the total across the 7 days?", "split": "eval"}
+{"relation": "geom_seq", "args": [2, 4, 5], "question": "A rumour reaches 2 people in hour one and each hearer tells 4 others; the school has 900 students and the bell rings at 8 am. How many hear it in hour 5, and how many in total over 5 hours?", "split": "train"}
+{"relation": "geom_seq", "args": [7, 3, 4], "question": "4 terms of a geometric sequence, the first 7 and the ratio 3: give the 4th and the sum of the 4.", "split": "eval"}
+{"relation": "geom_seq", "args": [6, 6, 5], "question": "A chain letter starts with 6 senders and each round multiplies the count by 6 for 5 rounds. Senders in round 5, and the total over the five rounds?", "split": "eval"}
+{"relation": "geom_seq", "args": [10, 2, 8], "question": "Start with 10 bacteria. Every hour the count is multiplied by 2. After 8 hours, how many are there, and what is the total of all 8 hourly counts?", "split": "train"}
+{"relation": "geom_seq", "args": [4, 3, 6], "question": "The grid has 3 rows; A1 holds 4 and each cell to the right triples the value before it, with 6 cells filled. Value in the 6th cell, and the sum of all 6?", "split": "train"}
+{"relation": "geom_seq", "args": [9, 2, 5], "question": "A savings jar starts at 9 coins and every week the count doubles for 5 weeks; the tin is 2 cm deep, the jar holds 40 coins and 3 labels are stuck on it. Coins in week 5, and the total over the 5 weeks?", "split": "train"}
+{"relation": "geom_seq", "args": [5, 3, 7], "question": "7 seasons, each 3 times the last, opening at 5 members: how big is the 7th, and how many members in all 7?", "split": "train"}
+{"relation": "geom_seq", "args": [4, 4, 5], "question": "A sequence opens at 4 and multiplies by 4 each term for 5 terms; give the fifth term and the sum.", "split": "train"}
+{"relation": "geom_seq", "args": [3, 3, 7], "question": "Opening at 3 with a ratio of 3 over 7 terms: last term and total.", "split": "train"}
+{"relation": "geom_seq", "args": [12, 2, 4], "question": "A chain starts at 12 forwards and each person sends it to 2 friends for 4 rounds; the message reaches a class of 30 before 9 pm. Forwards in round 4, and the total number of forwards?", "split": "train"}
+{"relation": "geom_seq", "args": [6, 4, 8], "question": "A plant has 6 shoots. Each week the count is 4 times the week before. By week 8 the gardener wants the count and the running total for all eight weeks.", "split": "train"}
+{"relation": "geom_seq", "args": [2, 3, 5], "question": "(a) Five terms, ratio 3, starting at 2: give a_5 and S_5.", "split": "eval"}
+{"relation": "geom_seq", "args": [9, 3, 2], "question": "A rumour: 9 people at the start, each tells 3 more, two rounds only; the firm has 200 staff and a 12-minute break. Who hears it in round 2, and how many in total?", "split": "train"}
+{"relation": "geom_seq", "args": [11, 2, 7], "question": "The lab logs 11 cells on 2 sheets; the count doubles hourly for 7 hours, and the room seats 30 people at 4 benches. Cells at hour 7, and the total across the seven logs?", "split": "train"}
+{"relation": "geom_seq", "args": [15, 4, 6], "question": "A prize pool starts at 15 dollars. Each of 6 rounds multiplies it by 4. What is it after the sixth round, and what did all six rounds add to?", "split": "train"}
+{"relation": "geom_seq", "args": [7, 2, 8], "question": "A pyramid of 7 cans doubles each row above the last, a factor of 2, for 8 rows; a can is 12 cm tall and the trolley holds 4 crates. Cans in row 8, and cans in the whole pyramid?", "split": "eval"}
+{"relation": "geom_seq", "args": [3, 4, 5], "question": "Five steps from 3, each 4 times the one before: what does step 5 hold, and what do the five steps total?", "split": "eval"}
+{"relation": "geom_seq", "args": [10, 3, 4], "question": "A count starts at 10 on day 1 and is multiplied by 3 each day. 4 days are logged; give the day-4 count and the total of the 4.", "split": "eval"}
+{"relation": "geom_seq", "args": [5, 5, 4], "question": "4 terms from 5 with a ratio of 5: report the last and the sum.", "split": "eval"}
+{"relation": "linear_ineq", "args": [-3, 7, 10], "question": "A fund's balance is modelled by -3x + 7 and must stay under 10; the board has 5 seats and meets 2 times. Solve -3x + 7 < 10 for x.", "split": "eval"}
+{"relation": "linear_ineq", "args": [2, -5, 9], "question": "9 is the ceiling and 2x - 5 is the quantity; solve 2x - 5 < 9 for x.", "split": "eval"}
+{"relation": "linear_ineq", "args": [4, 4, 12], "question": "Solve 4x + 4 < 12 and write the answer as an inequality.", "split": "train"}
+{"relation": "linear_ineq", "args": [5, -10, 0], "question": "The quantity 5x - 10 has to be negative; state the values of x that make it so.", "split": "train"}
+{"relation": "linear_ineq", "args": [-2, 6, -4], "question": "Solve -2x + 6 < -4 for x; the plot uses a 40 mm grid and 3 colours.", "split": "eval"}
+{"relation": "linear_ineq", "args": [3, 0, 15], "question": "A hire charge of 3x a day must stay below 15 dollars and there is no fixed fee. Find the range of x.", "split": "train"}
+{"relation": "linear_ineq", "args": [7, -2, 19], "question": "19 is the limit and -2 + 7x is the expression; solve for x.", "split": "eval"}
+{"relation": "linear_ineq", "args": [2, 3, 11], "question": "Solve 2x + 3 < 11, then say whether x = 4 works; the room holds 30 and the sheet is 1 of 6.", "split": "eval"}
+{"relation": "linear_ineq", "args": [5, -5, 25], "question": "5x - 5 < 25 is on the board; give the range of x that satisfies it.", "split": "eval"}
+{"relation": "linear_ineq", "args": [-3, -3, 9], "question": "Solve -3x - 3 < 9 and state how the direction of the sign changes.", "split": "train"}
+{"relation": "linear_ineq", "args": [3, -8, 12], "question": "A fee of 3x - 8 must stay under a cap of 12 dollars, which is two thirds of the 18 dollar budget. Find the range of x.", "split": "train"}
+{"relation": "linear_ineq", "args": [2, 9, 3], "question": "Solve 2x + 9 < 3 for x; the workshop has 14 benches and 5 vices.", "split": "train"}
+{"relation": "linear_ineq", "args": [7, 4, 18], "question": "Start from 7x + 4. It has to fall below 18. Which values of x work?", "split": "eval"}
+{"relation": "linear_ineq", "args": [4, -6, 10], "question": "10 is the bound, -6 is the constant, 4 is the coefficient: solve 4x - 6 < 10.", "split": "train"}
+{"relation": "linear_ineq", "args": [-4, 11, 7], "question": "Solve -4x + 11 < 7 for x; a ticket costs 20 and the bus holds 45.", "split": "train"}
+{"relation": "linear_ineq", "args": [3, 5, 20], "question": "A tank holds 3x + 5 litres. The alarm sounds above 20 litres. Which x keep it quiet?", "split": "eval"}
+{"relation": "linear_ineq", "args": [8, 3, -1], "question": "-1 is the limit and 8x + 3 is the quantity; solve for x.", "split": "train"}
+{"relation": "linear_ineq", "args": [5, -7, 13], "question": "Solve 5x - 7 < 13; the trial ran for 6 weeks with 3 groups.", "split": "train"}
+{"relation": "linear_ineq", "args": [9, -2, 16], "question": "The model is 9x - 2. Keep it under 16. Give the range of x.", "split": "train"}
+{"relation": "linear_ineq", "args": [6, -5, 9], "question": "Work out where 6x - 5 falls under the bound 9, and give the interval.", "split": "train"}
+{"relation": "deriv_poly3", "args": [2, -3, 4, -5, 2], "question": "Evaluate the derivative of f(x) = 2x^3 - 3x^2 + 4x - 5 at x = 2; the exercise earns 3 of the 20 marks, with 6 for method.", "split": "train"}
+{"relation": "deriv_poly3", "args": [1, -6, 0, 9, 3], "question": "The function x^3 - 6x^2 + 9 has a gradient at x = 3; find it.", "split": "train"}
+{"relation": "deriv_poly3", "args": [1, 2, 3, 4, 2], "question": "The point x = 2 is the one asked about for f(x) = x^3 + 2x^2 + 3x + 4; give the derivative's value there.", "split": "train"}
+{"relation": "deriv_poly3", "args": [2, 2, -2, -2, 1], "question": "f(x) = 2x^3 + 2x^2 - 2x - 2 at x = 1: give the slope.", "split": "train"}
+{"relation": "deriv_poly3", "args": [3, -4, 5, -6, -2], "question": "A curve is given by 3x^3 - 4x^2 + 5x - 6. Its slope is wanted at the point x = -2.", "split": "train"}
+{"relation": "deriv_poly3", "args": [-1, 5, -7, 2, 3], "question": "The sheet is 6 of 8 and asks for the derivative of -x^3 + 5x^2 - 7x + 2 when x = 3; give it.", "split": "train"}
+{"relation": "deriv_poly3", "args": [2, 4, -6, 8, -1], "question": "The leading coefficient is 2 and the x^2 coefficient is double it, with -6x and 8 to finish; find f'(-1) of 2x^3 + 4x^2 - 6x + 8.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [3, -3, 3, -3, 2], "question": "f(x) = 3x^3 - 3x^2 + 3x - 3 at x = 2: give the derivative's value.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [4, 2, -8, 6, 1], "question": "Evaluate the derivative of 4x^3 + 2x^2 - 8x + 6 at x = 1; the class of 28 sits at 14 desks.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [1, 0, -3, 0, 2], "question": "The curve x^3 - 3x is differentiated and read at x = 2; give the value.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [3, 3, 2, 1, -2], "question": "At x = -2 the function f(x) = 3x^3 + 3x^2 + 2x + 1 is differentiated; state the result.", "split": "train"}
+{"relation": "deriv_poly3", "args": [2, -6, 6, -2, 3], "question": "Evaluate the derivative of 2x^3 - 6x^2 + 6x - 2 at x = 3; the trial ran 5 days across 8 sites.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [1, 3, -9, 5, 4], "question": "The curve x^3 + 3x^2 - 9x + 5 is touched by a tangent at x = 4. Find that gradient.", "split": "train"}
+{"relation": "deriv_poly3", "args": [1, -4, 4, -1, 3], "question": "At x = 3 the derivative of x^3 - 4x^2 + 4x - 1 is wanted.", "split": "train"}
+{"relation": "deriv_poly3", "args": [-2, 8, -8, 2, -1], "question": "Evaluate the derivative of -2x^3 + 8x^2 - 8x + 2 at x = -1; the class handed in 20 sheets of 4 pages.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [2, -2, 2, -2, -1], "question": "f(x) = 2x^3 - 2x^2 + 2x - 2: give the slope at x = -1.", "split": "train"}
+{"relation": "deriv_poly3", "args": [5, -5, 0, 5, 2], "question": "A cost function is 5x^3 - 5x^2 + 5. Give the marginal cost at x = 2.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [3, 0, -12, 0, -2], "question": "Evaluate the derivative of 3x^3 - 12x at x = -2; the class has 30 students and 9 empty desks.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [1, 2, -4, -8, 2], "question": "At x = 2, the polynomial x^3 + 2x^2 - 4x - 8 is differentiated and evaluated; give the value.", "split": "train"}
+{"relation": "deriv_poly3", "args": [4, -8, 12, -16, 1], "question": "The model 4x^3 - 8x^2 + 12x - 16 has a slope at x = 1; find it.", "split": "train"}
+{"relation": "integr_poly3", "args": [1, 2, -3, 4, 0, 2], "question": "Compute the definite integral of x^3 + 2x^2 - 3x + 4 from x = 0 to x = 2; the region is shaded on a sketch 20 cm wide, with 7 colours.", "split": "eval"}
+{"relation": "integr_poly3", "args": [2, -1, 3, -4, 1, 4], "question": "The upper limit is 4 and the lower 1 for 2x^3 - x^2 + 3x - 4; integrate.", "split": "train"}
+{"relation": "integr_poly3", "args": [2, 2, -2, -2, 0, 3], "question": "2x^3 + 2x^2 - 2x - 2 from x = 0 to x = 3: give the definite integral.", "split": "train"}
+{"relation": "integr_poly3", "args": [1, -3, 0, 0, -1, 2], "question": "Find how much area x^3 - 3x^2 collects between x = -1 and x = 2, counting below-axis parts as negative.", "split": "train"}
+{"relation": "integr_poly3", "args": [3, -2, 4, -1, -2, 1], "question": "A curve is 3x^3 - 2x^2 + 4x - 1. Find the signed area from x = -2 to x = 1.", "split": "train"}
+{"relation": "integr_poly3", "args": [-1, 3, -5, 7, 2, 5], "question": "The sheet is 6 of 8: integrate -x^3 + 3x^2 - 5x + 7 from x = 2 to x = 5.", "split": "eval"}
+{"relation": "integr_poly3", "args": [1, 0, 0, -9, -3, 3], "question": "x^3 - 9 is integrated between x = -3 and x = 3; give the result.", "split": "eval"}
+{"relation": "integr_poly3", "args": [3, -3, 3, -3, -1, 1], "question": "3x^3 - 3x^2 + 3x - 3 from x = -1 to x = 1: give the value.", "split": "train"}
+{"relation": "integr_poly3", "args": [4, 2, -8, 6, 1, 3], "question": "Compute the integral of 4x^3 + 2x^2 - 8x + 6 from x = 1 to x = 3; the class of 28 fills 13 desks.", "split": "eval"}
+{"relation": "integr_poly3", "args": [1, 0, -3, 0, 1, 4], "question": "f(x) = x^3 - 3x. Find the signed area between it and the axis from x = 1 to x = 4.", "split": "eval"}
+{"relation": "integr_poly3", "args": [5, 3, -2, 1, 2, 6], "question": "From x = 2 up to x = 6, the curve 5x^3 + 3x^2 - 2x + 1 is integrated; give the value.", "split": "train"}
+{"relation": "integr_poly3", "args": [3, -6, 9, -12, -2, 3], "question": "Compute the integral of 3x^3 - 6x^2 + 9x - 12 from x = -2 to x = 3; the model is fitted on 5 runs from 8 sites.", "split": "eval"}
+{"relation": "integr_poly3", "args": [1, -2, -9, 10, -4, 0], "question": "The curve x^3 - 2x^2 - 9x + 10 runs from x = -4 to x = 0. Find the accumulated change.", "split": "train"}
+{"relation": "integr_poly3", "args": [6, 4, 2, 1, 1, 2], "question": "Integrating 6x^3 + 4x^2 + 2x + 1 between x = 1 and x = 2 gives what?", "split": "eval"}
+{"relation": "integr_poly3", "args": [-2, 8, -8, 2, -1, 0], "question": "Compute the integral of -2x^3 + 8x^2 - 8x + 2 from x = -1 to x = 0; the graph runs 4 units up and 20 along.", "split": "train"}
+{"relation": "integr_poly3", "args": [2, -2, 2, -2, 1, 2], "question": "2x^3 - 2x^2 + 2x - 2 between x = 1 and x = 2: give the definite integral.", "split": "train"}
+{"relation": "integr_poly3", "args": [3, -3, 0, 3, -2, 2], "question": "A cost function is 3x^3 - 3x^2 + 3. Find its accumulated change between x = -2 and x = 2.", "split": "eval"}
+{"relation": "integr_poly3", "args": [4, 0, -10, 0, 0, 2], "question": "Compute the integral of 4x^3 - 10x between 0 and 2; the lecture takes 30 minutes in 6 parts.", "split": "train"}
+{"relation": "integr_poly3", "args": [1, 5, -6, -8, 3, 4], "question": "Between x = 3 and x = 4 the integral of x^3 + 5x^2 - 6x - 8 is required.", "split": "train"}
+{"relation": "integr_poly3", "args": [2, -4, 6, -8, -1, 1], "question": "The model 2x^3 - 4x^2 + 6x - 8 over [-1, 1] has a definite integral; give it.", "split": "train"}
+{"relation": "compound_interest", "args": [2000, 5, 4, 3], "question": "2000 dollars at 5% a year compounded 4 times a year for 3 years; the vault has 12 drawers and 2 keys. Find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [500, 6, 2, 10], "question": "Over 10 years at 2 periods a year and 6%, an account starts from 500 dollars; what is the balance?", "split": "eval"}
+{"relation": "compound_interest", "args": [1000, 4, 4, 4], "question": "1000 dollars sits at 4% a year with interest added 4 times a year across 4 years; give the final balance.", "split": "train"}
+{"relation": "compound_interest", "args": [1000, 2, 4, 2], "question": "A bond of 1000 dollars pays 0.5% each period, with 4 periods a year for 2 years; find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [2500, 6, 12, 5], "question": "2500 dollars at 6% a year, credited 12 times annually for 5 years; the branch has 3 counters and 8 desks.", "split": "eval"}
+{"relation": "compound_interest", "args": [1200, 4, 1, 8], "question": "A sum of 1200 dollars earns 4% a year, credited once a year, and stays 8 years. Find the balance.", "split": "eval"}
+{"relation": "compound_interest", "args": [3000, 5, 12, 7], "question": "12 periods a year, 5% a year and 7 years, starting from 3000 dollars: what is the balance?", "split": "train"}
+{"relation": "compound_interest", "args": [2000, 2, 2, 2], "question": "2000 dollars earning 2% with 2 credits a year over 2 years; find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [400, 8, 4, 6], "question": "400 dollars at 8% a year credited 4 times a year for 6 years; the form has 20 rows and 5 boxes.", "split": "train"}
+{"relation": "compound_interest", "args": [750, 5, 2, 10], "question": "A deposit starts at 750 dollars. The rate is 5% a year. It is credited 2 times in each year. 10 years pass. What is the balance?", "split": "train"}
+{"relation": "compound_interest", "args": [1000, 3, 12, 4], "question": "4 years, 12 credits a year, 3% a year and 1000 dollars to start: find the closing balance.", "split": "eval"}
+{"relation": "compound_interest", "args": [5000, 4, 2, 9], "question": "5000 dollars at 4% a year credited 2 times yearly over 9 years; the branch is open 8 hours across 5 days.", "split": "train"}
+{"relation": "compound_interest", "args": [300, 6, 4, 7], "question": "A small fund holds 300 dollars. It grows at 6% a year. There are 4 credits a year. 7 years pass. Find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [1500, 1, 4, 5], "question": "A deposit of 1500 dollars earns 0.25% per period with 4 periods a year over 5 years; find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [2500, 4, 1, 6], "question": "6 years, 1 credit a year, 4% a year and 2500 dollars: find the balance.", "split": "train"}
+{"relation": "compound_interest", "args": [1500, 3, 3, 3], "question": "1500 dollars at 3% credited 3 times a year for 3 years; give the final amount.", "split": "eval"}
+{"relation": "compound_interest", "args": [900, 7, 4, 5], "question": "Start with 900 dollars. The rate is 7% a year. Credited 4 times a year. 5 years pass. Balance?", "split": "train"}
+{"relation": "compound_interest", "args": [800, 6, 2, 4], "question": "800 dollars at 6% a year credited 2 times a year over 4 years; the sheet has 30 rows and 3 columns.", "split": "eval"}
+{"relation": "compound_interest", "args": [2200, 3, 12, 8], "question": "8 years at 12 credits a year and 3% a year, from 2200 dollars: give the balance.", "split": "eval"}
+{"relation": "compound_interest", "args": [4500, 2, 4, 11], "question": "4500 dollars at 2% a year, interest credited 4 times yearly over 11 years; the vault is 45 cm thick and 3 m wide.", "split": "eval"}
+{"relation": "continuous_growth", "args": [500, 4, 6], "question": "A pond holds 500 fish that grow continuously at 4% a year; the warden counts them after 6 years. The pond is 30 m wide and 2 m deep. Find the population.", "split": "eval"}
+{"relation": "continuous_growth", "args": [200, 5, 8], "question": "Over 8 years at 5% a year a colony starts at 200 and grows continuously. Find the size.", "split": "train"}
+{"relation": "continuous_growth", "args": [300, 3, 3], "question": "300 bacteria grow continuously at 3% a year for 3 years; report the count.", "split": "eval"}
+{"relation": "continuous_growth", "args": [400, 3, 7], "question": "The colony starts at 400, half of the 800 the pond held before, and grows at 3% a year for 7 years. Find the size.", "split": "eval"}
+{"relation": "continuous_growth", "args": [1000, 3, 10], "question": "A town of 1000 residents grows continuously at 3% a year, and the census repeats after 10 years; the hall seats 400 people at 30 tables. Find the population.", "split": "train"}
+{"relation": "continuous_growth", "args": [150, 6, 4], "question": "Start from 150. Growth is continuous at 6% a year. 4 years pass. Find the population.", "split": "eval"}
+{"relation": "continuous_growth", "args": [250, 8, 5], "question": "5 years of continuous growth at 8% from 250: find the population.", "split": "eval"}
+{"relation": "continuous_growth", "args": [800, 8, 8], "question": "800 units grow continuously at 8% a year for 8 years; give the final value.", "split": "train"}
+{"relation": "continuous_growth", "args": [600, 5, 3], "question": "600 cells at 5% continuous growth for 3 years; the dish is 12 cm across and 2 cm deep.", "split": "eval"}
+{"relation": "continuous_growth", "args": [120, 7, 9], "question": "A culture holds 120. It grows continuously. The rate is 7% a year. 9 years later, what is the population?", "split": "train"}
+{"relation": "continuous_growth", "args": [450, 2, 12], "question": "12 years, 2% a year and a start of 450: give the final population.", "split": "train"}
+{"relation": "continuous_growth", "args": [900, 3, 5], "question": "The study runs 5 years, half of the 10 years planned, at 3% continuous growth from 900. Find the population.", "split": "train"}
+{"relation": "continuous_growth", "args": [700, 3, 6], "question": "A herd starts at 700. It grows continuously at 3% a year. 6 years on, how many are there?", "split": "eval"}
+{"relation": "continuous_growth", "args": [350, 6, 8], "question": "350 fish grow continuously at 6% a year for 8 years; the tank holds 500 litres in 3 sections.", "split": "train"}
+{"relation": "continuous_growth", "args": [900, 5, 2], "question": "2 years of continuous growth at 5% from 900: find the value.", "split": "train"}
+{"relation": "continuous_growth", "args": [700, 7, 7], "question": "700 units at 7% continuous growth for 7 years; give the final figure.", "split": "train"}
+{"relation": "continuous_growth", "args": [1100, 2, 15], "question": "An investment of 1100 grows continuously at 2% a year. After 15 years, what is it worth?", "split": "train"}
+{"relation": "continuous_growth", "args": [2500, 3, 5], "question": "2500 dollars grows continuously at 3% a year for 5 years; the account has 2 holders and 4 beneficiaries.", "split": "train"}
+{"relation": "continuous_growth", "args": [180, 9, 4], "question": "4 years of continuous growth at 9% from 180: report the value.", "split": "eval"}
+{"relation": "continuous_growth", "args": [100, 5, 10], "question": "A sample of 100 grows continuously. The rate is 5% a year. 10 years later, what is it?", "split": "train"}
+{"relation": "doubling_time", "args": [4], "question": "Money grows at 4% a year; how long until it doubles? The branch has 12 tellers and 2 counters.", "split": "train"}
+{"relation": "doubling_time", "args": [5], "question": "How many years until a doubling, at 5% a year?", "split": "eval"}
+{"relation": "doubling_time", "args": [7], "question": "A 7% fund earns 7 cents a year on the dollar; how long to double?", "split": "train"}
+{"relation": "doubling_time", "args": [3], "question": "The rate is twice the 1.5% of the neighbouring column, so 3%; when does the money double?", "split": "train"}
+{"relation": "doubling_time", "args": [6], "question": "A fund returning 6% a year runs 30 member accounts on 2 ledgers; when does the balance double?", "split": "eval"}
+{"relation": "doubling_time", "args": [8], "question": "A balance grows. The rate is 8% a year. When does it double?", "split": "train"}
+{"relation": "doubling_time", "args": [9], "question": "Years to double, for an account earning 9% a year and opened today?", "split": "train"}
+{"relation": "doubling_time", "args": [10], "question": "A 10% return is expected for 10 years of contributions; how long does doubling take?", "split": "train"}
+{"relation": "doubling_time", "args": [11], "question": "An index gains 11% a year and the report that tracks it runs 20 pages in 4 sections; how long until it doubles?", "split": "train"}
+{"relation": "doubling_time", "args": [12], "question": "A small fund earns 12% a year and the owner wants to know when the balance reaches twice its value.", "split": "train"}
+{"relation": "doubling_time", "args": [14], "question": "How many years for a doubling, at 14% a year?", "split": "eval"}
+{"relation": "doubling_time", "args": [15], "question": "The broker quotes 15% a year to 45 clients from 3 offices; how long until the money doubles?", "split": "train"}
+{"relation": "doubling_time", "args": [16], "question": "A rate of 16% a year is on the card. The question is the doubling time.", "split": "train"}
+{"relation": "doubling_time", "args": [18], "question": "An 18% rate on an 18 month certificate: how long to double?", "split": "eval"}
+{"relation": "doubling_time", "args": [20], "question": "A fund grows 20% a year; when does it double? The sheet has 2 columns and 30 rows.", "split": "eval"}
+{"relation": "doubling_time", "args": [2], "question": "An account is opened at twice the 1% that the leaflet quotes, so 2%; when is it worth double?", "split": "eval"}
+{"relation": "doubling_time", "args": [2.5], "question": "A savings rate of 2.5% a year is quoted; how long does doubling take?", "split": "train"}
+{"relation": "doubling_time", "args": [1.5], "question": "At 1.5% a year, how long to double? The leaflet has 4 pages and 2 charts.", "split": "eval"}
+{"relation": "doubling_time", "args": [4.5], "question": "A rate of 4.5% a year appears on the statement. Find the doubling time.", "split": "eval"}
+{"relation": "doubling_time", "args": [6], "question": "A 6% rate over a 6 year note: how long does doubling take?", "split": "train"}
+{"relation": "half_life", "args": [200, 4, 6], "question": "A 200 g sample has a half life of 4 years; how much remains after 6 years? The vial weighs 30 g and holds 12 doses.", "split": "train"}
+{"relation": "half_life", "args": [400, 5, 7], "question": "7 years on, from a 5 year half life and a 400 g sample: what is left?", "split": "eval"}
+{"relation": "half_life", "args": [100, 5, 5], "question": "100 g with a 5 year half life decays for 5 years; what remains?", "split": "train"}
+{"relation": "half_life", "args": [150, 3, 12], "question": "A 150 g sample with a 3 year half life is read four half lives on, at year 12; what mass is left?", "split": "eval"}
+{"relation": "half_life", "args": [800, 6, 10], "question": "800 g with a half life of 6 years; what remains after 10 years? The lab has 3 fume hoods and 12 trays.", "split": "train"}
+{"relation": "half_life", "args": [500, 2, 7], "question": "A source of 500 g. Its half life is 2 years. 7 years pass. How much is left?", "split": "train"}
+{"relation": "half_life", "args": [120, 8, 3], "question": "3 years after a 120 g sample with an 8 year half life: how much remains?", "split": "eval"}
+{"relation": "half_life", "args": [240, 6, 6], "question": "240 g decays with a 6 year half life for 6 years; how much is left?", "split": "train"}
+{"relation": "half_life", "args": [1000, 10, 25], "question": "A 1000 g sample whose half life is 10 years sits for 25 years; the vault is 2 m deep and 3 m wide.", "split": "train"}
+{"relation": "half_life", "args": [400, 5, 13], "question": "The starting mass is 400 g. The half life is 5 years. 13 years later, what mass remains?", "split": "train"}
+{"relation": "half_life", "args": [960, 12, 30], "question": "30 years, a 12 year half life and 960 g to start: what remains?", "split": "train"}
+{"relation": "half_life", "args": [250, 3, 11], "question": "250 g with a 3 year half life for 11 years; the tray holds 45 tubes in 5 racks.", "split": "eval"}
+{"relation": "half_life", "args": [700, 4, 14], "question": "A 700 g block. Half life 4 years. 14 years on, what is left?", "split": "train"}
+{"relation": "half_life", "args": [180, 6, 4], "question": "180 g with a 6 year half life; 4 years later, what remains? The bench is 90 cm wide with 2 sinks.", "split": "train"}
+{"relation": "half_life", "args": [100, 2, 9], "question": "9 years on, from 100 g and a 2 year half life: how much is left?", "split": "eval"}
+{"relation": "half_life", "args": [500, 10, 10], "question": "500 g under a 10 year half life, left for 10 years; how much is left?", "split": "train"}
+{"relation": "half_life", "args": [640, 8, 20], "question": "A sample weighs 640 g with an 8 year half life, and the 20 years it sits amount to two and a half half lives. What is left?", "split": "eval"}
+{"relation": "half_life", "args": [900, 12, 18], "question": "900 g with a 12 year half life over 18 years; the site has 6 rooms across 3 floors.", "split": "train"}
+{"relation": "half_life", "args": [320, 4, 10], "question": "10 years at a 4 year half life from 320 g: report what remains.", "split": "eval"}
+{"relation": "half_life", "args": [50, 6, 15], "question": "A 50 g sample with a 6 year half life sits for 15 years; how much remains?", "split": "eval"}
+{"relation": "ln_eval", "args": [7], "question": "A reading of 7 is logged beside 12 marks and 4 pages; take its natural logarithm to four figures.", "split": "train"}
+{"relation": "ln_eval", "args": [9], "question": "The natural log of the 9 in the second column is wanted; give it to four figures.", "split": "train"}
+{"relation": "ln_eval", "args": [11], "question": "A tube holds 11 ml and the reading is also 11; take the natural log of that value.", "split": "train"}
+{"relation": "ln_eval", "args": [14], "question": "The value is twice the 7 marked on the axis, so 14; give its natural logarithm.", "split": "train"}
+{"relation": "ln_eval", "args": [16], "question": "A count doubles four times from 1 and lands on 16; take its natural logarithm.", "split": "train"}
+{"relation": "ln_eval", "args": [18], "question": "Find ln(18); the cold room holds 12 racks at 3 degrees.", "split": "train"}
+{"relation": "ln_eval", "args": [21], "question": "The 21 in the middle row needs its natural logarithm; report four figures.", "split": "eval"}
+{"relation": "ln_eval", "args": [22], "question": "A 22 cm bar carries the reading 22; take the natural log of that number.", "split": "train"}
+{"relation": "ln_eval", "args": [24], "question": "Find ln(24); the soil sample weighs 4 kg, taken 20 m from the gate.", "split": "eval"}
+{"relation": "ln_eval", "args": [27], "question": "The sample is 27 units. Its natural logarithm is required for the table.", "split": "eval"}
+{"relation": "ln_eval", "args": [28], "question": "A value of 28 is entered; give its natural logarithm to four figures.", "split": "eval"}
+{"relation": "ln_eval", "args": [32], "question": "The value is four times the 8 on the axis, so 32; find its natural logarithm.", "split": "train"}
+{"relation": "ln_eval", "args": [35], "question": "Find ln(35); the crate holds 45 cup hooks in 3 trays.", "split": "train"}
+{"relation": "ln_eval", "args": [42], "question": "A reading of 42 units is recorded. The natural logarithm of it is wanted.", "split": "train"}
+{"relation": "ln_eval", "args": [45], "question": "A 45 kg mass and a 45 m reading share the same number; take ln(45).", "split": "eval"}
+{"relation": "ln_eval", "args": [55], "question": "Find ln(55); the spreadsheet runs 20 lines deep in 3 columns.", "split": "eval"}
+{"relation": "ln_eval", "args": [60], "question": "The last entry, 60, needs its natural log; give four figures.", "split": "train"}
+{"relation": "ln_eval", "args": [75], "question": "A stock of 75 units is stacked in the yard. Take its natural logarithm.", "split": "eval"}
+{"relation": "ln_eval", "args": [90], "question": "Find ln(90); the room holds 24 chairs and 2 lecterns.", "split": "train"}
+{"relation": "ln_eval", "args": [13], "question": "The 13 on the drum needs its natural log; report it to four figures.", "split": "eval"}
+{"relation": "log10_eval", "args": [6], "question": "A reading of 6 sits on a dial that also shows 15 kg and 30 cm; take its common logarithm to four figures.", "split": "eval"}
+{"relation": "log10_eval", "args": [8], "question": "The common log of 8 is on the card; give it to four figures.", "split": "train"}
+{"relation": "log10_eval", "args": [12], "question": "A 12 cm rule and a reading of 12: take the common log of that number.", "split": "eval"}
+{"relation": "log10_eval", "args": [15], "question": "The value is half of the 30 on the axis, so 15; give its common log.", "split": "train"}
+{"relation": "log10_eval", "args": [25], "question": "A count grows by ten until it reaches 25; take its common logarithm.", "split": "train"}
+{"relation": "log10_eval", "args": [30], "question": "Find log(30); the cold store keeps 12 shelves at 3 degrees.", "split": "eval"}
+{"relation": "log10_eval", "args": [50], "question": "The 50 in the second row needs its common log; report four figures.", "split": "train"}
+{"relation": "log10_eval", "args": [75], "question": "A 75 kg load with the reading 75; take the common log of the number.", "split": "train"}
+{"relation": "log10_eval", "args": [150], "question": "Find log(150); the soil is 4 kg, dug 20 m from the hedge.", "split": "train"}
+{"relation": "log10_eval", "args": [250], "question": "The sample reads 250 units. Its common logarithm is wanted for the table.", "split": "eval"}
+{"relation": "log10_eval", "args": [400], "question": "A value of 400 is entered; give its common logarithm to four figures.", "split": "eval"}
+{"relation": "log10_eval", "args": [500], "question": "The value is twice the 250 on the axis, so 500; find its common log.", "split": "train"}
+{"relation": "log10_eval", "args": [600], "question": "Find log(600); the crate carries 45 pipes in 3 bundles.", "split": "train"}
+{"relation": "log10_eval", "args": [750], "question": "A reading of 750 units is logged. The common logarithm of it is wanted.", "split": "eval"}
+{"relation": "log10_eval", "args": [900], "question": "A 900 mm span and a reading of 900 share one number; take log(900).", "split": "train"}
+{"relation": "log10_eval", "args": [1200], "question": "Find log(1200); the folder runs 20 pages with 3 tabs.", "split": "train"}
+{"relation": "log10_eval", "args": [2500], "question": "The last entry, 2500, needs its common log; give four figures.", "split": "eval"}
+{"relation": "log10_eval", "args": [5000], "question": "A stock of 5000 units is held in the warehouse. Take its common logarithm.", "split": "train"}
+{"relation": "log10_eval", "args": [8000], "question": "Find log(8000); the class of 24 brings 2 helpers.", "split": "train"}
+{"relation": "log10_eval", "args": [10000], "question": "The 10000 on the drum needs its common log; report it to four figures.", "split": "eval"}
+{"relation": "log_eval", "args": [2, 96], "question": "Find log base 2 of 96; the class has 30 students and 4 sheets.", "split": "eval"}
+{"relation": "log_eval", "args": [5, 80], "question": "80 to base 5: what is the logarithm?", "split": "train"}
+{"relation": "log_eval", "args": [3, 3], "question": "The base and the argument are both 3; find the logarithm.", "split": "train"}
+{"relation": "log_eval", "args": [2, 90], "question": "The argument is twice the 45 quoted on the sheet, so 90; find log base 2 of that value.", "split": "train"}
+{"relation": "log_eval", "args": [10, 2500], "question": "Find log base 10 of 2500; the titration used 12 flasks from 3 shelves.", "split": "train"}
+{"relation": "log_eval", "args": [3, 54], "question": "The base is 3. The argument is 54. What logarithm results?", "split": "train"}
+{"relation": "log_eval", "args": [4, 7], "question": "7 in base 4: give the logarithm.", "split": "train"}
+{"relation": "log_eval", "args": [4, 100], "question": "A test with 4 sections uses log base 4 of 100 in question one; give the value.", "split": "eval"}
+{"relation": "log_eval", "args": [3, 81], "question": "The argument is three quarters of 108, written 81 on the card; find log base 3 of it.", "split": "train"}
+{"relation": "log_eval", "args": [2, 45], "question": "Find log base 2 of 45; the site has 18 sensors and 6 towers.", "split": "train"}
+{"relation": "log_eval", "args": [6, 200], "question": "A growth model uses base 6 and reaches the value 200; what exponent is that?", "split": "train"}
+{"relation": "log_eval", "args": [7, 50], "question": "50, taken to base 7, has what logarithm?", "split": "eval"}
+{"relation": "log_eval", "args": [3, 45], "question": "Find log base 3 of 45; the plot is 20 m and 4 stakes.", "split": "eval"}
+{"relation": "log_eval", "args": [2, 63], "question": "Take the base as 2 and the argument as 63; report the logarithm.", "split": "eval"}
+{"relation": "log_eval", "args": [4, 1000], "question": "1000 to base 4: give the log to four figures.", "split": "eval"}
+{"relation": "log_eval", "args": [8, 8], "question": "The base is 8 and the argument is 8; give the logarithm.", "split": "train"}
+{"relation": "log_eval", "args": [5, 700], "question": "Find log base 5 of 700; the pallet carries 45 crates on 3 trips.", "split": "eval"}
+{"relation": "log_eval", "args": [3, 12], "question": "The label says base 3 and the value 12; give the logarithm.", "split": "eval"}
+{"relation": "log_eval", "args": [2, 1500], "question": "Find log base 2 of 1500; the register has 20 lines in 3 columns.", "split": "train"}
+{"relation": "log_eval", "args": [9, 200], "question": "200 in base 9: report the logarithm to four figures.", "split": "train"}
+{"relation": "exp_solve", "args": [2, 32], "question": "Solve 2^x = 32; the class has 28 students and the quiz is 4 pages.", "split": "train"}
+{"relation": "exp_solve", "args": [2, 8], "question": "8 is the result and 2 is the base; solve for the exponent.", "split": "train"}
+{"relation": "exp_solve", "args": [2, 32], "question": "Solve 2^x = 2^5, which is 32, and state the time in hours.", "split": "eval"}
+{"relation": "exp_solve", "args": [3, 2187], "question": "A culture triples each day; after 3 days the count is 2187, starting from 1. How many days have passed?", "split": "eval"}
+{"relation": "exp_solve", "args": [2, 512], "question": "Each round multiplies the tellers by 2; 512 people have now heard it. How many rounds have gone by?", "split": "eval"}
+{"relation": "exp_solve", "args": [5, 125], "question": "Solve 5^x = 125; the lab has 12 benches and 3 fume hoods.", "split": "train"}
+{"relation": "exp_solve", "args": [3, 81], "question": "Solve 3^x = 81 for x, then say whether x is above 3.", "split": "train"}
+{"relation": "exp_solve", "args": [4, 64], "question": "64 is the target and 4 is the base; find the exponent.", "split": "train"}
+{"relation": "exp_solve", "args": [3, 81], "question": "3^x = 3^4 = 81: report the exponent.", "split": "train"}
+{"relation": "exp_solve", "args": [2, 128], "question": "Solve 2^x = 128; the room holds 30 and the bell rings at 8.", "split": "train"}
+{"relation": "exp_solve", "args": [10, 100], "question": "10 raised to the x equals 100. State x and check it by multiplying.", "split": "eval"}
+{"relation": "exp_solve", "args": [5, 625], "question": "Solve 5^x = 625; the van carries 45 boxes in 2 runs.", "split": "train"}
+{"relation": "exp_solve", "args": [3, 27], "question": "27 is what 3 raised to x gives; solve for x.", "split": "train"}
+{"relation": "exp_solve", "args": [6, 216], "question": "6^x = 216: find x and say whether it is an integer.", "split": "eval"}
+{"relation": "exp_solve", "args": [10, 1000], "question": "10^x = 10^3 = 1000; give the power that balances the two sides.", "split": "train"}
+{"relation": "exp_solve", "args": [7, 343], "question": "Seven cubed is the target; find x in 7^x = 343.", "split": "eval"}
+{"relation": "exp_solve", "args": [10, 10000], "question": "Solve 10^x = 10000; the printout runs to 4 pages and 20 rows.", "split": "train"}
+{"relation": "exp_solve", "args": [5, 3125], "question": "3125 and 5 are the two numbers in play: write 5^x = 3125 and solve.", "split": "eval"}
+{"relation": "exp_solve", "args": [4, 16], "question": "4 to the x is 16; give x and the check.", "split": "train"}
+{"relation": "exp_solve", "args": [3, 729], "question": "Solve 3^x = 729; the class of 24 brings 5 aides.", "split": "eval"}
+{"relation": "linear2", "args": [2, 1, 8, 1, -2, -1], "question": "A stall sells clips and pens, with 2x + y = 8 and x - 2y = -1 giving the prices in cents; the stall has 9 trays and 4 shelves. Find x and y.", "split": "eval"}
+{"relation": "linear2", "args": [1, -2, -1, 2, 1, 8], "question": "The board lists x - 2y = -1 above 2x + y = 8; solve the pair for x and y.", "split": "eval"}
+{"relation": "linear2", "args": [2, 1, 5, 2, -3, -7], "question": "Solve 2x + y = 5 together with 2x - 3y = -7; both lines start with 2x, so keep the y terms apart.", "split": "train"}
+{"relation": "linear2", "args": [1, 1, 9, 1, -1, 1], "question": "Two numbers add to 9 and differ by 1; write the system and solve it.", "split": "train"}
+{"relation": "linear2", "args": [1, 2, 7, 3, -1, 0], "question": "One number plus 2 times the other is 7, and 3 times the first less the second comes to nothing; find both.", "split": "train"}
+{"relation": "linear2", "args": [3, -1, 5, 1, 2, 4], "question": "Two lines describe the rates: 3x - y = 5. The other is x + 2y = 4. Find the pair (x, y).", "split": "train"}
+{"relation": "linear2", "args": [4, 2, -6, 1, -3, 2], "question": "Solve 4x + 2y = -6 and x - 3y = 2; the answer sheet has 20 slots for 5 marks.", "split": "eval"}
+{"relation": "linear2", "args": [2, -3, 8, 5, 1, 3], "question": "5x + y = 3 is the second line and 2x - 3y = 8 the first; solve the system.", "split": "eval"}
+{"relation": "linear2", "args": [3, 4, 2, 2, -1, 5], "question": "Solve 3x + 4y = 2 with 2x - y = 5; a pen costs 12 cents and a pad 30.", "split": "train"}
+{"relation": "linear2", "args": [1, 3, 7, 2, 5, 12], "question": "The first equation is x + 3y = 7. The second is 2x + 5y = 12. Give the solution pair.", "split": "train"}
+{"relation": "linear2", "args": [6, -2, 10, 1, 1, 3], "question": "Solve 6x - 2y = 10 and x + y = 3; the bus holds 45 and keeps 8 spare seats.", "split": "train"}
+{"relation": "linear2", "args": [2, 2, 10, 1, -1, -1], "question": "Solve 2x + 2y = 10 with x - y = -1; note that both leading coefficients are 2.", "split": "eval"}
+{"relation": "linear2", "args": [1, 1, 4, 3, -1, 4], "question": "Solve x + y = 4 and 3x - y = 4, where the same 4 sits on both right-hand sides.", "split": "eval"}
+{"relation": "linear2", "args": [5, 1, 9, -2, 3, -7], "question": "Solve 5x + y = 9 and -2x + 3y = -7; the lab has 16 stools and 4 sinks.", "split": "train"}
+{"relation": "linear2", "args": [4, -3, 10, 2, 1, 0], "question": "4x - 3y = 10. Also 2x + y = 0. Solve the pair.", "split": "eval"}
+{"relation": "linear2", "args": [3, 2, 12, 4, -1, 5], "question": "4x - y = 5 is written under 3x + 2y = 12; find x and y.", "split": "train"}
+{"relation": "linear2", "args": [7, -2, 3, 1, 3, 7], "question": "Solve 7x - 2y = 3 and x + 3y = 7; the class has 30 pupils and 5 tables.", "split": "eval"}
+{"relation": "linear2", "args": [2, 5, 1, 4, 3, 9], "question": "A baker's two lines read 2x + 5y = 1 and 4x + 3y = 9. What are x and y?", "split": "train"}
+{"relation": "linear2", "args": [8, 1, 6, 3, -2, 7], "question": "Solve 8x + y = 6 and 3x - 2y = 7; the print run is 40 pages in 12 minutes.", "split": "train"}
+{"relation": "linear2", "args": [3, 3, 9, 2, -4, 0], "question": "3x + 3y = 9 and 2x - 4y = 0 describe a puzzle; solve it.", "split": "train"}
+{"relation": "quad_solve", "args": [2, -8, -10], "question": "Solve 2x^2 - 8x - 10 = 0; the room seats 30 and 4 invigilators walk the rows.", "split": "train"}
+{"relation": "quad_solve", "args": [3, -6, -9], "question": "The constant is -9, the x term -6x and the leading term 3x^2: solve for x.", "split": "train"}
+{"relation": "quad_solve", "args": [5, -5, -10], "question": "5x^2 - 5x - 10 = 0: give both roots.", "split": "eval"}
+{"relation": "quad_solve", "args": [1, 0, -9], "question": "x^2 - 9 is zero at two values; name them.", "split": "eval"}
+{"relation": "quad_solve", "args": [1, -5, 0], "question": "x^2 - 5x equals zero at two values of x; list them.", "split": "train"}
+{"relation": "quad_solve", "args": [1, -44, 384], "question": "Solve x^2 - 44x + 384 = 0; the room holds 30 and the test runs 90 minutes.", "split": "train"}
+{"relation": "quad_solve", "args": [1, -3, -10], "question": "A rectangle is x wide and x - 3 tall with area 10, so x^2 - 3x - 10 = 0. Find x.", "split": "train"}
+{"relation": "quad_solve", "args": [1, -1, -6], "question": "-6 on the end, -1 in the middle, 1 up front: solve the quadratic.", "split": "eval"}
+{"relation": "quad_solve", "args": [1, -12, 35], "question": "Solve x^2 - 12x + 35 = 0; the board has 24 pupils and 2 aides.", "split": "train"}
+{"relation": "quad_solve", "args": [2, 3, -2], "question": "A ball's height is 2x^2 + 3x - 2. When is it zero?", "split": "eval"}
+{"relation": "quad_solve", "args": [2, 2, -24], "question": "2x^2 + 2x - 24 = 0: give both roots.", "split": "train"}
+{"relation": "quad_solve", "args": [1, 4, -12], "question": "-12 is the constant and 4 the middle term; solve x^2 + 4x - 12 = 0.", "split": "train"}
+{"relation": "quad_solve", "args": [3, 3, -6], "question": "The expression 3x^2 + 3x - 6 is zero at two values of x; find them.", "split": "train"}
+{"relation": "quad_solve", "args": [2, -2, -4], "question": "Solve 2x^2 - 2x - 4 = 0; the trial has 7 weeks and 5 sites.", "split": "eval"}
+{"relation": "quad_solve", "args": [1, 7, 12], "question": "x^2 + 7x + 12 is an area model; for which x is it zero?", "split": "eval"}
+{"relation": "quad_solve", "args": [1, -2, -15], "question": "Solve x^2 - 2x - 15 = 0; the class is 28 strong and 3 markers are used.", "split": "train"}
+{"relation": "quad_solve", "args": [1, 3, -4], "question": "-4 on the end and 3 in the middle: solve x^2 + 3x - 4 = 0.", "split": "train"}
+{"relation": "quad_solve", "args": [4, -4, -8], "question": "4x^2 - 4x - 8 is zero where?", "split": "eval"}
+{"relation": "quad_solve", "args": [1, -16, 60], "question": "Solve x^2 - 16x + 60 = 0; the shelf is 45 cm and holds 12 boxes.", "split": "train"}
+{"relation": "quad_solve", "args": [6, -6, -12], "question": "6x^2 - 6x - 12 = 0: both roots, smallest first.", "split": "eval"}
+{"relation": "arc_length", "args": [12, 45], "question": "A pendulum 12 cm long swings through 45 degrees; the frame is 30 cm wide and holds 2 bobs. Find the arc the tip travels.", "split": "train"}
+{"relation": "arc_length", "args": [18, 120], "question": "The sweep is 120 degrees on a circle of radius 18; find the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [9, 9], "question": "A wheel of radius 9 turns through 9 degrees; how long is the arc?", "split": "train"}
+{"relation": "arc_length", "args": [16, 90], "question": "The radius is 16 and the sweep is a quarter turn, marked 90; find the arc length.", "split": "eval"}
+{"relation": "arc_length", "args": [10, 60], "question": "A wiper 10 cm long sweeps 60 degrees; the windscreen is 90 cm wide and has 2 blades; find the tip's arc.", "split": "eval"}
+{"relation": "arc_length", "args": [5, 144], "question": "On a circle of radius 5 m, an arc cuts off 144 degrees; how long is that arc?", "split": "train"}
+{"relation": "arc_length", "args": [7, 300], "question": "300 degrees of a circle of radius 7: how long is that arc?", "split": "train"}
+{"relation": "arc_length", "args": [6, 6], "question": "Radius 6 with an angle of 6 degrees; give the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [20, 225], "question": "A rotor of radius 20 turns 225 degrees; the housing is 45 cm across with 3 bolts; find the arc travelled by a rim point.", "split": "eval"}
+{"relation": "arc_length", "args": [3, 150], "question": "A dial has radius 3 cm. Its pointer sweeps 150 degrees. How far does the tip move?", "split": "eval"}
+{"relation": "arc_length", "args": [24, 30], "question": "An arc of 30 degrees on a radius of 24: find its length.", "split": "eval"}
+{"relation": "arc_length", "args": [11, 180], "question": "The arm is 11 cm and swings through half a turn, that is 180 degrees; find the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [8, 270], "question": "A radius of 8 sweeps 270 degrees; the gate is 12 m wide and 4 hinges hold it; find the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [14, 36], "question": "A sector of radius 14 carries a 36 degree angle at the centre; give the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [15, 15], "question": "A wheel of radius 15 cm turns 15 degrees; how far does a point on the rim move?", "split": "eval"}
+{"relation": "arc_length", "args": [4, 100], "question": "Radius 4 with a 100 degree sweep; the sheet is 1 cm thick with 6 sheets below; find the arc.", "split": "train"}
+{"relation": "arc_length", "args": [13, 210], "question": "210 degrees of a circle drawn with radius 13: give the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [2, 320], "question": "A small disc has radius 2 cm. A marker sits 320 degrees round. How long is the arc?", "split": "eval"}
+{"relation": "arc_length", "args": [17, 72], "question": "A radius of 17 sweeps 72 degrees; the bench is 40 cm and holds 3 vices; find the arc length.", "split": "train"}
+{"relation": "arc_length", "args": [19, 45], "question": "A needle of length 19 cm moves through 45 degrees. How far does its tip travel?", "split": "eval"}
+{"relation": "cos_eval", "args": [22], "question": "A beam lies at 22 degrees to the horizontal, spanning 8 m between 3 posts; find the cosine of the beam angle.", "split": "train"}
+{"relation": "cos_eval", "args": [35], "question": "The inclinometer shows 35 degrees; what is the cosine of the reading?", "split": "train"}
+{"relation": "cos_eval", "args": [48], "question": "A 48 cm arm holds a joint at 48 degrees; find the cosine of the joint angle.", "split": "eval"}
+{"relation": "cos_eval", "args": [15], "question": "The fixture is set to 15, half of the 30 degree spread quoted on the box; give the cosine of that setting.", "split": "eval"}
+{"relation": "cos_eval", "args": [61], "question": "A sail is eased out. The boom sits at 61 degrees. Find the cosine of the boom angle.", "split": "train"}
+{"relation": "cos_eval", "args": [29], "question": "A conveyor climbs at 29 degrees over 12 m on 4 rollers; give the cosine of the incline.", "split": "train"}
+{"relation": "cos_eval", "args": [13], "question": "Give the cosine of the tilt that the gauge reports as 13 degrees.", "split": "train"}
+{"relation": "cos_eval", "args": [41], "question": "The sheet lists 41 degrees once in the drawing and once in the notes; find its cosine.", "split": "eval"}
+{"relation": "cos_eval", "args": [56], "question": "A camera tilts 56 degrees, mounted 2 m up on a 30 cm bracket; find the cosine of the tilt.", "split": "train"}
+{"relation": "cos_eval", "args": [19], "question": "The crane's jib rises. The angle is 19 degrees. What is the cosine of that angle?", "split": "train"}
+{"relation": "cos_eval", "args": [66], "question": "A windsock hangs at 66 degrees in a stiff wind with 5 knots in the gusts; the pole is 4 m tall. Give the cosine of the hang angle.", "split": "eval"}
+{"relation": "cos_eval", "args": [23], "question": "The protractor reads 23 degrees for the second arm; find its cosine.", "split": "eval"}
+{"relation": "cos_eval", "args": [47], "question": "A 47 degree tilt across a 47 cm span: find the cosine of the tilt.", "split": "train"}
+{"relation": "cos_eval", "args": [9], "question": "The arm is set to 9 degrees, one short of the 10 marked on the dial; give the cosine of the setting.", "split": "train"}
+{"relation": "cos_eval", "args": [54], "question": "A plank rests against the wall. Its angle with the floor is 54 degrees. Take the cosine of that angle.", "split": "eval"}
+{"relation": "cos_eval", "args": [39], "question": "A searchlight dips 39 degrees, 3 m above a 25 m runway; give the cosine of the dip.", "split": "eval"}
+{"relation": "cos_eval", "args": [74], "question": "The reading is 74 degrees on the inclinometer; state its cosine to four figures.", "split": "train"}
+{"relation": "cos_eval", "args": [27], "question": "A 27 cm rise holds the ramp at 27 degrees; find the cosine of the ramp's angle.", "split": "eval"}
+{"relation": "cos_eval", "args": [43], "question": "The jig is clamped. The angle comes out at 43 degrees. What is its cosine?", "split": "train"}
+{"relation": "cos_eval", "args": [32], "question": "A solar panel tilts 32 degrees, measures 1.7 m by 1 m, and feeds 4 cells; find the cosine of the panel angle.", "split": "train"}
+{"relation": "law_cosines", "args": [9, 12, 60], "question": "Sides 9 and 12 enclose 60 degrees; the yard is 30 m by 20 m; find the third side.", "split": "eval"}
+{"relation": "law_cosines", "args": [12, 9, 60], "question": "60 degrees sits between the sides 12 and 9; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [7, 7, 70], "question": "Two sides are both 7 with 70 degrees between; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [5, 8, 120], "question": "The sides are 5 and 8 and the angle between them is the supplement of 60, so 120; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [10, 14, 45], "question": "Sides 10 and 14 meet at 45 degrees; the garden has 5 beds and 2 paths; find the third side.", "split": "eval"}
+{"relation": "law_cosines", "args": [6, 11, 110], "question": "Two sides of a triangle are 6 m and 11 m. The angle between them is 110 degrees. How long is the third side?", "split": "eval"}
+{"relation": "law_cosines", "args": [15, 20, 80], "question": "80 degrees lies between the sides 15 and 20; find the side opposite that angle.", "split": "train"}
+{"relation": "law_cosines", "args": [9, 9, 50], "question": "Both given sides are 9 with 50 degrees between; find the third side.", "split": "eval"}
+{"relation": "law_cosines", "args": [13, 17, 30], "question": "Sides 13 and 17 enclose 30 degrees; the plot is 40 m and 6 stakes; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [4, 9, 135], "question": "A triangle has sides of 4 m. Another is 9 m. The angle between is 135 degrees. Find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [21, 8, 100], "question": "The included angle is 100 degrees and the sides are 21 and 8; find the side opposite it.", "split": "eval"}
+{"relation": "law_cosines", "args": [8, 16, 45], "question": "One side is half the other, the longer 16, the shorter marked 8; the angle is 45 degrees. Find the third side.", "split": "eval"}
+{"relation": "law_cosines", "args": [12, 16, 120], "question": "Sides 12 and 16 enclose 120 degrees; the lab is 6 m by 3 m; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [5, 10, 60], "question": "A rope of 5 m and one of 10 m meet. The angle between them is 60 degrees. Find the straight-line distance across.", "split": "train"}
+{"relation": "law_cosines", "args": [14, 14, 30], "question": "Both sides measure 14 with 30 degrees between; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [18, 25, 75], "question": "Sides 18 and 25 meet at 75 degrees; the frame is 2 m and 4 panels; find the third side.", "split": "eval"}
+{"relation": "law_cosines", "args": [35, 12, 55], "question": "55 degrees is included between sides 35 and 12; what is the third side?", "split": "eval"}
+{"relation": "law_cosines", "args": [7, 15, 90], "question": "Two sides, 7 cm and 15 cm, meet at 90 degrees. Find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [11, 19, 150], "question": "Sides 11 and 19 enclose 150 degrees; the sheet has 20 rows and 3 columns; find the third side.", "split": "train"}
+{"relation": "law_cosines", "args": [8, 13, 120], "question": "8 m and 13 m sit either side of a 120 degree corner; how long is the third side?", "split": "train"}
+{"relation": "law_sines", "args": [12, 40, 60], "question": "Side 12 faces 40 degrees; the next angle along is 60 degrees, and the site measures 30 m by 45 m. Find the side facing the 60.", "split": "train"}
+{"relation": "law_sines", "args": [18, 50, 70], "question": "The angles run 70 and 50, with side 18 facing the 50; find the side opposite the 70.", "split": "train"}
+{"relation": "law_sines", "args": [20, 20, 40], "question": "A side of 20 faces a 20 degree angle; another angle is 40 degrees. Find the side facing the 40.", "split": "train"}
+{"relation": "law_sines", "args": [10, 50, 60], "question": "Two angles are 50 and 70, the side facing the 50 is 10, and the site has 60 m of fencing. How long is the side that faces the third angle?", "split": "train"}
+{"relation": "law_sines", "args": [14, 60, 40], "question": "Side 14 faces 60 and another angle is 40; the plot is 25 m and 8 stakes; find the side facing the 40.", "split": "train"}
+{"relation": "law_sines", "args": [9, 45, 30], "question": "A survey gives an angle of 45 degrees opposite a 9 m side. A second angle reads 30 degrees. Find the side opposite it.", "split": "train"}
+{"relation": "law_sines", "args": [22, 80, 50], "question": "The 50 degree angle comes first in the sketch, then the 80; the side facing the 80 is 22. Find the side facing the 50.", "split": "train"}
+{"relation": "law_sines", "args": [16, 40, 40], "question": "The triangle is isosceles at 40 degrees twice over, with 16 facing one of them; how long faces the other?", "split": "train"}
+{"relation": "law_sines", "args": [11, 70, 35], "question": "Side 11 faces 70 degrees, another angle is 35, and the site is 2 km from 3 gates; find the side facing the 35.", "split": "eval"}
+{"relation": "law_sines", "args": [13, 25, 115], "question": "One angle is 25 degrees with 13 m opposite. Another angle is 115 degrees. What side faces it?", "split": "train"}
+{"relation": "law_sines", "args": [17, 55, 55], "question": "Both mentioned angles are 55 and the side facing the first is 17; give the side facing the second.", "split": "eval"}
+{"relation": "law_sines", "args": [12, 30, 85], "question": "Angles of 30 and 65 sit at the base, the side facing the 30 is 12, and the tray holds 85 beads; find the side facing the remaining angle.", "split": "train"}
+{"relation": "law_sines", "args": [10, 30, 90], "question": "Side 10 faces 30 degrees, another angle is 90, and the class of 28 works in 6 groups; find the side facing the right angle.", "split": "eval"}
+{"relation": "law_sines", "args": [15, 80, 40], "question": "15 m is opposite 80 degrees and a 40 degree angle sits elsewhere in the triangle. How long is the side facing the 40?", "split": "eval"}
+{"relation": "law_sines", "args": [20, 65, 35], "question": "The 35 degree angle is named first in the table and the 65 second; side 20 faces the 65. Find the side facing the 35.", "split": "train"}
+{"relation": "law_sines", "args": [6, 50, 80], "question": "Side 6 faces 50 degrees and another angle is 80; the frame is 3 m and 4 panels; find the side facing the 80.", "split": "train"}
+{"relation": "law_sines", "args": [19, 110, 35], "question": "An obtuse triangle has 19 cm opposite 110 degrees. Another angle is 35 degrees. Find the side facing it.", "split": "eval"}
+{"relation": "law_sines", "args": [12, 60, 60], "question": "Side 12 faces 60 and a second angle is 60; find the side facing it.", "split": "eval"}
+{"relation": "law_sines", "args": [7, 40, 100], "question": "Side 7 faces 40 degrees, another angle is 100, and the sheet has 16 rows in 2 columns; find the side facing the 100.", "split": "eval"}
+{"relation": "law_sines", "args": [23, 85, 45], "question": "The chain survey has 23 m opposite 85 degrees. A second angle is 45 degrees. How long is the side opposite?", "split": "eval"}
+{"relation": "pythagoras", "args": [9, 12], "question": "A right triangle's legs are 9 m and 12 m; the plot is 30 m by 20 m. Find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [12, 9], "question": "The vertical leg is 9 and the horizontal leg 12; find the hypotenuse.", "split": "eval"}
+{"relation": "pythagoras", "args": [7, 7], "question": "A square tile 7 cm on each side is cut corner to corner; how long is the cut?", "split": "eval"}
+{"relation": "pythagoras", "args": [18, 9], "question": "One leg is 18 and the other is half of it, so 9; find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [5, 12], "question": "A right triangle has legs 5 and 12; the poster is 90 cm wide and 4 colours are used; find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [8, 15], "question": "Two walls meet at a right angle. One side measures 8 m. The other measures 15 m. How long is the diagonal?", "split": "train"}
+{"relation": "pythagoras", "args": [24, 7], "question": "The shorter leg is 7 and the taller 24; find the hypotenuse.", "split": "eval"}
+{"relation": "pythagoras", "args": [13, 13], "question": "A square tile is 13 cm on each side; how long is its diagonal?", "split": "train"}
+{"relation": "pythagoras", "args": [16, 30], "question": "A rectangle is 16 by 30; a 45 cm ruler and 2 pencils lie on it. Find its diagonal.", "split": "train"}
+{"relation": "pythagoras", "args": [10, 24], "question": "The first leg runs 10 cm and the second 24 cm; how long is the side across the right angle?", "split": "eval"}
+{"relation": "pythagoras", "args": [40, 9], "question": "The 9 cm leg and the 40 cm leg: find the hypotenuse.", "split": "eval"}
+{"relation": "pythagoras", "args": [9, 18], "question": "One leg is twice the other, the short one 9, and the sheet shows 18 for the long leg; find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [20, 21], "question": "A right triangle has legs 20 and 21; the frame needs 5 m of trim and 2 nails. Find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [11, 60], "question": "A flagpole is 60 m from a gate and 11 m from a fence; the two directions are at right angles. How far apart are gate and fence?", "split": "eval"}
+{"relation": "pythagoras", "args": [17, 17], "question": "A square has sides 17 and 17; find its diagonal.", "split": "eval"}
+{"relation": "pythagoras", "args": [28, 45], "question": "Legs 28 and 45; the drawing is on A4 with 6 labels; find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [36, 15], "question": "The vertical is 15 and the horizontal 36; find the hypotenuse.", "split": "eval"}
+{"relation": "pythagoras", "args": [14, 48], "question": "Leg one measures 14 m and leg two measures 48 m; give the side opposite the right angle.", "split": "train"}
+{"relation": "pythagoras", "args": [33, 56], "question": "Legs 33 and 56; a 2 m rule with 7 clamps lies on the bench; find the hypotenuse.", "split": "train"}
+{"relation": "pythagoras", "args": [12, 35], "question": "Legs 12 and 35; a 70 cm ruler and 3 pencils sit beside; find the hypotenuse.", "split": "train"}
+{"relation": "right_triangle", "args": [5, 12], "question": "A ramp rises 5 m over a 12 m run; the deck is 30 m and 2 rails are fitted. Find the angle of inclination and the ramp length.", "split": "train"}
+{"relation": "right_triangle", "args": [12, 5], "question": "The run is 5 and the rise is 12: find the angle opposite the rise and the sloping length.", "split": "train"}
+{"relation": "right_triangle", "args": [8, 8], "question": "Rise and run are both 8; give the angle and the hypotenuse.", "split": "train"}
+{"relation": "right_triangle", "args": [9, 12], "question": "The rise is three quarters of the run, which is 12, and the rise is written as 9 on the plan. Find the angle and the slope length.", "split": "eval"}
+{"relation": "right_triangle", "args": [7, 24], "question": "A right triangle has opposite 7 and adjacent 24; the poster is 40 cm by 60 cm; give the angle and the longest side.", "split": "train"}
+{"relation": "right_triangle", "args": [15, 20], "question": "A ladder problem: the wall height is 15 m. The distance from the wall is 20 m. Find the angle at the ground and the ladder length.", "split": "eval"}
+{"relation": "right_triangle", "args": [24, 7], "question": "The adjacent side is 7 and the opposite side 24; give the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [6, 6], "question": "With opposite and adjacent equal at 6, what angle does the triangle open at, and how long is the hypotenuse?", "split": "train"}
+{"relation": "right_triangle", "args": [10, 24], "question": "Opposite 10, adjacent 24; a 45 cm ruler and 3 pegs lie nearby; report the angle and the longest side.", "split": "eval"}
+{"relation": "right_triangle", "args": [16, 30], "question": "A hill rises 16 m. It runs 30 m. What angle does it make with the horizontal, and how long is the slope?", "split": "train"}
+{"relation": "right_triangle", "args": [35, 12], "question": "The 12 m side is adjacent and the 35 m side opposite; find the angle and the longest side.", "split": "train"}
+{"relation": "right_triangle", "args": [15, 30], "question": "The opposite side is half the adjacent, and the adjacent is 30, drawn as 15; find the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [20, 21], "question": "Opposite 20 and adjacent 21; a 3 panel fence and 5 m of post stand nearby; work out the angle and the longest side.", "split": "train"}
+{"relation": "right_triangle", "args": [9, 40], "question": "A kite string runs 40 m out. The kite is 9 m up. Find the angle of the string and its length.", "split": "train"}
+{"relation": "right_triangle", "args": [11, 11], "question": "Both legs are 11; give the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [28, 45], "question": "Opposite 28, adjacent 45; a drawing with 6 labels sits on A4; find the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [48, 14], "question": "The 14 is adjacent, the 48 is opposite; find the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [13, 84], "question": "The rise is 13 m. The run is 84 m. Give the angle and the slope length.", "split": "train"}
+{"relation": "right_triangle", "args": [33, 56], "question": "Opposite 33 and adjacent 56; the bench is 2 m long and the sketch is pinned at 7 points; find the angle and the hypotenuse.", "split": "train"}
+{"relation": "right_triangle", "args": [18, 24], "question": "Opposite 18 and adjacent 24; the plan is 90 cm by 30 cm; find the angle and the hypotenuse.", "split": "train"}
+{"relation": "sin_eval", "args": [24], "question": "A wheelchair ramp climbs at 24 degrees over 6 m with a 2 m landing; find the sine of the ramp's angle.", "split": "train"}
+{"relation": "sin_eval", "args": [33], "question": "The dial reads 33 degrees and the rig is switched off; give the sine of that reading.", "split": "train"}
+{"relation": "sin_eval", "args": [40], "question": "A 40 cm strut braces a ramp cut at 40 degrees; find the sine of the angle.", "split": "train"}
+{"relation": "sin_eval", "args": [26], "question": "The dial reads 26, twice the 13 degrees marked at the base; find the sine of the dial reading.", "split": "train"}
+{"relation": "sin_eval", "args": [18], "question": "A surveyor notes the slope. The instrument says 18 degrees. Find the sine of the slope angle.", "split": "eval"}
+{"relation": "sin_eval", "args": [63], "question": "A ladder 4 m long leans at 63 degrees with its foot 1 m out; the alley is 2 m wide. Give the sine of the lean angle.", "split": "eval"}
+{"relation": "sin_eval", "args": [28], "question": "What is the sine of the angle marked 28 degrees on the drum?", "split": "train"}
+{"relation": "sin_eval", "args": [52], "question": "The text says 52 degrees and the table lists 52 as well; give the sine of the angle they share.", "split": "train"}
+{"relation": "sin_eval", "args": [11], "question": "A ski slope runs at 11 degrees for 900 m with 5 pylons; find the sine of the slope.", "split": "train"}
+{"relation": "sin_eval", "args": [37], "question": "A seesaw is tilted. The angle at the pivot is 37 degrees. Its sine is wanted.", "split": "train"}
+{"relation": "sin_eval", "args": [16], "question": "A ramp cut at 16 degrees sits on a 30 cm kerb beside 3 steps; give the sine of the angle.", "split": "eval"}
+{"relation": "sin_eval", "args": [68], "question": "The reflectors stand at 68 degrees to the road; what does the sine of 68 give?", "split": "train"}
+{"relation": "sin_eval", "args": [21], "question": "A 21 cm block lifts a beam to 21 degrees; find the sine of the beam's angle.", "split": "eval"}
+{"relation": "sin_eval", "args": [42], "question": "Half of the 84 degree opening is measured and the gauge shows 42; what is the sine of the gauge reading?", "split": "eval"}
+{"relation": "sin_eval", "args": [44], "question": "The strut's angle comes to 44 degrees after the jig is set. Find the sine of that angle.", "split": "eval"}
+{"relation": "sin_eval", "args": [58], "question": "An antenna tilts at 58 degrees; the mast is 12 m and the base plate 45 cm. Give the sine of the tilt.", "split": "eval"}
+{"relation": "sin_eval", "args": [8], "question": "The needle sits at 8 degrees; write down its sine to four figures.", "split": "eval"}
+{"relation": "sin_eval", "args": [72], "question": "An awning pitches at 72 degrees over a 72 cm window; find the sine of the pitch.", "split": "train"}
+{"relation": "sin_eval", "args": [31], "question": "The transit reads 31 degrees for the second sighting; what sine goes with that bearing?", "split": "train"}
+{"relation": "sin_eval", "args": [34], "question": "A chute drops at 34 degrees over 5 m with a 15 kg load; give the sine of the chute angle.", "split": "train"}
+{"relation": "sinusoid", "args": [4, 3, 60], "question": "For y = 4 sin(3x + 60), state the amplitude, period and phase shift; the plot is 20 cm by 15 cm and 2 curves are drawn.", "split": "train"}
+{"relation": "sinusoid", "args": [5, 2, -30], "question": "The shift is -30 and the x multiplier 2, with amplitude 5: give the amplitude, period and phase shift of y = 5 sin(2x - 30).", "split": "train"}
+{"relation": "sinusoid", "args": [3, 3, 30], "question": "y = 3 sin(3x + 30): give all three parameters.", "split": "train"}
+{"relation": "sinusoid", "args": [2, 4, 0], "question": "With no phase term, y = 2 sin(4x) still has three features to name: amplitude, period in degrees and shift.", "split": "eval"}
+{"relation": "sinusoid", "args": [-4, 2, 45], "question": "y = -4 sin(2x + 45): the sheet is 30 cm and 3 graphs are printed; find the oscillation size, the period and the shift.", "split": "train"}
+{"relation": "sinusoid", "args": [7, 1, 90], "question": "Harbour depth runs as y = 7 sin(x + 90); give the swing size, the cycle in degrees and the offset.", "split": "train"}
+{"relation": "sinusoid", "args": [-2, 3, -60], "question": "The shift is -60 and the x multiplier 3; the amplitude is -2. Analyse y = -2 sin(3x - 60).", "split": "eval"}
+{"relation": "sinusoid", "args": [5, 5, -45], "question": "y = 5 sin(5x - 45) is on the screen; read its amplitude, its period in degrees and its shift in that order.", "split": "train"}
+{"relation": "sinusoid", "args": [8, 4, 30], "question": "y = 8 sin(4x + 30); the board is 2 m long and 6 markers are on the tray; find the amplitude, period and shift.", "split": "train"}
+{"relation": "sinusoid", "args": [3, 2, 0], "question": "A sinusoid reads y = 3 sin(2x). Report the amplitude, the cycle length in degrees and the sideways shift.", "split": "train"}
+{"relation": "sinusoid", "args": [-3, 4, 60], "question": "The x coefficient is 4, the phase 60 and the leading coefficient -3: give the amplitude, period and shift of y = -3 sin(4x + 60).", "split": "train"}
+{"relation": "sinusoid", "args": [1, 2, 45], "question": "y = sin(2x + 45) has an amplitude of one by construction; report the amplitude, the period and the shift.", "split": "eval"}
+{"relation": "sinusoid", "args": [-7, 2, -90], "question": "y = -7 sin(2x - 90), drawn with 45 cm of paper and 3 staples; give the amplitude, the period and the phase offset.", "split": "eval"}
+{"relation": "sinusoid", "args": [4, 6, 30], "question": "A wave is y = 4 sin(6x + 30). Read off the amplitude. Then the period. Then the shift.", "split": "train"}
+{"relation": "sinusoid", "args": [2, 2, 60], "question": "y = 2 sin(2x + 60): report all three features.", "split": "eval"}
+{"relation": "sinusoid", "args": [6, 3, -60], "question": "y = 6 sin(3x - 60) is plotted on a 20 cm grid with 5 ticks; state the amplitude, period and shift.", "split": "eval"}
+{"relation": "sinusoid", "args": [5, 4, -90], "question": "The phase is -90 and the multiplier 4, with amplitude 5: describe y = 5 sin(4x - 90) by amplitude, period and shift.", "split": "eval"}
+{"relation": "sinusoid", "args": [-5, 3, 45], "question": "The signal y = -5 sin(3x + 45) needs three numbers: oscillation size, period in degrees and phase offset.", "split": "train"}
+{"relation": "sinusoid", "args": [8, 2, 90], "question": "y = 8 sin(2x + 90); the lab has 5 benches and 12 leads; give the amplitude, period and phase shift.", "split": "eval"}
+{"relation": "sinusoid", "args": [3, 6, -30], "question": "For y = 3 sin(6x - 30), the report wants three numbers: amplitude, cycle in degrees, phase shift.", "split": "train"}
+{"relation": "tan_eval", "args": [20], "question": "A sighting pole stands at 20 degrees over 7 m with 2 guy ropes; find the tangent of the elevation.", "split": "train"}
+{"relation": "tan_eval", "args": [30], "question": "The theodolite reads 30 degrees; give the tangent of that reading.", "split": "train"}
+{"relation": "tan_eval", "args": [45], "question": "A 45 cm step lifts a slope to 45 degrees; find the tangent of the slope.", "split": "train"}
+{"relation": "tan_eval", "args": [12], "question": "The gradient is set to 12 degrees, one third of the 36 shown on the card; give the tangent of that setting.", "split": "train"}
+{"relation": "tan_eval", "args": [57], "question": "A cliff path climbs. Its angle is 57 degrees. Find the tangent of the climb.", "split": "eval"}
+{"relation": "tan_eval", "args": [26], "question": "A ramp rises at 26 degrees, is 3 m long and 90 cm wide; report the tangent of the incline.", "split": "train"}
+{"relation": "tan_eval", "args": [17], "question": "Write down the tangent of the angle the dial marks as 17 degrees.", "split": "train"}
+{"relation": "tan_eval", "args": [38], "question": "The plan repeats 38, once as a height in cm and once as the 38 degree pitch; find the tangent of the pitch.", "split": "eval"}
+{"relation": "tan_eval", "args": [64], "question": "A telescope points up at 64 degrees from a 2 m tripod with 4 legs; find the tangent of the elevation.", "split": "train"}
+{"relation": "tan_eval", "args": [21], "question": "The shadow maker tilts. The angle reads 21 degrees. What is the tangent of that tilt?", "split": "eval"}
+{"relation": "tan_eval", "args": [50], "question": "A stair climbs at 50 degrees with 12 treads and a 25 cm rise; give the tangent of the pitch.", "split": "train"}
+{"relation": "tan_eval", "args": [36], "question": "The tangent of the slope marked 36 degrees is required.", "split": "eval"}
+{"relation": "tan_eval", "args": [70], "question": "A 70 cm run holds the pitch at 70 degrees; find the tangent of the pitch.", "split": "eval"}
+{"relation": "tan_eval", "args": [14], "question": "The gauge shows 14, half of the 28 degree swing on the label; give the tangent of that reading.", "split": "train"}
+{"relation": "tan_eval", "args": [47], "question": "A ramp's angle is measured. It comes to 47 degrees. Find the tangent of that angle.", "split": "eval"}
+{"relation": "tan_eval", "args": [33], "question": "A roof rises at 33 degrees over a 9 m span with 6 trusses; find the tangent of the pitch.", "split": "eval"}
+{"relation": "tan_eval", "args": [78], "question": "The needle stops at 78 degrees; state the tangent of that angle to four figures.", "split": "train"}
+{"relation": "tan_eval", "args": [25], "question": "A 25 cm depth sets the incline to 25 degrees; find the tangent of the incline.", "split": "train"}
+{"relation": "tan_eval", "args": [55], "question": "A laser is aimed upward. The beam makes 55 degrees with the floor. Give the tangent of the beam angle.", "split": "eval"}
+{"relation": "tan_eval", "args": [40], "question": "A slide drops at 40 degrees, 2 m high and 60 cm wide; state the tangent of the drop.", "split": "train"}

@@ -168,16 +168,16 @@
 {"relation": "proj_range", "args": [20, 25, 9.81], "question": "The ball comes off the boot at 20 m/s aimed 25 degrees up. Taking g = 9.81, how far along the field does it land?", "split": "train"}
 {"relation": "proj_range", "args": [16, 30, 9.8], "question": "The distance the rocket covers horizontally is what the club wants; it leaves the tube at 16 m/s at 30 degrees, with g = 9.8 m/s^2.", "split": "train"}
 {"relation": "proj_range", "args": [8, 45, 9.81], "question": "The gardener wants the jet to clear the flowerbed. It leaves the nozzle at 8 m/s at 45 degrees, and g is 9.81 m/s^2; how far out does it land?", "split": "eval"}
-{"relation": "specific_heat", "args": [3, 4.18, 60], "question": "3 kg of water at c = 4.18 J/(g C) warms by 60 degrees. Energy required?", "split": "train"}
-{"relation": "specific_heat", "args": [10, 0.9, 40], "question": "A 10 kg sample of metal with c = 0.9 J/(g C) is heated by 40 degrees. What energy does that need?", "split": "eval"}
-{"relation": "specific_heat", "args": [25, 1, 10], "question": "A 25 kg block of c = 1 J/(g C) heats by 10 degrees. Find the heat transfer. The block is 30 cm on a side.", "split": "train"}
-{"relation": "specific_heat", "args": [4, 0.9, 25], "question": "A 4 kg block of aluminium, specific heat 0.9 J/(g C), is warmed through 25 degrees. How much heat goes in?", "split": "train"}
-{"relation": "specific_heat", "args": [12, 0.45, 20], "question": "An iron casting of 12 kg, c = 0.45 J/(g C), comes out of the mould 20 degrees hotter. How much heat did it take in?", "split": "eval"}
-{"relation": "specific_heat", "args": [5, 0.45, 12], "question": "Heat gained is what is asked: a 5 kg pan of c = 0.45 J/(g C) goes up 12 degrees on the hob.", "split": "eval"}
-{"relation": "specific_heat", "args": [6, 2.1, 15], "question": "Heating 6 kg of a liquid of specific heat 2.1 J/(g C) by 15 degrees requires what energy?", "split": "train"}
-{"relation": "specific_heat", "args": [8, 2.1, 35], "question": "How much energy warms 8 kg of specific heat 2.1 J/(g C) by 35 degrees?", "split": "eval"}
-{"relation": "specific_heat", "args": [1.5, 4.2, 30], "question": "Mass 1.5 kg, c = 4.2 J/(g C), rise of 30 degrees. How much heat goes in?", "split": "train"}
-{"relation": "specific_heat", "args": [2, 4.18, 50], "question": "Water has c = 4.18 J/(g C). What heat is needed to warm 2 kg of it by 50 degrees?", "split": "train"}
+{"relation": "specific_heat", "args": [3, 4.18, 60], "question": "3 g of water at c = 4.18 J/(g C) warms by 60 degrees. Energy required?", "split": "train"}
+{"relation": "specific_heat", "args": [10, 0.9, 40], "question": "A 10 g sample of metal with c = 0.9 J/(g C) is heated by 40 degrees. What energy does that need?", "split": "eval"}
+{"relation": "specific_heat", "args": [25, 1, 10], "question": "A 25 g block of c = 1 J/(g C) heats by 10 degrees. Find the heat transfer. The block sits in a tray 30 cm long.", "split": "train"}
+{"relation": "specific_heat", "args": [4, 0.9, 25], "question": "A 4 g block of aluminium, specific heat 0.9 J/(g C), is warmed through 25 degrees. How much heat goes in?", "split": "train"}
+{"relation": "specific_heat", "args": [12, 0.45, 20], "question": "An iron casting of 12 g, c = 0.45 J/(g C), comes out of the mould 20 degrees hotter. How much heat did it take in?", "split": "eval"}
+{"relation": "specific_heat", "args": [450, 0.45, 12], "question": "Heat gained is what is asked: a 450 g iron pan of c = 0.45 J/(g C) goes up 12 degrees on the hob.", "split": "eval"}
+{"relation": "specific_heat", "args": [6, 2.1, 15], "question": "Heating 6 g of a liquid of specific heat 2.1 J/(g C) by 15 degrees requires what energy?", "split": "train"}
+{"relation": "specific_heat", "args": [8, 2.1, 35], "question": "An 8 g portion of a liquid at c = 2.1 J/(g C) warms through 35 degrees. Energy needed?", "split": "eval"}
+{"relation": "specific_heat", "args": [1.5, 4.2, 30], "question": "Mass 1.5 g, c = 4.2 J/(g C), rise of 30 degrees. How much heat goes in?", "split": "train"}
+{"relation": "specific_heat", "args": [2, 4.18, 50], "question": "Water has c = 4.18 J/(g C). What heat is needed to warm 2 g of it by 50 degrees?", "split": "train"}
 {"relation": "spring_energy", "args": [120, 0.2], "question": "A 120 N/m spring is stretched 0.2 m. How much elastic energy is stored?", "split": "train"}
 {"relation": "spring_energy", "args": [500, 0.25], "question": "A spring of 500 N/m is compressed 0.25 m. What energy builds up, ready to push back?", "split": "train"}
 {"relation": "spring_energy", "args": [800, 0.08], "question": "A spring of 800 N/m is squeezed 0.08 m - work out the stored elastic energy. A student answers 2.56 J.", "split": "train"}

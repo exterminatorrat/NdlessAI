@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "expr.h"
 #include "pipeline.h"
 #include "solvers.h"
 
@@ -184,6 +185,20 @@ void pipeline_free(pipeline_t *p)
 	p->ready = 0;
 }
 
+int pipeline_typed_answer(const char *text, char *answer, int answer_max)
+{
+	gexpr_t e;
+	char err[48];
+
+	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
+		return PIPELINE_ERR;
+	if (gexpr_has_x(&e))
+		return PIPELINE_ERR;
+	if (gexpr_format(gexpr_eval(&e, 0), answer, answer_max) < 0)
+		return PIPELINE_ERR;
+	return PIPELINE_OK;
+}
+
 int pipeline_answer(pipeline_t *p, const char *question,
                     char *answer, int answer_max,
                     char *call, int call_max)
@@ -192,6 +207,17 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	char prompt[MAX_PROMPT + 16];
 	int n, pos = 0, gen = 0;
 	size_t qlen = strlen(question);
+
+	/*
+	 * Typed arithmetic never reaches the model: it needs no weights, no
+	 * vocabulary and no inference, so it answers in microseconds instead of
+	 * the seconds a decode costs.
+	 */
+	if (pipeline_typed_answer(question, answer, answer_max) == PIPELINE_OK) {
+		if (call && call_max > 0)
+			call[0] = 0;
+		return PIPELINE_OK;
+	}
 
 	if (!p->ready)
 		return PIPELINE_ERR;

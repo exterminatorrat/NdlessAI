@@ -10,15 +10,9 @@
  */
 #include <string.h>
 
+#include "expr.h"
 #include "graph.h"
 
-#define Q16_PI     205887
-#define Q16_2PI    411775
-#define Q16_HALFPI 102944
-#define Q16_E      178146
-#define Q16_LN2    45426	/* ln 2 in Q16.16 */
-#define Q24_LN2    11629073	/* ln 2 in Q24.24, for the logarithm series */
-#define LN_Q       24		/* guard bits the logarithm series runs in */
 
 #define G_BG        0x0000
 #define G_GRID      0x2104
@@ -98,15 +92,6 @@ static const uint8_t gfont[64][5] = {
 	{ 0x40, 0x40, 0x40, 0x40, 0x40 }, /* '_' */
 };
 
-static q16_t sat(int64_t v)
-{
-	if (v > Q16_MAX)
-		return Q16_MAX;
-	if (v < Q16_MIN)
-		return Q16_MIN;
-	return (q16_t)v;
-}
-
 static int64_t fdiv(int64_t a, int64_t b)
 {
 	int64_t q = a / b;
@@ -114,564 +99,6 @@ static int64_t fdiv(int64_t a, int64_t b)
 	if ((a % b) != 0 && ((a < 0) != (b < 0)))
 		q--;
 	return q;
-}
-
-q16_t gq_mul(q16_t a, q16_t b)
-{
-	return sat(((int64_t)a * b) >> 16);
-}
-
-q16_t gq_div(q16_t a, q16_t b)
-{
-	if (b == 0)
-		return a < 0 ? Q16_MIN : Q16_MAX;
-	return sat(((int64_t)a << 16) / b);
-}
-
-/*
- * sin via range reduction to [-pi/2, pi/2] and a Taylor series. The series
- * is accurate to well under one Q16.16 step over that interval, and the
- * chained multiplies keep every intermediate inside int32.
- */
-q16_t gq_sin(q16_t x)
-{
-	int64_t r = (int64_t)x % Q16_2PI;
-	q16_t t2, t3, t5, t7, t9;
-
-	if (r > Q16_PI)
-		r -= Q16_2PI;
-	else if (r < -Q16_PI)
-		r += Q16_2PI;
-	if (r > Q16_HALFPI)
-		r = Q16_PI - r;
-	else if (r < -Q16_HALFPI)
-		r = -Q16_PI - r;
-
-	t2 = gq_mul((q16_t)r, (q16_t)r);
-	t3 = gq_mul(t2, (q16_t)r);
-	t5 = gq_mul(t3, t2);
-	t7 = gq_mul(t5, t2);
-	t9 = gq_mul(t7, t2);
-	return (q16_t)(r - t3 / 6 + t5 / 120 - t7 / 5040 + t9 / 362880);
-}
-
-q16_t gq_cos(q16_t x)
-{
-	return gq_sin(sat((int64_t)x + Q16_HALFPI));
-}
-
-q16_t gq_tan(q16_t x)
-{
-	q16_t s = gq_sin(x);
-	q16_t c = gq_cos(x);
-
-	if (c == 0)
-		return s < 0 ? Q16_MIN : Q16_MAX;
-	return gq_div(s, c);
-}
-
-/*
- * Integer square root of a 64-bit value: the largest r with r*r <= v.
- * Bitwise, so it needs no division and no float.
- */
-static uint32_t isqrt64(uint64_t v)
-{
-	uint64_t r = 0;
-	uint64_t bit = (uint64_t)1 << 62;
-
-	while (bit > v)
-		bit >>= 2;
-	while (bit) {
-		if (v >= r + bit) {
-			v -= r + bit;
-			r = (r >> 1) + bit;
-		} else {
-			r >>= 1;
-		}
-		bit >>= 2;
-	}
-	return (uint32_t)r;
-}
-
-/* Square root of a non-negative Q16.16 value; a negative input has no value. */
-static q16_t gq_sqrt(q16_t x)
-{
-	if (x < 0)
-		return Q16_MAX;
-	return (q16_t)isqrt64((uint64_t)(uint32_t)x << 16);
-}
-
-/*
- * Natural logarithm: reduce to [1, 2) by powers of two, then the atanh series
- * ln(m) = 2(t + t^3/3 + t^5/5 + ...) with t = (m-1)/(m+1) <= 1/3. The series
- * runs in Q24 rather than Q16, because t and every truncated multiply cost
- * about a Q16 step each and that showed up in the third significant digit of
- * ln near 1. Eight guard bits put the error below one Q16 step over the whole
- * domain.
- */
-static q16_t gq_ln(q16_t x)
-{
-	int32_t k = 0;
-	int64_t m, t, t2, term, sum;
-	int i;
-
-	if (x <= 0)
-		return Q16_MAX;
-	while (x < Q16_ONE && k > -40) {
-		x = (q16_t)((uint32_t)x << 1);
-		k--;
-	}
-	while (x >= 2 * Q16_ONE && k < 40) {
-		x = (q16_t)((uint32_t)x >> 1);
-		k++;
-	}
-	m = x;
-	t = ((m - Q16_ONE) << LN_Q) / (m + Q16_ONE);
-	t2 = (t * t) >> LN_Q;
-	sum = 0;
-	term = t;
-	for (i = 1; i <= 11; i += 2) {
-		sum += term / i;
-		term = (term * t2) >> LN_Q;
-	}
-	/* The series gives ln(m)/2, so one extra bit of shift restores the factor. */
-	return sat((sum >> (LN_Q - 17)) + (int64_t)k * Q24_LN2 / 256);
-}
-
-/*
- * Exponential: x = k ln2 + r with |r| <= ln2/2, a Taylor series for e^r, then
- * scale by 2^k. Saturates rather than overflowing, and never calls libm.
- */
-static q16_t gq_exp(q16_t x)
-{
-	int32_t k = x / Q16_LN2;
-	q16_t r = sat((int64_t)x - (int64_t)k * Q16_LN2);
-	q16_t sum = Q16_ONE;
-	q16_t term = Q16_ONE;
-	int i;
-
-	for (i = 1; i <= 9; i++) {
-		term = gq_mul(term, r) / i;
-		sum = sat((int64_t)sum + term);
-	}
-	if (k > 15)
-		return Q16_MAX;
-	if (k < -16)
-		return 0;
-	if (k >= 0)
-		return sat((int64_t)sum << k);
-	return (q16_t)((int64_t)sum >> (-k));
-}
-
-/* ---- expression parser ---- */
-
-typedef struct {
-	const char *p;
-	gexpr_t *e;
-	int err;
-} gp_t;
-
-static const char *const gerr[] = {
-	"",
-	"Expression is too complex.",
-	"Missing a closing bracket.",
-	"Unexpected character.",
-	"Malformed number.",
-	"Unknown function.",
-	"Expected a bracket after the function.",
-	"Enter a function of x.",
-	"Unexpected text after the expression.",
-};
-
-static void skip(gp_t *g)
-{
-	while (*g->p == ' ' || *g->p == '\t')
-		g->p++;
-}
-
-static int node(gp_t *g, int op, int a, int b, int32_t num)
-{
-	int i;
-
-	if (g->e->n >= G_MAX_NODES) {
-		g->err = 1;
-		return -1;
-	}
-	i = g->e->n++;
-	g->e->node[i].op = (int16_t)op;
-	g->e->node[i].a = (int16_t)a;
-	g->e->node[i].b = (int16_t)b;
-	g->e->node[i].num = num;
-	return i;
-}
-
-static int parse_expr(gp_t *g);
-static int parse_unary(gp_t *g);
-
-static int parse_number(gp_t *g)
-{
-	int64_t ip = 0, frac = 0, v;
-	int fdig = 0, any = 0;
-
-	while (*g->p >= '0' && *g->p <= '9') {
-		if (ip < 100000)
-			ip = ip * 10 + (*g->p - '0');
-		g->p++;
-		any = 1;
-	}
-	if (*g->p == '.') {
-		g->p++;
-		while (*g->p >= '0' && *g->p <= '9') {
-			if (fdig < 9) {
-				frac = frac * 10 + (*g->p - '0');
-				fdig++;
-			}
-			g->p++;
-			any = 1;
-		}
-	}
-	if (!any) {
-		g->err = 4;
-		return -1;
-	}
-	v = ip << 16;
-	if (fdig) {
-		int64_t den = 1;
-
-		for (int i = 0; i < fdig; i++)
-			den *= 10;
-		v += (frac << 16) / den;
-	}
-	return node(g, G_NUM, 0, 0, sat(v));
-}
-
-static int parse_func(gp_t *g)
-{
-	int op, a;
-
-	if (g->p[0] == 's' && g->p[1] == 'i' && g->p[2] == 'n') {
-		op = G_SIN;
-		g->p += 3;
-	} else if (g->p[0] == 's' && g->p[1] == 'q' && g->p[2] == 'r' &&
-	           g->p[3] == 't') {
-		op = G_SQRT;
-		g->p += 4;
-	} else if (g->p[0] == 'c' && g->p[1] == 'o' && g->p[2] == 's') {
-		op = G_COS;
-		g->p += 3;
-	} else if (g->p[0] == 't' && g->p[1] == 'a' && g->p[2] == 'n') {
-		op = G_TAN;
-		g->p += 3;
-	} else if (g->p[0] == 'a' && g->p[1] == 'b' && g->p[2] == 's') {
-		op = G_ABS;
-		g->p += 3;
-	} else if (g->p[0] == 'l' && g->p[1] == 'n') {
-		op = G_LN;
-		g->p += 2;
-	} else if (g->p[0] == 'e' && g->p[1] == 'x' && g->p[2] == 'p') {
-		op = G_EXP;
-		g->p += 3;
-	} else {
-		g->err = 5;
-		return -1;
-	}
-	skip(g);
-	if (*g->p != '(') {
-		g->err = 6;
-		return -1;
-	}
-	g->p++;
-	a = parse_expr(g);
-	if (a < 0)
-		return -1;
-	skip(g);
-	if (*g->p != ')') {
-		g->err = 2;
-		return -1;
-	}
-	g->p++;
-	return node(g, op, a, 0, 0);
-}
-
-static int parse_atom(gp_t *g)
-{
-	char c;
-
-	skip(g);
-	c = *g->p;
-	if (c == '(') {
-		int a;
-
-		g->p++;
-		a = parse_expr(g);
-		if (a < 0)
-			return -1;
-		skip(g);
-		if (*g->p != ')') {
-			g->err = 2;
-			return -1;
-		}
-		g->p++;
-		return a;
-	}
-	if (c == 'x') {
-		g->p++;
-		return node(g, G_X, 0, 0, 0);
-	}
-	if ((c >= '0' && c <= '9') || c == '.')
-		return parse_number(g);
-	if (c == 'p') {
-		if (g->p[1] != 'i') {
-			g->err = 3;
-			return -1;
-		}
-		g->p += 2;
-		return node(g, G_NUM, 0, 0, Q16_PI);
-	}
-	if (c == 'e' && !(g->p[1] == 'x' && g->p[2] == 'p')) {
-		g->p++;
-		return node(g, G_NUM, 0, 0, Q16_E);
-	}
-	if (c == 's' || c == 'c' || c == 't' || c == 'a' || c == 'l' || c == 'e')
-		return parse_func(g);
-	g->err = 3;
-	return -1;
-}
-
-static int parse_power(gp_t *g)
-{
-	int a = parse_atom(g);
-
-	if (a < 0)
-		return -1;
-	skip(g);
-	if (*g->p == '^') {
-		int b;
-
-		g->p++;
-		b = parse_unary(g);
-		if (b < 0)
-			return -1;
-		return node(g, G_POW, a, b, 0);
-	}
-	return a;
-}
-
-static int parse_unary(gp_t *g)
-{
-	int a;
-
-	skip(g);
-	if (*g->p == '-') {
-		g->p++;
-		a = parse_unary(g);
-		if (a < 0)
-			return -1;
-		return node(g, G_NEG, a, 0, 0);
-	}
-	if (*g->p == '+') {
-		g->p++;
-		return parse_unary(g);
-	}
-	return parse_power(g);
-}
-
-static int starts_atom(char c)
-{
-	return (c >= '0' && c <= '9') || c == '.' || c == 'x' || c == '(' ||
-	       c == 's' || c == 'c' || c == 't' || c == 'a' || c == 'l' ||
-	       c == 'e' || c == 'p';
-}
-
-static int parse_term(gp_t *g)
-{
-	int a = parse_unary(g);
-
-	if (a < 0)
-		return -1;
-	for (;;) {
-		char c;
-		int op, b;
-
-		skip(g);
-		c = *g->p;
-		if (c == '*') {
-			op = G_MUL;
-			g->p++;
-		} else if (c == '/') {
-			op = G_DIV;
-			g->p++;
-		} else if (starts_atom(c)) {
-			op = G_MUL;
-		} else {
-			break;
-		}
-		b = parse_unary(g);
-		if (b < 0)
-			return -1;
-		a = node(g, op, a, b, 0);
-		if (a < 0)
-			return -1;
-	}
-	return a;
-}
-
-static int parse_expr(gp_t *g)
-{
-	int a = parse_term(g);
-
-	if (a < 0)
-		return -1;
-	for (;;) {
-		char c;
-		int b;
-
-		skip(g);
-		c = *g->p;
-		if (c != '+' && c != '-')
-			break;
-		g->p++;
-		b = parse_term(g);
-		if (b < 0)
-			return -1;
-		a = node(g, c == '+' ? G_ADD : G_SUB, a, b, 0);
-		if (a < 0)
-			return -1;
-	}
-	return a;
-}
-
-int gexpr_parse(const char *text, gexpr_t *e, char *err, int errlen)
-{
-	gp_t g;
-	int r;
-
-	e->n = 0;
-	e->root = -1;
-	if (err && errlen > 0)
-		err[0] = 0;
-
-	g.p = text;
-	g.e = e;
-	g.err = 0;
-	skip(&g);
-	if (!*g.p) {
-		g.err = 7;
-		goto fail;
-	}
-	r = parse_expr(&g);
-	if (r < 0)
-		goto fail;
-	skip(&g);
-	if (*g.p) {
-		g.err = 8;
-		goto fail;
-	}
-	e->root = r;
-	return 0;
-
-fail:
-	if (err && errlen > 0) {
-		const char *m = gerr[g.err];
-		int i = 0;
-
-		while (m[i] && i < errlen - 1) {
-			err[i] = m[i];
-			i++;
-		}
-		err[i] = 0;
-	}
-	return -1;
-}
-
-/* ---- evaluation ---- */
-
-/*
- * Power. An integer exponent in [-8, 8] is repeated multiplication, which is
- * exact; anything else goes through exp(ex * ln b). A fractional exponent is
- * real only for a positive base, and a negative base keeps the sign of an odd
- * integer exponent.
- */
-static q16_t qpow(q16_t b, q16_t ex)
-{
-	int32_t k;
-	int n;
-	q16_t r;
-
-	if ((ex & 0xFFFF) == 0) {
-		k = ex >> 16;
-		if (b == 0)
-			return k > 0 ? 0 : Q16_MAX;
-		if (k >= -8 && k <= 8) {
-			n = k < 0 ? -k : k;
-			r = Q16_ONE;
-			for (int i = 0; i < n; i++)
-				r = gq_mul(r, b);
-			if (k < 0)
-				r = gq_div(Q16_ONE, r);
-			return r;
-		}
-		if (b < 0) {
-			r = gq_exp(gq_mul(ex, gq_ln((q16_t)-b)));
-			return (k & 1) ? sat(-(int64_t)r) : r;
-		}
-		return gq_exp(gq_mul(ex, gq_ln(b)));
-	}
-	if (b == 0)
-		return ex > 0 ? 0 : Q16_MAX;
-	if (b < 0)
-		return Q16_MAX;
-	return gq_exp(gq_mul(ex, gq_ln(b)));
-}
-
-static q16_t eval_node(const gexpr_t *e, int i, q16_t x)
-{
-	const gnode_t *n = &e->node[i];
-
-	switch (n->op) {
-	case G_NUM:
-		return n->num;
-	case G_X:
-		return x;
-	case G_ADD:
-		return sat((int64_t)eval_node(e, n->a, x) + eval_node(e, n->b, x));
-	case G_SUB:
-		return sat((int64_t)eval_node(e, n->a, x) - eval_node(e, n->b, x));
-	case G_MUL:
-		return gq_mul(eval_node(e, n->a, x), eval_node(e, n->b, x));
-	case G_DIV:
-		return gq_div(eval_node(e, n->a, x), eval_node(e, n->b, x));
-	case G_POW:
-		return qpow(eval_node(e, n->a, x), eval_node(e, n->b, x));
-	case G_SIN:
-		return gq_sin(eval_node(e, n->a, x));
-	case G_COS:
-		return gq_cos(eval_node(e, n->a, x));
-	case G_TAN:
-		return gq_tan(eval_node(e, n->a, x));
-	case G_NEG:
-		return sat(-(int64_t)eval_node(e, n->a, x));
-	case G_SQRT:
-		return gq_sqrt(eval_node(e, n->a, x));
-	case G_ABS: {
-		q16_t v = eval_node(e, n->a, x);
-
-		return v < 0 ? sat(-(int64_t)v) : v;
-	}
-	case G_LN:
-		return gq_ln(eval_node(e, n->a, x));
-	case G_EXP:
-		return gq_exp(eval_node(e, n->a, x));
-	default:
-		return 0;
-	}
-}
-
-q16_t gexpr_eval(const gexpr_t *e, q16_t x)
-{
-	if (e->root < 0)
-		return 0;
-	return eval_node(e, e->root, x);
 }
 
 /* ---- view ---- */
@@ -684,7 +111,7 @@ void gview_autoscale(gview_t *v, const gexpr_t *e)
 	int64_t span, pad;
 
 	for (int i = 0; i <= 256; i++) {
-		q16_t x = sat((int64_t)x0 + (int64_t)(x1 - x0) * i / 256);
+		q16_t x = gq_sat((int64_t)x0 + (int64_t)(x1 - x0) * i / 256);
 		q16_t y = gexpr_eval(e, x);
 
 		if (y == Q16_MAX || y == Q16_MIN)
@@ -707,13 +134,13 @@ void gview_autoscale(gview_t *v, const gexpr_t *e)
 	pad = span / 10;
 	if (pad < Q16_ONE / 2)
 		pad = Q16_ONE / 2;
-	ymin = sat((int64_t)ymin - pad);
-	ymax = sat((int64_t)ymax + pad);
+	ymin = gq_sat((int64_t)ymin - pad);
+	ymax = gq_sat((int64_t)ymax + pad);
 	if ((int64_t)ymax - ymin < Q16_ONE) {
 		int64_t c = ((int64_t)ymin + ymax) / 2;
 
-		ymin = sat(c - Q16_ONE);
-		ymax = sat(c + Q16_ONE);
+		ymin = gq_sat(c - Q16_ONE);
+		ymax = gq_sat(c + Q16_ONE);
 	}
 	v->xmin = x0;
 	v->xmax = x1;
@@ -755,14 +182,14 @@ q16_t gunmap_x(const gview_t *v, int px)
 {
 	int64_t span = (int64_t)v->xmax - v->xmin;
 
-	return sat((int64_t)v->xmin + fdiv((int64_t)px * span, G_PLOT_W));
+	return gq_sat((int64_t)v->xmin + fdiv((int64_t)px * span, G_PLOT_W));
 }
 
 q16_t gunmap_y(const gview_t *v, int py)
 {
 	int64_t span = (int64_t)v->ymax - v->ymin;
 
-	return sat((int64_t)v->ymax - fdiv((int64_t)py * span, G_PLOT_H));
+	return gq_sat((int64_t)v->ymax - fdiv((int64_t)py * span, G_PLOT_H));
 }
 
 /* ---- clipping ---- */
@@ -1234,8 +661,8 @@ static q16_t refine_extremum(const gexpr_t *e, q16_t lo, q16_t hi, int want_max)
 
 		if (d <= 0)
 			break;
-		m1 = sat((int64_t)lo + d);
-		m2 = sat((int64_t)hi - d);
+		m1 = gq_sat((int64_t)lo + d);
+		m2 = gq_sat((int64_t)hi - d);
 		f1 = gexpr_eval(e, m1);
 		f2 = gexpr_eval(e, m2);
 		if (want_max ? (f1 < f2) : (f1 > f2))
@@ -1243,7 +670,7 @@ static q16_t refine_extremum(const gexpr_t *e, q16_t lo, q16_t hi, int want_max)
 		else
 			hi = m2;
 	}
-	return sat(((int64_t)lo + hi) / 2);
+	return gq_sat(((int64_t)lo + hi) / 2);
 }
 
 static void analyze(gstate_t *g)
@@ -1259,10 +686,10 @@ static void analyze(gstate_t *g)
 
 	x0 = v->xmin;
 	y0 = gexpr_eval(&g->expr, x0);
-	x1 = sat((int64_t)v->xmin + span / 512);
+	x1 = gq_sat((int64_t)v->xmin + span / 512);
 	y1 = gexpr_eval(&g->expr, x1);
 	for (int i = 2; i <= 512 && g->nextrema < G_MAX_EXTREMA; i++) {
-		q16_t x2 = sat((int64_t)v->xmin + span * i / 512);
+		q16_t x2 = gq_sat((int64_t)v->xmin + span * i / 512);
 		q16_t y2 = gexpr_eval(&g->expr, x2);
 		int d1 = (y1 > y0) - (y1 < y0);
 		int d2 = (y2 > y1) - (y2 < y1);
@@ -1281,7 +708,7 @@ static void analyze(gstate_t *g)
 	x0 = v->xmin;
 	y0 = gexpr_eval(&g->expr, x0);
 	for (int i = 1; i <= 512 && g->nroots < G_MAX_ROOTS; i++) {
-		q16_t x = sat((int64_t)v->xmin + span * i / 512);
+		q16_t x = gq_sat((int64_t)v->xmin + span * i / 512);
 		q16_t y = gexpr_eval(&g->expr, x);
 
 		if (y0 == 0) {
@@ -1290,7 +717,7 @@ static void analyze(gstate_t *g)
 			q16_t lo = x0, hi = x, flo = y0;
 
 			for (int j = 0; j < 24; j++) {
-				q16_t mid = sat(((int64_t)lo + hi) / 2);
+				q16_t mid = gq_sat(((int64_t)lo + hi) / 2);
 				q16_t fm = gexpr_eval(&g->expr, mid);
 
 				if (fm == 0) {
@@ -1304,7 +731,7 @@ static void analyze(gstate_t *g)
 					flo = fm;
 				}
 			}
-			add_root(g, sat(((int64_t)lo + hi) / 2));
+			add_root(g, gq_sat(((int64_t)lo + hi) / 2));
 		}
 		x0 = x;
 		y0 = y;
@@ -1345,10 +772,10 @@ int graph_init(gstate_t *g, const char *text, char *err, int errlen)
 
 static void pan(gview_t *v, int64_t dx, int64_t dy)
 {
-	v->xmin = sat((int64_t)v->xmin + dx);
-	v->xmax = sat((int64_t)v->xmax + dx);
-	v->ymin = sat((int64_t)v->ymin + dy);
-	v->ymax = sat((int64_t)v->ymax + dy);
+	v->xmin = gq_sat((int64_t)v->xmin + dx);
+	v->xmax = gq_sat((int64_t)v->xmax + dx);
+	v->ymin = gq_sat((int64_t)v->ymin + dy);
+	v->ymax = gq_sat((int64_t)v->ymax + dy);
 }
 
 static void zoom(gview_t *v, int in)
@@ -1391,10 +818,10 @@ static void zoom(gview_t *v, int in)
 		nymin = ay - ys / 2;
 		nymax = ay + ys / 2;
 	}
-	v->xmin = sat(nxmin);
-	v->xmax = sat(nxmax);
-	v->ymin = sat(nymin);
-	v->ymax = sat(nymax);
+	v->xmin = gq_sat(nxmin);
+	v->xmax = gq_sat(nxmax);
+	v->ymin = gq_sat(nymin);
+	v->ymax = gq_sat(nymax);
 }
 
 int graph_key(gstate_t *g, int key)

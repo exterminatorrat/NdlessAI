@@ -14,7 +14,9 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
-for f in bpe fixed solvers infer pipeline main_device graph; do
+# Every source file on the device path. A new one must be added here or the
+# link below fails with undefined references, which is how expr.c was caught.
+for f in bpe fixed solvers infer pipeline main_device graph expr; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -23,7 +25,7 @@ $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
 status=0
-for f in bpe fixed solvers graph; do
+for f in bpe fixed solvers graph expr; do
     # qstate_init and the exp_solve log fallback may use soft-float; the
     # per-token loop may not.
     hot=$($CC -print-prog-name=objdump >/dev/null 2>&1 && \

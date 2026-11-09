@@ -204,3 +204,121 @@ class FreeFall:
     @staticmethod
     def solve(h, g):
         return f"{dec(sp.sqrt(2 * sp.Float(h) * sp.Float(g)))} m/s"
+
+@relation("friction_force", "physics", ["mu", "N"], exact=False)
+class FrictionForce:
+    @staticmethod
+    def gen(rng):
+        mu = rng.choice([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6])
+        N = rng.choice([50, 80, 100, 120, 150, 200, 250, 300, 400, 500])
+        return [mu, N], (f"A crate on a rough floor feels a normal force of "
+                         f"{N} N. The coefficient of friction is {mu}. Find "
+                         f"the friction force.")
+
+    @staticmethod
+    def solve(mu, N):
+        return f"{dec_exact(_exact(mu) * sp.Rational(N))} N"
+
+@relation("work_energy", "physics", ["m", "v0", "v"], exact=False)
+class WorkEnergy:
+    @staticmethod
+    def gen(rng):
+        m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+        v0 = rng.choice([0, 2, 3, 4, 5, 6, 8, 10, 12])
+        v = v0 + rng.choice([2, 3, 4, 5, 6, 8, 10, 12])
+        return [m, v0, v], (f"A {m} kg cart speeds up from {v0} m/s to {v} "
+                            f"m/s. Find the net work done on it.")
+
+    @staticmethod
+    def solve(m, v0, v):
+        gain = sp.Rational(v * v - v0 * v0, 2)
+        return f"{dec_exact(sp.Rational(m) * gain)} J"
+
+@relation("power_force", "physics", ["F", "v"], exact=False)
+class PowerForce:
+    @staticmethod
+    def gen(rng):
+        F = rng.choice([10, 20, 25, 30, 40, 50, 60, 80, 100, 120])
+        v = rng.choice([2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+        return [F, v], (f"A motor pulls a load with a constant force of {F} N "
+                        f"while moving it at {v} m/s. Find the power output.")
+
+    @staticmethod
+    def solve(F, v):
+        return f"{dec_exact(sp.Rational(F) * sp.Rational(v))} W"
+
+@relation("energy_friction", "physics", ["m", "v0", "f", "d"], exact=False)
+class EnergyFriction:
+    @staticmethod
+    def gen(rng):
+        while True:
+            m = rng.choice([1, 2, 3, 4, 5, 8, 10, 12, 15, 20])
+            v0 = rng.choice([6, 8, 10, 12, 15, 20])
+            d = rng.choice([2, 3, 4, 5, 6, 8, 10, 12])
+            pool = [f for f in (5, 10, 15, 20, 25, 30, 40, 50, 60, 80)
+                    if 2 * f * d < m * v0 * v0]
+            if pool:
+                break
+        f = rng.choice(pool)
+        return [m, v0, f, d], (f"A {m} kg block slides at {v0} m/s on a rough "
+                               f"floor. A constant friction force of {f} N "
+                               f"acts over {d} m. Find its final speed.")
+
+    @staticmethod
+    def solve(m, v0, f, d):
+        left = sp.Rational(m * v0 * v0 - 2 * f * d, m)
+        return f"{dec(sp.sqrt(sp.Float(left)))} m/s"
+
+@relation("impulse", "physics", ["F", "t"], exact=False)
+class Impulse:
+    @staticmethod
+    def gen(rng):
+        F = rng.choice([5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100])
+        t = rng.choice([1, 2, 3, 4, 5, 6, 8, 10])
+        return [F, t], (f"A constant force of {F} N acts on a ball for {t} s. "
+                        f"Find the impulse delivered.")
+
+    @staticmethod
+    def solve(F, t):
+        return f"{dec_exact(sp.Rational(F) * sp.Rational(t))} N s"
+
+@relation("spring_energy", "physics", ["k", "x"], exact=False)
+class SpringEnergy:
+    @staticmethod
+    def gen(rng):
+        k = rng.choice([50, 80, 100, 120, 150, 200, 250, 300, 400, 500])
+        x = rng.choice([0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5])
+        return [k, x], (f"A spring with constant {k} N/m is compressed {x} m. "
+                        f"Find the elastic potential energy stored.")
+
+    @staticmethod
+    def solve(k, x):
+        return f"{dec_exact(sp.Rational(k) * _exact(x) ** 2 / 2)} J"
+
+@relation("pendulum_period", "physics", ["L", "g"], exact=False)
+class PendulumPeriod:
+    @staticmethod
+    def gen(rng):
+        L = rng.choice([0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4])
+        g = rng.choice([9.8, 9.81, 10])
+        return [L, g], (f"A pendulum is {L} m long. Find its period using "
+                        f"g = {g} m/s^2.")
+
+    @staticmethod
+    def solve(L, g):
+        return f"{dec(2 * sp.pi * sp.sqrt(sp.Float(L) / sp.Float(g)))} s"
+
+@relation("torque", "physics", ["F", "r", "theta"], exact=False)
+class Torque:
+    @staticmethod
+    def gen(rng):
+        F = rng.choice([10, 20, 25, 30, 40, 50, 60, 80, 100])
+        r = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12])
+        theta = rng.choice([30, 45, 60, 90, 120, 150])
+        return [F, r, theta], (f"A force of {F} N acts {r} m from a pivot at "
+                               f"{theta} degrees to the lever arm. Find the "
+                               f"torque about the pivot.")
+
+    @staticmethod
+    def solve(F, r, theta):
+        return f"{dec(sp.Float(F) * sp.Float(r) * sp.sin(sp.rad(theta)))} N m"

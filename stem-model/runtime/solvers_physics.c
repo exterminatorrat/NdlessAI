@@ -309,6 +309,189 @@ static int solve_free_fall(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_friction_force(const char *const *args, char *out,
+                                size_t outlen)
+{
+	rat mu, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &mu, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(mu.n * n.n, mu.d * n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s N", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_work_energy(const char *const *args, char *out,
+                             size_t outlen)
+{
+	rat m, v0, v;
+	int rc;
+	long long num, den;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v0, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v, NULL)) != 0)
+		return rc;
+	num = m.n * (v.n * v.n * v0.d * v0.d - v0.n * v0.n * v.d * v.d);
+	den = 2 * m.d * v.d * v.d * v0.d * v0.d;
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s J", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_power_force(const char *const *args, char *out,
+                             size_t outlen)
+{
+	rat F, v;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &F, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(F.n * v.n, F.d * v.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s W", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_energy_friction(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat m, v0, f, d, s;
+	int rc;
+	long long s12;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v0, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &f, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &d, NULL)) != 0)
+		return rc;
+	s.n = v0.n * v0.n * f.d * d.d * m.n -
+	      2 * f.n * d.n * v0.d * v0.d * m.d;
+	s.d = v0.d * v0.d * f.d * d.d * m.n;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	if (s.n < 0)
+		return -4;
+	if (s.n == 0) {
+		out_set(out, outlen, "0 m/s");
+		return 0;
+	}
+	s12 = sqrt12(s.n, s.d, &rc);
+	if (rc != 0)
+		return rc;
+	if ((rc = dec4_render(s12, 1000000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s m/s", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_impulse(const char *const *args, char *out, size_t outlen)
+{
+	rat F, t;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &F, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &t, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(F.n * t.n, F.d * t.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s N s", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_spring_energy(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat k, x;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &k, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &x, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(k.n * x.n * x.n, 2 * k.d * x.d * x.d,
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s J", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_pendulum_period(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	const long long PI9 = 3141592653LL;
+	rat L, g, s;
+	int rc;
+	long long q12, t9, t9pi;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &L, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &g, NULL)) != 0)
+		return rc;
+	if ((rc = rat_div(&s, &L, &g)) != 0)
+		return rc;
+	if (s.n < 0)
+		return -4;
+	if (s.n == 0) {
+		out_set(out, outlen, "0 s");
+		return 0;
+	}
+	q12 = sqrt12(s.n, s.d, &rc);
+	if (rc != 0)
+		return rc;
+	t9 = div_round(q12, 1000);
+	if (t9 > 1400000000LL)
+		return -4;
+	t9pi = div_round(2 * t9 * PI9, 1000000000LL);
+	if ((rc = dec4_render(t9pi, 1000000000LL, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s s", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_torque(const char *const *args, char *out, size_t outlen)
+{
+	rat F, r, th;
+	int rc, et;
+	long long s9, num, den;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &F, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &th, NULL)) != 0)
+		return rc;
+	et = pow10_index(th.d);
+	if (et < 0 || et > 9)
+		return -4;
+	s9 = sin9(th.n, et, &rc);
+	if (rc != 0)
+		return rc;
+	num = F.n * r.n * s9;
+	den = F.d * r.d * 1000000000LL;
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s N m", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_physics_solve(const char *name, const char *const *args,
                           int nargs, char *out, size_t outlen)
 {
@@ -387,6 +570,46 @@ int solvers_physics_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "free_fall") == 0) {
 		if (nargs == 2)
 			rc = solve_free_fall(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "friction_force") == 0) {
+		if (nargs == 2)
+			rc = solve_friction_force(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "work_energy") == 0) {
+		if (nargs == 3)
+			rc = solve_work_energy(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "power_force") == 0) {
+		if (nargs == 2)
+			rc = solve_power_force(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "energy_friction") == 0) {
+		if (nargs == 4)
+			rc = solve_energy_friction(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "impulse") == 0) {
+		if (nargs == 2)
+			rc = solve_impulse(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "spring_energy") == 0) {
+		if (nargs == 2)
+			rc = solve_spring_energy(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "pendulum_period") == 0) {
+		if (nargs == 2)
+			rc = solve_pendulum_period(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "torque") == 0) {
+		if (nargs == 3)
+			rc = solve_torque(args, out, outlen);
 		else
 			rc = -2;
 	} else {

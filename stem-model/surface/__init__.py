@@ -101,6 +101,14 @@ _ARG_NAMES = {
     "dilution": ("c1", "v1", "v2"),
     "gas_p": ("n", "T", "V"),
     "sig_figs": ("value", "n"),
+    "friction_force": ("mu", "N"),
+    "work_energy": ("m", "v0", "v"),
+    "power_force": ("F", "v"),
+    "energy_friction": ("m", "v0", "f", "d"),
+    "impulse": ("F", "t"),
+    "spring_energy": ("k", "x"),
+    "pendulum_period": ("L", "g"),
+    "torque": ("F", "r", "theta"),
 }
 
 _POLY_COEFFS = {

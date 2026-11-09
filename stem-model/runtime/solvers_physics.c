@@ -299,6 +299,10 @@ static int solve_free_fall(const char *const *args, char *out, size_t outlen)
 		return rc;
 	if (s.n < 0)
 		return -4;
+	if (s.n == 0) {
+		out_set(out, outlen, "0 m/s");
+		return 0;
+	}
 	s12 = sqrt12(s.n, s.d, &rc);
 	if (rc != 0)
 		return rc;

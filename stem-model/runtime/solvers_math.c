@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "equation.h"
 #include "solvers.h"
 #include "solvers_subject.h"
 
@@ -9,19 +10,13 @@ static const rat RAT_2 = { 2, 1 };
 static const rat RAT_3 = { 3, 1 };
 static const rat RAT_4 = { 4, 1 };
 
-static int rat_cmp(const rat *a, const rat *b)
-{
-	long long l = a->n * b->d, r = b->n * a->d;
-
-	return (l > r) - (l < r);
-}
-
 static int solve_quad(const char *const *args, char *out, size_t outlen)
 {
-	char f1[48], f2[48], buf[112];
-	rat a, b, c, disc, s, t, t2, r1, r2;
-	int rc, eb, ea, fa, fb, fc;
-	long long q, rt, bn_scaled, s12, n1, n2, den;
+	eq_poly_t p;
+	eq_result_t res;
+	rat a, b, c, coef[3];
+	char f[2][48], buf[112];
+	int rc, i, fa, fb, fc, decimals;
 
 	if ((rc = parse_rat(args[0], &a, &fa)) != 0 ||
 	    (rc = parse_rat(args[1], &b, &fb)) != 0 ||
@@ -36,104 +31,39 @@ static int solve_quad(const char *const *args, char *out, size_t outlen)
 	fa = fa && a.n != 0;
 	fb = fb && b.n != 0;
 	fc = fc && c.n != 0;
-	if (a.n == 0) {
-		if (b.n == 0) {
-			out_set(out, outlen, "");
-			return 0;
-		}
-		if ((rc = rat_div(&r1, &c, &b)) != 0)
-			return rc;
-		r1.n = -r1.n;
-		if (fb || (fc && c.n != 0))
-			dec4_render(r1.n, r1.d, f1, sizeof(f1));
-		else
-			fmt_rat(&r1, f1, sizeof(f1));
-		snprintf(buf, sizeof(buf), "x=%s", f1);
-		out_set(out, outlen, buf);
+	/*
+	 * The engine owns the arithmetic: one code path for degree 1, for a
+	 * double root, for exact pair roots and for the irrational ones, so this
+	 * function is a renderer. a=0 with nothing to solve for renders as an
+	 * empty answer in relations.py whatever c is, so that stays true here.
+	 */
+	coef[0] = c;
+	coef[1] = b;
+	coef[2] = a;
+	equation_poly_from(&p, coef, 3);
+	equation_solve_poly(&p, &res);
+	if (res.status == EQ_ALL ||
+	    (res.status == EQ_NONE && p.degree == 0)) {
+		out_set(out, outlen, "");
 		return 0;
 	}
-	if ((rc = rat_mul(&disc, &b, &b)) != 0 ||
-	    (rc = rat_mul(&t, &a, &c)) != 0 ||
-	    (rc = rat_mul(&t, &t, &RAT_4)) != 0 ||
-	    (rc = rat_sub(&disc, &disc, &t)) != 0)
-		return rc;
-	if (disc.n < 0)
+	if (res.status != EQ_SOLVED)
 		return -4;
-	if (disc.n == 0) {
-		if ((rc = rat_add(&t, &a, &a)) != 0 ||
-		    (rc = rat_div(&r1, &b, &t)) != 0)
-			return rc;
-		r1.n = -r1.n;
-		if (fa || fb || (fc && c.n != 0))
-			dec4_render(r1.n, r1.d, f1, sizeof(f1));
-		else
-			fmt_rat(&r1, f1, sizeof(f1));
-		snprintf(buf, sizeof(buf), "x=%s", f1);
-		out_set(out, outlen, buf);
-		return 0;
-	}
-	if (disc.n > WIDE_LIMIT / disc.d)
-		return -4;
-	q = disc.n * disc.d;
-	rt = (long long)isqrt64((unsigned long long)q);
-	if (rt * rt == q) {
-		s.n = rt;
-		s.d = disc.d;
-		if ((rc = rat_norm(&s)) != 0)
-			return rc;
-		if ((rc = rat_add(&t, &b, &s)) != 0 ||
-		    (rc = rat_mul(&t2, &a, &RAT_2)) != 0 ||
-		    (rc = rat_div(&r1, &t, &t2)) != 0 ||
-		    (rc = rat_sub(&t, &s, &b)) != 0 ||
-		    (rc = rat_div(&r2, &t, &t2)) != 0)
-			return rc;
-		r1.n = -r1.n;
-		if (fa || fb || (fc && c.n != 0)) {
-			dec4_render(r1.n, r1.d, f1, sizeof(f1));
-			dec4_render(r2.n, r2.d, f2, sizeof(f2));
+	decimals = res.approx || fa || fb || (fc && c.n != 0);
+	for (i = 0; i < res.n; i++) {
+		if (decimals) {
+			rc = dec4_render(res.root[i].n, res.root[i].d, f[i],
+			                 sizeof(f[i]));
+			if (rc != 0)
+				return rc;
 		} else {
-			fmt_rat(&r1, f1, sizeof(f1));
-			fmt_rat(&r2, f2, sizeof(f2));
+			fmt_rat(&res.root[i], f[i], sizeof(f[i]));
 		}
-		if (rat_cmp(&r1, &r2) > 0)
-			snprintf(buf, sizeof(buf), "x=%s, x=%s", f2, f1);
-		else
-			snprintf(buf, sizeof(buf), "x=%s, x=%s", f1, f2);
-		out_set(out, outlen, buf);
-		return 0;
 	}
-	s12 = sqrt12(disc.n, disc.d, &rc);
-	if (rc != 0)
-		return rc;
-	eb = pow10_index(b.d);
-	ea = pow10_index(a.d);
-	if (eb < 0 || ea < 0 || 12 - eb < 0 || 12 - ea < 0)
-		return -4;
-	if (b.n > 900000LL || -b.n > 900000LL || a.n > 900000LL ||
-	    -a.n > 900000LL)
-		return -4;
-	bn_scaled = b.n * P10[12 - eb];
-	if (bn_scaled > WIDE_LIMIT / 2 || -bn_scaled > WIDE_LIMIT / 2)
-		return -4;
-	den = 2 * a.n * P10[12 - ea];
-	n1 = -bn_scaled - s12;
-	n2 = s12 - bn_scaled;
-	if (den < 0) {
-		den = -den;
-		n1 = -n1;
-		n2 = -n2;
-	}
-	if (n1 > n2) {
-		long long sw = n1;
-
-		n1 = n2;
-		n2 = sw;
-	}
-	if ((rc = dec4_render(n1, den, f1, sizeof(f1))) != 0)
-		return rc;
-	if ((rc = dec4_render(n2, den, f2, sizeof(f2))) != 0)
-		return rc;
-	snprintf(buf, sizeof(buf), "x=%s, x=%s", f1, f2);
+	if (res.n == 1)
+		snprintf(buf, sizeof(buf), "x=%s", f[0]);
+	else
+		snprintf(buf, sizeof(buf), "x=%s, x=%s", f[0], f[1]);
 	out_set(out, outlen, buf);
 	return 0;
 }
@@ -269,7 +199,7 @@ solve_exp(const char *const *args, char *out, size_t outlen)
 	}
 	p = base;
 	for (m = 1; m <= 12; m++) {
-		if (rat_cmp(&p, &k) == 0) {
+		if (eq_rat_cmp(&p, &k) == 0) {
 			snprintf(buf, sizeof(buf), "%d", m);
 			out_set(out, outlen, buf);
 			return 0;
@@ -536,7 +466,9 @@ static int solve_geom_seq(const char *const *args, char *out, size_t outlen)
 static int solve_abs_value_eq(const char *const *args, char *out,
                               size_t outlen)
 {
-	rat a, b, c, r1, r2, t;
+	eq_poly_t p;
+	eq_result_t res;
+	rat a, b, c, coef[2], r1, r2;
 	int rc;
 	char f1[48], f2[48], buf[112];
 
@@ -546,22 +478,26 @@ static int solve_abs_value_eq(const char *const *args, char *out,
 		return rc;
 	if (a.n == 0 || c.n <= 0)
 		return -4;
-	r1.n = c.n - b.n;
-	r1.d = a.n;
-	r2.n = -c.n - b.n;
-	r2.d = a.n;
-	if (r1.d < 0) {
-		r1.n = -r1.n;
-		r1.d = -r1.d;
-	}
-	if (r2.d < 0) {
-		r2.n = -r2.n;
-		r2.d = -r2.d;
-	}
-	if ((rc = rat_norm(&r1)) != 0 || (rc = rat_norm(&r2)) != 0)
-		return rc;
-	if (rat_cmp(&r1, &r2) > 0) {
-		t = r1;
+	/*
+	 * |a x + b| = c is two degree-1 equations, a x + (b - c) = 0 and
+	 * a x + (b + c) = 0, so both roots come from the one engine.
+	 */
+	coef[1] = a;
+	if (rat_sub(&coef[0], &b, &c) != 0)
+		return -4;
+	equation_poly_from(&p, coef, 2);
+	if (equation_solve_poly(&p, &res) != EQ_SOLVED)
+		return -4;
+	r1 = res.root[0];
+	if (rat_add(&coef[0], &b, &c) != 0)
+		return -4;
+	equation_poly_from(&p, coef, 2);
+	if (equation_solve_poly(&p, &res) != EQ_SOLVED)
+		return -4;
+	r2 = res.root[0];
+	if (eq_rat_cmp(&r1, &r2) > 0) {
+		rat t = r1;
+
 		r1 = r2;
 		r2 = t;
 	}
@@ -575,7 +511,9 @@ static int solve_abs_value_eq(const char *const *args, char *out,
 static int solve_linear_ineq(const char *const *args, char *out,
                              size_t outlen)
 {
-	rat a, b, c, bound;
+	eq_poly_t p;
+	eq_result_t res;
+	rat a, b, c, coef[2];
 	int rc;
 	char f1[48], buf[80];
 
@@ -585,15 +523,17 @@ static int solve_linear_ineq(const char *const *args, char *out,
 		return rc;
 	if (a.n == 0)
 		return -4;
-	bound.n = c.n - b.n;
-	bound.d = a.n;
-	if (bound.d < 0) {
-		bound.n = -bound.n;
-		bound.d = -bound.d;
-	}
-	if ((rc = rat_norm(&bound)) != 0)
-		return rc;
-	fmt_rat(&bound, f1, sizeof(f1));
+	/*
+	 * a x + b < c has the root of a x + (b - c) = 0 as its bound; the sign
+	 * of a, not of the root, decides which way the inequality points.
+	 */
+	if (rat_sub(&coef[0], &b, &c) != 0)
+		return -4;
+	coef[1] = a;
+	equation_poly_from(&p, coef, 2);
+	if (equation_solve_poly(&p, &res) != EQ_SOLVED)
+		return -4;
+	fmt_rat(&res.root[0], f1, sizeof(f1));
 	snprintf(buf, sizeof(buf), "x %s %s", a.n > 0 ? "<" : ">", f1);
 	out_set(out, outlen, buf);
 	return 0;
@@ -695,7 +635,7 @@ static int solve_factor_quadratic(const char *const *args, char *out,
 	r2.d = 2 * a.n * s.d * b.d;
 	if ((rc = rat_norm(&r2)) != 0)
 		return rc;
-	if (rat_cmp(&r1, &r2) > 0) {
+	if (eq_rat_cmp(&r1, &r2) > 0) {
 		t = r1;
 		r1 = r2;
 		r2 = t;
@@ -789,17 +729,17 @@ static int solve_cubic_solve(const char *const *args, char *out, size_t outlen)
 	r3.n = -r3.n;
 	if ((rc = rat_div(&r3, &r3, &t)) != 0)
 		return rc;
-	if (rat_cmp(&r2, &r3) > 0) {
+	if (eq_rat_cmp(&r2, &r3) > 0) {
 		t = r2;
 		r2 = r3;
 		r3 = t;
 	}
-	if (rat_cmp(&r, &r2) > 0) {
+	if (eq_rat_cmp(&r, &r2) > 0) {
 		t = r;
 		r = r2;
 		r2 = t;
 	}
-	if (rat_cmp(&r2, &r3) > 0) {
+	if (eq_rat_cmp(&r2, &r3) > 0) {
 		t = r2;
 		r2 = r3;
 		r3 = t;

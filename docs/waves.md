@@ -117,6 +117,37 @@ hiding the price.
 not understanding, and any accuracy claim in this project has to name which set
 it came from.
 
+### Where the wording curve flattened, and what that decides
+
+Four rounds of hand-written data, each measured on the rows the model never
+trained on. The first three paid; the fourth did not.
+
+| Round | Hand-written rows | Exact, hand-written | Wrong formula | Exact, generated gate |
+| --- | --- | --- | --- | --- |
+| none | 0 | 43.4% (588) | 33.8% | 92.9% |
+| one | 1,260 | 61.2% (588) | 19.0% | 89.5% |
+| two | 2,710 | 67.6% (1,168) | 12.9% | 91.6% |
+| three | 4,390 | 72.6% (1,840) | 10.1% | 95.0% |
+| four | 6,070 | 68.0% (2,512) | 9.8% | 92.1% |
+
+Round four was aimed at the failure that dominates by then — right formula,
+wrong arguments (17.3%) — by burying the real data among distractors. Compared
+like-for-like against round three **on the same 2,512 rows**, it moved exact from
+66.7% to 68.0%, a 1.3-point gain with a standard error of about 0.9 points, so
+indistinguishable from zero. The generated gate moved 95.0% to 92.1%, which is
+3.4 standard errors, so that one is real.
+
+It is not shipped. The corpus stays on a branch with these numbers attached, and
+the shipped model is round three: 72.6% exact and 10.1% wrong on hand-written
+questions, 95.0% and 0.6% on the generated gate.
+
+**The decision this forces:** about 6,000 hand-written questions is where data
+stops buying accuracy on a 256-dimension model, and the next lever is not a
+fifth round. It is either capacity — roughly twice the answer time on a
+calculator that already takes seconds — or argument-level verification in the
+runtime, which is a code change and not a data one. Both need choosing
+deliberately rather than by another authoring round.
+
 ## Wave 4 — the deep end
 
 | # | Workstream | What it does | Owns |

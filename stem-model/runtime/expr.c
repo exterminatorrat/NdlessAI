@@ -666,3 +666,939 @@ int gexpr_format(q16_t v, char *out, int outlen)
 	memcpy(out, line, (size_t)p + 1);
 	return 0;
 }
+
+/* ---- differentiation ---- */
+
+/*
+ * A derivative is built against the source: the source's nodes stay as out's
+ * prefix, so a rule points at the original subtree instead of copying it.
+ * Only constructed nodes are appended, and every constructor simplifies before
+ * it appends, so the tree never holds the 0*a and a*1 that the rules would
+ * otherwise leave behind.
+ *
+ * The memo table means a subtree reached twice is derived once. Trees can be
+ * DAGs on the way in, because a derivative is itself a readable source.
+ */
+typedef struct {
+	gexpr_t *o;
+	int err;
+	int memo[EXPR_MAX_NODES];
+} dv_t;
+
+static int gnew(dv_t *d, int op, int a, int b, int32_t num)
+{
+	gexpr_t *o = d->o;
+	int i;
+
+	if (d->err)
+		return -1;
+	if (o->n >= EXPR_MAX_NODES) {
+		d->err = GEXPR_DIFF_TOO_BIG;
+		return -1;
+	}
+	i = o->n++;
+	o->node[i].op = (int16_t)op;
+	o->node[i].a = (int16_t)a;
+	o->node[i].b = (int16_t)b;
+	o->node[i].num = num;
+	return i;
+}
+
+static int gnum(dv_t *d, int32_t v)
+{
+	return gnew(d, G_NUM, 0, 0, v);
+}
+
+static int gnum_is(const gexpr_t *o, int i)
+{
+	return i >= 0 && o->node[i].op == G_NUM;
+}
+
+static int32_t gnum_of(const gexpr_t *o, int i)
+{
+	return o->node[i].num;
+}
+
+static int gneg(dv_t *d, int a)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0)
+		return -1;
+	if (o->node[a].op == G_NUM)
+		return gnum(d, (int32_t)(-(int64_t)o->node[a].num));
+	if (o->node[a].op == G_NEG)
+		return o->node[a].a;
+	return gnew(d, G_NEG, a, 0, 0);
+}
+
+static int gadd(dv_t *d, int a, int b)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0 || b < 0)
+		return -1;
+	if (gnum_is(o, a) && gnum_of(o, a) == 0)
+		return b;
+	if (gnum_is(o, b) && gnum_of(o, b) == 0)
+		return a;
+	if (gnum_is(o, a) && gnum_is(o, b))
+		return gnum(d, gq_sat((int64_t)gnum_of(o, a) + gnum_of(o, b)));
+	return gnew(d, G_ADD, a, b, 0);
+}
+
+static int gsub(dv_t *d, int a, int b)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0 || b < 0)
+		return -1;
+	if (gnum_is(o, b) && gnum_of(o, b) == 0)
+		return a;
+	if (gnum_is(o, a) && gnum_of(o, a) == 0)
+		return gneg(d, b);
+	if (gnum_is(o, a) && gnum_is(o, b))
+		return gnum(d, gq_sat((int64_t)gnum_of(o, a) - gnum_of(o, b)));
+	return gnew(d, G_SUB, a, b, 0);
+}
+
+static int gmul(dv_t *d, int a, int b)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0 || b < 0)
+		return -1;
+	if (gnum_is(o, a) && gnum_of(o, a) == 0)
+		return gnum(d, 0);
+	if (gnum_is(o, b) && gnum_of(o, b) == 0)
+		return gnum(d, 0);
+	if (gnum_is(o, a) && gnum_of(o, a) == Q16_ONE)
+		return b;
+	if (gnum_is(o, b) && gnum_of(o, b) == Q16_ONE)
+		return a;
+	if (gnum_is(o, a) && gnum_is(o, b))
+		return gnum(d, gq_mul(gnum_of(o, a), gnum_of(o, b)));
+	/* A negated factor moves out in front of the product, so a sum of terms
+	 * prints as 2xcos(x)-x^2sin(x) instead of 2xcos(x)+-x^2sin(x). */
+	if (o->node[b].op == G_NEG)
+		return gneg(d, gmul(d, a, o->node[b].a));
+	if (o->node[a].op == G_NEG)
+		return gneg(d, gmul(d, o->node[a].a, b));
+	/* The number goes first: 3exp(3x) reads better than exp(3x)*3, and the
+	 * product is bit-identical either way because gq_mul is symmetric. */
+	if (gnum_is(o, b) && !gnum_is(o, a))
+		return gmul(d, b, a);
+	/* Two numeric factors separated by a product collapse into one node, so
+	 * 2*(3x^2) prints as 6x^2 and takes a node less. */
+	if (gnum_is(o, a) && o->node[b].op == G_MUL && gnum_is(o, o->node[b].a))
+		return gmul(d, gnum(d, gq_mul(gnum_of(o, a), gnum_of(o, o->node[b].a))),
+		            o->node[b].b);
+	if (gnum_is(o, b) && o->node[a].op == G_MUL && gnum_is(o, o->node[a].a))
+		return gmul(d, gnum(d, gq_mul(gnum_of(o, b), gnum_of(o, o->node[a].a))),
+		            o->node[a].b);
+	return gnew(d, G_MUL, a, b, 0);
+}
+
+static int gdiv(dv_t *d, int a, int b)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0 || b < 0)
+		return -1;
+	if (gnum_is(o, a) && gnum_of(o, a) == 0)
+		return gnum(d, 0);
+	if (gnum_is(o, b) && gnum_of(o, b) == Q16_ONE)
+		return a;
+	if (gnum_is(o, a) && gnum_is(o, b) && gnum_of(o, b) != 0)
+		return gnum(d, gq_div(gnum_of(o, a), gnum_of(o, b)));
+	return gnew(d, G_DIV, a, b, 0);
+}
+
+static int gpow(dv_t *d, int a, int b)
+{
+	gexpr_t *o = d->o;
+
+	if (d->err || a < 0 || b < 0)
+		return -1;
+	if (gnum_is(o, b) && gnum_of(o, b) == 0)
+		return gnum(d, Q16_ONE);
+	if (gnum_is(o, b) && gnum_of(o, b) == Q16_ONE)
+		return a;
+	if (gnum_is(o, a) && gnum_of(o, a) == Q16_ONE)
+		return gnum(d, Q16_ONE);
+	if (gnum_is(o, a) && gnum_is(o, b))
+		return gnum(d, qpow(gnum_of(o, a), gnum_of(o, b)));
+	return gnew(d, G_POW, a, b, 0);
+}
+
+/* Whether the subtree at i depends on x; a constant subtree derives to 0. */
+static int node_has_x(const gexpr_t *f, int i)
+{
+	const gnode_t *n;
+
+	if (i < 0)
+		return 0;
+	n = &f->node[i];
+	switch (n->op) {
+	case G_X:
+		return 1;
+	case G_NUM:
+		return 0;
+	case G_ADD:
+	case G_SUB:
+	case G_MUL:
+	case G_DIV:
+	case G_POW:
+		return node_has_x(f, n->a) || node_has_x(f, n->b);
+	default:
+		return node_has_x(f, n->a);
+	}
+}
+
+static int d_node(dv_t *d, const gexpr_t *f, int i)
+{
+	const gnode_t *n;
+	int r, da;
+
+	if (i < 0 || d->err)
+		return -1;
+	if (d->memo[i] >= 0)
+		return d->memo[i];
+	if (!node_has_x(f, i)) {
+		d->memo[i] = gnum(d, 0);
+		return d->memo[i];
+	}
+	n = &f->node[i];
+	switch (n->op) {
+	case G_X:
+		r = gnum(d, Q16_ONE);
+		break;
+	case G_ADD:
+		r = gadd(d, d_node(d, f, n->a), d_node(d, f, n->b));
+		break;
+	case G_SUB:
+		r = gsub(d, d_node(d, f, n->a), d_node(d, f, n->b));
+		break;
+	case G_MUL:
+		r = gadd(d, gmul(d, d_node(d, f, n->a), n->b),
+		         gmul(d, n->a, d_node(d, f, n->b)));
+		break;
+	case G_DIV:
+		/* (u'v - uv') / v^2 */
+		r = gdiv(d, gsub(d, gmul(d, d_node(d, f, n->a), n->b),
+		                 gmul(d, n->a, d_node(d, f, n->b))),
+		         gpow(d, n->b, gnum(d, 2 * Q16_ONE)));
+		break;
+	case G_POW:
+		/* A constant exponent keeps the power rule: (u^c)' = c u^(c-1) u'.
+		 * An exponent that depends on x needs a logarithm the caller has
+		 * not been promised, so it is refused rather than approximated. */
+		if (node_has_x(f, n->b)) {
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		da = d_node(d, f, n->a);
+		r = gmul(d, gmul(d, n->b,
+		                 gpow(d, n->a, gsub(d, n->b, gnum(d, Q16_ONE)))), da);
+		break;
+	case G_NEG:
+		r = gneg(d, d_node(d, f, n->a));
+		break;
+	case G_SIN:
+		r = gmul(d, gnew(d, G_COS, n->a, 0, 0), d_node(d, f, n->a));
+		break;
+	case G_COS:
+		r = gneg(d, gmul(d, gnew(d, G_SIN, n->a, 0, 0), d_node(d, f, n->a)));
+		break;
+	case G_TAN:
+		r = gmul(d, gdiv(d, gnum(d, Q16_ONE),
+		                 gpow(d, gnew(d, G_COS, n->a, 0, 0),
+		                      gnum(d, 2 * Q16_ONE))),
+		         d_node(d, f, n->a));
+		break;
+	case G_EXP:
+		/* The node itself is the chain's outer factor. */
+		r = gmul(d, i, d_node(d, f, n->a));
+		break;
+	case G_LN:
+		r = gdiv(d, d_node(d, f, n->a), n->a);
+		break;
+	case G_SQRT:
+		r = gdiv(d, d_node(d, f, n->a),
+		         gmul(d, gnum(d, 2 * Q16_ONE), gnew(d, G_SQRT, n->a, 0, 0)));
+		break;
+	case G_ABS:
+		/* |u|' = u/|u| * u', the sign of u wherever u is not zero. */
+		r = gmul(d, gdiv(d, n->a, gnew(d, G_ABS, n->a, 0, 0)),
+		         d_node(d, f, n->a));
+		break;
+	default:
+		d->err = GEXPR_DIFF_UNSUPPORTED;
+		return -1;
+	}
+	d->memo[i] = r;
+	return r;
+}
+
+int gexpr_derive(const gexpr_t *f, gexpr_t *out)
+{
+	dv_t d;
+	int r, i, root;
+
+	if (!f || !out || f->root < 0 || f->root >= f->n)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (f->n > EXPR_MAX_NODES)
+		return GEXPR_DIFF_TOO_BIG;
+	/* out may be f, and clearing the root is how a refused derivative stays
+	 * unreadable, so the source root is kept here. */
+	root = f->root;
+	out->root = -1;
+	if (out != f) {
+		for (i = 0; i < f->n; i++)
+			out->node[i] = f->node[i];
+		out->n = f->n;
+	}
+	d.o = out;
+	d.err = 0;
+	for (i = 0; i < f->n; i++)
+		d.memo[i] = -1;
+	r = d_node(&d, f, root);
+	if (r < 0)
+		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+	out->root = r;
+	return GEXPR_DIFF_OK;
+}
+
+/* ---- printing ---- */
+
+/*
+ * Precedence of the text a node prints as, matching the parser's levels: + and
+ * - are loosest, then * and /, then a leading minus, then ^, then a literal or
+ * a function call. A child is bracketed when its own level is below the level
+ * its position allows.
+ */
+enum { UP_ADD = 1, UP_MUL = 2, UP_NEG = 3, UP_POW = 4, UP_ATOM = 5 };
+
+typedef struct {
+	char *out;
+	int cap;
+	int len;
+	int ok;
+} up_t;
+
+static void up_char(up_t *u, char c)
+{
+	if (!u->ok)
+		return;
+	/* One byte stays free for the terminator. */
+	if (u->len + 1 >= u->cap) {
+		u->ok = 0;
+		return;
+	}
+	u->out[u->len++] = c;
+}
+
+static void up_text(up_t *u, const char *s)
+{
+	while (*s)
+		up_char(u, *s++);
+}
+
+static void up_uint(up_t *u, int64_t v)
+{
+	char digits[12];
+	int n = 0;
+
+	do {
+		digits[n++] = (char)('0' + (int)(v % 10));
+		v /= 10;
+	} while (v > 0);
+	while (n > 0)
+		up_char(u, digits[--n]);
+}
+
+static const int32_t up_p10[9] = { 1, 10, 100, 1000, 10000, 100000,
+                                   1000000, 10000000, 100000000 };
+
+/*
+ * A number as a decimal the parser reads back to within one Q16 step: the
+ * fewest decimals that round-trip, and eight when none does. Integers stay
+ * integers, which is what keeps "3x^2+2" free of noise.
+ */
+static void up_num(up_t *u, int32_t v)
+{
+	int64_t a = v < 0 ? -(int64_t)v : v;
+	int64_t scaled, ip, fr;
+	int d, i;
+
+	if (v < 0)
+		up_char(u, '-');
+	for (d = 0; d < 8; d++) {
+		scaled = (a * up_p10[d] + 32768) >> 16;
+		ip = scaled / up_p10[d];
+		fr = scaled % up_p10[d];
+		if (((ip << 16) + ((fr << 16) / up_p10[d])) == a)
+			break;
+	}
+	scaled = (a * up_p10[d] + 32768) >> 16;
+	ip = scaled / up_p10[d];
+	fr = scaled % up_p10[d];
+	up_uint(u, ip);
+	if (d > 0) {
+		up_char(u, '.');
+		for (i = d - 1; i >= 0; i--)
+			up_char(u, (char)('0' + (int)(fr / up_p10[i] % 10)));
+	}
+}
+
+static int up_prec(const gexpr_t *e, int i)
+{
+	const gnode_t *n = &e->node[i];
+
+	switch (n->op) {
+	case G_ADD:
+	case G_SUB:
+		return UP_ADD;
+	case G_MUL:
+	case G_DIV:
+		return UP_MUL;
+	case G_NEG:
+		return UP_NEG;
+	case G_POW:
+		return UP_POW;
+	case G_NUM:
+		return n->num < 0 ? UP_NEG : UP_ATOM;
+	default:
+		return UP_ATOM;
+	}
+}
+
+/*
+ * True when the text of node i begins with a letter, so it can follow a number
+ * without a '*': "2x", "3sin(x)", "2x^2". A bracketed operand needs no '*'
+ * either and is handled by the caller, since it is unambiguous.
+ */
+static int up_implicit(const gexpr_t *e, int i)
+{
+	int op = e->node[i].op;
+
+	if (op == G_POW)
+		return up_prec(e, e->node[i].a) < UP_ATOM ||
+		       up_implicit(e, e->node[i].a);
+	return op == G_X || op == G_SIN || op == G_COS || op == G_TAN ||
+	       op == G_SQRT || op == G_ABS || op == G_LN || op == G_EXP;
+}
+
+static void up_node(up_t *u, const gexpr_t *e, int i, int min);
+
+static void up_call(up_t *u, const gexpr_t *e, int i, const char *name)
+{
+	up_text(u, name);
+	up_char(u, '(');
+	up_node(u, e, e->node[i].a, UP_ADD);
+	up_char(u, ')');
+}
+
+static void up_node(up_t *u, const gexpr_t *e, int i, int min)
+{
+	const gnode_t *n;
+	int paren;
+
+	if (!u->ok)
+		return;
+	if (i < 0) {
+		u->ok = 0;
+		return;
+	}
+	n = &e->node[i];
+	paren = up_prec(e, i) < min;
+	if (paren)
+		up_char(u, '(');
+	switch (n->op) {
+	case G_NUM:
+		up_num(u, n->num);
+		break;
+	case G_X:
+		up_char(u, 'x');
+		break;
+	case G_ADD:
+	case G_SUB:
+		up_node(u, e, n->a, UP_ADD);
+		/* a + (-u) is a - u: it reads better and re-parses to the same
+		 * value, and the same holds for a - (-u). */
+		if (e->node[n->b].op == G_NEG) {
+			up_char(u, n->op == G_ADD ? '-' : '+');
+			up_node(u, e, e->node[n->b].a, UP_MUL);
+		} else {
+			up_char(u, n->op == G_ADD ? '+' : '-');
+			up_node(u, e, n->b, UP_MUL);
+		}
+		break;
+	case G_MUL:
+		up_node(u, e, n->a, UP_MUL);
+		if (up_prec(e, n->b) >= UP_POW && !up_implicit(e, n->b))
+			up_char(u, '*');
+		up_node(u, e, n->b, UP_POW);
+		break;
+	case G_DIV:
+		up_node(u, e, n->a, UP_MUL);
+		up_char(u, '/');
+		up_node(u, e, n->b, UP_POW);
+		break;
+	case G_POW:
+		up_node(u, e, n->a, UP_ATOM);
+		up_char(u, '^');
+		up_node(u, e, n->b, UP_NEG);
+		break;
+	case G_NEG:
+		up_char(u, '-');
+		up_node(u, e, n->a, UP_MUL);
+		break;
+	case G_SIN:
+		up_call(u, e, i, "sin");
+		break;
+	case G_COS:
+		up_call(u, e, i, "cos");
+		break;
+	case G_TAN:
+		up_call(u, e, i, "tan");
+		break;
+	case G_SQRT:
+		up_call(u, e, i, "sqrt");
+		break;
+	case G_ABS:
+		up_call(u, e, i, "abs");
+		break;
+	case G_LN:
+		up_call(u, e, i, "ln");
+		break;
+	case G_EXP:
+		up_call(u, e, i, "exp");
+		break;
+	default:
+		u->ok = 0;
+	}
+	if (paren)
+		up_char(u, ')');
+}
+
+int gexpr_unparse(const gexpr_t *e, char *out, int outlen)
+{
+	up_t u;
+
+	if (!e || !out || outlen <= 0)
+		return -1;
+	out[0] = 0;
+	if (e->root < 0 || e->root >= e->n)
+		return -1;
+	u.out = out;
+	u.cap = outlen;
+	u.len = 0;
+	u.ok = 1;
+	up_node(&u, e, e->root, UP_ADD);
+	if (!u.ok)
+		return -1;
+	out[u.len] = 0;
+	return 0;
+}
+
+/* ---- definite integrals ---- */
+
+/*
+ * Simpson's rule over one panel: with width = b-a in Q16 units and s the
+ * weighted sample sum in Q16 units, the value in Q16 units is
+ * width*s/(6*65536). Both factors can be large, so the product is range
+ * checked instead of wrapped, and a panel that leaves Q16 is a failure: a
+ * saturated panel would make a divergent integral look answerable.
+ */
+static int simpson_panel(int64_t width, int64_t s, q16_t *out)
+{
+	const int64_t den = 6 * (int64_t)Q16_ONE;
+	int64_t w = width < 0 ? -width : width;
+	int64_t v = s < 0 ? -s : s;
+	int64_t num, q;
+
+	if (w != 0 && v > INT64_MAX / w)
+		return -1;
+	num = width * s;
+	q = (num >= 0 ? num + den / 2 : num - den / 2) / den;
+	if (q > Q16_MAX || q < Q16_MIN)
+		return -1;
+	*out = (q16_t)q;
+	return 0;
+}
+
+/*
+ * The work budget. Simpson converges quadratically on a smooth function and
+ * barely at all on an endpoint singularity, so an unbounded loop is not an
+ * option either way. 2000 samples is far more than any closed-form case in
+ * test_expr uses - the worst is 117, over six periods of sin - while a
+ * genuine singularity exhausts it and fails. The depth limit is the second
+ * guard: a panel narrower than four Q16 steps cannot be halved onto
+ * representable midpoints, so twenty levels reach that width from any Q16
+ * interval.
+ */
+#define INT_MAX_EVALS 2000
+#define INT_MAX_DEPTH 20
+
+typedef struct {
+	const gexpr_t *f;
+	int evals;
+} it_t;
+
+/*
+ * One sample. gexpr_eval reports "no value here" by saturating, which is the
+ * only signal a singularity gives; an integral of a function that is not
+ * finite across the interval cannot be bounded, so a saturated sample fails
+ * the whole call rather than entering the sum as a clamp.
+ */
+static int isample(it_t *g, q16_t x, q16_t *out)
+{
+	q16_t v;
+
+	if (g->evals >= INT_MAX_EVALS)
+		return -1;
+	g->evals++;
+	v = gexpr_eval(g->f, x);
+	if (v == Q16_MAX || v == Q16_MIN)
+		return -1;
+	*out = v;
+	return 0;
+}
+
+/* The midpoint in Q16, exact enough that it always lies between a and b. */
+static q16_t imid(q16_t a, q16_t b)
+{
+	return (q16_t)(((int64_t)a + b) / 2);
+}
+
+/*
+ * Refines [a, b] until the two-panel Simpson sum agrees with the one-panel
+ * estimate to `tol`. The split runs down the tree instead of in an explicit
+ * stack, so the budget is one frame per active level; the panel value and both
+ * sample sets travel by value.
+ *
+ * Failing to reach `tol` inside the depth or evaluation budget is reported as
+ * failure. A number with an error estimate larger than what the answer needs
+ * is exactly the kind of answer this engine refuses to give, and the caller
+ * has no way to tell it from a good one.
+ */
+static int adapt(it_t *g, q16_t a, q16_t b, q16_t fa, q16_t fm, q16_t fb,
+                 q16_t whole, int64_t tol, int depth, q16_t *out)
+{
+	q16_t m = imid(a, b);
+	q16_t lm = imid(a, m);
+	q16_t rm = imid(m, b);
+	q16_t flm, frm, left, right, lv, rv;
+	int64_t width = (int64_t)b - a;
+	int64_t total, d, err;
+
+	/*
+	 * A panel under four Q16 steps has no pair of half-panels with
+	 * representable midpoints: imid() would return an endpoint, the "half"
+	 * panel would be empty and the other lopsided, and the two-panel test
+	 * would compare against a rule that cannot converge. Its estimate is
+	 * already the best this grid can carry, so it is accepted as it stands.
+	 */
+	if (width < 4) {
+		*out = whole;
+		return 0;
+	}
+	if (depth <= 0 || g->evals + 2 > INT_MAX_EVALS)
+		return -1;
+	if (isample(g, lm, &flm) < 0 || isample(g, rm, &frm) < 0)
+		return -1;
+	if (simpson_panel((int64_t)m - a,
+	                  (int64_t)fa + 4 * (int64_t)flm + fm, &left) < 0 ||
+	    simpson_panel((int64_t)b - m,
+	                  (int64_t)fm + 4 * (int64_t)frm + fb, &right) < 0)
+		return -1;
+	total = (int64_t)left + right;
+	if (total > Q16_MAX || total < Q16_MIN)
+		return -1;
+	d = total - whole;
+	/*
+	 * The two-panel and one-panel sums differ by about fifteen times the
+	 * remaining error when the function is smooth, which is the usual
+	 * |d|/15 test. This code uses |d| itself. That is deliberate: on a kink
+	 * or near an endpoint where a derivative blows up, the fifteen-to-one
+	 * factor is not a bound but an underestimate, and a panel accepted on it
+	 * left sqrt(x) over [0,1] at 0.6665 instead of 0.6667. Demanding the two
+	 * sums agree to the answer's own tolerance on every panel costs about a
+	 * third more samples on the smooth cases and fixed every such case
+	 * measured.
+	 */
+	err = d < 0 ? -d : d;
+	if (err <= tol) {
+		/* Richardson: the refined sum plus the error it is expected to
+		 * carry. In Q16 the correction is often under one step, so it
+		 * rounds to nothing rather than biasing the answer. */
+		total += d / 15;
+		if (total > Q16_MAX || total < Q16_MIN)
+			return -1;
+		*out = (q16_t)total;
+		return 0;
+	}
+	/* Halving the allowance per side keeps the total error under tol. It
+	 * stops halving at two Q16 steps: below that, integer noise in the
+	 * samples makes the panel test unsatisfiable, which would refine a
+	 * smooth function forever and then fail it. */
+	if (tol > 2)
+		tol /= 2;
+	if (adapt(g, a, m, fa, flm, fm, left, tol, depth - 1, &lv) < 0 ||
+	    adapt(g, m, b, fm, frm, fb, right, tol, depth - 1, &rv) < 0)
+		return -1;
+	total = (int64_t)lv + rv;
+	if (total > Q16_MAX || total < Q16_MIN)
+		return -1;
+	*out = (q16_t)total;
+	return 0;
+}
+
+int gexpr_integrate(const gexpr_t *f, q16_t a, q16_t b, q16_t *out)
+{
+	it_t g;
+	q16_t fa, fb, fm, whole, total;
+	int64_t width, tol, est;
+
+	if (!f || !out || f->root < 0 || f->root >= f->n)
+		return GEXPR_INT_UNBOUNDED;
+	if (a == b) {
+		*out = 0;
+		return GEXPR_INT_OK;
+	}
+	/* Out of order is the negated integral; integrating the other way round
+	 * also keeps every panel's width non-negative. */
+	if (b < a) {
+		q16_t v;
+		int r = gexpr_integrate(f, b, a, &v);
+
+		if (r != GEXPR_INT_OK || v == Q16_MIN)
+			return GEXPR_INT_UNBOUNDED;
+		*out = gq_sat(-(int64_t)v);
+		return GEXPR_INT_OK;
+	}
+	g.f = f;
+	g.evals = 0;
+	width = (int64_t)b - a;
+	fm = 0;
+	if (isample(&g, a, &fa) < 0 || isample(&g, b, &fb) < 0 ||
+	    isample(&g, imid(a, b), &fm) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	if (simpson_panel(width, (int64_t)fa + 4 * (int64_t)fm + fb,
+	                  &whole) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	/*
+	 * The tolerance has two parts, both measured from things the engine knows
+	 * before it refines. The first is relative to the estimate: 1/16384 is
+	 * about an eighth of the last of the four significant digits
+	 * gexpr_format prints, so a panel that passes cannot move that digit on
+	 * its own. The second is the absolute floor a fixed-point sample imposes:
+	 * one Q16 step of error in f across this width moves the integral by
+	 * width/65536 Q16 units, and 1/8192 allows eight such steps for the
+	 * functions whose own series are a few steps off.
+	 */
+	est = whole < 0 ? -(int64_t)whole : whole;
+	tol = est / 16384 + width / 8192 + 4;
+	if (adapt(&g, a, b, fa, fm, fb, whole, tol, INT_MAX_DEPTH, &total) < 0)
+		return GEXPR_INT_UNBOUNDED;
+	*out = total;
+	return GEXPR_INT_OK;
+}
+
+/* ---- typed derivative answers ---- */
+
+#define EXPR_TEXT_MAX 256
+
+int gexpr_derivative_answer(const char *text, char *out, int outlen)
+{
+	static const char *const forms[] = { "d/dx", "diff", "derivative" };
+	char inner[EXPR_TEXT_MAX];
+	char err[48];
+	gexpr_t f, d;
+	const char *p;
+	size_t n, room;
+	int k;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+	for (k = 0; k < (int)(sizeof forms / sizeof forms[0]); k++) {
+		size_t flen = strlen(forms[k]);
+		size_t inner_len;
+		const char *open, *start;
+
+		/* Keyword, then a bracket, then at least one character and the
+		 * closing bracket. The closing bracket has to be the last
+		 * character, so "d/dx(x^2)+1" is not an answer about x^2. */
+		if (room < flen + 2 || text[n - 1] != ')')
+			continue;
+		if (strncmp(p, forms[k], flen) != 0)
+			continue;
+		open = p + flen;
+		while (*open == ' ' || *open == '\t')
+			open++;
+		if (*open != '(')
+			continue;
+		start = open + 1;
+		inner_len = (size_t)(text + n - 1 - start);
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			continue;
+		memcpy(inner, start, inner_len);
+		inner[inner_len] = 0;
+		if (gexpr_parse(inner, &f, err, sizeof err) < 0)
+			continue;
+		if (gexpr_derive(&f, &d) != GEXPR_DIFF_OK)
+			continue;
+		return gexpr_unparse(&d, out, outlen);
+	}
+	return -1;
+}
+
+/* ---- typed integral answers ---- */
+
+/*
+ * Splits "f, a, b" at the commas that are not inside brackets. Returns 0 only
+ * for exactly three non-empty parts with balanced brackets, so an extra comma,
+ * a stray bracket or trailing text cannot be read as part of the bounds.
+ */
+static int split_three(const char *s, int n, const char **part, int *plen)
+{
+	int depth = 0, k = 0;
+
+	part[0] = s;
+	for (int i = 0; i < n; i++) {
+		if (s[i] == '(') {
+			depth++;
+		} else if (s[i] == ')') {
+			if (--depth < 0)
+				return -1;
+		} else if (s[i] == ',' && depth == 0) {
+			if (k == 2)
+				return -1;
+			plen[k] = (int)(s + i - part[k]);
+			part[++k] = s + i + 1;
+		}
+	}
+	if (depth != 0 || k != 2)
+		return -1;
+	plen[2] = (int)(s + n - part[2]);
+	for (int i = 0; i < 3; i++)
+		if (plen[i] <= 0)
+			return -1;
+	return 0;
+}
+
+/*
+ * A bound is any constant expression gexpr_parse accepts: "0", "-1", "0.5",
+ * "pi", "2*pi", "1/2", "sqrt(2)". It is parsed like the integrand and then
+ * evaluated once at x = 0, which is how the typed path already decides that an
+ * expression is a number.
+ *
+ * That quantises the bound to Q16 before the integral runs, so pi is 3.14159
+ * and 2*pi is 6.28317 rather than the real constants. The answer is the
+ * integral over the quantised interval, which is why integrate(x,0,pi) prints
+ * 4.935 (4.93478...) rather than 4.9348: the difference is the bound, not the
+ * quadrature.
+ *
+ * A bound that depends on x has no single value as a limit, and one that fails
+ * to parse or has no finite Q16 value refuses the whole call rather than
+ * quietly integrating over something else.
+ */
+static int parse_bound(const char *s, int n, q16_t *out)
+{
+	char text[EXPR_TEXT_MAX];
+	char err[48];
+	gexpr_t e;
+	q16_t v;
+	int i = 0;
+
+	while (i < n && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	while (n > i && (s[n - 1] == ' ' || s[n - 1] == '\t'))
+		n--;
+	if (n <= i || n - i >= (int)sizeof text)
+		return -1;
+	memcpy(text, s + i, (size_t)(n - i));
+	text[n - i] = 0;
+	if (gexpr_parse(text, &e, err, sizeof err) < 0 || gexpr_has_x(&e))
+		return -1;
+	v = gexpr_eval(&e, 0);
+	if (v == Q16_MAX || v == Q16_MIN)
+		return -1;
+	*out = v;
+	return 0;
+}
+
+int gexpr_integral_answer(const char *text, char *out, int outlen)
+{
+	static const char *const forms[] = { "integrate", "int" };
+	char inner[EXPR_TEXT_MAX];
+	char expr_text[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[3];
+	int plen[3];
+	gexpr_t f;
+	const char *p;
+	size_t n, room;
+	q16_t a, b, v;
+	int k;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+	for (k = 0; k < (int)(sizeof forms / sizeof forms[0]); k++) {
+		size_t flen = strlen(forms[k]);
+		size_t inner_len;
+		const char *open;
+		int i;
+
+		/* Keyword, then a bracket, then three parts whose brackets balance
+		 * and a closing bracket as the last character, so
+		 * "integrate(x^2,0,3)+1" is not an answer about x^2. */
+		if (room < flen + 2 || text[n - 1] != ')')
+			continue;
+		if (strncmp(p, forms[k], flen) != 0)
+			continue;
+		open = p + flen;
+		while (*open == ' ' || *open == '\t')
+			open++;
+		if (*open != '(')
+			continue;
+		inner_len = (size_t)(text + n - 1 - (open + 1));
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			continue;
+		memcpy(inner, open + 1, inner_len);
+		inner[inner_len] = 0;
+		if (split_three(inner, (int)inner_len, part, plen) < 0)
+			continue;
+		if (parse_bound(part[1], plen[1], &a) < 0 ||
+		    parse_bound(part[2], plen[2], &b) < 0)
+			continue;
+		for (i = 0; i < plen[0]; i++)
+			expr_text[i] = part[0][i];
+		expr_text[i] = 0;
+		if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
+			continue;
+		if (gexpr_integrate(&f, a, b, &v) != GEXPR_INT_OK)
+			continue;
+		return gexpr_format(v, out, outlen);
+	}
+	return -1;
+}

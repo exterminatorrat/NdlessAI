@@ -1,0 +1,330 @@
+{"relation": "moles", "args": [175.5, 58.5], "question": "A brine recipe calls for 175.5 g of sodium chloride. Table salt is 58.5 g/mol, so what amount in moles is being weighed out?", "split": "train"}
+{"relation": "moles", "args": [5, 44], "question": "Dry ice is CO2, molar mass 44 g/mol. A chip of 5 g sublimates on the bench; give me the moles that escaped.", "split": "train"}
+{"relation": "moles", "args": [10, 18], "question": "A bartender drops 10 g of ice into a drink and it melts completely. Water has a molar mass of 18 g/mol, so how many moles of water went into the glass?", "split": "train"}
+{"relation": "moles", "args": [20, 40], "question": "Sodium hydroxide runs 40 g/mol on the label. A student stirs 20 g into a litre of water. How many moles of NaOH are now dissolved? The beaker itself weighs 250 g.", "split": "train"}
+{"relation": "moles", "args": [8, 32], "question": "Oxygen is 32 g/mol. If 8 g of it is released into a chamber, what amount in moles is present?", "split": "train"}
+{"relation": "moles", "args": [11, 44], "question": "A syringe contains 11 g of a gas of molar mass 44 g/mol. Give the amount of gas in moles.", "split": "train"}
+{"relation": "moles", "args": [44, 98], "question": "For the titration I weighed 44 g of sulfuric acid, whose molar mass the bottle gives as 98 g/mol. What amount of acid, in moles, is that?", "split": "eval"}
+{"relation": "moles", "args": [220, 44], "question": "A cylinder of carbon dioxide lost 220 g overnight. With the gas at 44 g/mol, how much substance leaked out, in moles?", "split": "eval"}
+{"relation": "moles", "args": [0.5, 100], "question": "Each tablet of a calcium supplement holds 0.5 g of a compound of molar mass 100 g/mol. How many moles does one tablet supply?", "split": "eval"}
+{"relation": "moles", "args": [250, 100], "question": "Chalk is calcium carbonate at 100 g/mol, and the lump on the bench weighs 250 g. How many moles does it hold?", "split": "eval"}
+{"relation": "dilution", "args": [0.8, 100, 400], "question": "100 mL of 0.8 M solution is watered down to 400 mL in a beaker. What is the resulting molarity?", "split": "train"}
+{"relation": "dilution", "args": [5, 8, 40], "question": "A student transfers 8 mL of a 5 M solution into a 40 mL flask and fills it to the mark. What molarity results?", "split": "train"}
+{"relation": "dilution", "args": [6, 15, 90], "question": "Take 15 mL of 6 M acid and add water until the total is 90 mL. What molarity do you end up with?", "split": "train"}
+{"relation": "dilution", "args": [3, 12, 48], "question": "The teacher asks for the concentration after 12 mL of 3 M acid is diluted to 48 mL. What should the answer be?", "split": "train"}
+{"relation": "dilution", "args": [1.5, 30, 250], "question": "A 1.5 M solution: 30 mL of it is transferred to a 250 mL flask and topped up to the mark. Find the diluted molarity.", "split": "train"}
+{"relation": "dilution", "args": [0.4, 60, 240], "question": "A stock of 0.4 M: 60 mL is taken and diluted to 240 mL. Give the final molarity.", "split": "train"}
+{"relation": "dilution", "args": [0.2, 75, 300], "question": "Diluting 75 mL of 0.2 M nitrate solution to 300 mL, what molarity do you get?", "split": "eval"}
+{"relation": "dilution", "args": [2.5, 20, 80], "question": "A 2.5 M stock is diluted: 20 mL of it is made up to 80 mL. Report the new concentration. The lab is kept at 21 C.", "split": "eval"}
+{"relation": "dilution", "args": [12, 5, 60], "question": "Concentrated hydrochloric acid is 12 M. A student pipettes 5 mL into a flask and dilutes it to 60 mL; what concentration is in the flask now?", "split": "eval"}
+{"relation": "dilution", "args": [1, 50, 500], "question": "50 mL of 1 M solution goes into a 500 mL volumetric flask, which is then filled to the mark with water. What concentration does the flask hold?", "split": "eval"}
+{"relation": "gas_p", "args": [1, 273, 22.4], "question": "One mole of ideal gas at 273 K fills 22.4 L. What pressure does that molar volume predict? Take R = 0.08206.", "split": "train"}
+{"relation": "gas_p", "args": [3.5, 275, 15], "question": "Ideal gas, 3.5 mol, 275 K, 15 L. What pressure does the gas exert?", "split": "train"}
+{"relation": "gas_p", "args": [2.5, 290, 12], "question": "The bulb holds 2.5 mol at 290 K and its volume is 12 L. What pressure does the gas exert? R = 0.08206.", "split": "train"}
+{"relation": "gas_p", "args": [0.4, 350, 4.5], "question": "A reaction flask at 350 K contains 0.4 mol of gas and measures 4.5 L. Compute the pressure using R = 0.08206.", "split": "train"}
+{"relation": "gas_p", "args": [1.4, 315, 7], "question": "Using the ideal gas law with R = 0.08206, find the pressure of 1.4 mol at 315 K confined to 7 L.", "split": "train"}
+{"relation": "gas_p", "args": [0.75, 310, 3], "question": "A 3 L canister holds 0.75 mol of gas at 310 K. What pressure is inside it? Use R = 0.08206.", "split": "train"}
+{"relation": "gas_p", "args": [6, 298, 20], "question": "20 L at 298 K holds 6 mol of an ideal gas. Determine the pressure inside.", "split": "eval"}
+{"relation": "gas_p", "args": [4, 320, 8], "question": "4 mol of ideal gas is held at 320 K in an 8 L vessel. Find the pressure, with R = 0.08206 L atm / (mol K).", "split": "eval"}
+{"relation": "gas_p", "args": [1.2, 305, 6], "question": "Find p for 1.2 mol of ideal gas at 305 K in 6 L, with R = 0.08206.", "split": "eval"}
+{"relation": "gas_p", "args": [0.8, 330, 2.5], "question": "Inside a 2.5 L cylinder sits 0.8 mol of gas at 330 K. What pressure does the gas register? Use R = 0.08206.", "split": "eval"}
+{"relation": "molarity", "args": [0.75, 1.5], "question": "A solution of 1.5 L holds 0.75 mol of salt. What is its molar concentration?", "split": "train"}
+{"relation": "molarity", "args": [0.05, 1], "question": "The titration solution holds 0.05 mol in 1 L. What is its concentration?", "split": "train"}
+{"relation": "molarity", "args": [1.2, 3], "question": "Dissolving 1.2 mol in enough water for 3 L of solution, find the molarity.", "split": "train"}
+{"relation": "molarity", "args": [6, 2], "question": "Into a 2 L flask go 6 mol of potassium nitrate and water to the mark. What molarity is in the flask? The flask was rinsed twice.", "split": "train"}
+{"relation": "molarity", "args": [4, 8], "question": "A batch of 8 L of solution contains 4 mol of solute. Report the concentration in mol/L.", "split": "train"}
+{"relation": "molarity", "args": [2.4, 6], "question": "A 6 L batch of solution is made from 2.4 mol of solute. Give its molarity.", "split": "train"}
+{"relation": "molarity", "args": [5, 10], "question": "A 10 L volume of solution carries 5 mol of dissolved material. Find the molarity.", "split": "eval"}
+{"relation": "molarity", "args": [0.3, 0.6], "question": "0.3 mol of solute in 0.6 L of solution: what concentration does that work out to?", "split": "eval"}
+{"relation": "molarity", "args": [0.9, 4.5], "question": "A sample of 4.5 L contains 0.9 mol of solute. Determine the concentration in mol/L.", "split": "eval"}
+{"relation": "molarity", "args": [0.5, 2], "question": "0.5 mol of glucose is dissolved and the volume made up to 2 L. What molarity does that give?", "split": "eval"}
+{"relation": "ph", "args": [0.0008], "question": "A buffered sample holds 0.0008 mol/L of H+. Compute the pH.", "split": "train"}
+{"relation": "ph", "args": [0.1], "question": "0.1 mol/L of hydrogen ions: what pH goes with that?", "split": "train"}
+{"relation": "ph", "args": [0.004], "question": "With hydrogen ions at 0.004 mol/L, calculate the pH.", "split": "train"}
+{"relation": "ph", "args": [0.02], "question": "Find the pH of a solution in which [H+] is 0.02 mol/L.", "split": "train"}
+{"relation": "ph", "args": [0.025], "question": "A cola sample has [H+] of 0.025 mol/L. What is its pH? The can is 330 mL.", "split": "train"}
+{"relation": "ph", "args": [0.005], "question": "The lab report lists [H+] as 0.005 mol/L. What pH should be entered?", "split": "train"}
+{"relation": "ph", "args": [0.01], "question": "The hydrogen ion concentration is 0.01 mol/L. What pH does the meter show?", "split": "eval"}
+{"relation": "ph", "args": [0.006], "question": "The sample registers 0.006 mol/L of hydrogen ions. What pH does that work out to?", "split": "eval"}
+{"relation": "ph", "args": [0.001], "question": "A solution measures [H+] = 0.001 mol/L on the electrode. Report the pH.", "split": "eval"}
+{"relation": "ph", "args": [0.0001], "question": "The electrode reads 0.0001 mol/L of H+ in a very dilute acid. What pH should be recorded?", "split": "eval"}
+{"relation": "poh", "args": [0.05], "question": "A cleaning product has [OH-] of 0.05 mol/L. What is its pOH?", "split": "train"}
+{"relation": "poh", "args": [0.001], "question": "The hydroxide concentration is 0.001 mol/L. What pOH is that?", "split": "train"}
+{"relation": "poh", "args": [0.01], "question": "A base solution with [OH-] = 0.01 mol/L: find the pOH.", "split": "train"}
+{"relation": "poh", "args": [0.0001], "question": "A very dilute base with [OH-] = 0.0001 mol/L. Give the pOH.", "split": "train"}
+{"relation": "poh", "args": [0.008], "question": "The hydroxide reading is 0.008 mol/L, so what pOH do you report?", "split": "train"}
+{"relation": "poh", "args": [0.00025], "question": "A dilute base measures 0.00025 mol/L in hydroxide ions. Give the pOH.", "split": "train"}
+{"relation": "poh", "args": [0.0005], "question": "A limewater sample has [OH-] = 0.0005 mol/L. Find its pOH to three decimals.", "split": "eval"}
+{"relation": "poh", "args": [0.1], "question": "0.1 mol/L of hydroxide ions, what pOH follows?", "split": "eval"}
+{"relation": "poh", "args": [0.004], "question": "At 0.004 mol/L of OH- the solution is weakly basic. What pOH would you report?", "split": "eval"}
+{"relation": "poh", "args": [0.02], "question": "With 0.02 mol/L of OH- present, determine the pOH.", "split": "eval"}
+{"relation": "ph_from_poh", "args": [9], "question": "A soap solution shows pOH 9. What pH does the meter read?", "split": "train"}
+{"relation": "ph_from_poh", "args": [5], "question": "pOH 5 is measured for a household solution. What is its pH?", "split": "train"}
+{"relation": "ph_from_poh", "args": [11], "question": "For a pOH of 11, give the corresponding pH.", "split": "train"}
+{"relation": "ph_from_poh", "args": [7], "question": "The pOH sits at 7. Report the pH of the solution.", "split": "train"}
+{"relation": "ph_from_poh", "args": [12], "question": "A drain cleaner has pOH 12. What pH should go on the label? The bottle holds 500 mL.", "split": "train"}
+{"relation": "ph_from_poh", "args": [13], "question": "The pOH comes out at 13, so find the pH.", "split": "train"}
+{"relation": "ph_from_poh", "args": [2], "question": "The pOH reads 2 for this solution. What pH does it show?", "split": "eval"}
+{"relation": "ph_from_poh", "args": [1], "question": "The pOH of a strong acid solution reads 1. What pH goes with it?", "split": "eval"}
+{"relation": "ph_from_poh", "args": [4], "question": "Given pOH = 4, work out the pH.", "split": "eval"}
+{"relation": "ph_from_poh", "args": [10], "question": "Soapy water gives a pOH reading of 10 on the meter. What pH does the solution have?", "split": "eval"}
+{"relation": "percent_yield", "args": [150, 200], "question": "200 g was expected from the calculation and 150 g was collected. Express the yield as a percentage.", "split": "train"}
+{"relation": "percent_yield", "args": [240, 300], "question": "300 g was the predicted mass and 240 g came out of the drier. What percent yield is that?", "split": "train"}
+{"relation": "percent_yield", "args": [38, 50], "question": "38 g is isolated where 50 g was possible. Find the percent yield.", "split": "train"}
+{"relation": "percent_yield", "args": [110, 125], "question": "The theoretical yield is 125 g and the experiment gives 110 g. What is the percentage yield?", "split": "train"}
+{"relation": "percent_yield", "args": [6, 10], "question": "6 g of purified product is collected where 10 g was predicted. What percent yield is achieved?", "split": "train"}
+{"relation": "percent_yield", "args": [85, 100], "question": "A reaction that should give 100 g returns 85 g. Report the percent yield. The oven was left at 60 C overnight.", "split": "train"}
+{"relation": "percent_yield", "args": [64, 80], "question": "The expected mass was 80 g; the balance shows 64 g of product. How efficient was the reaction, in percent?", "split": "eval"}
+{"relation": "percent_yield", "args": [9, 12], "question": "A microscale reaction can give 12 g but delivers 9 g. Calculate the percent yield.", "split": "eval"}
+{"relation": "percent_yield", "args": [24, 30], "question": "Theory predicts 30 g of product; the flask yields 24 g. What percent yield does that represent?", "split": "eval"}
+{"relation": "percent_yield", "args": [27, 36], "question": "The calculation gives 36 g and 27 g is obtained. Give the yield as a percent.", "split": "eval"}
+{"relation": "boyles", "args": [2.5, 4, 10], "question": "Expanding 4 L of gas at 2.5 atm to 10 L without a temperature change: what pressure do you read?", "split": "train"}
+{"relation": "boyles", "args": [9, 2, 6], "question": "A 2 L sample at 9 atm is compressed to 6 L. Determine the resulting pressure.", "split": "train"}
+{"relation": "boyles", "args": [12, 1, 4], "question": "1 L of gas at 12 atm is pushed into a 4 L vessel. What pressure does it reach? The vessel is steel.", "split": "train"}
+{"relation": "boyles", "args": [4, 12, 6], "question": "A gas at 4 atm fills 12 L. Compressed to 6 L at the same temperature, what pressure does it show?", "split": "train"}
+{"relation": "boyles", "args": [3, 9, 1], "question": "A 9 L balloon at 3 atm is compressed to 1 L. What pressure is needed to do that?", "split": "train"}
+{"relation": "boyles", "args": [8, 3, 12], "question": "Starting from 3 L at 8 atm and finishing at 12 L with the temperature held, what is the pressure?", "split": "train"}
+{"relation": "boyles", "args": [7, 4, 14], "question": "The piston expands 4 L of gas at 7 atm to 14 L. What is the new pressure at constant temperature?", "split": "eval"}
+{"relation": "boyles", "args": [6, 7, 3], "question": "7 L at 6 atm squeezed into 3 L, keeping the temperature fixed: give the pressure.", "split": "eval"}
+{"relation": "boyles", "args": [10, 2, 5], "question": "At 10 atm a sample occupies 2 L. What pressure results when the volume is increased to 5 L with T unchanged?", "split": "eval"}
+{"relation": "boyles", "args": [2, 3, 8], "question": "3 L of gas at 2 atm is allowed to expand to 8 L with the temperature constant. Find the new pressure.", "split": "eval"}
+{"relation": "charles", "args": [1, 273, 546], "question": "1 L at 273 K doubles its temperature to 546 K at constant pressure. What volume does it now occupy?", "split": "train"}
+{"relation": "charles", "args": [9, 220, 330], "question": "At 220 K the gas fills 9 L. Determine its volume at 330 K if the pressure stays fixed.", "split": "train"}
+{"relation": "charles", "args": [10, 250, 375], "question": "A 10 L sample at 250 K is warmed to 375 K without changing the pressure. Find the new volume.", "split": "train"}
+{"relation": "charles", "args": [8, 200, 250], "question": "Going from 200 K to 250 K at constant pressure, a gas of 8 L becomes what volume?", "split": "train"}
+{"relation": "charles", "args": [4, 280, 350], "question": "Warming 4 L of gas from 280 K to 350 K at constant pressure gives what volume?", "split": "train"}
+{"relation": "charles", "args": [3, 150, 450], "question": "A 3 L sample at 150 K is heated to 450 K with the pressure held constant. Give the new volume.", "split": "train"}
+{"relation": "charles", "args": [7, 320, 240], "question": "The gas is cooled from 320 K to 240 K. It started at 7 L and the pressure never changes; what volume is left?", "split": "eval"}
+{"relation": "charles", "args": [6, 300, 200], "question": "6 L of gas at 300 K is cooled to 200 K at constant pressure. What volume does it take up?", "split": "eval"}
+{"relation": "charles", "args": [2, 350, 420], "question": "A 2 L sample at 350 K is heated to 420 K. What volume does it reach at the same pressure?", "split": "eval"}
+{"relation": "charles", "args": [5, 360, 300], "question": "Gas at 360 K in a 5 L container cools to 300 K at fixed pressure. What volume does it shrink to?", "split": "eval"}
+{"relation": "combined_gas", "args": [1, 12, 273, 3, 300], "question": "12 L of gas at 1 atm and 273 K is compressed to 3 atm while warming to 300 K. Give the resulting volume.", "split": "train"}
+{"relation": "combined_gas", "args": [2, 4, 310, 4, 250], "question": "Starting at 2 atm, 4 L and 310 K, the sample ends at 4 atm and 250 K. What volume does it take?", "split": "train"}
+{"relation": "combined_gas", "args": [5, 3, 320, 6, 350], "question": "The gas goes from 5 atm and 320 K in 3 L to 6 atm and 350 K. Find the final volume.", "split": "train"}
+{"relation": "combined_gas", "args": [1, 8, 300, 2, 360], "question": "A gas at 1 atm in 8 L at 300 K is compressed to 2 atm and warmed to 360 K. What volume does it finally occupy?", "split": "train"}
+{"relation": "combined_gas", "args": [1, 6, 250, 1, 500], "question": "6 L at 250 K and 1 atm is heated to 500 K with the pressure unchanged. What volume is that now?", "split": "train"}
+{"relation": "combined_gas", "args": [3, 5, 280, 1, 350], "question": "5 L of gas at 3 atm and 280 K is allowed to reach 1 atm at 350 K. Find the new volume.", "split": "train"}
+{"relation": "combined_gas", "args": [1, 15, 330, 4, 300], "question": "Starting from 15 L at 1 atm and 330 K, the sample settles at 4 atm and 300 K. Volume?", "split": "eval"}
+{"relation": "combined_gas", "args": [3, 7, 370, 2, 420], "question": "7 L at 3 atm and 370 K becomes 2 atm at 420 K. What is the new volume? The vessel is glass.", "split": "eval"}
+{"relation": "combined_gas", "args": [4, 2, 400, 2, 500], "question": "Held at 400 K in 2 L and 4 atm, the gas is taken to 2 atm and 500 K. Find the volume it ends up with.", "split": "eval"}
+{"relation": "combined_gas", "args": [2, 9, 290, 1, 310], "question": "The gas starts at 2 atm in 9 L at 290 K and is allowed to settle at 1 atm and 310 K. What volume does it end up at?", "split": "eval"}
+{"relation": "density", "args": [45, 9], "question": "45 g of a liquid fills 9 mL. What density does that give?", "split": "train"}
+{"relation": "density", "args": [12.5, 2.5], "question": "2.5 mL of a solution weighs 12.5 g. Calculate its density.", "split": "train"}
+{"relation": "density", "args": [500, 25], "question": "A block of 500 g displaces 25 mL of water. What is its density?", "split": "train"}
+{"relation": "density", "args": [800, 100], "question": "100 mL of the syrup has a mass of 800 g. Give its density.", "split": "train"}
+{"relation": "density", "args": [64, 8], "question": "An 8 mL cube of metal weighs 64 g. Find its density in g/mL.", "split": "train"}
+{"relation": "density", "args": [90, 15], "question": "The stone's mass is 90 g and it displaces 15 mL of water. What is the density of the stone?", "split": "train"}
+{"relation": "density", "args": [18, 6], "question": "The sample takes up 6 mL and has a mass of 18 g. Report the density.", "split": "eval"}
+{"relation": "density", "args": [240, 48], "question": "48 mL of resin weighs 240 g. What is the density of the resin? The mould is steel.", "split": "eval"}
+{"relation": "density", "args": [55, 11], "question": "The oil in the cylinder measures 11 mL and weighs 55 g. What density is that?", "split": "eval"}
+{"relation": "density", "args": [3.5, 0.5], "question": "0.5 mL of a concentrate weighs 3.5 g. Density?", "split": "eval"}
+{"relation": "stoichiometry", "args": [1, 2], "question": "Each mole of reactant gives 2 mol of product. Running the reaction with 1 mol gives what?", "split": "train"}
+{"relation": "stoichiometry", "args": [3, 1], "question": "3 mol reacts and the ratio to product is 1 to 1. What amount of product results?", "split": "train"}
+{"relation": "stoichiometry", "args": [2, 3], "question": "2 mol of reactant goes in, and the equation shows 3 mol of product per mole of reactant. How many moles of product form?", "split": "train"}
+{"relation": "stoichiometry", "args": [12, 2], "question": "12 mol of reactant at a 2 to 1 product ratio: calculate the product moles.", "split": "train"}
+{"relation": "stoichiometry", "args": [2.4, 3], "question": "The product ratio is 3 to 1 and 2.4 mol of reactant is used up. Determine the moles of product formed.", "split": "train"}
+{"relation": "stoichiometry", "args": [0.3, 5], "question": "A reaction consumes 0.3 mol and makes 5 mol of product per mole consumed. How much product is made?", "split": "train"}
+{"relation": "stoichiometry", "args": [1.25, 4], "question": "If 1.25 mol reacts and the stoichiometry is 4 to 1 in favour of product, what is the product amount?", "split": "eval"}
+{"relation": "stoichiometry", "args": [8, 3], "question": "8 mol of reactant at a 3 to 1 product ratio yields how much product?", "split": "eval"}
+{"relation": "stoichiometry", "args": [0.75, 2], "question": "The balanced equation needs 2 mol of product for every mole of reactant. Starting with 0.75 mol, what amount of product is produced?", "split": "eval"}
+{"relation": "stoichiometry", "args": [5, 4], "question": "5 mol of limiting reagent reacts at a 4 to 1 ratio with product. Find the moles of product.", "split": "eval"}
+{"relation": "dilution_v1", "args": [3, 0.3, 200], "question": "200 mL of 0.3 M is wanted from 3 M stock. Find the volume to pipette.", "split": "train"}
+{"relation": "dilution_v1", "args": [1.5, 0.15, 300], "question": "Starting from 1.5 M, how many mL make 300 mL of 0.15 M?", "split": "train"}
+{"relation": "dilution_v1", "args": [12, 0.5, 600], "question": "How much 12 M stock makes 600 mL of 0.5 M solution?", "split": "train"}
+{"relation": "dilution_v1", "args": [10, 1, 500], "question": "You need 500 mL of 1 M solution and have only 10 M acid. What volume of the acid is required?", "split": "train"}
+{"relation": "dilution_v1", "args": [8, 0.4, 250], "question": "A 250 mL flask must end up 0.4 M, using 8 M stock. What stock volume goes in?", "split": "train"}
+{"relation": "dilution_v1", "args": [2, 0.1, 400], "question": "A 400 mL batch of 0.1 M solution has to be prepared from 2 M stock. How much stock do you measure?", "split": "train"}
+{"relation": "dilution_v1", "args": [2.5, 0.25, 750], "question": "Preparing 750 mL of 0.25 M from 2.5 M stock takes what volume of stock?", "split": "eval"}
+{"relation": "dilution_v1", "args": [4, 0.2, 600], "question": "600 mL of 0.2 M solution is needed and the bottle is 4 M. Calculate the volume required.", "split": "eval"}
+{"relation": "dilution_v1", "args": [0.5, 0.05, 100], "question": "To get 100 mL of 0.05 M from a 0.5 M solution, what volume of the 0.5 M solution is taken?", "split": "eval"}
+{"relation": "dilution_v1", "args": [6, 0.5, 150], "question": "A 150 mL flask has to end up 0.5 M and the bottle is 6 M. How much of the bottle goes in?", "split": "eval"}
+{"relation": "molality", "args": [0.6, 1.5], "question": "With 1.5 kg of solvent and 0.6 mol of solute, what molality do you have?", "split": "train"}
+{"relation": "molality", "args": [2.5, 5], "question": "Dissolving 2.5 mol of urea in 5 kg of water gives what molality?", "split": "train"}
+{"relation": "molality", "args": [3.5, 7], "question": "7 kg of solvent with 3.5 mol dissolved in it: what molality is that?", "split": "train"}
+{"relation": "molality", "args": [0.2, 0.25], "question": "For 0.2 mol in 0.25 kg of solvent, what is the molality? The solute was dried first.", "split": "train"}
+{"relation": "molality", "args": [0.4, 0.8], "question": "Dissolve 0.4 mol in 0.8 kg of solvent and report the molality.", "split": "train"}
+{"relation": "molality", "args": [6, 3], "question": "6 mol of solute in 3 kg of solvent gives what molality?", "split": "train"}
+{"relation": "molality", "args": [0.5, 2], "question": "A beaker holding 2 kg of solvent takes 0.5 mol of solute. What molality does that make?", "split": "eval"}
+{"relation": "molality", "args": [4, 8], "question": "8 kg of solvent carries 4 mol of dissolved substance. Give the molality.", "split": "eval"}
+{"relation": "molality", "args": [1, 0.5], "question": "One mole in 0.5 kg of solvent: find the molality.", "split": "eval"}
+{"relation": "molality", "args": [0.15, 0.3], "question": "A solution holds 0.15 mol in 0.3 kg of solvent. Calculate the molality.", "split": "eval"}
+{"relation": "h_from_ph", "args": [10], "question": "The pH of a soap solution is 10. What [H+] goes with it?", "split": "train"}
+{"relation": "h_from_ph", "args": [1], "question": "pH 1 for a strong acid: what hydrogen ion concentration does that mean?", "split": "train"}
+{"relation": "h_from_ph", "args": [12], "question": "With a pH of 12 recorded, determine the hydrogen ion concentration.", "split": "train"}
+{"relation": "h_from_ph", "args": [5], "question": "The pH reads 5. What concentration of hydrogen ions is present?", "split": "train"}
+{"relation": "h_from_ph", "args": [8], "question": "A solution of pH 8: report [H+].", "split": "train"}
+{"relation": "h_from_ph", "args": [7], "question": "A neutral solution sits at pH 7. What [H+] does that imply?", "split": "train"}
+{"relation": "h_from_ph", "args": [3], "question": "A solution at pH 3. Find [H+] in mol/L.", "split": "eval"}
+{"relation": "h_from_ph", "args": [9], "question": "Find [H+] for a solution whose pH is 9. The electrode was calibrated at 25 C.", "split": "eval"}
+{"relation": "h_from_ph", "args": [4], "question": "A weak acid sits at pH 4. Give the concentration of H+ ions.", "split": "eval"}
+{"relation": "h_from_ph", "args": [6], "question": "pH 6 on the meter: what hydrogen ion concentration is in the beaker?", "split": "eval"}
+{"relation": "buffer_ph", "args": [7.4, 0.15, 0.45], "question": "A phosphate buffer has pKa 7.4, base 0.15 M and acid 0.45 M. What pH does it hold?", "split": "train"}
+{"relation": "buffer_ph", "args": [3.2, 0.25, 0.5], "question": "0.25 M base, 0.5 M acid, pKa 3.2. Find the pH of this buffer.", "split": "train"}
+{"relation": "buffer_ph", "args": [4.2, 0.1, 0.1], "question": "A buffer holds 0.1 M conjugate base and 0.1 M weak acid, and the acid has pKa 4.2. What pH does it give?", "split": "train"}
+{"relation": "buffer_ph", "args": [11, 0.1, 0.3], "question": "A buffer with pKa 11 has 0.1 M base and 0.3 M acid. What pH does the meter show?", "split": "train"}
+{"relation": "buffer_ph", "args": [9, 0.6, 0.3], "question": "The buffer is 0.6 M in base and 0.3 M in acid, and pKa is 9. Give the pH.", "split": "train"}
+{"relation": "buffer_ph", "args": [10.5, 0.5, 0.25], "question": "With pKa 10.5, 0.5 M conjugate base and 0.25 M acid, what pH results?", "split": "train"}
+{"relation": "buffer_ph", "args": [4.76, 0.8, 0.2], "question": "pKa 4.76, with 0.8 M acetate and 0.2 M acetic acid. Compute the pH.", "split": "eval"}
+{"relation": "buffer_ph", "args": [6.8, 0.3, 0.6], "question": "pKa 6.8 with 0.3 M base and 0.6 M acid: find the buffer pH.", "split": "eval"}
+{"relation": "buffer_ph", "args": [5.5, 0.4, 0.1], "question": "0.4 M base and 0.1 M acid at pKa 5.5: calculate the pH of the buffer.", "split": "eval"}
+{"relation": "buffer_ph", "args": [8.5, 0.2, 0.4], "question": "A buffer of 0.2 M base against 0.4 M acid, with pKa 8.5. Determine its pH.", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [450, 0.45, 50], "question": "450 J raises a material of specific heat 0.45 J/(g C) through 50 degrees. Calculate the mass.", "split": "train"}
+{"relation": "calorimetry_mass", "args": [420, 2.1, 20], "question": "420 J warms a sample of specific heat 2.1 J/(g C) by 20 degrees. What mass is being heated?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [1400, 1, 35], "question": "1400 J goes into a sample with a specific heat of 1 J/(g C), raising it 35 degrees. Mass?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [385, 0.385, 25], "question": "385 J warms a piece of metal of c = 0.385 J/(g C) by 25 degrees. Find its mass.", "split": "train"}
+{"relation": "calorimetry_mass", "args": [900, 2.4, 25], "question": "25 degrees of warming on 900 J gives what mass, if c is 2.4 J/(g C)?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [60, 0.24, 10], "question": "A 10 degree rise from 60 J of heat at 0.24 J/(g C): what mass does that imply?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [1260, 4.2, 30], "question": "1260 J of heat produces a 30 degree rise with c = 4.2 J/(g C). Determine the mass of the sample.", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [418, 4.18, 20], "question": "Water takes 418 J to climb 20 degrees at 4.18 J/(g C). How many grams of water is that?", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [900, 0.9, 40], "question": "900 J in, 40 degrees hotter, and the material's c is 0.9 J/(g C). How many grams is the sample?", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [130, 0.13, 20], "question": "The specific heat is 0.13 J/(g C) and 130 J lifts the temperature by 20 degrees. How many grams is the sample?", "split": "eval"}
+{"relation": "calorimetry_c", "args": [650, 100, 50], "question": "650 J lifts the temperature of a 100 g block by 50 degrees. Report the value of c.", "split": "train"}
+{"relation": "calorimetry_c", "args": [120, 10, 5], "question": "With 10 g and a 5 degree rise from 120 J, what specific heat follows?", "split": "train"}
+{"relation": "calorimetry_c", "args": [90, 5, 40], "question": "5 g warmed by 40 degrees takes 90 J. Determine the specific heat.", "split": "train"}
+{"relation": "calorimetry_c", "args": [12600, 200, 15], "question": "Getting 200 g to rise 15 degrees took 12600 J. Find the specific heat of the material.", "split": "train"}
+{"relation": "calorimetry_c", "args": [770, 40, 50], "question": "40 g gains 770 J over 50 degrees. Report the specific heat.", "split": "train"}
+{"relation": "calorimetry_c", "args": [5400, 200, 30], "question": "200 g soaks up 5400 J and warms 30 degrees. What specific heat does that give?", "split": "train"}
+{"relation": "calorimetry_c", "args": [1050, 20, 25], "question": "The sample weighed 20 g, gained 1050 J and ended 25 degrees hotter. What is c?", "split": "eval"}
+{"relation": "calorimetry_c", "args": [2090, 50, 10], "question": "50 g of liquid takes in 2090 J over a 10 degree rise. Find c.", "split": "eval"}
+{"relation": "calorimetry_c", "args": [1000, 50, 20], "question": "A 50 g block takes 1000 J and rises 20 degrees. Compute c.", "split": "eval"}
+{"relation": "calorimetry_c", "args": [120, 25, 20], "question": "25 g absorbs 120 J and rises 20 degrees. Give c in J/(g C).", "split": "eval"}
+{"relation": "latent_heat", "args": [15, 334], "question": "15 g of a solid melts at 334 J/g. Find the energy required.", "split": "train"}
+{"relation": "latent_heat", "args": [150, 2260], "question": "150 g of a liquid vaporises at 2260 J/g. Determine the energy absorbed.", "split": "train"}
+{"relation": "latent_heat", "args": [80, 334], "question": "An 80 g block of ice at 0 C has to melt. At 334 J/g, what energy is required?", "split": "train"}
+{"relation": "latent_heat", "args": [10, 334], "question": "10 g of ice melts at 334 J/g. How much energy does the melting take?", "split": "train"}
+{"relation": "latent_heat", "args": [300, 2260], "question": "Boiling 300 g of water at 2260 J/g takes how much energy?", "split": "train"}
+{"relation": "latent_heat", "args": [45, 2260], "question": "45 g of the liquid vaporises with a latent heat of 2260 J/g. Give the energy.", "split": "train"}
+{"relation": "latent_heat", "args": [25, 2260], "question": "25 g of water boils away; the latent heat of vaporisation is 2260 J/g. Energy needed?", "split": "eval"}
+{"relation": "latent_heat", "args": [200, 334], "question": "200 g of ice at 0 C is melted at 334 J/g. What energy is absorbed?", "split": "eval"}
+{"relation": "latent_heat", "args": [60, 334], "question": "60 g changes from solid to liquid with a latent heat of 334 J/g. Calculate the heat needed.", "split": "eval"}
+{"relation": "latent_heat", "args": [90, 2260], "question": "Vaporising 90 g at 2260 J/g needs what amount of heat?", "split": "eval"}
+{"relation": "first_law", "args": [-250, 250], "question": "A system gives off 250 J (q = -250 J) and has 250 J of work done on it. What is the net change in internal energy?", "split": "train"}
+{"relation": "first_law", "args": [-80, -20], "question": "Both terms are negative: the system loses 80 J as heat (q = -80 J) and does 20 J of work (w = -20 J). Change in U?", "split": "train"}
+{"relation": "first_law", "args": [200, -50], "question": "The system takes in 200 J of heat and does 50 J of work, so w = -50 J. What is the change in internal energy?", "split": "train"}
+{"relation": "first_law", "args": [600, -150], "question": "600 J of heat flows in and the system does 150 J of work (w = -150 J). Find the change in internal energy.", "split": "train"}
+{"relation": "first_law", "args": [100, -40], "question": "100 J of heat is added while the gas does 40 J of work (w = -40 J). Give the internal energy change.", "split": "train"}
+{"relation": "first_law", "args": [-400, -75], "question": "q = -400 J of heat leaves the system and w = -75 J of work is done by it. What is the change in internal energy?", "split": "train"}
+{"relation": "first_law", "args": [-300, 100], "question": "A gas releases 300 J of heat, so q = -300 J, while 100 J of work is done on it. Find the internal energy change.", "split": "eval"}
+{"relation": "first_law", "args": [450, 0], "question": "450 J of heat enters a system that does no work at all (w = 0 J). What is the change in internal energy?", "split": "eval"}
+{"relation": "first_law", "args": [-60, 140], "question": "The system loses 60 J (q = -60 J) but gains 140 J of work. What is its internal energy change?", "split": "eval"}
+{"relation": "first_law", "args": [75, 25], "question": "75 J of heat is added and 25 J of work is done on the system. Determine the internal energy change.", "split": "eval"}
+{"relation": "gibbs", "args": [80, 273, -400], "question": "80 kJ of enthalpy change, -400 J/K of entropy change and 273 K. Give the Gibbs free energy change.", "split": "train"}
+{"relation": "gibbs", "args": [-600, 500, -100], "question": "The reaction releases 600 kJ of enthalpy, so dH = -600 kJ, with dS = -100 J/K at 500 K. What is dG?", "split": "train"}
+{"relation": "gibbs", "args": [-120, 310, 50], "question": "Someone hands you dH = -120 kJ and dS = 50 J/K at 310 K and asks whether the reaction is spontaneous. What is dG?", "split": "train"}
+{"relation": "gibbs", "args": [-450, 300, -300], "question": "An enthalpy change of -450 kJ and an entropy change of -300 J/K at 300 K: calculate dG.", "split": "train"}
+{"relation": "gibbs", "args": [320, 290, 150], "question": "dS = 150 J/K and dH = 320 kJ, measured at 290 K. Determine dG.", "split": "train"}
+{"relation": "gibbs", "args": [150, 350, -200], "question": "At 350 K a reaction has dH = 150 kJ and dS = -200 J/K. Find the Gibbs free energy change.", "split": "train"}
+{"relation": "gibbs", "args": [500, 450, 200], "question": "At 450 K, dH is 500 kJ and dS is 200 J/K. What is the change in Gibbs free energy? The calorimeter was new.", "split": "eval"}
+{"relation": "gibbs", "args": [-40, 340, -250], "question": "An enthalpy change of -40 kJ pairs with -250 J/K at 340 K. Compute the Gibbs free energy change.", "split": "eval"}
+{"relation": "gibbs", "args": [-200, 298, 100], "question": "dH is -200 kJ, dS is 100 J/K and the reaction runs at 298 K. What is dG?", "split": "eval"}
+{"relation": "gibbs", "args": [250, 400, 250], "question": "250 kJ of enthalpy and 250 J/K of entropy change at 400 K. Report the change in Gibbs free energy.", "split": "eval"}
+{"relation": "carnot", "args": [900, 600], "question": "A turbine runs with its hot side at 900 K and its cold side at 600 K. What ideal efficiency applies?", "split": "train"}
+{"relation": "carnot", "args": [800, 300], "question": "A power plant operates between 800 K and 300 K. What efficiency does the ideal cycle allow?", "split": "train"}
+{"relation": "carnot", "args": [550, 275], "question": "Heat enters a reversible engine at 550 K and leaves at 275 K. Give the best efficiency it could have.", "split": "train"}
+{"relation": "carnot", "args": [400, 300], "question": "A heat engine works between 400 K and 300 K. What efficiency can it reach at best?", "split": "train"}
+{"relation": "carnot", "args": [350, 280], "question": "Hot reservoir 350 K, cold reservoir 280 K. Find the best efficiency an engine could have.", "split": "train"}
+{"relation": "carnot", "args": [500, 400], "question": "Between a 500 K source and a 400 K sink, what is the highest possible efficiency?", "split": "train"}
+{"relation": "carnot", "args": [250, 200], "question": "Between 250 K and 200 K, what efficiency is the theoretical maximum?", "split": "eval"}
+{"relation": "carnot", "args": [700, 350], "question": "The Carnot efficiency for a cycle between 700 K and 350 K: what is it?", "split": "eval"}
+{"relation": "carnot", "args": [600, 450], "question": "An ideal engine runs between 600 K and 450 K. What efficiency does the Carnot limit give?", "split": "eval"}
+{"relation": "carnot", "args": [450, 150], "question": "With the source at 450 K and the sink at 150 K, what efficiency can a reversible engine achieve?", "split": "eval"}
+{"relation": "km_to_m", "args": [0.8], "question": "A sprint of 0.8 km on the track: give the distance in metres.", "split": "train"}
+{"relation": "km_to_m", "args": [4.2], "question": "The cross-country course is 4.2 km long. How many metres is that?", "split": "train"}
+{"relation": "km_to_m", "args": [6.5], "question": "A cycle path runs 6.5 km. Give its length in metres.", "split": "train"}
+{"relation": "km_to_m", "args": [5.5], "question": "The tunnel is 5.5 km long. What is its length in metres? It opened in 1998.", "split": "train"}
+{"relation": "km_to_m", "args": [22], "question": "A stage of the race is 22 km. How far is that in metres?", "split": "train"}
+{"relation": "km_to_m", "args": [1.2], "question": "A walk of 1.2 km equals how many metres?", "split": "train"}
+{"relation": "km_to_m", "args": [9], "question": "The ferry crossing is 9 km. Express the distance in metres.", "split": "eval"}
+{"relation": "km_to_m", "args": [0.4], "question": "A 0.4 km lap of the park, measured in metres, is what?", "split": "eval"}
+{"relation": "km_to_m", "args": [16], "question": "A Sunday hike covered 16 km. Convert that to metres for the logbook.", "split": "eval"}
+{"relation": "km_to_m", "args": [3], "question": "The lake is 3 km across. What is that across in metres?", "split": "eval"}
+{"relation": "m_to_cm", "args": [7], "question": "A cable run of 7 m has to be ordered in centimetres. How many is that?", "split": "train"}
+{"relation": "m_to_cm", "args": [15], "question": "The hall is 15 m deep. Report the depth in centimetres. The hall seats 200 people.", "split": "train"}
+{"relation": "m_to_cm", "args": [2.4], "question": "A bookshelf is 2.4 m wide. What is its width in centimetres?", "split": "train"}
+{"relation": "m_to_cm", "args": [3.75], "question": "A curtain track of 3.75 m, what is that in centimetres?", "split": "train"}
+{"relation": "m_to_cm", "args": [0.9], "question": "A bench 0.9 m long, written in centimetres, is what?", "split": "train"}
+{"relation": "m_to_cm", "args": [1.8], "question": "A wardrobe of 1.8 m: give the height in centimetres.", "split": "train"}
+{"relation": "m_to_cm", "args": [0.35], "question": "The gap under the door is 0.35 m. Express that in centimetres.", "split": "eval"}
+{"relation": "m_to_cm", "args": [12], "question": "The classroom is 12 m long. Convert that to centimetres.", "split": "eval"}
+{"relation": "m_to_cm", "args": [8.2], "question": "The beam spans 8.2 m. How many centimetres is the span?", "split": "eval"}
+{"relation": "m_to_cm", "args": [0.6], "question": "A step of 0.6 m in the plans is how many centimetres?", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [7], "question": "A fridge at 7 C corresponds to what Fahrenheit value?", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [31], "question": "The pool is at 31 C. What temperature is that in Fahrenheit?", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [-3], "question": "At -3 C the pond starts to freeze. Give the Fahrenheit reading.", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [14], "question": "A cellar sits at 14 degrees Celsius. Express that in Fahrenheit.", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [-25], "question": "Antifreeze is rated for -25 degrees Celsius. How cold is that in Fahrenheit?", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [45], "question": "Water at 45 degrees Celsius, in Fahrenheit? The jug holds 1.5 L.", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [-8], "question": "Overnight the reading dropped to -8 C. Give the Fahrenheit temperature.", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [24], "question": "The room is at 24 degrees Celsius. What is that on the Fahrenheit scale?", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [11], "question": "The morning was 11 degrees Celsius. What was it in Fahrenheit?", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [60], "question": "An oven set to 60 degrees Celsius: what does the Fahrenheit dial show?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [23], "question": "The freezer reads 23 F. Convert that to Celsius.", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [50], "question": "A thermometer showing 50 degrees Fahrenheit corresponds to what Celsius value?", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [140], "question": "The fryer oil reads 140 F. What is that on the Celsius scale?", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [77], "question": "A day of 77 degrees Fahrenheit: how warm is that in Celsius?", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [185], "question": "The recipe says 185 F for the oven. Give the Celsius setting.", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [-4], "question": "A winter morning at -4 F: give the Celsius temperature.", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [104], "question": "A hot tub at 104 F, in Celsius?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [26], "question": "The cold store runs at 26 F. What is that in Celsius?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [86], "question": "The bath is at 86 F. What is that in degrees Celsius?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [8], "question": "At 8 F the lake is solid. What Celsius temperature is that?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [40], "question": "A sack of cement is 40 kg. How many pounds is that? Use 1 kg = 2.205 lb.", "split": "train"}
+{"relation": "kg_to_lb", "args": [90], "question": "A crate of 90 kg is labelled in pounds for shipping. Using 2.205 lb per kg, what weight goes on the label?", "split": "train"}
+{"relation": "kg_to_lb", "args": [26], "question": "A suitcase of 26 kg, in pounds using 2.205 lb to a kg?", "split": "train"}
+{"relation": "kg_to_lb", "args": [7.5], "question": "A cat weighs 7.5 kg. Express that in pounds, with 2.205 lb per kg.", "split": "train"}
+{"relation": "kg_to_lb", "args": [11], "question": "A dumbbell of 11 kg: what is that in lb, at 2.205 pounds to the kilogram?", "split": "train"}
+{"relation": "kg_to_lb", "args": [18], "question": "A toddler weighs 18 kg. Give the weight in pounds, taking 2.205 lb per kg.", "split": "train"}
+{"relation": "kg_to_lb", "args": [1.6], "question": "A bag of flour is 1.6 kg. What is that in pounds at 2.205 lb/kg?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [3.2], "question": "A bag of potatoes is 3.2 kg. Using 1 kg = 2.205 lb, what is its weight in pounds?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [55], "question": "The patient is 55 kg. Convert to pounds with 1 kg = 2.205 lb. The scale was serviced in March.", "split": "eval"}
+{"relation": "kg_to_lb", "args": [0.45], "question": "A small parcel is 0.45 kg. Convert it to pounds with 1 kg = 2.205 lb.", "split": "eval"}
+{"relation": "liters_to_ml", "args": [2.75], "question": "A jug of 2.75 L: how many millilitres does it hold? The jug is glass.", "split": "train"}
+{"relation": "liters_to_ml", "args": [9], "question": "An urn of 9 L, converted to millilitres?", "split": "train"}
+{"relation": "liters_to_ml", "args": [8], "question": "A bucket of 8 L: how many mL does it hold?", "split": "train"}
+{"relation": "liters_to_ml", "args": [20], "question": "A fish tank of 20 L holds how many mL?", "split": "train"}
+{"relation": "liters_to_ml", "args": [3.5], "question": "The kettle holds 3.5 L. Express that in millilitres.", "split": "train"}
+{"relation": "liters_to_ml", "args": [0.15], "question": "A small vial holds 0.15 L. What is that in mL?", "split": "train"}
+{"relation": "liters_to_ml", "args": [4.25], "question": "A stockpot of 4.25 L, in millilitres?", "split": "eval"}
+{"relation": "liters_to_ml", "args": [1.8], "question": "A thermos of 1.8 L: give the capacity in millilitres.", "split": "eval"}
+{"relation": "liters_to_ml", "args": [0.6], "question": "A bottle of 0.6 L contains how many millilitres?", "split": "eval"}
+{"relation": "liters_to_ml", "args": [0.35], "question": "A can of drink holds 0.35 L. How many millilitres is that?", "split": "eval"}
+{"relation": "percent_error", "args": [19, 20], "question": "The sensor reads 19 C where the accepted value is 20 C. Find the percent error. The sensor is old.", "split": "train"}
+{"relation": "percent_error", "args": [9.5, 10], "question": "The balance reads 9.5 g but the accepted mass is 10 g. Report the percent error.", "split": "train"}
+{"relation": "percent_error", "args": [105, 95], "question": "A class re-runs the experiment and gets 105 where the accepted value is 95. How large is the error, as a percent?", "split": "train"}
+{"relation": "percent_error", "args": [48, 50], "question": "A titration gives 48 mL where 50 mL is the accepted volume. What is the percent error?", "split": "train"}
+{"relation": "percent_error", "args": [52, 50], "question": "The handbook gives 50 g for the product. A student weighs 52 g, so how far off is that in percent?", "split": "train"}
+{"relation": "percent_error", "args": [120, 150], "question": "The experiment returns 120 where 150 is accepted. Express the error as a percentage.", "split": "train"}
+{"relation": "percent_error", "args": [78, 75], "question": "A reading of 78 against a true value of 75: what percent error does that give?", "split": "eval"}
+{"relation": "percent_error", "args": [240, 200], "question": "240 units came back from the test when 200 was the accepted figure. What percent error does that represent?", "split": "eval"}
+{"relation": "percent_error", "args": [36, 40], "question": "A measurement of 36 compared with an accepted 40: calculate the percent error.", "split": "eval"}
+{"relation": "percent_error", "args": [5, 8], "question": "A small trial gives 5 mL where 8 mL is expected. What percent error is that?", "split": "eval"}
+{"relation": "scientific_notation", "args": [2.2, -4], "question": "The gap is 2.2 x 10^-4 m. Express it without powers of ten.", "split": "train"}
+{"relation": "scientific_notation", "args": [2.75, 5], "question": "A distance of 2.75 x 10^5 km, written as an ordinary number, is what?", "split": "train"}
+{"relation": "scientific_notation", "args": [4.6, -6], "question": "A charge of 4.6 x 10^-6 C is written out in full. What decimal is that?", "split": "train"}
+{"relation": "scientific_notation", "args": [3.75, -8], "question": "The constant is 3.75 x 10^-8. What is its decimal value?", "split": "train"}
+{"relation": "scientific_notation", "args": [9.3, 3], "question": "A frequency of 9.3 x 10^3 Hz: give it as an ordinary number.", "split": "train"}
+{"relation": "scientific_notation", "args": [6, 4], "question": "6 x 10^4 in ordinary notation is what number?", "split": "train"}
+{"relation": "scientific_notation", "args": [1.05, -7], "question": "A mass of 1.05 x 10^-7 kg, written as a decimal, is what?", "split": "eval"}
+{"relation": "scientific_notation", "args": [7.5, -1], "question": "A reading of 7.5 x 10^-1: express it as a decimal.", "split": "eval"}
+{"relation": "scientific_notation", "args": [5.8, 6], "question": "The number 5.8 x 10^6, written without an exponent, is what?", "split": "eval"}
+{"relation": "scientific_notation", "args": [8.4, 2], "question": "Write 8.4 x 10^2 out in full.", "split": "eval"}
+{"relation": "average", "args": [110, 95, 102, 89], "question": "The four readings were 110, 95, 102 and 89. What average do they give?", "split": "train"}
+{"relation": "average", "args": [200, 150, 180, 170], "question": "The results 200, 150, 180 and 170 were recorded. Determine their mean.", "split": "train"}
+{"relation": "average", "args": [61, 74, 58, 83], "question": "Four test marks were 61, 74, 58 and 83. What is the mean mark?", "split": "train"}
+{"relation": "average", "args": [67, 72, 58, 63], "question": "Four scores of 67, 72, 58 and 63: find the arithmetic mean.", "split": "train"}
+{"relation": "average", "args": [44, 39, 51, 46], "question": "Speeds of 44, 39, 51 and 46 km/h: what is the average speed?", "split": "train"}
+{"relation": "average", "args": [55, 47, 62, 50], "question": "A shop's takings were 55, 47, 62 and 50 over four days. Work out the mean.", "split": "train"}
+{"relation": "average", "args": [21, 34, 27, 18], "question": "The week's readings were 21, 34, 27 and 18 degrees. What average temperature is that?", "split": "eval"}
+{"relation": "average", "args": [5, 9, 14, 12], "question": "The values 5, 9, 14 and 12 were obtained. What is their mean? The sample was run twice.", "split": "eval"}
+{"relation": "average", "args": [3, 8, 15, 10], "question": "Counts of 3, 8, 15 and 10 came from four quadrats. Calculate the mean count.", "split": "eval"}
+{"relation": "average", "args": [9, 12, 18, 17], "question": "Four masses of 9, 12, 18 and 17 g were measured. Give the mean mass.", "split": "eval"}
+{"relation": "sig_figs", "args": [1.2849, 3], "question": "Round 1.2849 to 3 significant figures. The balance was recalibrated in June.", "split": "train"}
+{"relation": "sig_figs", "args": [845.6, 2], "question": "The survey gives 845.6 m for the run, but the report only needs 2 significant figures. What length is printed?", "split": "train"}
+{"relation": "sig_figs", "args": [0.0007492, 2], "question": "A concentration of 0.0007492 mol/L is recorded to 2 significant figures. What do you write?", "split": "train"}
+{"relation": "sig_figs", "args": [782.4, 3], "question": "782.4 g on the balance, but only 3 significant figures are justified. What do you record?", "split": "train"}
+{"relation": "sig_figs", "args": [0.04207, 3], "question": "A volume of 0.04207 L needs 3 significant figures. Give the value.", "split": "train"}
+{"relation": "sig_figs", "args": [57.19, 2], "question": "A titration volume of 57.19 mL, quoted to 2 significant figures, is what?", "split": "train"}
+{"relation": "sig_figs", "args": [0.3056, 4], "question": "The result 0.3056 is quoted to 4 significant figures. What number is that?", "split": "eval"}
+{"relation": "sig_figs", "args": [29.87, 3], "question": "Only 3 significant figures are allowed for 29.87. What number goes down?", "split": "eval"}
+{"relation": "sig_figs", "args": [9.721, 3], "question": "A mass of 9.721 g is reported to 3 significant figures. What should be written?", "split": "eval"}
+{"relation": "sig_figs", "args": [0.00618, 2], "question": "The instrument gives 0.00618 mol. Quote it to 2 significant figures.", "split": "eval"}

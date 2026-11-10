@@ -12,9 +12,11 @@ from . import (  # noqa: F401  (imported for their @relation side effects)
     algebra,
     calculus,
     chemistry,
+    em,
     logs,
     physics,
     precalc,
+    thermo,
     trig,
     units,
 )

@@ -575,6 +575,8 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 		solvers_trig_solve,
 		solvers_physics_solve,
 		solvers_chem_solve,
+		solvers_thermo_solve,
+		solvers_em_solve,
 		solvers_units_solve
 	};
 	size_t i;

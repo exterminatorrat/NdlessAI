@@ -40,6 +40,18 @@ GOLDEN = {
     ("kc_from_conc", (0.5, 0.25, 2)): "1",
     ("avg_rate", (0.2, 20)): "0.01 M/s",
     ("heat_reaction", (2, 285.8)): "571.6 kJ",
+    ("gas_work_isobaric", (500, 0.2)): "100 J",
+    ("gas_heat_cp", (2, 29.1, 20)): "1164 J",
+    ("entropy_change", (500, 250)): "2 J/K",
+    ("conduction_rate", (0.5, 2, 50, 0.05)): "1000 W",
+    ("radiation_power", (300, 2)): "918.5 W",
+    ("heat_pump_cop", (280, 320)): "7",
+    ("coulomb_force", (2, 3, 0.5)): "0.2158 N",
+    ("electric_field_point", (2, 2)): "4495 N/C",
+    ("capacitor_charge", (10, 12)): "120 uC",
+    ("capacitor_energy", (120, 12)): "720 uJ",
+    ("parallel_resistance", (6, 12)): "4 ohm",
+    ("motional_emf", (0.5, 1, 4)): "2 V",
 }
 
 

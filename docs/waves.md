@@ -181,7 +181,20 @@ on master. Nothing here is called done before it is merged.
 | 3.2 exact linear algebra | open, stacked on #58; typed `det`/`inv`/`rank`/`solve` on exact rationals, 4x4 cap, 47 host cases, device cross-compiles (+3.5 KB text) | #59 |
 | 3.3 and 3.4 pulled forward: chemistry and thermodynamics | 10 relations landed with the retrain | #29 |
 | 3.3 the rest of AP Chemistry: solutions, stoichiometry, equilibrium, kinetics | open; 6 relations (mass percent, mass-to-mass stoichiometry, mole fraction, Kc from concentrations, average rate, heat of reaction), trained at 12,000 steps because 6,000 left both gates worse than master | — |
+| 3.4 the rest of thermodynamics: work, entropy, conduction, radiation, heat pumps | open; 6 relations, trained with 3.5 in one run | — |
+| 3.5 electricity and magnetism: Coulomb, field, capacitors, parallel resistance, motional emf | open; 6 relations; the catalogue is now 102 and the generated gate says so — see below | — |
 | Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
+
+**The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
+102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
+relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the
+generated gate, which rewards memorising the phrasing a relation was trained
+with, the same three points read 95.0%, 94.2%, 90.5%. Training longer does not
+close that gap: the last run reached a validation loss of 0.0001 by step 12,000,
+so the model is out of capacity rather than out of steps. Restoring the
+generated number means a wider model, which costs answer time on a 132 MHz ARM9
+and should not be spent before anyone has timed the current one on hardware.
+That is the state wave 4 starts from.
 
 Wave 1's six code pulls verified together, with the trained weights present: the
 combined tree builds, every C test passes, fixed-point parity is 6/6, the

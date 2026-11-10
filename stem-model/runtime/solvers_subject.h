@@ -54,6 +54,10 @@ int solvers_physics_solve(const char *name, const char *const *args, int nargs,
                           char *out, size_t outlen);
 int solvers_chem_solve(const char *name, const char *const *args, int nargs,
                        char *out, size_t outlen);
+int solvers_thermo_solve(const char *name, const char *const *args,
+                         int nargs, char *out, size_t outlen);
+int solvers_em_solve(const char *name, const char *const *args, int nargs,
+                     char *out, size_t outlen);
 int solvers_units_solve(const char *name, const char *const *args, int nargs,
                         char *out, size_t outlen);
 

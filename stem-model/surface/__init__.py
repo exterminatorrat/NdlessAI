@@ -13,13 +13,15 @@ correct call is unchanged.
 from relations import amp, lin2, poly
 
 from . import (  # noqa: F401
-    precalc,
-    calculus,
     algebra,
-    logs,
-    trig,
-    physics,
+    calculus,
     chemistry,
+    em,
+    logs,
+    physics,
+    precalc,
+    thermo,
+    trig,
     units,
 )
 
@@ -31,6 +33,8 @@ TEMPLATES = {
     **trig.TEMPLATES,
     **physics.TEMPLATES,
     **chemistry.TEMPLATES,
+    **thermo.TEMPLATES,
+    **em.TEMPLATES,
     **units.TEMPLATES,
 }
 
@@ -115,6 +119,18 @@ _ARG_NAMES = {
     "kc_from_conc": ("product", "reactant", "coefficient"),
     "avg_rate": ("change", "time"),
     "heat_reaction": ("moles", "enthalpy"),
+    "gas_work_isobaric": ("P", "dV"),
+    "gas_heat_cp": ("n", "cp", "dT"),
+    "entropy_change": ("q", "T"),
+    "conduction_rate": ("k", "A", "dT", "d"),
+    "radiation_power": ("T", "area"),
+    "heat_pump_cop": ("t_cold", "t_hot"),
+    "coulomb_force": ("q1", "q2", "r"),
+    "electric_field_point": ("q", "r"),
+    "capacitor_charge": ("C", "V"),
+    "capacitor_energy": ("Q", "V"),
+    "parallel_resistance": ("r1", "r2"),
+    "motional_emf": ("B", "L", "v"),
     "gas_p": ("n", "T", "V"),
     "sig_figs": ("value", "n"),
     "friction_force": ("mu", "N"),

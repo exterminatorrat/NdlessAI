@@ -14124,6 +14124,103 @@ static const tcase HEAT_REACTION[] = {
 	{ { "1.5", "500", "", "", "", "" }, "750 kJ" },
 };
 
+static const tcase GAS_WORK_ISOBARIC[] = {
+	{ { "500", "0.2", "", "", "", "" }, "100 J" },
+	{ { "1000", "1", "", "", "", "" }, "1000 J" },
+	{ { "200", "0.5", "", "", "", "" }, "100 J" },
+	{ { "2000", "2", "", "", "", "" }, "4000 J" },
+	{ { "100", "0.1", "", "", "", "" }, "10 J" },
+	{ { "500", "2", "", "", "", "" }, "1000 J" },
+};
+static const tcase GAS_HEAT_CP[] = {
+	{ { "2", "29.1", "20", "", "", "" }, "1164 J" },
+	{ { "1", "75.3", "10", "", "", "" }, "753 J" },
+	{ { "3", "20.8", "50", "", "", "" }, "3120 J" },
+	{ { "0.5", "37.1", "25", "", "", "" }, "463.8 J" },
+	{ { "2", "29.1", "50", "", "", "" }, "2910 J" },
+	{ { "1", "29.1", "25", "", "", "" }, "727.5 J" },
+};
+static const tcase ENTROPY_CHANGE[] = {
+	{ { "500", "250", "", "", "", "" }, "2 J/K" },
+	{ { "1000", "300", "", "", "", "" }, "3.333 J/K" },
+	{ { "200", "200", "", "", "", "" }, "1 J/K" },
+	{ { "2500", "400", "", "", "", "" }, "6.25 J/K" },
+	{ { "100", "250", "", "", "", "" }, "0.4 J/K" },
+	{ { "500", "350", "", "", "", "" }, "1.429 J/K" },
+};
+static const tcase CONDUCTION_RATE[] = {
+	{ { "0.5", "2", "50", "0.05", "", "" }, "1000 W" },
+	{ { "400", "1", "100", "1", "", "" }, "4e+04 W" },
+	{ { "0.1", "0.5", "10", "0.02", "", "" }, "25 W" },
+	{ { "1", "5", "20", "0.1", "", "" }, "1000 W" },
+	{ { "0.2", "1", "50", "0.05", "", "" }, "200 W" },
+	{ { "400", "2", "100", "0.02", "", "" }, "4e+06 W" },
+};
+static const tcase RADIATION_POWER[] = {
+	{ { "300", "2", "", "", "", "" }, "918.5 W" },
+	{ { "250", "1", "", "", "", "" }, "221.5 W" },
+	{ { "400", "1", "", "", "", "" }, "1452 W" },
+	{ { "350", "2", "", "", "", "" }, "1702 W" },
+	{ { "200", "0.5", "", "", "", "" }, "45.36 W" },
+	{ { "300", "3", "", "", "", "" }, "1378 W" },
+};
+static const tcase HEAT_PUMP_COP[] = {
+	{ { "280", "320", "", "", "", "" }, "7" },
+	{ { "250", "300", "", "", "", "" }, "5" },
+	{ { "270", "320", "", "", "", "" }, "5.4" },
+	{ { "290", "350", "", "", "", "" }, "4.833" },
+	{ { "280", "300", "", "", "", "" }, "14" },
+	{ { "250", "270", "", "", "", "" }, "12.5" },
+};
+static const tcase COULOMB_FORCE[] = {
+	{ { "2", "3", "0.5", "", "", "" }, "0.2158 N" },
+	{ { "1", "1", "1", "", "", "" }, "0.00899 N" },
+	{ { "5", "4", "2", "", "", "" }, "0.04495 N" },
+	{ { "8", "10", "4", "", "", "" }, "0.04495 N" },
+	{ { "3", "2", "3", "", "", "" }, "0.005993 N" },
+	{ { "4", "6", "2", "", "", "" }, "0.05394 N" },
+};
+static const tcase ELECTRIC_FIELD_POINT[] = {
+	{ { "2", "1", "", "", "", "" }, "1.798e+04 N/C" },
+	{ { "3", "2", "", "", "", "" }, "6742 N/C" },
+	{ { "5", "4", "", "", "", "" }, "2809 N/C" },
+	{ { "10", "5", "", "", "", "" }, "3596 N/C" },
+	{ { "1", "3", "", "", "", "" }, "998.9 N/C" },
+	{ { "8", "2", "", "", "", "" }, "1.798e+04 N/C" },
+};
+static const tcase CAPACITOR_CHARGE[] = {
+	{ { "10", "12", "", "", "", "" }, "120 uC" },
+	{ { "47", "5", "", "", "", "" }, "235 uC" },
+	{ { "100", "24", "", "", "", "" }, "2400 uC" },
+	{ { "2", "9", "", "", "", "" }, "18 uC" },
+	{ { "20", "3", "", "", "", "" }, "60 uC" },
+	{ { "5", "12", "", "", "", "" }, "60 uC" },
+};
+static const tcase CAPACITOR_ENERGY[] = {
+	{ { "120", "12", "", "", "", "" }, "720 uJ" },
+	{ { "40", "5", "", "", "", "" }, "100 uJ" },
+	{ { "200", "24", "", "", "", "" }, "2400 uJ" },
+	{ { "10", "9", "", "", "", "" }, "45 uJ" },
+	{ { "60", "3", "", "", "", "" }, "90 uJ" },
+	{ { "20", "12", "", "", "", "" }, "120 uJ" },
+};
+static const tcase PARALLEL_RESISTANCE[] = {
+	{ { "6", "12", "", "", "", "" }, "4 ohm" },
+	{ { "2", "3", "", "", "", "" }, "1.2 ohm" },
+	{ { "4", "4", "", "", "", "" }, "2 ohm" },
+	{ { "8", "20", "", "", "", "" }, "5.714 ohm" },
+	{ { "3", "6", "", "", "", "" }, "2 ohm" },
+	{ { "12", "12", "", "", "", "" }, "6 ohm" },
+};
+static const tcase MOTIONAL_EMF[] = {
+	{ { "0.5", "1", "4", "", "", "" }, "2 V" },
+	{ { "1", "2", "5", "", "", "" }, "10 V" },
+	{ { "2", "3", "10", "", "", "" }, "60 V" },
+	{ { "1.5", "0.5", "2", "", "", "" }, "1.5 V" },
+	{ { "0.2", "1", "10", "", "", "" }, "2 V" },
+	{ { "1", "1", "2", "", "", "" }, "2 V" },
+};
+
 int main(void)
 {
 	int total = 0, bad = 0;
@@ -14207,6 +14304,18 @@ int main(void)
 	bad += check_rel("kc_from_conc", KC_FROM_CONC, (int)(sizeof(KC_FROM_CONC) / sizeof(KC_FROM_CONC[0])), 3, &total);
 	bad += check_rel("avg_rate", AVG_RATE, (int)(sizeof(AVG_RATE) / sizeof(AVG_RATE[0])), 2, &total);
 	bad += check_rel("heat_reaction", HEAT_REACTION, (int)(sizeof(HEAT_REACTION) / sizeof(HEAT_REACTION[0])), 2, &total);
+	bad += check_rel("gas_work_isobaric", GAS_WORK_ISOBARIC, (int)(sizeof(GAS_WORK_ISOBARIC) / sizeof(GAS_WORK_ISOBARIC[0])), 2, &total);
+	bad += check_rel("gas_heat_cp", GAS_HEAT_CP, (int)(sizeof(GAS_HEAT_CP) / sizeof(GAS_HEAT_CP[0])), 3, &total);
+	bad += check_rel("entropy_change", ENTROPY_CHANGE, (int)(sizeof(ENTROPY_CHANGE) / sizeof(ENTROPY_CHANGE[0])), 2, &total);
+	bad += check_rel("conduction_rate", CONDUCTION_RATE, (int)(sizeof(CONDUCTION_RATE) / sizeof(CONDUCTION_RATE[0])), 4, &total);
+	bad += check_rel("radiation_power", RADIATION_POWER, (int)(sizeof(RADIATION_POWER) / sizeof(RADIATION_POWER[0])), 2, &total);
+	bad += check_rel("heat_pump_cop", HEAT_PUMP_COP, (int)(sizeof(HEAT_PUMP_COP) / sizeof(HEAT_PUMP_COP[0])), 2, &total);
+	bad += check_rel("coulomb_force", COULOMB_FORCE, (int)(sizeof(COULOMB_FORCE) / sizeof(COULOMB_FORCE[0])), 3, &total);
+	bad += check_rel("electric_field_point", ELECTRIC_FIELD_POINT, (int)(sizeof(ELECTRIC_FIELD_POINT) / sizeof(ELECTRIC_FIELD_POINT[0])), 2, &total);
+	bad += check_rel("capacitor_charge", CAPACITOR_CHARGE, (int)(sizeof(CAPACITOR_CHARGE) / sizeof(CAPACITOR_CHARGE[0])), 2, &total);
+	bad += check_rel("capacitor_energy", CAPACITOR_ENERGY, (int)(sizeof(CAPACITOR_ENERGY) / sizeof(CAPACITOR_ENERGY[0])), 2, &total);
+	bad += check_rel("parallel_resistance", PARALLEL_RESISTANCE, (int)(sizeof(PARALLEL_RESISTANCE) / sizeof(PARALLEL_RESISTANCE[0])), 2, &total);
+	bad += check_rel("motional_emf", MOTIONAL_EMF, (int)(sizeof(MOTIONAL_EMF) / sizeof(MOTIONAL_EMF[0])), 3, &total);
 	bad += check_rel("km_to_m", KM_TO_M, (int)(sizeof(KM_TO_M) / sizeof(KM_TO_M[0])), 1, &total);
 	bad += check_rel("m_to_cm", M_TO_CM, (int)(sizeof(M_TO_CM) / sizeof(M_TO_CM[0])), 1, &total);
 	bad += check_rel("celsius_to_fahrenheit", CELSIUS_TO_FAHRENHEIT, (int)(sizeof(CELSIUS_TO_FAHRENHEIT) / sizeof(CELSIUS_TO_FAHRENHEIT[0])), 1, &total);

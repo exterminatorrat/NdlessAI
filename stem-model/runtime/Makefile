@@ -65,7 +65,7 @@ test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
 
 test_matrix: test_matrix.c matrix.c $(SOLVERS) $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_matrix.c matrix.c $(SOLVERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_matrix.c matrix.c $(SOLVERS) $(LDLIBS)
 
 test_expr: test_expr.c expr.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_expr.c expr.c $(LDLIBS)

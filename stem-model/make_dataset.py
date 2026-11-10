@@ -1,4 +1,5 @@
 import argparse
+import glob
 import json
 import os
 import random
@@ -58,6 +59,42 @@ def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None):
     return rows
 
 
+def paraphrase_rows(paths):
+    """Rows from the hand-written paraphrase corpus that are marked for training.
+
+    The corpus splits deterministically per relation, so the eval rows never
+    reach here: a phrasing the model trains on can never be the phrasing it is
+    measured on. Each row is re-derived rather than trusted, so a corpus row
+    whose args do not render back to themselves fails here instead of teaching
+    the model a wrong call.
+    """
+    rows = []
+    for path in paths:
+        with open(path) as fh:
+            for lineno, line in enumerate(fh, 1):
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                if row.get("split") != "train":
+                    continue
+                name = row["relation"]
+                params = list(row["args"])
+                call = render_call(name, params)
+                got = call.split()[2:]
+                if got != [str(p) for p in params]:
+                    raise RuntimeError(
+                        f"{path}:{lineno}: {name} {params} rendered as {call}")
+                rows.append({
+                    "relation": name,
+                    "subject": RELATIONS[name].subject,
+                    "question": row["question"],
+                    "call": call,
+                    "answer": run_call(call),
+                    "distractor": None,
+                })
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="data")
@@ -71,6 +108,12 @@ def main():
                          "and changes the vocabulary almost not at all")
     ap.add_argument("--distractors", type=float, default=0.5)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--paraphrases", default="",
+                    help="glob of hand-written corpus files to train on; "
+                         "empty means none, which is the pre-corpus behaviour")
+    ap.add_argument("--paraphrase-share", type=float, default=0.25,
+                    help="fraction of the training set made of hand-written "
+                         "paraphrases, by repeating the training split")
     ap.add_argument("--max-train-phrasings", type=int, default=0,
                     help="cap phrasings per relation; for A/B tests only")
     args = ap.parse_args()
@@ -81,6 +124,18 @@ def main():
     print(f"generating {args.train} train rows", flush=True)
     train_rows = build(names, args.train, args.seed, args.distractors,
                        args.max_train_phrasings or None)
+    if args.paraphrases:
+        extra = paraphrase_rows(sorted(glob.glob(args.paraphrases)))
+        target = int(args.train * args.paraphrase_share)
+        reps = max(1, target // max(1, len(extra)))
+        extra = extra * reps
+        print(f"adding {len(extra)} hand-written rows "
+              f"({reps}x of {len(extra) // reps} phrasings, "
+              f"{100.0 * len(extra) / (len(train_rows) + len(extra)):.0f}% of train)",
+              flush=True)
+        train_rows = train_rows + extra
+        random.Random(args.seed).shuffle(train_rows)
+
     print(f"generating {args.val} val rows", flush=True)
     val_rows = build(names, args.val, args.seed + 90001, args.distractors)
     print(f"generating {args.held_out} held-out phrasing rows", flush=True)

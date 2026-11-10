@@ -1,0 +1,420 @@
+{"relation": "arith_seq", "args": [12, -3, 9], "question": "A stack of boxes starts with 12 on the top shelf, and each shelf below holds 3 fewer than the one above, so take d = -3. How many boxes sit on the 9th shelf, and how many are on the first 9 shelves altogether?", "split": "train"}
+{"relation": "arith_seq", "args": [8, 6, 10], "question": "A savings jar gets 8 dollars in week one and then 6 more dollars than the week before, every week. After 10 weeks, what was the last deposit, and how much has gone in overall?", "split": "train"}
+{"relation": "arith_seq", "args": [7, 4, 15], "question": "Every horn blast from the ferry is 4 decibels louder than the last as it comes closer, starting at 7 dB. Find the level of the 15th blast and the sum of the first 15 levels. The hall itself seats 400 in total.", "split": "eval"}
+{"relation": "arith_seq", "args": [3, 5, 12], "question": "The front row of a small theatre seats 3 people, and every row behind it has 5 more seats than the row in front. Row 12 is the last one. How many seats does that last row have, and what does the whole 12-row block seat?", "split": "eval"}
+{"relation": "arith_seq", "args": [20, -2, 6], "question": "Count down from 20 in steps of 2, so d = -2. What is the 6th term of that sequence, and what do the first 6 terms add up to?", "split": "eval"}
+{"relation": "geom_seq", "args": [2, 3, 5], "question": "A rumour reaches 2 people in the first hour and then multiplies by 3 every hour. How many hear it in hour 5, and how many have heard it across the first 5 hours?", "split": "train"}
+{"relation": "geom_seq", "args": [6, 3, 4], "question": "A tower game pays 6 points for the first level, and each level is worth 3 times the one before. What does level 4 pay, and what does clearing 4 levels pay in total?", "split": "train"}
+{"relation": "geom_seq", "args": [3, 4, 4], "question": "A chain message begins with 3 copies, and each round multiplies the count by 4. How many copies go out in round 4, and how many exist after 4 rounds in all?", "split": "eval"}
+{"relation": "geom_seq", "args": [10, 2, 6], "question": "A video has 10 views on day one, and the daily count then multiplies by 2. What is the day 6 count, and what is the total across days 1 to 6?", "split": "eval"}
+{"relation": "geom_seq", "args": [5, 2, 7], "question": "A dish starts with 5 bacteria, and the count multiplies by 2 at every generation. Give the count at generation 7 and the running total over the first 7 generations.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [4, 2, 16], "question": "Some x makes 4x + 2 sit 16 units from zero, that is |4x + 2| = 16. Find those x.", "split": "train"}
+{"relation": "abs_value_eq", "args": [5, -1, 12], "question": "|5x - 1| works out to 12; what are the possible x?", "split": "train"}
+{"relation": "abs_value_eq", "args": [2, -5, 9], "question": "The distance between 2x and 5 is 9, so |2x - 5| = 9. Which x values satisfy that?", "split": "eval"}
+{"relation": "abs_value_eq", "args": [3, 4, 10], "question": "For the equation |3x + 4| = 10, list every solution for x.", "split": "eval"}
+{"relation": "abs_value_eq", "args": [1, -7, 6], "question": "An alarm sounds whenever |x - 7| reaches 6. At which values of x does it go off?", "split": "eval"}
+{"relation": "linear_ineq", "args": [3, -7, 11], "question": "3x - 7 has to stay under 11 for the circuit to be safe. Which x keep it that way?", "split": "train"}
+{"relation": "linear_ineq", "args": [-4, 5, 20], "question": "Solve -4x + 5 < 20, and watch which way the sign points after you divide.", "split": "train"}
+{"relation": "linear_ineq", "args": [5, -3, 12], "question": "Where is 5x - 3 smaller than 12? Give the range of x.", "split": "eval"}
+{"relation": "linear_ineq", "args": [-2, 8, 4], "question": "For -2x + 8 < 4, what values of x work? Dividing by a negative turns the sign around.", "split": "eval"}
+{"relation": "linear_ineq", "args": [2, 9, 15], "question": "Which x satisfy 2x + 9 < 15? State the answer as an inequality in x.", "split": "eval"}
+{"relation": "complete_square", "args": [1, -6, 5], "question": "A parabola is y = x^2 - 6x + 5. By completing the square, where is its vertex?", "split": "train"}
+{"relation": "complete_square", "args": [2, -10, 4], "question": "For f(x) = 2x^2 - 10x + 4, write it as a perfect square plus a constant and give the coordinates of the vertex.", "split": "train"}
+{"relation": "complete_square", "args": [3, -12, 10], "question": "Complete the square on 3x^2 - 12x + 10 and say where the minimum sits.", "split": "eval"}
+{"relation": "complete_square", "args": [1, 4, 7], "question": "The curve y = x^2 + 4x + 7 never crosses the x axis. Find its lowest point by completing the square.", "split": "eval"}
+{"relation": "complete_square", "args": [2, 8, -3], "question": "Put 2x^2 + 8x - 3 into the form a(x - h)^2 + k. What is the vertex?", "split": "eval"}
+{"relation": "factor_quadratic", "args": [3, -3, -6], "question": "Take out the common factor first. 3x^2 - 3x - 6 has a 3 in front and two linear factors behind it, so give the whole factorization.", "split": "train"}
+{"relation": "factor_quadratic", "args": [2, -14, 24], "question": "2x^2 - 14x + 24 splits into integer roots, so write it factored.", "split": "train"}
+{"relation": "factor_quadratic", "args": [1, 2, -8], "question": "Break x^2 + 2x - 8 into (x + something)(x + something).", "split": "eval"}
+{"relation": "factor_quadratic", "args": [1, -1, -12], "question": "x^2 - x - 12 = ( )( ). Fill in the two binomials.", "split": "eval"}
+{"relation": "factor_quadratic", "args": [1, -5, 6], "question": "A rectangle's area is x^2 - 5x + 6. Write that expression as two binomials multiplied together.", "split": "eval"}
+{"relation": "cubic_solve", "args": [1, 3, -4, -12], "question": "(x + 3) is one factor of x^3 + 3x^2 - 4x - 12, so what are the other two roots?", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -1, -12, 0], "question": "The cubic x^3 - x^2 - 12x crosses the axis three times. Find the three crossings.", "split": "train"}
+{"relation": "cubic_solve", "args": [1, -6, 11, -6], "question": "x^3 - 6x^2 + 11x - 6 = 0 has three integer solutions. What are they?", "split": "eval"}
+{"relation": "cubic_solve", "args": [2, -4, -2, 4], "question": "Which values of x make 2x^3 - 4x^2 - 2x + 4 vanish?", "split": "eval"}
+{"relation": "cubic_solve", "args": [2, -6, -8, 24], "question": "Solve 2x^3 - 6x^2 - 8x + 24 = 0. All three roots are integers. Question 13 on the sheet asks the same thing.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [3, -4, 2, 7, 2], "question": "For y = 3x^3 - 4x^2 + 2x + 7, how steep is the graph at x = 2?", "split": "train"}
+{"relation": "deriv_poly3", "args": [4, 0, -3, 8, -3], "question": "Take f(x) = 4x^3 - 3x + 8 and work out the value of its derivative at x = -3.", "split": "train"}
+{"relation": "deriv_poly3", "args": [2, 3, -4, 0, 5], "question": "How fast is f(x) = 2x^3 + 3x^2 - 4x changing at x = 5?", "split": "eval"}
+{"relation": "deriv_poly3", "args": [-1, 2, 0, -6, 4], "question": "Differentiate -x^3 + 2x^2 - 6 with respect to x, then substitute x = 4.", "split": "eval"}
+{"relation": "deriv_poly3", "args": [2, -1, 0, 5, -2], "question": "For f(x) = 2x^3 - x^2 + 5, what is the gradient at x = -2?", "split": "eval"}
+{"relation": "integr_poly3", "args": [2, -3, 1, -5, -1, 2], "question": "A region sits under y = 2x^3 - 3x^2 + x - 5, bounded by x = -1 and x = 2. What is its signed area?", "split": "train"}
+{"relation": "integr_poly3", "args": [1, 2, -4, 0, 1, 3], "question": "Water arrives at a rate f(x) = x^3 + 2x^2 - 4x. How much has accumulated by the time x runs from 1 to 3? The tank it feeds holds 200 L.", "split": "train"}
+{"relation": "integr_poly3", "args": [-2, 0, 3, 4, -2, 1], "question": "-2x^3 + 3x + 4 integrated from x = -2 to x = 1, what comes out?", "split": "eval"}
+{"relation": "integr_poly3", "args": [3, -1, 0, -2, 0, 2], "question": "Add up the contribution of 3x^3 - x^2 - 2 as x moves from 0 to 2.", "split": "eval"}
+{"relation": "integr_poly3", "args": [4, 2, -6, 3, -3, 1], "question": "Between x = -3 and x = 1, what is the integral of 4x^3 + 2x^2 - 6x + 3?", "split": "eval"}
+{"relation": "moles", "args": [50, 100], "question": "A 50 g portion of a compound of molar mass 100 g/mol sits on the balance. Convert that to moles.", "split": "train"}
+{"relation": "moles", "args": [25, 98], "question": "A beaker holds 25 g of sulfuric acid, molar mass 98 g/mol. Give the amount in moles.", "split": "train"}
+{"relation": "moles", "args": [36, 18], "question": "How many moles of water are in a 36 g sample? Water's molar mass is 18 g/mol.", "split": "eval"}
+{"relation": "moles", "args": [117, 58.5], "question": "Table salt has a molar mass of 58.5 g/mol, and the spoon holds 117 g. What amount is that, in moles?", "split": "eval"}
+{"relation": "moles", "args": [88, 44], "question": "Carbon dioxide weighs 44 g/mol. How many moles are in 88 g of it?", "split": "eval"}
+{"relation": "dilution", "args": [2, 25, 150], "question": "You take 25 mL of 2 M hydrochloric acid and add water until the volume is 150 mL. What concentration do you end up with?", "split": "train"}
+{"relation": "dilution", "args": [4, 10, 60], "question": "10 mL of 4 M sodium hydroxide is topped up with water to 60 mL. What is the diluted concentration?", "split": "train"}
+{"relation": "dilution", "args": [3, 20, 100], "question": "A student takes 20 mL of 3 M acid and tops it up to 100 mL. What is the new molarity?", "split": "eval"}
+{"relation": "dilution", "args": [0.5, 40, 200], "question": "A stock of 0.5 M copper sulfate: 40 mL of it is diluted to 200 mL. Find the new molarity.", "split": "eval"}
+{"relation": "dilution", "args": [0.5, 25, 250], "question": "The bottle is 0.5 M; 25 mL is measured out and made up to 250 mL. New concentration?", "split": "eval"}
+{"relation": "gas_p", "args": [2, 350, 10], "question": "2 mol of an ideal gas sits at 350 K in a 10 L flask. What pressure does it exert? Take R = 0.08206. The flask is labelled 500 mL.", "split": "train"}
+{"relation": "gas_p", "args": [3, 300, 22.4], "question": "3 mol at 300 K in 22.4 L of ideal gas: what pressure does that give, with R = 0.08206?", "split": "train"}
+{"relation": "gas_p", "args": [0.5, 298, 2], "question": "0.5 mol of gas at room temperature, 298 K, fills 2 L. Find the pressure with R = 0.08206 L atm / (mol K).", "split": "eval"}
+{"relation": "gas_p", "args": [0.25, 298, 1], "question": "0.25 mol of ideal gas at 298 K is confined to 1 L. Find the pressure, taking R = 0.08206.", "split": "eval"}
+{"relation": "gas_p", "args": [1.5, 273, 5], "question": "At 273 K, 1.5 mol of ideal gas occupies 5 L. What is its pressure, using R = 0.08206?", "split": "eval"}
+{"relation": "molarity", "args": [2, 5], "question": "Dissolve 2 mol of potassium nitrate and make the volume up to 5 L. Give the molarity.", "split": "train"}
+{"relation": "molarity", "args": [1.5, 0.5], "question": "A flask holds 0.5 L of solution containing 1.5 mol of glucose. Concentration?", "split": "train"}
+{"relation": "molarity", "args": [0.25, 2], "question": "0.25 mol of salt is stirred into enough water to make 2 L of solution. What is the molarity?", "split": "eval"}
+{"relation": "molarity", "args": [3, 4], "question": "A 4 L batch contains 3 mol of solute. Find the molar concentration.", "split": "eval"}
+{"relation": "molarity", "args": [0.1, 0.25], "question": "There is 0.1 mol of solute in 0.25 L of solution. What concentration is that?", "split": "eval"}
+{"relation": "ph", "args": [0.0005], "question": "The hydrogen ion concentration reads 0.0005 mol/L on the meter. Give the pH.", "split": "train"}
+{"relation": "ph", "args": [0.05], "question": "A sample of lemon juice has [H+] of 0.05 mol/L. Find the pH to four significant figures.", "split": "train"}
+{"relation": "ph", "args": [0.002], "question": "A dilute acid has [H+] = 0.002 mol/L. What is its pH?", "split": "eval"}
+{"relation": "ph", "args": [0.0002], "question": "The acid is very dilute: [H+] = 0.0002 mol/L. What is its pH?", "split": "eval"}
+{"relation": "ph", "args": [0.008], "question": "For a hydrogen ion concentration of 0.008 mol/L, what pH do you report?", "split": "eval"}
+{"relation": "poh", "args": [0.0002], "question": "Hydroxide concentration 0.0002 mol/L, what pOH follows from it?", "split": "train"}
+{"relation": "poh", "args": [0.0005], "question": "For [OH-] equal to 0.0005 mol/L, find the pOH.", "split": "train"}
+{"relation": "poh", "args": [0.005], "question": "A base solution has [OH-] = 0.005 mol/L. What is the pOH?", "split": "eval"}
+{"relation": "poh", "args": [0.1], "question": "A 0.1 mol/L hydroxide solution, what is its pOH?", "split": "eval"}
+{"relation": "poh", "args": [0.02], "question": "A solution with [OH-] 0.02 mol/L, what pOH does it have?", "split": "eval"}
+{"relation": "ph_from_poh", "args": [8], "question": "Given pOH 8, calculate the pH of the solution.", "split": "train"}
+{"relation": "ph_from_poh", "args": [11], "question": "A cleaning solution has pOH 11. What is its pH?", "split": "train"}
+{"relation": "ph_from_poh", "args": [3], "question": "The pOH comes out at 3; what pH goes with it?", "split": "eval"}
+{"relation": "ph_from_poh", "args": [6], "question": "A buffer's pOH is 6. Report its pH.", "split": "eval"}
+{"relation": "ph_from_poh", "args": [12], "question": "With pOH 12, what pH does the solution have?", "split": "eval"}
+{"relation": "percent_yield", "args": [33, 40], "question": "You calculate 40 g of product and weigh out 33 g. What percent yield is that?", "split": "train"}
+{"relation": "percent_yield", "args": [72, 80], "question": "A synthesis predicted 80 g and delivered 72 g. How efficient was it, in percent?", "split": "train"}
+{"relation": "percent_yield", "args": [95, 120], "question": "Starting materials could give 120 g; 95 g is isolated. Give the percent yield.", "split": "eval"}
+{"relation": "percent_yield", "args": [18, 25], "question": "Theory says 25 g; the experiment gives 18 g. Find the percent yield.", "split": "eval"}
+{"relation": "percent_yield", "args": [45, 60], "question": "The reaction should give 60 g of product, but only 45 g is collected. Percent yield? The oven was set to 110 degrees.", "split": "eval"}
+{"relation": "boyles", "args": [1, 10, 4], "question": "10 L at 1 atm is compressed to 4 L with the temperature kept fixed. What pressure does it reach?", "split": "train"}
+{"relation": "boyles", "args": [3, 8, 4], "question": "A gas occupies 8 L at 3 atm. Squeeze it to 4 L while the temperature holds. What pressure results?", "split": "train"}
+{"relation": "boyles", "args": [8, 5, 2], "question": "A cylinder holds 5 L of gas at 8 atm. Its piston compresses it to 2 L. Pressure?", "split": "eval"}
+{"relation": "boyles", "args": [5, 4, 10], "question": "4 L at 5 atm expands to 10 L, temperature unchanged. What is the pressure now?", "split": "eval"}
+{"relation": "boyles", "args": [2, 6, 3], "question": "Squeezing 6 L of gas at 2 atm down to 3 L, with the temperature untouched, gives what pressure?", "split": "eval"}
+{"relation": "charles", "args": [8, 400, 500], "question": "8 L at 400 K is heated to 500 K, pressure fixed. Give the final volume.", "split": "train"}
+{"relation": "charles", "args": [3, 350, 300], "question": "Cooling 3 L of gas from 350 K to 300 K at constant pressure, what volume remains?", "split": "train"}
+{"relation": "charles", "args": [4, 300, 450], "question": "A balloon of 4 L sits at 300 K. Heat it to 450 K without changing the pressure; what volume does it reach?", "split": "eval"}
+{"relation": "charles", "args": [2, 273, 350], "question": "A 2 L balloon at 273 K is warmed to 350 K with the pressure held. What volume does it swell to?", "split": "eval"}
+{"relation": "charles", "args": [5, 250, 400], "question": "Gas at 250 K fills 5 L. At 400 K and the same pressure, how much space does it need?", "split": "eval"}
+{"relation": "combined_gas", "args": [2, 5, 300, 1, 250], "question": "A gas starts at 2 atm in 5 L at 300 K, then settles at 1 atm and 250 K. What volume does it take up?", "split": "train"}
+{"relation": "combined_gas", "args": [4, 6, 400, 3, 300], "question": "A 6 L sample at 4 atm and 400 K ends up at 3 atm and 300 K. Find the final volume.", "split": "train"}
+{"relation": "combined_gas", "args": [1, 10, 273, 4, 273], "question": "10 L at 1 atm and 273 K is compressed to 4 atm at the same 273 K. What volume is left?", "split": "eval"}
+{"relation": "combined_gas", "args": [3, 4, 350, 2, 400], "question": "A pressure of 3 atm in 4 L at 350 K drops to 2 atm while warming to 400 K. What volume now?", "split": "eval"}
+{"relation": "combined_gas", "args": [1, 2, 300, 2, 350], "question": "From 1 atm, 2 L and 300 K the sample moves to 2 atm and 350 K. Find its new volume.", "split": "eval"}
+{"relation": "density", "args": [120, 15], "question": "Weighing 120 g and taking up 15 mL, how dense is the sample?", "split": "train"}
+{"relation": "density", "args": [85, 25], "question": "25 mL of liquid weighs 85 g. Density?", "split": "train"}
+{"relation": "density", "args": [250, 40], "question": "A metal block of mass 250 g displaces 40 mL. What is its density? The beaker itself weighs 180 g.", "split": "eval"}
+{"relation": "density", "args": [7.5, 3], "question": "A cork of 7.5 g floats with a volume of 3 mL. What density does that imply?", "split": "eval"}
+{"relation": "density", "args": [36, 12], "question": "An object of 36 g takes up 12 mL. Find the density in g/mL.", "split": "eval"}
+{"relation": "stoichiometry", "args": [1.5, 4], "question": "Starting from 1.5 mol and a product ratio of 4 to 1, how much product is made?", "split": "train"}
+{"relation": "stoichiometry", "args": [6, 2], "question": "6 mol of reactant goes in with a 2 to 1 ratio to product. How many moles come out?", "split": "train"}
+{"relation": "stoichiometry", "args": [2.5, 3], "question": "2.5 mol of reactant is consumed, and the equation gives 3 mol of product per mole of reactant. How many moles of product form?", "split": "eval"}
+{"relation": "stoichiometry", "args": [0.5, 3], "question": "0.5 mol reacts and each mole makes 3 mol of product. What amount of product results?", "split": "eval"}
+{"relation": "stoichiometry", "args": [4, 2], "question": "4 mol of limiting reagent reacts, with a 2 to 1 product ratio. Moles of product?", "split": "eval"}
+{"relation": "dilution_v1", "args": [0.5, 0.1, 50], "question": "Making 50 mL of 0.1 M from a 0.5 M stock: how much stock goes in?", "split": "train"}
+{"relation": "dilution_v1", "args": [5, 1, 200], "question": "To prepare 200 mL of 1 M solution from 5 M stock, what volume of stock is required?", "split": "train"}
+{"relation": "dilution_v1", "args": [2, 0.25, 500], "question": "You need 500 mL of 0.25 M from a 2 M bottle. How much stock do you pipette?", "split": "eval"}
+{"relation": "dilution_v1", "args": [1, 0.2, 100], "question": "A 0.2 M solution of 100 mL is wanted, starting from 1 M stock. Find the volume to take.", "split": "eval"}
+{"relation": "dilution_v1", "args": [4, 0.5, 250], "question": "What volume of 4 M stock makes 250 mL of a 0.5 M solution?", "split": "eval"}
+{"relation": "molality", "args": [0.75, 2.5], "question": "A beaker of solvent (2.5 kg) has 0.75 mol of solute stirred into it. Molality?", "split": "train"}
+{"relation": "molality", "args": [3, 5], "question": "Dissolving 3 mol in 5 kg of solvent gives what molality?", "split": "train"}
+{"relation": "molality", "args": [0.25, 1], "question": "For 0.25 mol in 1 kg of solvent, report the molality.", "split": "eval"}
+{"relation": "molality", "args": [2, 4], "question": "2 mol dissolved in 4 kg of solvent: what molality does that give?", "split": "eval"}
+{"relation": "molality", "args": [1.5, 0.5], "question": "0.5 kg of solvent carries 1.5 mol of solute. Find the molality.", "split": "eval"}
+{"relation": "h_from_ph", "args": [4], "question": "At pH 4, what is [H+] in mol/L?", "split": "train"}
+{"relation": "h_from_ph", "args": [9], "question": "A weak base sits at pH 9. Find the hydrogen ion concentration.", "split": "train"}
+{"relation": "h_from_ph", "args": [13], "question": "Given pH 13, what [H+] does the solution hold?", "split": "eval"}
+{"relation": "h_from_ph", "args": [2], "question": "A solution of pH 2, what hydrogen ion concentration does it have?", "split": "eval"}
+{"relation": "h_from_ph", "args": [11], "question": "The pH is 11, so what concentration of hydrogen ions is present?", "split": "eval"}
+{"relation": "buffer_ph", "args": [5, 0.05, 0.2], "question": "pKa 5 with 0.05 M base and 0.2 M acid. Compute the pH.", "split": "train"}
+{"relation": "buffer_ph", "args": [9.25, 0.1, 0.5], "question": "With pKa 9.25, 0.1 M base and 0.5 M acid, find the buffer's pH.", "split": "train"}
+{"relation": "buffer_ph", "args": [4.76, 0.2, 0.1], "question": "An acetate buffer has 0.2 M conjugate base and 0.1 M acid, with pKa 4.76. What pH does it hold?", "split": "eval"}
+{"relation": "buffer_ph", "args": [7.2, 0.5, 0.5], "question": "Equal parts 0.5 M base and 0.5 M acid at pKa 7.2, what pH results?", "split": "eval"}
+{"relation": "buffer_ph", "args": [3.75, 1, 0.2], "question": "A formate buffer runs at pKa 3.75 with 1 M base against 0.2 M acid. Give its pH.", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [418, 4.18, 25], "question": "Water takes 418 J to rise 25 degrees. With c = 4.18 J/(g C), what mass of water is it?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [252, 2.1, 15], "question": "252 J of heat warms a sample by 15 degrees; its specific heat is 2.1 J/(g C). What mass is being heated?", "split": "train"}
+{"relation": "calorimetry_mass", "args": [180, 0.9, 20], "question": "A metal sample absorbs 180 J and climbs 20 degrees; c = 0.9 J/(g C). Find its mass.", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [450, 0.45, 40], "question": "450 J produces a 40 degree rise in a material of specific heat 0.45 J/(g C). Mass?", "split": "eval"}
+{"relation": "calorimetry_mass", "args": [630, 4.2, 50], "question": "630 J heats something by 50 degrees, and its c is 4.2 J/(g C). What mass is that?", "split": "eval"}
+{"relation": "calorimetry_c", "args": [962.5, 100, 25], "question": "A 100 g slug absorbs 962.5 J over a 25 degree rise. Specific heat?", "split": "train"}
+{"relation": "calorimetry_c", "args": [1260, 40, 15], "question": "40 g absorbs 1260 J over 15 degrees. What specific heat does that imply?", "split": "train"}
+{"relation": "calorimetry_c", "args": [360, 50, 30], "question": "50 g absorbs 360 J and rises 30 degrees. Find c.", "split": "eval"}
+{"relation": "calorimetry_c", "args": [180, 10, 40], "question": "10 g warmed by 40 degrees soaks up 180 J. Specific heat?", "split": "eval"}
+{"relation": "calorimetry_c", "args": [130, 20, 50], "question": "A 20 g sample takes in 130 J to climb 50 degrees. Give its specific heat.", "split": "eval"}
+{"relation": "latent_heat", "args": [120, 334], "question": "120 g changes phase at 334 J/g. What energy does the change absorb?", "split": "train"}
+{"relation": "latent_heat", "args": [250, 334], "question": "A 250 g block of a substance melts at 334 J/g. Find the energy needed.", "split": "train"}
+{"relation": "latent_heat", "args": [50, 334], "question": "50 g of ice melts completely; its latent heat of fusion is 334 J/g. How much energy does that take?", "split": "eval"}
+{"relation": "latent_heat", "args": [5, 2260], "question": "5 g of a liquid with latent heat 2260 J/g vaporises. How much energy is consumed?", "split": "eval"}
+{"relation": "latent_heat", "args": [20, 2260], "question": "Boiling 20 g of water needs 2260 J/g of latent heat. Total energy required?", "split": "eval"}
+{"relation": "first_law", "args": [300, 150], "question": "300 J of heat goes in and 150 J of work is done on the system. What is the change in internal energy?", "split": "train"}
+{"relation": "first_law", "args": [250, -80], "question": "Heat of 250 J is added while the system does 80 J of work, so w = -80 J. Find the change in internal energy.", "split": "train"}
+{"relation": "first_law", "args": [-200, -50], "question": "The system gives off 200 J (q = -200 J) and does 50 J of work (w = -50 J). Find the change in internal energy.", "split": "eval"}
+{"relation": "first_law", "args": [-150, 90], "question": "A system loses 150 J as heat, so q = -150 J, while 90 J of work is done on it. What is the change in internal energy?", "split": "eval"}
+{"relation": "first_law", "args": [0, 120], "question": "No heat crosses the boundary (q = 0 J) but 120 J of work is done on the gas. Change in internal energy?", "split": "eval"}
+{"relation": "gibbs", "args": [200, 400, 300], "question": "With dH of 200 kJ and dS of 300 J/K at 400 K, what is dG?", "split": "train"}
+{"relation": "gibbs", "args": [0, 300, -250], "question": "A reaction has no enthalpy change (0 kJ), dS = -250 J/K and runs at 300 K. What is dG?", "split": "train"}
+{"relation": "gibbs", "args": [-100, 350, -150], "question": "The enthalpy change is -100 kJ, the entropy change -150 J/K, and the temperature 350 K. Compute dG.", "split": "eval"}
+{"relation": "gibbs", "args": [400, 500, 200], "question": "dH = 400 kJ with dS = 200 J/K at 500 K. Gibbs free energy change?", "split": "eval"}
+{"relation": "gibbs", "args": [-500, 298, -200], "question": "dG at 298 K when dH is -500 kJ and dS is -200 J/K, what is it?", "split": "eval"}
+{"relation": "carnot", "args": [500, 350], "question": "Between 500 K and 350 K, what efficiency can a Carnot cycle reach?", "split": "train"}
+{"relation": "carnot", "args": [600, 300], "question": "Heat enters an ideal engine at 600 K and leaves at 300 K. What efficiency can it not beat?", "split": "train"}
+{"relation": "carnot", "args": [700, 400], "question": "An ideal engine works between 700 K and 400 K. What efficiency does the Carnot limit allow?", "split": "eval"}
+{"relation": "carnot", "args": [550, 200], "question": "With reservoirs at 550 K and 200 K, what is the best efficiency a heat engine can reach?", "split": "eval"}
+{"relation": "carnot", "args": [400, 250], "question": "Hot reservoir 400 K, cold reservoir 250 K. Give the Carnot efficiency.", "split": "eval"}
+{"relation": "log_eval", "args": [5, 125], "question": "A worksheet asks for base 5 with argument 125. Give the value.", "split": "train"}
+{"relation": "log_eval", "args": [2, 32], "question": "2 raised to what exponent lands on 32? That exponent is log_2(32).", "split": "train"}
+{"relation": "log_eval", "args": [4, 64], "question": "Base 4, argument 64. What is the log?", "split": "eval"}
+{"relation": "log_eval", "args": [3, 81], "question": "The log of 81 in base 3, what number is that?", "split": "eval"}
+{"relation": "log_eval", "args": [2, 128], "question": "How many doublings take you from 1 to 128? In other words, log base 2 of 128.", "split": "eval"}
+{"relation": "ln_eval", "args": [80], "question": "A rate constant needs ln(80). Punch it in.", "split": "train"}
+{"relation": "ln_eval", "args": [50], "question": "A decay formula needs ln(50). What is it?", "split": "train"}
+{"relation": "ln_eval", "args": [25], "question": "What does ln(25) come to?", "split": "eval"}
+{"relation": "ln_eval", "args": [20], "question": "Find ln(20). Four significant figures is fine.", "split": "eval"}
+{"relation": "ln_eval", "args": [12], "question": "Work out the natural log of 12.", "split": "eval"}
+{"relation": "log10_eval", "args": [250], "question": "Put 250 through a base 10 logarithm.", "split": "train"}
+{"relation": "log10_eval", "args": [45], "question": "The base 10 log of 45 comes to what?", "split": "train"}
+{"relation": "log10_eval", "args": [1000], "question": "log(1000), meaning log base 10, is what?", "split": "eval"}
+{"relation": "log10_eval", "args": [800], "question": "Take log10 of 800 and give four significant figures.", "split": "eval"}
+{"relation": "log10_eval", "args": [2.5], "question": "A reading of 2.5 goes into a base 10 log. What comes out?", "split": "eval"}
+{"relation": "compound_interest", "args": [2500, 3, 2, 5], "question": "2500 dollars grows at 3% a year, compounded 2 times a year, over 5 years. Find the closing balance.", "split": "train"}
+{"relation": "compound_interest", "args": [5000, 2, 1, 10], "question": "5000 dollars at 2% compounded once a year for 10 years. How much is there?", "split": "train"}
+{"relation": "compound_interest", "args": [1000, 6, 12, 2], "question": "Interest of 6% a year compounded 12 times (monthly) on 1000 dollars, left for 2 years. What is it worth at the end?", "split": "eval"}
+{"relation": "compound_interest", "args": [800, 5, 4, 6], "question": "Interest of 5% a year compounds quarterly (4 times a year) on 800 dollars for 6 years. Final amount? The bank also charges a 25 dollar fee.", "split": "eval"}
+{"relation": "compound_interest", "args": [1500, 4, 12, 3], "question": "A savings account holds 1500 dollars at 4% nominal annual interest, credited monthly (12 times a year). What does it hold after 3 years?", "split": "eval"}
+{"relation": "continuous_growth", "args": [1200, 2.5, 5], "question": "Starting at 1200 residents and growing without pause at 2.5% a year, what is the population 5 years on?", "split": "train"}
+{"relation": "continuous_growth", "args": [2000, 5, 4], "question": "Something grows without pause at 5% a year from 2000. What is it after 4 years?", "split": "train"}
+{"relation": "continuous_growth", "args": [900, 4, 6], "question": "Continuous compounding of 900 at 4% a year for 6 years, what is the result?", "split": "eval"}
+{"relation": "continuous_growth", "args": [150, 6, 10], "question": "Start with 150 rabbits; the colony grows continuously at 6% a year. 10 years later, how many?", "split": "eval"}
+{"relation": "continuous_growth", "args": [750, 3, 8], "question": "A culture of 750 bacteria grows continuously at 3% a year. How big is it after 8 years?", "split": "eval"}
+{"relation": "half_life", "args": [400, 3, 7], "question": "Half life 3 years, starting mass 400 g, elapsed time 7 years. What mass survives?", "split": "train"}
+{"relation": "half_life", "args": [800, 5, 12], "question": "At the 12 year mark, how much of an 800 g sample survives if it halves every 5 years?", "split": "train"}
+{"relation": "half_life", "args": [600, 12, 30], "question": "Starting from 600 g, a substance halves every 12 years. What mass remains at year 30?", "split": "eval"}
+{"relation": "half_life", "args": [1000, 6, 20], "question": "A source of 1000 g loses half its mass every 6 years. After 20 years, how much is there?", "split": "eval"}
+{"relation": "half_life", "args": [250, 4, 10], "question": "Halving every 4 years, how much of a 250 g sample is left at the 10 year mark?", "split": "eval"}
+{"relation": "doubling_time", "args": [12], "question": "12% annual growth means doubling every how many years?", "split": "train"}
+{"relation": "doubling_time", "args": [7.5], "question": "Growth of 7.5% a year, so what is the doubling time in years?", "split": "train"}
+{"relation": "doubling_time", "args": [6], "question": "A population rising 6% each year doubles in how many years? Ignore the 2% inflation figure in the footnote.", "split": "eval"}
+{"relation": "doubling_time", "args": [5], "question": "If a fund returns 5% a year, when does it double?", "split": "eval"}
+{"relation": "doubling_time", "args": [4], "question": "Money growing at 4% annually takes how many years to double in value?", "split": "eval"}
+{"relation": "kinematic_v", "args": [20, -4, 3], "question": "A ball is thrown up at 20 m/s and decelerates at 4 m/s^2, so its acceleration is a = -4 m/s^2. What is its speed after 3 s?", "split": "train"}
+{"relation": "kinematic_v", "args": [12, 3, 5], "question": "A cyclist rolling along at 12 m/s keeps pedalling and gains 3 m/s^2 for 5 s. How fast is she going then?", "split": "train"}
+{"relation": "kinematic_v", "args": [0, 5, 4], "question": "A cart starts from rest and accelerates at 5 m/s^2 for 4 s. What velocity does it reach?", "split": "eval"}
+{"relation": "kinematic_v", "args": [15, 2.5, 4], "question": "Starting at 15 m/s, a drone adds 2.5 m/s^2 of speed every second for 4 s. What velocity does it end at?", "split": "eval"}
+{"relation": "kinematic_v", "args": [8, -2, 6], "question": "A trolley moves at 8 m/s and is braked, giving a = -2 m/s^2. 6 s later, what is its velocity?", "split": "eval"}
+{"relation": "proj_range", "args": [12, 30, 10], "question": "A stone leaves a sling at 12 m/s at 30 degrees. With g = 10 m/s^2, what is the horizontal range?", "split": "train"}
+{"relation": "proj_range", "args": [25, 40, 9.8], "question": "A rugby ball is kicked at 25 m/s, 40 degrees above the ground. Taking g = 9.8 m/s^2, how far away does it land?", "split": "train"}
+{"relation": "proj_range", "args": [45, 35, 10], "question": "A golf drive leaves at 45 m/s at 35 degrees, with g = 10 m/s^2. How far does the ball travel horizontally?", "split": "eval"}
+{"relation": "proj_range", "args": [18, 20, 9.8], "question": "A dart leaves the hand at 18 m/s, aiming 20 degrees up. For g = 9.8, find the distance covered before it lands.", "split": "eval"}
+{"relation": "proj_range", "args": [36, 55, 9.81], "question": "Downrange distance for a shell fired at 36 m/s and 55 degrees, taking g = 9.81 m/s^2?", "split": "eval"}
+{"relation": "ohm_i", "args": [9, 6], "question": "Hooking a 6 ohm resistor to a 9 V cell, what current does the meter read?", "split": "train"}
+{"relation": "ohm_i", "args": [18, 12], "question": "12 ohms sit across 18 V. What is the current in the circuit?", "split": "train"}
+{"relation": "ohm_i", "args": [24, 8], "question": "With 24 V applied to 8 ohms, how much current passes?", "split": "eval"}
+{"relation": "ohm_i", "args": [3, 2], "question": "A thermistor of 2 ohms has 3 V across it. How many amps flow?", "split": "eval"}
+{"relation": "ohm_i", "args": [5, 4], "question": "A 5 V supply drives a 4 ohm load. Find the current.", "split": "eval"}
+{"relation": "kinetic_energy", "args": [15, 4], "question": "Our 15 kg puppy trots along at 4 m/s. What kinetic energy does that give it?", "split": "train"}
+{"relation": "kinetic_energy", "args": [2.5, 6], "question": "A 2.5 kg ball rolls at 6 m/s. How much kinetic energy does it have?", "split": "train"}
+{"relation": "kinetic_energy", "args": [8, 7], "question": "An 8 kg bag is thrown at 7 m/s. Give the energy of motion.", "split": "eval"}
+{"relation": "kinetic_energy", "args": [6, 9], "question": "A 6 kg shot put leaves the hand at 9 m/s. How much kinetic energy does it carry? The shot comes from a 2016 meet.", "split": "eval"}
+{"relation": "kinetic_energy", "args": [3, 12], "question": "A model rocket of 3 kg is doing 12 m/s. How much energy does its motion represent?", "split": "eval"}
+{"relation": "potential_energy", "args": [12, 3, 10], "question": "12 kg is raised 3 m, taking g = 10 m/s^2. What is its potential energy?", "split": "train"}
+{"relation": "potential_energy", "args": [9, 15, 10], "question": "9 kg is hauled 15 m up with g = 10 m/s^2. Energy stored?", "split": "train"}
+{"relation": "potential_energy", "args": [4, 12, 9.8], "question": "A 4 kg weight is lifted 12 m. With g = 9.8 m/s^2, how much gravitational energy does it gain?", "split": "eval"}
+{"relation": "potential_energy", "args": [2.5, 8, 9.8], "question": "A 2.5 kg lamp hangs 8 m above the floor. Using g = 9.8, what potential energy does it have?", "split": "eval"}
+{"relation": "potential_energy", "args": [7, 5, 9.81], "question": "A 7 kg pack is carried 5 m up a hill, taking g = 9.81. Find the potential energy gained.", "split": "eval"}
+{"relation": "work", "args": [25, 12, 0], "question": "A 25 N push moves a box 12 m straight along the push, 0 degrees, no angle at all. Work done?", "split": "train"}
+{"relation": "work", "args": [80, 10, 60], "question": "An 80 N rope pulls a sled 10 m at 60 degrees to its path. Find the work done.", "split": "train"}
+{"relation": "work", "args": [120, 8, 35], "question": "A 120 N force drags a crate 8 m, pulling at 35 degrees to the motion. How much work does it do?", "split": "eval"}
+{"relation": "work", "args": [60, 5, 120], "question": "Someone pulls with 60 N at 120 degrees to a 5 m displacement. What work results?", "split": "eval"}
+{"relation": "work", "args": [45, 6, 90], "question": "A 45 N force acts at 90 degrees to a 6 m displacement. How much work is done?", "split": "eval"}
+{"relation": "power", "args": [500, 2.5], "question": "500 J in 2.5 s, give the power output.", "split": "train"}
+{"relation": "power", "args": [2400, 8], "question": "A pump moves 2400 J of energy in 8 s. Find its power rating.", "split": "train"}
+{"relation": "power", "args": [360, 4], "question": "A hoist transfers 360 J of energy in 4 s. What is its power output?", "split": "eval"}
+{"relation": "power", "args": [1350, 9], "question": "A machine takes 9 s to do 1350 J of work. What power is that?", "split": "eval"}
+{"relation": "power", "args": [750, 5], "question": "A motor lifts a load with 750 J of work in 5 s. What power does it deliver? The winch is rated for 900 N.", "split": "eval"}
+{"relation": "momentum", "args": [2.5, 12], "question": "Serving a 2.5 kg ball at 12 m/s gives it how much momentum?", "split": "train"}
+{"relation": "momentum", "args": [5, 14], "question": "A 5 kg stone flies at 14 m/s. Give the momentum.", "split": "train"}
+{"relation": "momentum", "args": [0.5, 20], "question": "A 0.5 kg ball is hit at 20 m/s. What momentum does it gain?", "split": "eval"}
+{"relation": "momentum", "args": [7, 6], "question": "A 7 kg bowling ball rolls at 6 m/s. What momentum does it carry?", "split": "eval"}
+{"relation": "momentum", "args": [18, 3], "question": "An 18 kg trolley creeps along at 3 m/s. Momentum?", "split": "eval"}
+{"relation": "newton2", "args": [12, 3.5], "question": "12 kg needs 3.5 m/s^2 of acceleration. How much force is that?", "split": "train"}
+{"relation": "newton2", "args": [15, 6], "question": "A 15 kg crate must accelerate at 6 m/s^2. What force is required?", "split": "train"}
+{"relation": "newton2", "args": [6, 4], "question": "Something pushes a 6 kg box hard enough that it gains 4 m/s^2. How big is that push?", "split": "eval"}
+{"relation": "newton2", "args": [2.5, 8], "question": "A 2.5 kg cart is accelerated at 8 m/s^2. What force is being applied?", "split": "eval"}
+{"relation": "newton2", "args": [9, 7], "question": "A 9 kg sack is pushed to 7 m/s^2. Find the net force.", "split": "eval"}
+{"relation": "circular_accel", "args": [15, 12], "question": "At 15 m/s around a circle of radius 12 m, what acceleration points to the centre?", "split": "train"}
+{"relation": "circular_accel", "args": [20, 8], "question": "Something moves at 20 m/s around an 8 m circle. What acceleration pulls it toward the centre?", "split": "train"}
+{"relation": "circular_accel", "args": [9, 4], "question": "A 9 m/s spin on a 4 m radius: find the centripetal acceleration.", "split": "eval"}
+{"relation": "circular_accel", "args": [12, 6], "question": "A car takes a bend of radius 6 m at 12 m/s. What is its centripetal acceleration?", "split": "eval"}
+{"relation": "circular_accel", "args": [7, 2.5], "question": "A toy train runs at 7 m/s on a 2.5 m circular track. What centripetal acceleration does it feel?", "split": "eval"}
+{"relation": "wave_speed", "args": [120, 2.5], "question": "Crests 2.5 m apart pass at 120 Hz, so how fast is the wave going?", "split": "train"}
+{"relation": "wave_speed", "args": [40, 3.75], "question": "A water wave repeats 40 times a second and crests are 3.75 m apart. Speed?", "split": "train"}
+{"relation": "wave_speed", "args": [15, 8], "question": "15 Hz with 8 m between crests: what is the wave speed?", "split": "eval"}
+{"relation": "wave_speed", "args": [250, 1.2], "question": "Sound at 250 Hz in a medium with 1.2 m wavelength, find its speed.", "split": "eval"}
+{"relation": "wave_speed", "args": [60, 5], "question": "Wavelength 5 m at 60 Hz, how fast is the wave moving?", "split": "eval"}
+{"relation": "specific_heat", "args": [8, 0.9, 30], "question": "8 kg of a metal with specific heat 0.9 J/(g C) heats by 30 degrees. Energy required?", "split": "train"}
+{"relation": "specific_heat", "args": [10, 1, 20], "question": "10 kg of a substance with c = 1 J/(g C) climbs 20 degrees. What heat goes in?", "split": "train"}
+{"relation": "specific_heat", "args": [2.5, 4.2, 40], "question": "Warming 2.5 kg of a liquid (c = 4.2 J/(g C)) through 40 degrees takes how much heat?", "split": "eval"}
+{"relation": "specific_heat", "args": [5, 2.1, 15], "question": "A 5 kg block of c = 2.1 J/(g C) rises 15 degrees. Find the heat needed.", "split": "eval"}
+{"relation": "specific_heat", "args": [3, 4.18, 25], "question": "3 kg of water (c = 4.18 J/(g C)) warms by 25 degrees. How much heat is absorbed?", "split": "eval"}
+{"relation": "ohm_v", "args": [3, 15], "question": "Pushing 3 A through a 15 ohm coil, what voltage drop appears?", "split": "train"}
+{"relation": "ohm_v", "args": [0.5, 24], "question": "0.5 A through 24 ohms, find the potential difference.", "split": "train"}
+{"relation": "ohm_v", "args": [2, 18], "question": "With 2 A flowing in an 18 ohm wire, what is the voltage across it?", "split": "eval"}
+{"relation": "ohm_v", "args": [4.5, 6], "question": "A 4.5 A current in a 6 ohm coil: what is the voltage drop?", "split": "eval"}
+{"relation": "ohm_v", "args": [12, 5], "question": "12 A through 5 ohms, how much voltage is needed?", "split": "eval"}
+{"relation": "ohm_power", "args": [6, 9], "question": "6 A at 9 V, what power is dissipated?", "split": "train"}
+{"relation": "ohm_power", "args": [0.5, 120], "question": "A charger rated 120 V draws 0.5 A. Power?", "split": "train"}
+{"relation": "ohm_power", "args": [3, 15], "question": "3 A from 15 V, give the power rating.", "split": "eval"}
+{"relation": "ohm_power", "args": [4, 12], "question": "A fan draws 4 A from a 12 V supply. How much power does it use?", "split": "eval"}
+{"relation": "ohm_power", "args": [2.5, 24], "question": "A 24 V device pulls 2.5 A. Find the power it consumes.", "split": "eval"}
+{"relation": "free_fall", "args": [120, 10], "question": "A skydiver's camera drops 120 m before the chute opens; take g = 10. How fast is it falling?", "split": "train"}
+{"relation": "free_fall", "args": [45, 10], "question": "From 45 m up, with g = 10, what speed does a falling object reach at the ground?", "split": "train"}
+{"relation": "free_fall", "args": [6.5, 9.81], "question": "A tile falls 6.5 m. Using g = 9.81, find the impact speed.", "split": "eval"}
+{"relation": "free_fall", "args": [25, 9.8], "question": "An object is released 25 m above the ground. With g = 9.8, what speed on landing?", "split": "eval"}
+{"relation": "free_fall", "args": [18, 9.8], "question": "A stone is dropped from 18 m. Taking g = 9.8 m/s^2, how fast is it going when it lands?", "split": "eval"}
+{"relation": "friction_force", "args": [0.2, 150], "question": "Normal force 150 N, mu = 0.2. Find the friction force.", "split": "train"}
+{"relation": "friction_force", "args": [0.15, 400], "question": "A sledge of 400 N normal force slides with mu = 0.15. What retarding force does friction give?", "split": "train"}
+{"relation": "friction_force", "args": [0.35, 240], "question": "A crate presses on the floor with 240 N and the coefficient of friction is 0.35. What friction force acts?", "split": "eval"}
+{"relation": "friction_force", "args": [0.6, 95], "question": "With mu 0.6 against a 95 N normal force, what is the friction?", "split": "eval"}
+{"relation": "friction_force", "args": [0.45, 180], "question": "Coefficient 0.45 on a surface with 180 N of normal force, how much friction?", "split": "eval"}
+{"relation": "work_energy", "args": [2.5, 2, 10], "question": "A 2.5 kg ball is sped up from 2 m/s to 10 m/s. Net work?", "split": "train"}
+{"relation": "work_energy", "args": [4, 6, 14], "question": "4 kg accelerates from 6 m/s to 14 m/s. How much net work is that? The track is 300 m long.", "split": "train"}
+{"relation": "work_energy", "args": [5, 3, 11], "question": "A 5 kg cart picks up speed, 3 m/s at the start and 11 m/s at the end. Work done on it?", "split": "eval"}
+{"relation": "work_energy", "args": [12, 0, 8], "question": "A 12 kg trolley is pushed from rest to 8 m/s. Find the net work done.", "split": "eval"}
+{"relation": "work_energy", "args": [8, 5, 9], "question": "8 kg goes from 5 m/s up to 9 m/s. What net work is required?", "split": "eval"}
+{"relation": "power_force", "args": [36, 25], "question": "A constant 36 N propulsion at 25 m/s, give the power output.", "split": "train"}
+{"relation": "power_force", "args": [200, 3.5], "question": "Pulling with 200 N at a steady 3.5 m/s, how much power is used?", "split": "train"}
+{"relation": "power_force", "args": [900, 15], "question": "Traction of 900 N at 15 m/s, what power does the engine produce?", "split": "eval"}
+{"relation": "power_force", "args": [48, 12], "question": "Towing with 48 N at a constant 12 m/s, how much power does that take?", "split": "eval"}
+{"relation": "power_force", "args": [150, 8], "question": "A winch pulls with 150 N while hauling at 8 m/s. What power does it deliver?", "split": "eval"}
+{"relation": "energy_friction", "args": [8, 6, 10, 6], "question": "8 kg moving at 6 m/s meets 10 N of friction for 6 m. Final speed?", "split": "train"}
+{"relation": "energy_friction", "args": [10, 8, 25, 5], "question": "A 10 kg crate at 8 m/s feels 25 N of friction across 5 m. Find the final speed.", "split": "train"}
+{"relation": "energy_friction", "args": [2.5, 14, 30, 2], "question": "A 2.5 kg ball at 14 m/s loses energy to 30 N of friction over 2 m. How fast is it then?", "split": "eval"}
+{"relation": "energy_friction", "args": [4, 12, 15, 4], "question": "Friction of 15 N slows a 4 kg puck over 4 m from 12 m/s. Speed at the end?", "split": "eval"}
+{"relation": "energy_friction", "args": [6, 10, 20, 3], "question": "A 6 kg block slides at 10 m/s and friction of 20 N acts over 3 m. What is its final speed?", "split": "eval"}
+{"relation": "impulse", "args": [45, 3], "question": "A 45 N force pushes a ball for 3 s. What impulse is delivered?", "split": "train"}
+{"relation": "impulse", "args": [250, 2], "question": "2 s of 250 N force: what impulse does the object receive?", "split": "train"}
+{"relation": "impulse", "args": [9, 12], "question": "A 9 N push lasting 12 s, give the impulse.", "split": "eval"}
+{"relation": "impulse", "args": [18, 6], "question": "A steady 18 N acts for 6 s, find the impulse.", "split": "eval"}
+{"relation": "impulse", "args": [120, 0.5], "question": "0.5 s of 120 N gives what impulse?", "split": "eval"}
+{"relation": "spring_energy", "args": [90, 0.4], "question": "Compressing a 90 N/m spring 0.4 m stores what energy?", "split": "train"}
+{"relation": "spring_energy", "args": [320, 0.15], "question": "Spring constant 320 N/m, extension 0.15 m. Elastic potential energy?", "split": "train"}
+{"relation": "spring_energy", "args": [250, 0.3], "question": "A spring of constant 250 N/m is stretched 0.3 m. How much energy is stored?", "split": "eval"}
+{"relation": "spring_energy", "args": [180, 0.25], "question": "With k = 180 N/m compressed by 0.25 m, what elastic energy builds up?", "split": "eval"}
+{"relation": "spring_energy", "args": [500, 0.12], "question": "A 500 N/m spring pulled 0.12 m holds how much energy?", "split": "eval"}
+{"relation": "pendulum_period", "args": [0.45, 9.8], "question": "A 0.45 m pendulum with g = 9.8 swings with what period?", "split": "train"}
+{"relation": "pendulum_period", "args": [1.2, 9.81], "question": "A 1.2 m pendulum on Earth, g = 9.81. Find the period.", "split": "train"}
+{"relation": "pendulum_period", "args": [2.5, 9.8], "question": "A pendulum hangs 2.5 m long. With g = 9.8 m/s^2, what is its period?", "split": "eval"}
+{"relation": "pendulum_period", "args": [0.8, 10], "question": "How long does a 0.8 m pendulum take to swing back and forth, using g = 10?", "split": "eval"}
+{"relation": "pendulum_period", "args": [3, 9.8], "question": "A 3 m pendulum clock, g = 9.8, what period does it have?", "split": "eval"}
+{"relation": "torque", "args": [80, 2.5, 90], "question": "At 90 degrees, 80 N applied 2.5 m from the pivot: find the torque.", "split": "train"}
+{"relation": "torque", "args": [25, 1.5, 45], "question": "25 N at 1.5 m and 45 degrees to the lever arm, give the torque.", "split": "train"}
+{"relation": "torque", "args": [150, 0.6, 60], "question": "A 150 N force acts 0.6 m from a hinge at 60 degrees to the arm. What torque does it produce?", "split": "eval"}
+{"relation": "torque", "args": [60, 4, 120], "question": "A 60 N pull 4 m from the fulcrum at 120 degrees, what torque results?", "split": "eval"}
+{"relation": "torque", "args": [200, 0.35, 30], "question": "A 0.35 m wrench gets 200 N at 30 degrees. What turning effect does that give?", "split": "eval"}
+{"relation": "quad_solve", "args": [1, 0, -16], "question": "Set x^2 - 16 to zero and solve. Both answers are integers.", "split": "train"}
+{"relation": "quad_solve", "args": [4, 4, -3], "question": "For 4x^2 + 4x - 3 = 0, give the two roots as exact fractions.", "split": "train"}
+{"relation": "quad_solve", "args": [1, -2, -15], "question": "A parabola y = x^2 - 2x - 15 cuts the x axis twice. At which x?", "split": "eval"}
+{"relation": "quad_solve", "args": [2, 5, -3], "question": "The quadratic 2x^2 + 5x - 3 equals zero for which two x values?", "split": "eval"}
+{"relation": "quad_solve", "args": [3, -7, 2], "question": "Solve 3x^2 - 7x + 2 = 0. One of the roots is a fraction. It is question 17 of the worksheet.", "split": "eval"}
+{"relation": "linear2", "args": [1, 1, -7, 2, -3, 11], "question": "Where do x + y = -7 and 2x - 3y = 11 cross?", "split": "train"}
+{"relation": "linear2", "args": [2, 3, 10, 4, -1, -8], "question": "2x + 3y = 10 goes with 4x - y = -8. Solve the pair.", "split": "train"}
+{"relation": "linear2", "args": [3, 1, 3, 1, -2, 8], "question": "Two equations from a worksheet: 3x + y = 3 and x - 2y = 8. What x and y satisfy both?", "split": "eval"}
+{"relation": "linear2", "args": [5, 2, 19, -1, 4, 5], "question": "Two lines, 5x + 2y = 19 and -x + 4y = 5. At which point do they meet?", "split": "eval"}
+{"relation": "linear2", "args": [1, -2, 3, 3, 1, 16], "question": "x - 2y = 3 and 3x + y = 16 hold at the same time. Find x and y.", "split": "eval"}
+{"relation": "exp_solve", "args": [4, 64], "question": "Which exponent solves 4^x = 64?", "split": "train"}
+{"relation": "exp_solve", "args": [2, 64], "question": "64 is 2 raised to which power?", "split": "train"}
+{"relation": "exp_solve", "args": [3, 243], "question": "How many times do you multiply by 3 to turn 1 into 243?", "split": "eval"}
+{"relation": "exp_solve", "args": [5, 625], "question": "5^x = 625. Find x.", "split": "eval"}
+{"relation": "exp_solve", "args": [10, 100000], "question": "On a base 10 scale, 10^x reaches 100000 when x is what?", "split": "eval"}
+{"relation": "sin_eval", "args": [53], "question": "In a right triangle one acute angle is 53 degrees. What is its sine?", "split": "train"}
+{"relation": "sin_eval", "args": [85], "question": "Compute the sine for an angle of 85 degrees, in degrees of course.", "split": "train"}
+{"relation": "sin_eval", "args": [28], "question": "An angle of 28 degrees, what is its sine?", "split": "eval"}
+{"relation": "sin_eval", "args": [12], "question": "sin 12 degrees equals what?", "split": "eval"}
+{"relation": "sin_eval", "args": [37], "question": "A ramp rises at 37 degrees; what is the sine of that angle?", "split": "eval"}
+{"relation": "cos_eval", "args": [58], "question": "An angle measures 58 degrees. Take its cosine.", "split": "train"}
+{"relation": "cos_eval", "args": [41], "question": "The cosine of 41 degrees is what?", "split": "train"}
+{"relation": "cos_eval", "args": [33], "question": "33 degrees of arc, what cosine does that angle have?", "split": "eval"}
+{"relation": "cos_eval", "args": [18], "question": "A pendulum swings to 18 degrees from vertical; what is the cosine of that 18 degrees?", "split": "eval"}
+{"relation": "cos_eval", "args": [72], "question": "cos 72 degrees, what is it?", "split": "eval"}
+{"relation": "tan_eval", "args": [77], "question": "tan 77 degrees, what value comes out?", "split": "train"}
+{"relation": "tan_eval", "args": [63], "question": "An angle of 63 degrees, so what is its tangent?", "split": "train"}
+{"relation": "tan_eval", "args": [21], "question": "The angle is 21 degrees, so what is its tangent?", "split": "eval"}
+{"relation": "tan_eval", "args": [32], "question": "A slope of 32 degrees has what tangent?", "split": "eval"}
+{"relation": "tan_eval", "args": [48], "question": "tan 48 degrees equals what?", "split": "eval"}
+{"relation": "pythagoras", "args": [9, 12], "question": "Two perpendicular sides of a right triangle measure 9 and 12. Give the third side.", "split": "train"}
+{"relation": "pythagoras", "args": [5, 12], "question": "A ladder question: the triangle has legs 5 and 12. What is the hypotenuse?", "split": "train"}
+{"relation": "pythagoras", "args": [20, 21], "question": "Legs of 20 and 21 enclose the right angle. Find the hypotenuse. The page is numbered 34.", "split": "eval"}
+{"relation": "pythagoras", "args": [7, 24], "question": "One leg is 7 m, the other 24 m, and they meet at a right angle. Find the longest side.", "split": "eval"}
+{"relation": "pythagoras", "args": [8, 15], "question": "Legs of 8 cm and 15 cm meet at a right angle. How long is the side opposite that corner?", "split": "eval"}
+{"relation": "law_sines", "args": [14, 40, 65], "question": "Side 14 faces 40 degrees; a second angle is 65 degrees. How long is the side opposite that second angle?", "split": "train"}
+{"relation": "law_sines", "args": [22, 55, 35], "question": "In a triangle, the side opposite 55 degrees is 22 units and another angle is 35 degrees. Find the side facing the 35 degree angle.", "split": "train"}
+{"relation": "law_sines", "args": [25, 45, 70], "question": "One angle is 45 degrees and the side across from it is 25; a further angle is 70 degrees. Give its opposite side.", "split": "eval"}
+{"relation": "law_sines", "args": [9, 30, 80], "question": "A surveyor measures 9 m opposite a 30 degree corner and 80 degrees at another corner. What length faces the 80 degrees?", "split": "eval"}
+{"relation": "law_sines", "args": [17, 62, 48], "question": "Use the sine rule with side 17 opposite 62 degrees and a 48 degree angle. Find the side opposite 48 degrees.", "split": "eval"}
+{"relation": "law_cosines", "args": [10, 10, 90], "question": "Sides of 10 and 10 with a 90 degree included angle: what is the third side?", "split": "train"}
+{"relation": "law_cosines", "args": [5, 11, 135], "question": "The included angle between sides 5 and 11 is 135 degrees. Determine the missing side.", "split": "train"}
+{"relation": "law_cosines", "args": [6, 8, 60], "question": "How long is the third side when 6 and 8 enclose 60 degrees?", "split": "eval"}
+{"relation": "law_cosines", "args": [7, 9, 120], "question": "The angle between two 7 m and 9 m sides is 120 degrees. How long is the side joining their far ends?", "split": "eval"}
+{"relation": "law_cosines", "args": [12, 15, 45], "question": "With 12 and 15 as the sides around a 45 degree angle, find the remaining side.", "split": "eval"}
+{"relation": "arc_length", "args": [15, 72], "question": "A 72 degree sector of a circle with radius 15 m, what arc length does it have? The wheel it belongs to has 5 spokes.", "split": "train"}
+{"relation": "arc_length", "args": [8, 45], "question": "Going 45 degrees around a circle of radius 8, how much arc do you travel?", "split": "train"}
+{"relation": "arc_length", "args": [6, 135], "question": "On a circle of radius 6 cm, how long is the arc cut off by a 135 degree angle at the centre?", "split": "eval"}
+{"relation": "arc_length", "args": [3, 240], "question": "A 240 degree sector is cut from a circle of radius 3. How long is its curved edge?", "split": "eval"}
+{"relation": "arc_length", "args": [12, 300], "question": "A radius of 12 with a central angle of 300 degrees, how long is the arc?", "split": "eval"}
+{"relation": "sinusoid", "args": [5, 1, -45], "question": "Amplitude, period and phase shift of y = 5 sin(x - 45), please, with the shift in degrees.", "split": "train"}
+{"relation": "sinusoid", "args": [-2, 6, 90], "question": "y = -2 sin(6x + 90): amplitude, period and phase shift, all three, with the shift in degrees.", "split": "train"}
+{"relation": "sinusoid", "args": [4, 2, 30], "question": "Work out amp, period and phase shift (degrees) for y = 4 sin(2x + 30).", "split": "eval"}
+{"relation": "sinusoid", "args": [-4, 3, 0], "question": "A signal is modelled as y = -4 sin(3x). Give its amplitude, its period and how far the curve is shifted.", "split": "eval"}
+{"relation": "sinusoid", "args": [3, 4, -60], "question": "A sinusoid reads y = 3 sin(4x - 60). Report amp, period and shift in degrees.", "split": "eval"}
+{"relation": "right_triangle", "args": [5, 9], "question": "The side across from an angle measures 5, the side beside it 9. What is the angle, and how long is the hypotenuse?", "split": "train"}
+{"relation": "right_triangle", "args": [13, 6], "question": "A right triangle rises 13 over a run of 6. Find the angle of elevation and the hypotenuse.", "split": "train"}
+{"relation": "right_triangle", "args": [3, 10], "question": "The side across from the angle is 3 and the side next to it is 10. Give the angle and the longest side.", "split": "eval"}
+{"relation": "right_triangle", "args": [16, 7], "question": "From an opposite side of 16 and an adjacent side of 7, get the angle and the hypotenuse.", "split": "eval"}
+{"relation": "right_triangle", "args": [11, 4], "question": "Opposite 11, adjacent 4. What are the angle and the hypotenuse?", "split": "eval"}
+{"relation": "km_to_m", "args": [12.5], "question": "A bike ride of 12.5 kilometres is how many metres?", "split": "train"}
+{"relation": "km_to_m", "args": [3.6], "question": "My run this morning was 3.6 km. Give the metres.", "split": "train"}
+{"relation": "km_to_m", "args": [7.5], "question": "A trail is signposted at 7.5 km from the car park. How many metres is that? The map was printed in 2019.", "split": "eval"}
+{"relation": "km_to_m", "args": [2], "question": "The sign says 2 km to the next town, so how far is that in metres?", "split": "eval"}
+{"relation": "km_to_m", "args": [0.25], "question": "The pool race is 0.25 km long. Express that distance in metres.", "split": "eval"}
+{"relation": "m_to_cm", "args": [6], "question": "A table 6 metres long is how many centimetres?", "split": "train"}
+{"relation": "m_to_cm", "args": [1.25], "question": "Express 1.25 m as centimetres for the cutting list.", "split": "train"}
+{"relation": "m_to_cm", "args": [0.75], "question": "The curtain drop is 0.75 m; give it in centimetres.", "split": "eval"}
+{"relation": "m_to_cm", "args": [4.5], "question": "A plank measures 4.5 m. What is that in centimetres?", "split": "eval"}
+{"relation": "m_to_cm", "args": [9.5], "question": "The room is 9.5 m across. Convert that to centimetres.", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [-12], "question": "The thermometer reads -12 degrees Celsius. What is that in Fahrenheit?", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [42], "question": "The oven is set to 42 degrees Celsius. Give the Fahrenheit equivalent.", "split": "train"}
+{"relation": "celsius_to_fahrenheit", "args": [38], "question": "A fever of 38 degrees Celsius corresponds to what Fahrenheit reading?", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [18], "question": "A room held at 18 degrees Celsius is how warm in Fahrenheit? The room holds 30 people.", "split": "eval"}
+{"relation": "celsius_to_fahrenheit", "args": [-5], "question": "Overnight the temperature fell to -5 C. How many degrees Fahrenheit is that?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [68], "question": "68 F feels mild; what is it on the Celsius scale?", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [14], "question": "It was 14 degrees Fahrenheit on the mountain. Give the Celsius reading.", "split": "train"}
+{"relation": "fahrenheit_to_celsius", "args": [41], "question": "A chilled drink sits at 41 F. Convert it to Celsius.", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [95], "question": "The forecast says 95 degrees Fahrenheit. What is that in Celsius?", "split": "eval"}
+{"relation": "fahrenheit_to_celsius", "args": [203], "question": "Steam at 203 degrees Fahrenheit, what does the Celsius thermometer read?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [6], "question": "A suitcase weighs 6 kg. Using 2.205 pounds to the kilogram, what is its weight in pounds?", "split": "train"}
+{"relation": "kg_to_lb", "args": [2.5], "question": "A newborn is 2.5 kg. Give the pounds, taking 2.205 lb per kg.", "split": "train"}
+{"relation": "kg_to_lb", "args": [75], "question": "A passenger of 75 kg weighs how much in pounds, at 2.205 lb per kg?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [14], "question": "The dog is 14 kg; how many pounds with 2.205 lb to a kg?", "split": "eval"}
+{"relation": "kg_to_lb", "args": [0.9], "question": "A parcel of 0.9 kg needs a pounds label, using 2.205 lb per kg.", "split": "eval"}
+{"relation": "liters_to_ml", "args": [1.5], "question": "The bottle holds 1.5 L. How many millilitres is that?", "split": "train"}
+{"relation": "liters_to_ml", "args": [12], "question": "A bucket of 12 L contains how many millilitres?", "split": "train"}
+{"relation": "liters_to_ml", "args": [2.25], "question": "A jug of 2.25 L holds how many mL?", "split": "eval"}
+{"relation": "liters_to_ml", "args": [0.75], "question": "A sample of 0.75 L is how many millilitres?", "split": "eval"}
+{"relation": "liters_to_ml", "args": [6], "question": "A 6 L can of paint, expressed in millilitres?", "split": "eval"}
+{"relation": "percent_error", "args": [23, 25], "question": "The balance reads 23 g but the true mass is 25 g. Give the percent error.", "split": "train"}
+{"relation": "percent_error", "args": [64, 60], "question": "A reading of 64 against a known 60: what is the percentage error?", "split": "train"}
+{"relation": "percent_error", "args": [47, 50], "question": "A titration gave 47 mL where the accepted value is 50 mL. How far off is that, in percent?", "split": "eval"}
+{"relation": "percent_error", "args": [88, 80], "question": "A student measures 88 g against an accepted 80 g. What percent error does that make?", "split": "eval"}
+{"relation": "percent_error", "args": [115, 100], "question": "The test returned 115 where 100 was expected. Express the error as a percent.", "split": "eval"}
+{"relation": "scientific_notation", "args": [7.2, 4], "question": "A reading of 7.2 x 10^4 Pa, written out digit by digit?", "split": "train"}
+{"relation": "scientific_notation", "args": [1.8, -3], "question": "The reading is 1.8 x 10^-3 V. What is it without the exponent?", "split": "train"}
+{"relation": "scientific_notation", "args": [3.4, -5], "question": "A wavelength is 3.4 x 10^-5 m. Write that out as an ordinary decimal.", "split": "eval"}
+{"relation": "scientific_notation", "args": [2.5, -2], "question": "A capacitor value of 2.5 x 10^-2 F, written without powers of ten?", "split": "eval"}
+{"relation": "scientific_notation", "args": [6.5, 5], "question": "A distance of 6.5 x 10^5 km, written out in full, is what?", "split": "eval"}
+{"relation": "average", "args": [104, 96, 87, 92], "question": "A runner's times were 104, 96, 87 and 92 seconds. What is the average time?", "split": "train"}
+{"relation": "average", "args": [45, 60, 38, 52], "question": "The sales figures for four days are 45, 60, 38 and 52. Work out the average.", "split": "train"}
+{"relation": "average", "args": [73, 88, 64, 95], "question": "Four quiz scores were 73, 88, 64 and 95. What is the mean score?", "split": "eval"}
+{"relation": "average", "args": [12, 18, 25, 31], "question": "Four readings came out as 12, 18, 25 and 31. Find their mean.", "split": "eval"}
+{"relation": "average", "args": [7, 14, 22, 33], "question": "Four samples measured 7, 14, 22 and 33. Give their arithmetic mean.", "split": "eval"}
+{"relation": "sig_figs", "args": [8.006, 4], "question": "A measurement of 8.006 needs reporting to 4 significant figures. What do you write?", "split": "train"}
+{"relation": "sig_figs", "args": [4620, 2], "question": "A survey gives 4620 m. Report it with 2 significant figures.", "split": "train"}
+{"relation": "sig_figs", "args": [0.08357, 3], "question": "A technician records 0.08357 and must quote 3 significant figures. Give the figure.", "split": "eval"}
+{"relation": "sig_figs", "args": [0.00456, 2], "question": "A pipette reading of 0.00456 mL gets reported to 2 significant figures. What number goes down?", "split": "eval"}
+{"relation": "sig_figs", "args": [123.45, 3], "question": "The balance prints 123.45; write that to 3 significant figures.", "split": "eval"}

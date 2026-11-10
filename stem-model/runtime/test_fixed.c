@@ -399,7 +399,22 @@ int main(int argc, char **argv)
 		}
 		double cr = pearson(fl, ff, m.vocab);
 		int af = argmax(fl, m.vocab), aq = argmax32(fx, m.vocab);
-		int ok = pos_ok && af == aq && cr > 0.999;
+		/*
+		 * A final-position flip is only a disagreement the engine could have
+		 * avoided when the float preference is wider than the engine's own
+		 * error at those two positions. Below that the quantised ordering is
+		 * indistinguishable from the float one, so both answers are the same
+		 * answer. Compare against the per-position error, not the case-wide
+		 * maximum: a case-wide tolerance would excuse an engine that is wrong
+		 * everywhere, which is what this check exists to catch.
+		 */
+		double margin = (double)fl[af] - (double)fl[aq];
+		double perr = fabs((double)fl[af] - (double)ff[af]) +
+		              fabs((double)fl[aq] - (double)ff[aq]);
+		int tie_at_end = af != aq && margin <= perr + FIXED_TIE_TOL;
+		int ok = pos_ok && (af == aq || tie_at_end) && cr > 0.999;
+		if (tie_at_end)
+			ties++;
 
 		if (maxd > worst)
 			worst = maxd;

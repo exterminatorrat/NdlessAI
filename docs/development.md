@@ -71,6 +71,29 @@ sh crosscheck.sh
 
 It compiles the device path for `arm926ej-s`, links a test ELF, and fails if the hot objects reference soft-float helpers.
 
+## Building the calculator app
+
+`stem-model/device` builds the Ndless application itself, which is a separate step from `runtime/crosscheck.sh`: that one links the runtime, this one links the whole app including `main.c`.
+
+You need the Ndless SDK's ARM toolchain on `PATH` (`nspire-gcc`, `nspire-as`, `nspire-ld`, `genzehn`, `make-prg`), and the model artefacts the build packages. Neither is committed, so build them first:
+
+```sh
+cd stem-model
+make data && make export
+cd device && make
+```
+
+That writes two files, and both must be copied into the same folder on the calculator because the app looks for its model beside itself:
+
+| File | What it is |
+| --- | --- |
+| `stemhelp.tns` | The application. |
+| `weights.bin.tns` | `../weights.bin` renamed, because TI's transfer software only carries `.tns`. 5.9 MB. |
+
+Without `weights.bin.tns` the app still answers typed arithmetic and plots graphs, but not word problems. `make` also refreshes `runtime/bpe.h` from `data/tokenizer.json` first, so a stale tokenizer cannot ship by accident.
+
+Nothing here has been run on a calculator yet: the app has been cross-compiled and measured on the host path only.
+
 ## Adding a relation
 
 A relation touches the Python contract, the phrasing bank, the distractor bank, the C solver, and the tests. Keep the arity fixed and keep the call fields whitespace-separated.

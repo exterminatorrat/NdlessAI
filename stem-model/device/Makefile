@@ -4,6 +4,7 @@ GCC = nspire-gcc
 AS  = nspire-as
 LD  = nspire-ld
 GENZEHN = genzehn
+PYTHON = python3
 
 RUNTIME = ../runtime
 DATA = ../data
@@ -34,11 +35,11 @@ all: tokenizer $(EXE).tns weights.bin.tns
 # the rule never fires. The exporter is a no-op when the content already
 # matches, so running it every build costs nothing and cannot go stale.
 tokenizer:
-	uv run --with sympy python ../export_tokenizer.py \
+	$(PYTHON) ../export_tokenizer.py \
 		--tokenizer $(DATA)/tokenizer.json --header $(RUNTIME)/bpe.h
 
 check-tokenizer:
-	uv run --with sympy python ../check_tokenizer_sync.py \
+	$(PYTHON) ../check_tokenizer_sync.py \
 		$(DATA)/tokenizer.json $(RUNTIME)/bpe.h
 
 main.o: main.c tokenizer

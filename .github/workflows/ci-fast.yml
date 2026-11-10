@@ -22,7 +22,7 @@ concurrency:
 jobs:
   c-runtime:
     name: C runtime
-    runs-on: ubuntu-24.04
+    runs-on: namespace-profile-exterminatorrat
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,7 +55,7 @@ jobs:
 
   python:
     name: Python pipeline
-    runs-on: ubuntu-24.04
+    runs-on: namespace-profile-exterminatorrat
     env:
       UV_TORCH_BACKEND: cpu
     steps:

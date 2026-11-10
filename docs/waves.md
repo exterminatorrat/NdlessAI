@@ -158,6 +158,97 @@ deliberately rather than by another authoring round.
 | 4.4 | **Waves, optics, fluids, modern physics** | The rest of AP Physics 2 | `relations/waves.py`, `runtime/solvers_waves.c` |
 | 4.5 | **Interface** — keypad templates, step display, error explanations, history | A correct answer nobody believes is not a product | `device/*.c` |
 
+## Where this stands, and what finishing waves 3 and 4 would buy
+
+Everything through wave 2 is **merged on master**, together with the wording
+work that was not in the original plan because the measurement that motivated it
+did not exist yet. A student can type arithmetic, an expression to differentiate,
+a definite integral with `pi` or `e` as a bound, and can ask any of 84 formulas
+in their own words.
+
+The honest scoreboard, every figure on questions no version of the model trained
+on:
+
+| | Now |
+| --- | --- |
+| Formulas answered exactly by the on-device solver | 84 |
+| Exact on hand-written questions (1,840 rows) | 72.6% |
+| Right formula, wrong numbers | 17.3% |
+| Wrong formula | 10.1% |
+| Exact on the generated held-out set | 95.0% |
+| Nothing has run on a calculator | still true |
+
+**Waves 3 and 4 are breadth, not accuracy.** This is the distinction that decides
+how to continue, and it is worth being blunt about it. Waves 3 and 4 add topics —
+systems of equations, the rest of AP Chemistry, thermodynamics, E&M, symbolic
+integration, series, differential equations, optics and fluids, and the whole
+interface layer. Each one makes the calculator able to *ask about more things*.
+None of them, on their own evidence so far, makes it more accurate at
+understanding the question, because that turned out to be a function of training
+data and model size, and the data lever flattened at round four (see below).
+
+So the answer to "after waves 3 and 4 plus final testing, is it extremely
+powerful?" is: **broad, and honest about its limits, but not uniformly accurate.**
+A student will find their topic covered and get the right answer roughly seven
+times in ten when they phrase it their own way, and about nineteen times in
+twenty when the phrasing is close to the catalogue's. Making that seven into
+nine is a different project from finishing the wave list, and pretending the wave
+list does it would be the kind of claim this document exists to prevent.
+
+### What is genuinely left in wave 3
+
+| # | Workstream | State | What it adds | Rough cost |
+| --- | --- | --- | --- | --- |
+| 3.1 | Numeric integration | **done** — definite integrals with expression bounds | `integrate(x^2,0,3)` → 9 | shipped |
+| 3.2 | Exact linear algebra | not started | 2x2 and 3x3 systems, determinant, inverse — Kirchhoff, balancing, precalc | ~1 PR, no retrain (typed path) |
+| 3.3 | AP Chemistry | **partial** — 23 chem relations, including the thermochemistry set | stoichiometry, equilibrium, kinetics still missing | ~2 PRs + 1 retrain |
+| 3.4 | Thermodynamics | **partial** — calorimetry, latent heat, first law, Gibbs, Carnot shipped | gas processes, entropy, conduction, radiation missing | ~1 PR + 1 retrain |
+| 3.5 | Electricity and magnetism | not started | Coulomb through induction; the largest unserved subject after mechanics | ~3 PRs + 1 retrain |
+| 3.6 | Real wording data | **done, and it flattened** — 4,390 rows shipped, round four parked | 72.6% on hand-written questions | shipped |
+
+### What is genuinely left in wave 4
+
+| # | Workstream | State | What it adds |
+| --- | --- | --- | --- |
+| 4.1 | Symbolic integration | not started | antiderivatives as expressions, substitution and by parts — the rest of Calc BC |
+| 4.2 | Series | not started | Taylor and Maclaurin, convergence tests |
+| 4.3 | Differential equations | not started | separable, first-order linear, logistic, RK4 |
+| 4.4 | Waves, optics, fluids, modern | not started | the rest of AP Physics 2 |
+| 4.5 | Interface | not started | keypad templates, step display, error explanations, history |
+
+### How to continue, in the order that buys the most
+
+1. **Run it on a calculator.** This is first because it is the only item that can
+   invalidate everything else, and it is the only one this repository cannot do
+   for itself. The parity gate proves the fixed-point path agrees with the float
+   path; it says nothing about whether the app builds for the device, loads a
+   5.9 MB weights file, or answers in a tolerable time. The CI `C runtime` job
+   cross-compiles the runtime but never `device/main.c`.
+2. **Decide the accuracy lever deliberately.** Two candidates, both measured
+   before committed to: a wider model (roughly twice the answer time, needs the
+   device timing from step 1 to judge), or argument verification in the runtime —
+   checking that the numbers the model chose are the ones the question asked for,
+   which targets the 17.3% wrong-arguments bucket directly and needs no retrain.
+   A fifth wording round is *not* on this list; round four measured a 1.3-point
+   gain inside the noise for a 2.9-point loss outside it.
+3. **Then breadth, in monthly batches.** A relation batch is cheap to write and
+   expensive to verify: every batch needs a retrain (about an hour of machine
+   time), a regenerated vocabulary and fixture set, and a full gate. Fifteen to
+   twenty relations per batch is the practical size. That rate is roughly 120
+   more formulas in six or seven batches, which is the whole of waves 3 and 4
+   minus the interface work.
+4. **The interface is not decoration.** A correct answer nobody trusts is not a
+   product. Step display and error explanations earn their place as much as
+   another thirty formulas do, and they need no retraining at all.
+
+### The one thing that would change this plan
+
+If device testing shows the calculator cannot hold a larger weights file, or an
+answer takes too long, then capacity is off the table and the accuracy work goes
+into argument verification and better data instead. That single measurement
+decides between the two, which is why it comes before the next wave rather than
+after it.
+
 ## Status
 
 `open` means a pull request exists and is verified locally; `merged` means it is

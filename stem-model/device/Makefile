@@ -18,7 +18,7 @@ else
 	GCCFLAGS += -O0 -g
 endif
 
-OBJS = main.o graph_ui.o pipeline.o bpe.o fixed.o infer.o graph.o expr.o \
+OBJS = main.o graph_ui.o pipeline.o bpe.o fixed.o infer.o graph.o expr.o callmask.o \
        solvers.o solvers_math.o equation.o solvers_trig.o solvers_physics.o \
        solvers_chem.o solvers_units.o
 EXE = stemhelp

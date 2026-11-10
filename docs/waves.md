@@ -178,6 +178,7 @@ on master. Nothing here is called done before it is merged.
 | 2.3 curve analysis | **not started**, and the wave closed without it — see below | — |
 | 2.4 AP Physics 1 mechanics | 8 relations landed with the retrain; the solver/relation parity gate shipped separately, because a checker is reviewable without a vocabulary rebuild | #24, #29 |
 | 3.1 pulled forward: definite integrals | open; `integrate(x^2,0,3)` answers 9, worst relative error 1.08e-4 | #30 |
+| 3.2 exact linear algebra | open, stacked on #58; typed `det`/`inv`/`rank`/`solve` on exact rationals, 4x4 cap, 47 host cases, device cross-compiles (+3.5 KB text) | #59 |
 | 3.3 and 3.4 pulled forward: chemistry and thermodynamics | 10 relations landed with the retrain | #29 |
 | Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
 

@@ -54,6 +54,7 @@ if [ -d runtime ]; then
     run "call mask"              sh -c "cd runtime && ./test_callmask | grep -q 'all cases passed' && cd .. && $PY export_relations.py --check >/dev/null"
     run "graph"                  sh -c 'cd runtime && make -s test_graph >/dev/null 2>&1 && ./test_graph | grep -q "all checks passed"'
     run "typed answers"          sh -c 'cd runtime && ./test_typed | grep -q "all cases passed"'
+    run "linear algebra"         sh -c 'cd runtime && ./test_matrix | grep -q "all cases passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     if [ -f weights.bin ]; then
         run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'

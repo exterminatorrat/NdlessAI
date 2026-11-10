@@ -79,6 +79,13 @@ int main(void)
 	expect_refused("A 5 kg block slides down a ramp");
 	expect_refused("d/dx(2^x)");
 	expect_refused("d/dx(x^");
+	/* Linear algebra is answered before the expression parser sees the
+	 * text: brackets, ';' and ',' have no arithmetic meaning. */
+	expect("det([1,2;3,4])", "-2");
+	expect("inv([2,1;1,3])", "[3/5, -1/5; -1/5, 2/5]");
+	expect("solve([2,1;1,3],[5,10])", "x1 = 1, x2 = 3");
+	expect("rank([1,2;2,4])", "1");
+
 	/* The whole text has to be the call, and the integral has to exist:
 	 * a divergent one is refused rather than approximated. */
 	expect_refused("integrate(x^2,0,3)+1");

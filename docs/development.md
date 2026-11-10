@@ -75,7 +75,17 @@ It compiles the device path for `arm926ej-s`, links a test ELF, and fails if the
 
 `stem-model/device` builds the Ndless application itself, which is a separate step from `runtime/crosscheck.sh`: that one links the runtime, this one links the whole app including `main.c`.
 
-You need the Ndless SDK's ARM toolchain on `PATH` (`nspire-gcc`, `nspire-as`, `nspire-ld`, `genzehn`, `make-prg`), and the model artefacts the build packages. Neither is committed, so build them first:
+You need the Ndless SDK's ARM toolchain on `PATH` (`nspire-gcc`, `nspire-as`, `nspire-ld`, `genzehn`, `make-prg`), and the SDK's own archives, which a fresh checkout does not contain:
+
+```sh
+cd ndless-sdk
+git -C .. submodule update --init --recursive
+make -C thirdparty nspireio   # nspireio's headers are what libsyscalls' stdlib needs
+make -C libsyscalls
+make -C libndls
+```
+
+Then the model artefacts the build packages. Neither is committed, so build them first:
 
 ```sh
 cd stem-model

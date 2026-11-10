@@ -34,6 +34,12 @@ TEMPLATES = {
     "ohm_power": "A second device in the same circuit draws {n} A.",
     "free_fall": "A second object in the same problem is dropped from {n} m.",
     "molarity": "A second solution in the same problem contains {n} mol.",
+    "mass_percent": "A second solution in the same problem holds {n} g of solute.",
+    "stoich_mass": "A second reaction in the same problem starts from {n} g.",
+    "mole_fraction": "A third gas in the same mixture is {n} mol.",
+    "kc_from_conc": "A second experiment at equilibrium shows {n} M.",
+    "avg_rate": "A second trial in the same lab runs for {n} s.",
+    "heat_reaction": "A second sample in the same problem is {n} mol.",
     "ph": "A second solution in the same problem has concentration {n} mol/L.",
     "poh": "A second solution in the same problem has concentration {n} mol/L.",
     "ph_from_poh": "A second solution in the same problem has pOH {n}.",
@@ -96,6 +102,12 @@ POOLS = {
     "proj_range": [5, 10, 15, 20, 25, 30, 35, 40],
     "kinematic_v": [2, 5, 8, 10, 12, 15, 18, 20],
     "moles": [5, 10, 11, 20, 22, 44, 50, 88],
+    "mass_percent": [5, 10, 12.5, 20, 25, 40, 50],
+    "stoich_mass": [9, 18, 20, 25, 36, 50, 90],
+    "mole_fraction": [1, 1.5, 2, 3, 4, 5, 6],
+    "kc_from_conc": [0.1, 0.2, 0.25, 0.5, 1, 1.5, 2],
+    "avg_rate": [10, 20, 25, 50, 100],
+    "heat_reaction": [0.5, 1, 2, 2.5, 3, 100, 250],
 }
 
 

@@ -14075,6 +14075,55 @@ static const tcase SIG_FIGS[] = {
 	{ { "19632", "2", "", "", "", "" }, "20000" },
 };
 
+static const tcase MASS_PERCENT[] = {
+	{ { "25", "250", "", "", "", "" }, "10%" },
+	{ { "12.5", "250", "", "", "", "" }, "5%" },
+	{ { "5", "200", "", "", "", "" }, "2.5%" },
+	{ { "40", "500", "", "", "", "" }, "8%" },
+	{ { "10", "100", "", "", "", "" }, "10%" },
+	{ { "20", "400", "", "", "", "" }, "5%" },
+};
+static const tcase STOICH_MASS[] = {
+	{ { "18", "18", "44", "1", "", "" }, "44 g" },
+	{ { "36", "18", "44", "2", "", "" }, "176 g" },
+	{ { "50", "100", "80", "1", "", "" }, "40 g" },
+	{ { "9", "18", "44", "1", "", "" }, "22 g" },
+	{ { "25", "100", "58.5", "2", "", "" }, "29.25 g" },
+	{ { "90", "18", "44", "3", "", "" }, "660 g" },
+};
+static const tcase MOLE_FRACTION[] = {
+	{ { "1", "3", "", "", "", "" }, "0.25" },
+	{ { "2", "6", "", "", "", "" }, "0.25" },
+	{ { "1.5", "1", "", "", "", "" }, "0.6" },
+	{ { "3", "5", "", "", "", "" }, "0.375" },
+	{ { "4", "4", "", "", "", "" }, "0.5" },
+	{ { "2", "3", "", "", "", "" }, "0.4" },
+};
+static const tcase KC_FROM_CONC[] = {
+	{ { "0.5", "0.25", "2", "", "", "" }, "1" },
+	{ { "0.1", "0.1", "1", "", "", "" }, "1" },
+	{ { "1", "2", "2", "", "", "" }, "0.5" },
+	{ { "0.2", "0.5", "1", "", "", "" }, "0.4" },
+	{ { "1.5", "0.5", "2", "", "", "" }, "4.5" },
+	{ { "0.25", "1", "1", "", "", "" }, "0.25" },
+};
+static const tcase AVG_RATE[] = {
+	{ { "0.2", "20", "", "", "", "" }, "0.01 M/s" },
+	{ { "0.1", "10", "", "", "", "" }, "0.01 M/s" },
+	{ { "0.5", "50", "", "", "", "" }, "0.01 M/s" },
+	{ { "1", "100", "", "", "", "" }, "0.01 M/s" },
+	{ { "0.4", "25", "", "", "", "" }, "0.016 M/s" },
+	{ { "0.5", "20", "", "", "", "" }, "0.025 M/s" },
+};
+static const tcase HEAT_REACTION[] = {
+	{ { "2", "285.8", "", "", "", "" }, "571.6 kJ" },
+	{ { "1", "393.5", "", "", "", "" }, "393.5 kJ" },
+	{ { "2.5", "100", "", "", "", "" }, "250 kJ" },
+	{ { "0.5", "890.3", "", "", "", "" }, "445.2 kJ" },
+	{ { "3", "250", "", "", "", "" }, "750 kJ" },
+	{ { "1.5", "500", "", "", "", "" }, "750 kJ" },
+};
+
 int main(void)
 {
 	int total = 0, bad = 0;
@@ -14152,6 +14201,12 @@ int main(void)
 	bad += check_rel("first_law", FIRST_LAW, (int)(sizeof(FIRST_LAW) / sizeof(FIRST_LAW[0])), 2, &total);
 	bad += check_rel("gibbs", GIBBS, (int)(sizeof(GIBBS) / sizeof(GIBBS[0])), 3, &total);
 	bad += check_rel("carnot", CARNOT, (int)(sizeof(CARNOT) / sizeof(CARNOT[0])), 2, &total);
+	bad += check_rel("mass_percent", MASS_PERCENT, (int)(sizeof(MASS_PERCENT) / sizeof(MASS_PERCENT[0])), 2, &total);
+	bad += check_rel("stoich_mass", STOICH_MASS, (int)(sizeof(STOICH_MASS) / sizeof(STOICH_MASS[0])), 4, &total);
+	bad += check_rel("mole_fraction", MOLE_FRACTION, (int)(sizeof(MOLE_FRACTION) / sizeof(MOLE_FRACTION[0])), 2, &total);
+	bad += check_rel("kc_from_conc", KC_FROM_CONC, (int)(sizeof(KC_FROM_CONC) / sizeof(KC_FROM_CONC[0])), 3, &total);
+	bad += check_rel("avg_rate", AVG_RATE, (int)(sizeof(AVG_RATE) / sizeof(AVG_RATE[0])), 2, &total);
+	bad += check_rel("heat_reaction", HEAT_REACTION, (int)(sizeof(HEAT_REACTION) / sizeof(HEAT_REACTION[0])), 2, &total);
 	bad += check_rel("km_to_m", KM_TO_M, (int)(sizeof(KM_TO_M) / sizeof(KM_TO_M[0])), 1, &total);
 	bad += check_rel("m_to_cm", M_TO_CM, (int)(sizeof(M_TO_CM) / sizeof(M_TO_CM[0])), 1, &total);
 	bad += check_rel("celsius_to_fahrenheit", CELSIUS_TO_FAHRENHEIT, (int)(sizeof(CELSIUS_TO_FAHRENHEIT) / sizeof(CELSIUS_TO_FAHRENHEIT[0])), 1, &total);

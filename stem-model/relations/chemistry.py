@@ -338,3 +338,110 @@ class Carnot:
     @staticmethod
     def solve(t_hot, t_cold):
         return f"{dec_exact(sp.Rational(100 * (t_hot - t_cold), t_hot))}%"
+
+# ---------------------------------------------------------------------------
+# Wave 3.3: the parts of AP Chemistry the catalogue had no relation for.
+#
+# Every answer here is an exact rational of the decimal arguments, rendered
+# with dec_exact. That is deliberate: these are the relations where a student
+# checks the arithmetic, so "7.1 g" instead of "7.142 g" is the kind of thing
+# that costs a mark, and rounding the exact rational is what keeps the C
+# renderer and the catalogue byte-identical.
+# ---------------------------------------------------------------------------
+
+
+@relation("mass_percent", "chemistry", ["solute", "solution"], exact=False)
+class MassPercent:
+    @staticmethod
+    def gen(rng):
+        solution = rng.choice([100, 200, 250, 400, 500])
+        solute = rng.choice([5, 10, 12.5, 20, 25, 40, 50])
+        return [solute, solution], (
+            f"A solution is made from {solute} g of solute and "
+            f"{solution} g of solution. Find the mass percent of the solute.")
+
+    @staticmethod
+    def solve(solute, solution):
+        return f"{dec_exact(_exact(solute) / _exact(solution) * 100)}%"
+
+
+@relation("stoich_mass", "chemistry",
+          ["mass", "mm_given", "mm_product", "ratio"], exact=False)
+class StoichMass:
+    @staticmethod
+    def gen(rng):
+        mass = rng.choice([9, 10, 18, 20, 25, 36, 50, 90])
+        mm_given = rng.choice([18, 32, 44, 58.5, 100])
+        mm_product = rng.choice([18, 44, 58.5, 80, 100])
+        ratio = rng.choice([1, 2, 3])
+        return [mass, mm_given, mm_product, ratio], (
+            f"{mass} g of a reactant with molar mass {mm_given} g/mol reacts. "
+            f"Each mole of it gives {ratio} mol of product, whose molar mass is "
+            f"{mm_product} g/mol. Find the mass of product.")
+
+    @staticmethod
+    def solve(mass, mm_given, mm_product, ratio):
+        moles = _exact(mass) / _exact(mm_given)
+        return f"{dec_exact(moles * _exact(ratio) * _exact(mm_product))} g"
+
+
+@relation("mole_fraction", "chemistry", ["na", "nb"], exact=False)
+class MoleFraction:
+    @staticmethod
+    def gen(rng):
+        na = rng.choice([1, 1.5, 2, 3, 4])
+        nb = rng.choice([1, 2, 3, 5, 6])
+        return [na, nb], (f"A mixture holds {na} mol of gas A and {nb} mol of "
+                          f"gas B. Find the mole fraction of A.")
+
+    @staticmethod
+    def solve(na, nb):
+        return dec_exact(_exact(na) / (_exact(na) + _exact(nb)))
+
+
+@relation("kc_from_conc", "chemistry", ["product", "reactant", "coefficient"],
+          exact=False)
+class KcFromConc:
+    @staticmethod
+    def gen(rng):
+        product = rng.choice([0.1, 0.2, 0.5, 1, 1.5])
+        reactant = rng.choice([0.1, 0.25, 0.5, 1, 2])
+        coefficient = rng.choice([1, 2])
+        return [product, reactant, coefficient], (
+            f"At equilibrium a reaction mixture has {product} M of product and "
+            f"{reactant} M of reactant. The product has coefficient "
+            f"{coefficient} and the reactant coefficient 1. Find Kc.")
+
+    @staticmethod
+    def solve(product, reactant, coefficient):
+        return dec_exact(_exact(product) ** coefficient / _exact(reactant))
+
+
+@relation("avg_rate", "chemistry", ["change", "time"], exact=False)
+class AvgRate:
+    @staticmethod
+    def gen(rng):
+        change = rng.choice([0.1, 0.2, 0.4, 0.5, 1])
+        time = rng.choice([10, 20, 25, 50, 100])
+        return [change, time], (
+            f"The concentration of a reactant falls by {change} M over "
+            f"{time} s. Find the average rate of the reaction.")
+
+    @staticmethod
+    def solve(change, time):
+        return f"{dec_exact(_exact(change) / _exact(time))} M/s"
+
+
+@relation("heat_reaction", "chemistry", ["moles", "enthalpy"], exact=False)
+class HeatReaction:
+    @staticmethod
+    def gen(rng):
+        moles = rng.choice([0.5, 1, 2, 2.5, 3])
+        enthalpy = rng.choice([100, 250, 285.8, 393.5, 500, 890.3])
+        return [moles, enthalpy], (
+            f"A reaction releases {enthalpy} kJ per mole. Find the heat "
+            f"released when {moles} mol reacts.")
+
+    @staticmethod
+    def solve(moles, enthalpy):
+        return f"{dec_exact(_exact(moles) * _exact(enthalpy))} kJ"

@@ -180,6 +180,7 @@ on master. Nothing here is called done before it is merged.
 | 3.1 pulled forward: definite integrals | open; `integrate(x^2,0,3)` answers 9, worst relative error 1.08e-4 | #30 |
 | 3.2 exact linear algebra | open, stacked on #58; typed `det`/`inv`/`rank`/`solve` on exact rationals, 4x4 cap, 47 host cases, device cross-compiles (+3.5 KB text) | #59 |
 | 3.3 and 3.4 pulled forward: chemistry and thermodynamics | 10 relations landed with the retrain | #29 |
+| 3.3 the rest of AP Chemistry: solutions, stoichiometry, equilibrium, kinetics | open; 6 relations (mass percent, mass-to-mass stoichiometry, mole fraction, Kc from concentrations, average rate, heat of reaction), trained at 12,000 steps because 6,000 left both gates worse than master | — |
 | Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
 
 Wave 1's six code pulls verified together, with the trained weights present: the

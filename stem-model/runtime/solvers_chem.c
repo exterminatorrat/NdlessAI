@@ -466,6 +466,143 @@ static int solve_carnot(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_mass_percent(const char *const *args, char *out,
+                              size_t outlen)
+{
+	rat solute, solution, hundred, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &solute, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &solution, NULL)) != 0)
+		return rc;
+	if (solution.n == 0)
+		return -4;
+	hundred.n = 100;
+	hundred.d = 1;
+	if ((rc = rat_mul(&p, &solute, &hundred)) != 0 ||
+	    (rc = rat_div(&p, &p, &solution)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s%%", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_stoich_mass(const char *const *args, char *out, size_t outlen)
+{
+	rat mass, mm_given, mm_product, ratio, moles, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &mass, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &mm_given, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &mm_product, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &ratio, NULL)) != 0)
+		return rc;
+	if (mm_given.n == 0)
+		return -4;
+	if ((rc = rat_div(&moles, &mass, &mm_given)) != 0 ||
+	    (rc = rat_mul(&p, &moles, &ratio)) != 0 ||
+	    (rc = rat_mul(&p, &p, &mm_product)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s g", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_mole_fraction(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat na, nb, total, p;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &na, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &nb, NULL)) != 0)
+		return rc;
+	if ((rc = rat_add(&total, &na, &nb)) != 0)
+		return rc;
+	if (total.n == 0)
+		return -4;
+	if ((rc = rat_div(&p, &na, &total)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_kc_from_conc(const char *const *args, char *out,
+                              size_t outlen)
+{
+	rat product, reactant, p;
+	int rc, coef;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &product, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &reactant, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &p, NULL)) != 0)
+		return rc;
+	if (reactant.n == 0)
+		return -4;
+	coef = (int)(p.n / p.d);
+	if (coef < 1 || coef > 4)
+		return -4;
+	p = product;
+	for (int i = 1; i < coef; i++)
+		if ((rc = rat_mul(&p, &p, &product)) != 0)
+			return rc;
+	if ((rc = rat_div(&p, &p, &reactant)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_avg_rate(const char *const *args, char *out, size_t outlen)
+{
+	rat change, time, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &change, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &time, NULL)) != 0)
+		return rc;
+	if (time.n == 0)
+		return -4;
+	if ((rc = rat_div(&p, &change, &time)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s M/s", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_heat_reaction(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat moles, enthalpy, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &moles, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &enthalpy, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&p, &moles, &enthalpy)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s kJ", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -584,6 +721,36 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "carnot") == 0) {
 		if (nargs == 2)
 			rc = solve_carnot(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mass_percent") == 0) {
+		if (nargs == 2)
+			rc = solve_mass_percent(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "stoich_mass") == 0) {
+		if (nargs == 4)
+			rc = solve_stoich_mass(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mole_fraction") == 0) {
+		if (nargs == 2)
+			rc = solve_mole_fraction(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "kc_from_conc") == 0) {
+		if (nargs == 3)
+			rc = solve_kc_from_conc(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "avg_rate") == 0) {
+		if (nargs == 2)
+			rc = solve_avg_rate(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "heat_reaction") == 0) {
+		if (nargs == 2)
+			rc = solve_heat_reaction(args, out, outlen);
 		else
 			rc = -2;
 	} else {

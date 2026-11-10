@@ -283,3 +283,69 @@ TEMPLATES = {
         "Determine the efficiency of an engine whose reservoirs are at {t_hot} K and {t_cold} K.",
     ],
 }
+
+TEMPLATES["mass_percent"] = [
+    "A solution is made from {solute} g of solute and {solution} g of solution. Find the mass percent of the solute.",
+    "Find the mass percent when {solute} g of solute is dissolved in {solution} g of solution.",
+    "What is the mass percent of a solution of {solute} g of solute in {solution} g of solution?",
+    "Compute the mass percent for {solute} g of solute in {solution} g of solution.",
+    "A solution contains {solute} g of solute in {solution} g of solution. Determine its mass percent.",
+    "Calculate the mass percent of solute when {solute} g is in {solution} g of solution.",
+    "Find the mass percent for a {solution} g solution holding {solute} g of solute.",
+    "Given {solute} g of solute and {solution} g of solution, what is the mass percent?",
+]
+
+TEMPLATES["stoich_mass"] = [
+    "{mass} g of a reactant with molar mass {mm_given} g/mol reacts. Each mole of it gives {ratio} mol of product, whose molar mass is {mm_product} g/mol. Find the mass of product.",
+    "Find the mass of product when {mass} g of reactant (molar mass {mm_given} g/mol) reacts, {ratio} mol of product forms per mole, and the product's molar mass is {mm_product} g/mol.",
+    "What mass of product forms from {mass} g of a reactant of molar mass {mm_given} g/mol, given a {ratio}:1 product ratio and product molar mass {mm_product} g/mol?",
+    "Calculate the product mass for {mass} g of reactant with molar mass {mm_given} g/mol, ratio {ratio}, and product molar mass {mm_product} g/mol.",
+    "A reaction uses {mass} g of a substance of molar mass {mm_given} g/mol. It gives {ratio} mol of product per mol, and the product has molar mass {mm_product} g/mol. Find the product mass.",
+    "Determine the mass of product from {mass} g of reactant (molar mass {mm_given} g/mol) where the ratio is {ratio} and the product's molar mass is {mm_product} g/mol.",
+    "Find the mass of product formed when {mass} g of reactant of molar mass {mm_given} g/mol reacts in a {ratio}:1 ratio with a product of molar mass {mm_product} g/mol.",
+    "For {mass} g of reactant with molar mass {mm_given} g/mol, {ratio} mol of product per mol, and product molar mass {mm_product} g/mol, find the product mass.",
+]
+
+TEMPLATES["mole_fraction"] = [
+    "A mixture holds {na} mol of gas A and {nb} mol of gas B. Find the mole fraction of A.",
+    "Find the mole fraction of A when {na} mol of A is mixed with {nb} mol of B.",
+    "What is the mole fraction of A in a mixture of {na} mol A and {nb} mol B?",
+    "Compute the mole fraction of A for {na} mol of A and {nb} mol of B.",
+    "A gas mixture contains {na} mol of A and {nb} mol of B. Determine the mole fraction of A.",
+    "Calculate the mole fraction of A when the mixture has {na} mol of A and {nb} mol of B.",
+    "Find the mole fraction of A in a gas mixture of {na} mol A and {nb} mol B.",
+    "Given {na} mol of A and {nb} mol of B, what is the mole fraction of A?",
+]
+
+TEMPLATES["kc_from_conc"] = [
+    "At equilibrium a reaction mixture has {product} M of product and {reactant} M of reactant. The product has coefficient {coefficient} and the reactant coefficient 1. Find Kc.",
+    "Find Kc when equilibrium concentrations are {product} M for the product and {reactant} M for the reactant, with product coefficient {coefficient}.",
+    "What is Kc for a mixture at equilibrium with {product} M product and {reactant} M reactant, the product coefficient being {coefficient}?",
+    "Compute Kc at equilibrium where the product is {product} M with coefficient {coefficient} and the reactant is {reactant} M.",
+    "A reaction reaches equilibrium at {product} M product (coefficient {coefficient}) and {reactant} M reactant. Determine Kc.",
+    "Calculate Kc when the product concentration is {product} M with coefficient {coefficient} and the reactant concentration is {reactant} M.",
+    "Find the equilibrium constant Kc for {product} M of product (coefficient {coefficient}) and {reactant} M of reactant.",
+    "Given {product} M product with coefficient {coefficient} and {reactant} M reactant at equilibrium, what is Kc?",
+]
+
+TEMPLATES["avg_rate"] = [
+    "The concentration of a reactant falls by {change} M over {time} s. Find the average rate of the reaction.",
+    "Find the average rate when a reactant concentration drops by {change} M in {time} s.",
+    "What is the average rate of reaction if the concentration decreases by {change} M over {time} s?",
+    "Compute the average rate for a change of {change} M over {time} s.",
+    "A reactant decreases by {change} M in {time} s. Determine the average rate of the reaction.",
+    "Calculate the average reaction rate when the concentration falls {change} M in {time} s.",
+    "Find the average rate of reaction, given a {change} M decrease over {time} s.",
+    "Given a concentration change of {change} M over {time} s, what is the average rate of reaction?",
+]
+
+TEMPLATES["heat_reaction"] = [
+    "A reaction releases {enthalpy} kJ per mole. Find the heat released when {moles} mol reacts.",
+    "Find the heat released when {moles} mol of a reaction that gives {enthalpy} kJ per mole occurs.",
+    "What heat is released when {moles} mol reacts if the enthalpy is {enthalpy} kJ/mol?",
+    "Compute the heat released by {moles} mol of a reaction with enthalpy {enthalpy} kJ/mol.",
+    "A reaction has an enthalpy of {enthalpy} kJ/mol. Determine the heat released by {moles} mol.",
+    "Calculate the heat released when {moles} mol reacts, given {enthalpy} kJ/mol.",
+    "Find the total heat released from {moles} mol at {enthalpy} kJ per mole.",
+    "Given {moles} mol and an enthalpy of {enthalpy} kJ/mol, what is the heat released?",
+]

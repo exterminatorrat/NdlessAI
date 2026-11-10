@@ -34,6 +34,12 @@ GOLDEN = {
     ("moles", (5, 100)): "0.05 mol",
     ("dilution", (1, 50, 250)): "0.2 M",
     ("dilution", (4, 10, 60)): "0.6667 M",
+    ("mass_percent", (25, 250)): "10%",
+    ("stoich_mass", (18, 18, 44, 1)): "44 g",
+    ("mole_fraction", (1, 3)): "0.25",
+    ("kc_from_conc", (0.5, 0.25, 2)): "1",
+    ("avg_rate", (0.2, 20)): "0.01 M/s",
+    ("heat_reaction", (2, 285.8)): "571.6 kJ",
 }
 
 

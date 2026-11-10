@@ -23,7 +23,7 @@
  * Bump this whenever behaviour changes; a stale .tns is otherwise
  * indistinguishable from a broken fix.
  */
-#define BUILD_STAMP "stemhelp v7"
+#define BUILD_STAMP "stemhelp v8"
 
 /*
  * TI's transfer software only accepts files ending in .tns, so the model

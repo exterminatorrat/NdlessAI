@@ -34,3 +34,4 @@ runtime/test_expr
 runtime/test_equation
 runtime/test_callmask
 runtime/bench_kernel
+runtime/test_matrix

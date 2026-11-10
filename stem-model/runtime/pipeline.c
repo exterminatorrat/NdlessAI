@@ -3,6 +3,7 @@
 
 #include "expr.h"
 #include "callmask.h"
+#include "matrix.h"
 #include "pipeline.h"
 #include "solvers.h"
 
@@ -217,6 +218,11 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	gexpr_t e;
 	char err[48];
 
+	/* Linear algebra is not an expression either: brackets, ';' and ',' have
+	 * no arithmetic meaning, so det/inv/rank/solve are recognised on the raw
+	 * text before anything is parsed as a formula. */
+	if (matrix_typed_answer(text, answer, (size_t)answer_max) == 0)
+		return PIPELINE_OK;
 	/* A derivative request is not an expression: "d/dx" carries a slash the
 	 * parser would read as division, so it is recognised on the raw text and
 	 * answered with the derivative before any arithmetic is attempted. */

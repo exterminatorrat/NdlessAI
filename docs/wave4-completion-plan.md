@@ -357,3 +357,41 @@ until the cross-compile gate stops reporting SKIP.
   `docs/waves.md`, next to wave 3's, whether they improved or not.
 - The plan and status tables say what shipped and what the retrain cost, in the
   same place, so the next reader does not have to reconstruct it.
+
+
+## What shipped, and what it cost
+
+Everything above is on the branch, measured:
+
+| | 102 relations (wave 3) | 136 relations (wave 4.4) |
+| --- | --- | --- |
+| generated held-out gate | 90.5% | **90.3%** |
+| hand-written paraphrases | 72.3% | **71.8%** |
+| wrong relation | — | 1.7% |
+| fixed-point parity | 6/6 | **6/6** |
+| full on-device path | — | 60/60 exact calls, 60/60 correct answers |
+| step templates | 89 | **123** |
+| solver parity cases | — | 54,400, no mismatch, no gap |
+
+**The capacity prediction was wrong, and the reason is the interesting part.**
+The plan said 34 more relations would cost accuracy because the generated gate
+had fallen from 95.0% to 90.5% across 84 to 102 relations. At 136 it reads
+90.3% — the fall stopped rather than continuing. The hand-written number is
+within half a point too, measured on 1,942 rows that include hand-written
+phrasings for all 34 new relations rather than only generated ones.
+
+What *did* cost accuracy, by far more than the catalogue: the training recipe.
+The same catalogue, trained with the Makefile's defaults as they were (6,000
+steps, no paraphrase mix), scores 83.6% and 32.7%. So the two figures in this
+project's history that looked like capacity limits are better explained as
+protocol. `make data` now mixes the corpus's train split and `make train` runs
+12,000 steps, which is the recipe the recorded numbers came from.
+
+Three relations were cut rather than fudged, all for the numeric range recorded
+above: mean free path, relativistic energy, and nuclear binding energy from
+per-nucleon tables.
+
+**Still unverified: the device.** Not one line of wave 4 has been compiled for
+`arm926ej-s`, because no machine here has the Ndless toolchain. The ARM gate
+reports SKIP. The wave's engine work is done and its catalogue is measured; its
+product does not exist on a calculator yet.

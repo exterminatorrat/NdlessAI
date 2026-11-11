@@ -10,8 +10,8 @@ each piece stopped.
 | --- | --- | --- | --- |
 | 4.1 | Symbolic integration | **done** | powers of x, sums, constant multiples, `1/x` to `ln(x)`, and sin/cos/exp of a linear argument; anything else is refused |
 | 4.2 | Series | **half** | Taylor and Maclaurin answer as expressions. Convergence tests are not built: a real ratio test needs limits and this engine has none |
-| 4.3 | Differential equations | **half** | RK4 answers a value at a point; `desolve` answers the closed form for constant-coefficient growth, decay, cooling and logistic equations. Separable equations with x-dependent coefficients are not covered |
-| 4.4 | Waves, optics, fluids, modern physics | **not started** | about 34 relations, gated on the capacity decision: the evidence says a 136-relation catalogue on this model gets worse at what already works |
+| 4.3 | Differential equations | **done** | RK4 answers a value at a point; `desolve` answers the closed form for growth, decay, cooling and logistic equations, including a rate that depends on x (`desolve(x*y,0,2)` is `2exp(x^2/2)`, `desolve(x/y,0,1)` is `sqrt(1+x^2)`). First-order linear with a non-zero x-dependent forcing term is still refused, and slope-field data exists for 4.6f with nothing yet drawing it |
+| 4.4 | Waves, optics, fluids, modern physics | **done** | 34 relations, 136 in the catalogue, and the predicted capacity cost did not appear: at the recorded training protocol both accuracy gates sit within a point of wave 3's. Three relations were cut for the numeric range, not for time |
 | 4.5 | Interface | **not started** | device-only code; not one line of it can be compiled on a machine without the Ndless toolchain |
 | 4.6 | Graphing from the problem | **not started** | same, plus 4.6c needs the decoder to keep its top-three call tokens |
 
@@ -36,18 +36,26 @@ different verification, and only two of the six need a retrain.
 
 ## What orders the work
 
-**The capacity decision gates 4.4, and nothing else.** Measured on the same
-1,840 hand-written rows, accuracy is 72.6% at 84 relations, 73.8% at 90 and
-72.3% at 102 — flat — while the generated gate fell 95.0%, 94.2%, 90.5%.
-Training longer does not recover it: the last run reached validation loss 0.0001
-by step 12,000. So the model is out of capacity, not out of data or steps.
+**The capacity decision gated 4.4, and 4.4 answered it.** Measured on the same
+hand-written rows, accuracy was 72.6% at 84 relations, 73.8% at 90 and 72.3% at
+102 — flat — while the generated gate fell 95.0%, 94.2%, 90.5%. That read as a
+model out of capacity, and it was the reason the last 34 relations waited behind
+a decision about making the model wider.
 
-That matters here because 4.4 is roughly 34 more relations. Adding them costs a
-dataset rebuild and an 80-minute retrain, and the evidence says a 136-relation
-catalogue on a 256-dimension model will be worse at the relations that already
-work. Either the model gets wider first (about twice the answer time on a 132 MHz
-ARM9, unmeasured on hardware), or 4.4 ships with the accuracy cost recorded, or
-4.4 waits.
+The prediction did not survive its own test. At 136 relations, trained the way
+the recorded numbers were trained, the generated gate reads **90.3%** and the
+hand-written paraphrases **71.8%** — both within half a point of the 102-relation
+figures, with 1,942 hand-written rows covering the new relations rather than
+generated phrasings alone. The wider model is not the binding constraint at this
+size, and the answer time it would have cost stays unspent.
+
+What did move was the recipe, and it moved by more than the catalogue did. The
+Makefile's defaults — 6,000 steps and no paraphrase mix — score 83.6% and 32.7%
+on this same catalogue. That is a 7-point and a 39-point gap that has nothing to
+do with how many relations exist. `make data` now mixes the corpus's train split
+and `make train` runs the 12,000 steps the published numbers came from, because
+an accuracy figure whose recipe is not the default recipe is a figure nobody can
+reproduce.
 
 Everything else in wave 4 is unaffected: 4.1–4.3 and 4.6 are typed-expression
 code that never touches the model, and 4.5 is device UI. They can run in
@@ -206,7 +214,8 @@ second can be abandoned without losing the first.
 ## Decisions this plan needs
 
 1. **Capacity: wider model, runtime argument verification, or neither yet.**
-   Gates 4.4 and sets what accuracy wave 4 can claim.
+   Answered by 4.4 and not in the direction the plan expected: 34 more relations
+   cost half a point on both gates, so no wider model is needed at this size.
 2. **Step display: generic or per-relation.** A cheap line that does not help, or
    roughly 500 lines of registry data that does.
 3. **Vocabulary headroom.** The 512-token vocabulary was sized for about 250

@@ -154,8 +154,8 @@ deliberately rather than by another authoring round.
 | --- | --- | --- | --- |
 | 4.1 | **Symbolic integration** — table, linearity, substitution, by parts, partial fractions | Completes Calc BC | `runtime/expr.c` |
 | 4.2 | **Series** — Taylor, Maclaurin, convergence and error tests | The remaining BC unit | `runtime/expr.c` |
-| 4.3 | **Differential equations** — separable, first-order linear, logistic, RK4 | Cooling, kinetics, RC, populations | `runtime/expr.c` |
-| 4.4 | **Waves, optics, fluids, modern physics** | The rest of AP Physics 2 | `relations/waves.py`, `runtime/solvers_waves.c` |
+| 4.3 | **Differential equations** — separable, first-order linear, logistic, RK4, slope fields | Cooling, kinetics, RC, populations | `runtime/expr.c` |
+| 4.4 | **Waves, optics, fluids, modern physics** | The rest of AP Physics 2 | `relations/waves.py`, `relations/optics.py`, `relations/fluids.py`, `relations/modern.py`, `runtime/solvers_{waves,optics,fluids,modern}.c` |
 | 4.5 | **Interface** — keypad templates, step display, error explanations, history | A correct answer nobody believes is not a product | `device/*.c` |
 | 4.6 | **Graphing from the problem, not from a formula** — see below | The one graph feature a competitor cannot copy from its own UI | `device/graph_ui.c`, `runtime/graph.c` |
 
@@ -234,27 +234,48 @@ workstreams are done or half done and everything they touch is gated:
   function it approximates and re-parses what it prints. Convergence tests are
   deliberately absent: a ratio test needs limits, and this engine has none.
 - **4.3 differential equations** answers `ode(2y,0,1,1,64)` numerically with
-  RK4, and `desolve(2y,0,1)` analytically as `exp(2x)` for constant-coefficient
-  growth, decay, cooling and logistic equations. The two are checked against
-  each other, which is stronger than either alone. Separable equations with
-  x-dependent coefficients are not covered.
+  RK4, and `desolve(2y,0,1)` analytically as `exp(2x)`. The recogniser splits
+  the right-hand side into an x factor and a y polynomial, so a rate that
+  depends on x works too: `desolve(x*y,0,2)` is `2exp(x^2/2)` and
+  `desolve(x/y,0,1)` is `sqrt(1+x^2)`. The two answers are checked against each
+  other, which is stronger than either alone. A first-order linear equation with
+  a non-zero x-dependent forcing term is refused, because its solution needs an
+  integration by parts the rule table does not have.
+- **4.4 waves, optics, fluids, modern physics** adds 34 relations and lands the
+  catalogue at 136, in the units the exam states them: eV and nanometres for
+  modern physics, because `h = 6.626e-34` cannot even be typed into this
+  engine's number parser. Parity is 54,400 cases with no mismatch, and every
+  relation carries the working line the step display prints.
 
-**4.4 through 4.6 are not started, on purpose.** 4.4 is about 34 relations and
-the capacity evidence says the model gets worse at what already works when the
-catalogue grows; that is a decision, not a task. 4.5 and 4.6 are device UI, and
-no machine in this project has the Ndless toolchain, so their code could be
-written but not compiled — which is how a feature ends up looking done.
+**4.5 and 4.6 are not started, on purpose.** They are device UI, and no machine
+in this project has the Ndless toolchain, so their code could be written but not
+compiled — which is how a feature ends up looking done.
 
-**The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
-102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
-relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the
-generated gate, which rewards memorising the phrasing a relation was trained
-with, the same three points read 95.0%, 94.2%, 90.5%. Training longer does not
-close that gap: the last run reached a validation loss of 0.0001 by step 12,000,
-so the model is out of capacity rather than out of steps. Restoring the
-generated number means a wider model, which costs answer time on a 132 MHz ARM9
-and should not be spent before anyone has timed the current one on hardware.
-That is the state wave 4 starts from.
+**The catalogue did not outgrow the model after all.** Wave 3 closed at 102
+relations with a worrying shape: hand-written accuracy flat at 72.6%, 73.8% and
+72.3% across 84, 90 and 102 relations, while the generated gate fell 95.0%,
+94.2%, 90.5%. That looked like a model out of capacity, and it gated wave 4.4
+behind a decision about making the model wider.
+
+The 34 relations went in and the fall did not continue. At 136 relations:
+
+| | 102 relations | 136 relations |
+| --- | --- | --- |
+| generated held-out gate | 90.5% | **90.3%** |
+| hand-written paraphrases | 72.3% | **71.8%** |
+| fixed-point parity | 6/6 | **6/6** |
+| full on-device path | — | 60/60 exact calls |
+
+Both gates are within half a point, and the new relations are measured on
+hand-written rows of their own — 1,942 eval phrasings across the whole
+catalogue, not generated ones. So the wider model earns nothing at this size,
+and the answer time it would cost stays unspent until someone times the device.
+
+The gap that did show up was in the recipe rather than the model. The same
+catalogue trained with the Makefile's old defaults — 6,000 steps, no paraphrase
+mix — scores 83.6% and 32.7%. Those defaults are now the recipe the published
+numbers came from, because an accuracy figure you cannot reproduce from `make` is
+a claim rather than a measurement.
 
 Wave 1's six code pulls verified together, with the trained weights present: the
 combined tree builds, every C test passes, fixed-point parity is 6/6, the

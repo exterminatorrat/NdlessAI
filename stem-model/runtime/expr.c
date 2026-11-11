@@ -2148,11 +2148,10 @@ int gexpr_ode_answer(const char *text, char *out, int outlen)
 	expr_text[i] = 0;
 	if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
 		return -1;
-	if (gexpr_has_y(&f) == 0)
-		/* y' = f(x) alone is legitimate: a pure integral with a step. */
-		;
-	if (gexpr_rk4(&f, x0, y0, xn, steps, NULL, 0) != GEXPR_DIFF_OK)
-		return -1;
+	/*
+	 * y' = f(x) alone is legitimate - a pure integral with a step - so there
+	 * is no requirement that y appears.
+	 */
 	{
 		q16_t ys[EXPR_MAX_ODE_STEPS + 1];
 

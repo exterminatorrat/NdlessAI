@@ -23,6 +23,50 @@ static int argmax32(const int32_t *v, int n)
 	return best;
 }
 
+/*
+ * The relation is one token, chosen at the step after "CALL " and already
+ * narrowed to the relation ids by the mask. Keeping the top three rather than
+ * only the argmax lets the graphing screen draw the runners-up dimmed, so a
+ * near miss is visible instead of silent.
+ *
+ * Ties keep the token seen first, which is argmax32's own rule, so alts[0] is
+ * always the token the decode actually emitted and its margin is exactly zero.
+ * Masked entries are INT32_MIN, not scores: skipping them keeps a masked token
+ * out of the list and keeps the margin subtraction from overflowing.
+ */
+static void keep_alts(pipeline_t *p)
+{
+	struct {
+		uint16_t token;
+		int32_t logit;
+	} best[PIPELINE_ALTS];
+	int n = 0;
+
+	for (int i = 0; i < p->model.vocab; i++) {
+		int32_t v = p->logits[i];
+		int at;
+
+		if (v == INT32_MIN)
+			continue;
+		for (at = n; at > 0 && v > best[at - 1].logit; at--)
+			;
+		if (at == PIPELINE_ALTS)
+			continue;
+		if (n < PIPELINE_ALTS)
+			n++;
+		for (int j = n - 1; j > at; j--)
+			best[j] = best[j - 1];
+		best[at].token = (uint16_t)i;
+		best[at].logit = v;
+	}
+
+	for (int i = 0; i < n; i++) {
+		p->alts[i].token = best[i].token;
+		p->alts[i].margin = best[0].logit - best[i].logit;
+	}
+	p->n_alts = n;
+}
+
 static int ids_to_text(const bpe_tok *tok, const uint16_t *ids, int n,
                        char *out, int max)
 {
@@ -294,6 +338,11 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	int n, pos = 0, gen = 0;
 	size_t qlen = strlen(question);
 
+	/* Every answer starts with nothing weighed, so a closed form that answers
+	 * before inference cannot leave the previous question's relations behind
+	 * for the screen to draw. */
+	p->n_alts = 0;
+
 	/*
 	 * Typed arithmetic never reaches the model: it needs no weights, no
 	 * vocabulary and no inference, so it answers in microseconds instead of
@@ -327,6 +376,10 @@ int pipeline_answer(pipeline_t *p, const char *question,
 		if (ids_to_text(&p->tok, ids + n, gen, sofar, (int)sizeof sofar) < 0)
 			return PIPELINE_ERR;
 		mask_logits(p, sofar);
+		/* The separator is out, so this is the step that names the
+		 * relation and the only one whose ranking the screen wants. */
+		if (strcmp(sofar, "CALL ") == 0)
+			keep_alts(p);
 		next = argmax32(p->logits, p->model.vocab);
 
 		if (next == 258 || next == 256)
@@ -347,4 +400,17 @@ int pipeline_answer(pipeline_t *p, const char *question,
 		return PIPELINE_UNCERTAIN;
 	}
 	return PIPELINE_OK;
+}
+
+int pipeline_alternatives(const pipeline_t *p, pipeline_alt_t *out, int max)
+{
+	int n = p->n_alts;
+
+	if (out == NULL || max < 1)
+		return 0;
+	if (n > max)
+		n = max;
+	for (int i = 0; i < n; i++)
+		out[i] = p->alts[i];
+	return n;
 }

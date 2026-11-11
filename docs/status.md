@@ -27,7 +27,7 @@ calculator, and it takes Ndless on a supported OS to get that far.
 | Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
 | Model picks the right tool | done, and the limit of the current model | 72.3% exact and 9.8% wrong relation on 1,840 hand-written rows; 90.5% exact on the generated gate |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
-| Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9; `d/dx`, `det`, `inv`, `rank` and `solve` on exact rationals |
+| Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9 and `d/dx`, `det`, `inv`, `rank`, `solve` answer on exact rationals; `integrate(x^2)` answers `x^3/3 + C`, `series(exp(x),0,5)` a Taylor polynomial, `ode(2y,0,1,1,64)` a numerical solution and `desolve(2y,0,1)` its closed form `exp(2x)` |
 | Function graphing | done | `test_graph`, merged in PR #8 |
 | Device build | done | `stemhelp.tns` and `weights.bin.tns`, cross-compiled for `arm926ej-s` |
 | On-calculator run | **not done** | no hardware in the build environment, and it needs Ndless on a supported OS |
@@ -63,16 +63,17 @@ how many formulas it adds.
 |---|---|---|
 | 1 | Breadth: relations, model unchanged | **complete**, and well past it at 102 |
 | 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8) |
-| 3 | Expression engine: parse, differentiate, integrate | **partly complete**: the Q16 parser, symbolic differentiation, numeric integration, and exact rational linear algebra are on master |
+| 3 | Expression engine: parse, differentiate, integrate | **done for what the roadmap asked**: Q16 parser, symbolic differentiation and integration, numeric integration, Taylor series, exact rational linear algebra, and constant-coefficient differential equations. What is not there is convergence tests, separable equations with x-dependent coefficients, and a computer algebra system, which is the next tier |
 | 4 | Full CAS | not started, and deliberately last |
 
 Tier 3 is the increment that pays without a retrain, because none of it touches
 the model: the parser and evaluator answer expressions nobody anticipated, and
 the linear-algebra path answers systems, determinants and inverses exactly.
-What is left of it is wave 4.1–4.3 in `docs/waves.md` — symbolic integration,
-series, and differential equations — which `ROADMAP.md` files under "a different
-project that happens to share a screen", because it is a small CAS rather than
-more formulas.
+Tier 4, a full computer algebra system, is what `ROADMAP.md` calls "a different
+project that happens to share a screen". Wave 4 took the parts of it that a
+student actually asks for — an antiderivative, a series, a differential
+equation — and stopped at the boundary where honest refusal beats a guess.
+`docs/wave4-plan.md` records where each piece stopped and why.
 
 ## Known gaps
 

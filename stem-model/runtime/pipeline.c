@@ -273,6 +273,9 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	 * a plain expression accepts. */
 	if (gexpr_ode_answer(text, answer, answer_max) == 0)
 		return PIPELINE_OK;
+	/* The analytical form of the same equation, as an expression. */
+	if (gexpr_desolve_answer(text, answer, answer_max) == 0)
+		return PIPELINE_OK;
 	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
 		return PIPELINE_ERR;
 	if (gexpr_has_x(&e) || gexpr_has_y(&e))

@@ -220,57 +220,30 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate | `gate.sh` gates generated phrasing and wrong relation only |
 | Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
 
-**Wave 4 is in flight, in small slices.** The map is `wave4-plan.md`. The
-first slice is 4.5c, step display: relations may now carry a `step` template -
-the formula, and the same formula as arithmetic over the arguments - which the
-device prints as the working above the answer. `check_steps.py` evaluates each
-template against its solver's own output on generated rows, and caught both a
-wrong placeholder order and a formula that reused an argument, so the templates
-are checked data rather than prose; `steptable.h` is generated from them and
-`gate.sh` fails when it drifts. Eighty-nine of the 102 relations carry a
-template. The thirteen that do not are the answers that are not a single
-number: `quad_solve`, `cubic_solve`, `linear2`, `abs_value_eq`, `linear_ineq`,
-`complete_square`, `factor_quadratic`, `arith_seq`, `geom_seq`, `sinusoid`,
-`right_triangle`, `sig_figs` and `scientific_notation`. There is nothing for the
-gate to compare against in those, and unchecked working is worse than none.
+**Wave 4, as it stands.** The map is `wave4-plan.md`. The three engine
+workstreams are done or half done and everything they touch is gated:
 
-Nine templates were wrong on the first pass and the gate caught every one:
-`dU = q - w` when the solver uses dU = q + w, `dG = dH - T dS` where the
-solver takes dS in J/K, R = 0.0821 against the solver's 0.08206, `doubling_time`
-modelled as ln(2)/r rather than ln(2)/ln(1 + r/100), and `energy_friction`
-answering a speed when the formula described an energy.
+- **4.1 symbolic integration** answers `integrate(x^2)` as `x^3/3 + C`, with
+  powers, sums, constant multiples, `1/x` to `ln(x)` and sin/cos/exp of a linear
+  argument. Anything else is refused rather than guessed. The gate differentiates
+  the antiderivative and compares it against the integrand, which needs no table
+  of expected answers and catches the failure this workstream produces: a rule
+  off by a factor.
+- **4.2 series** answers `series(exp(x),0,5)` and `taylor(sin(x),0,7)` as
+  expressions about any centre. The gate compares the polynomial against the
+  function it approximates and re-parses what it prints. Convergence tests are
+  deliberately absent: a ratio test needs limits, and this engine has none.
+- **4.3 differential equations** answers `ode(2y,0,1,1,64)` numerically with
+  RK4, and `desolve(2y,0,1)` analytically as `exp(2x)` for constant-coefficient
+  growth, decay, cooling and logistic equations. The two are checked against
+  each other, which is stronger than either alone. Separable equations with
+  x-dependent coefficients are not covered.
 
-**4.1 is in flight too.** Symbolic integration now answers the indefinite form:
-`integrate(x^2)` gives `x^3/3 + C` and the bounded form still gives a number.
-The rules cover powers of x, sums, constant multiples, `c/x^k` (which is where
-`1/x` and `ln(x)` come from) and sin, cos and exp of a linear argument; anything
-else is refused rather than guessed. Its gate is a round trip - differentiate
-the antiderivative and compare it against the integrand at six points - so a
-rule that is off by a factor fails instead of printing nearly-right working.
-Three supporting changes came with it: the node pool grew from 48 to 128
-because 48 ran out differentiating an answer back, the quotient rule now
-specialises a constant denominator because the full rule overflowed Q16 at
-`x^6/6`, and coefficients stay exact so `2x` prints `x^2` rather than
-`2(x^2/2)`.
-
-**4.2 is in flight as well.** `series(exp(x),0,5)` and `taylor(sin(x),0,7)`
-answer with the Taylor polynomial as a printed expression, built the same way
-as a derivative: coefficients from repeated differentiation at the centre,
-divided by the factorial, over one shared `(x-a)` subtree. Coefficients are
-fixed point, so the gate compares values against the function on the interval
-rather than text against a hand-written answer, and it also re-parses what the
-series prints. Convergence answers are not here yet: a real ratio test needs
-limits, and this engine has none.
-
-**4.3 is up as well, numerically.** `ode(2y,0,1,1,64)` steps `y' = f(x,y)` with
-RK4 and answers the final value; the expression may mention `y` as well as `x`,
-which no other typed form accepts, and a stray `y` elsewhere is refused rather
-than read as zero. Accuracy is about three significant digits, not four: every
-`k` is evaluated in Q16, so the error floor sits near 5e-4 whatever the step
-count, and the gate compares numbers rather than the printed string for that
-reason. Separable and first-order linear closed forms are not here yet — they
-need the symbolic integration from 4.1 plus a pattern matcher, and they are the
-next piece of this workstream.
+**4.4 through 4.6 are not started, on purpose.** 4.4 is about 34 relations and
+the capacity evidence says the model gets worse at what already works when the
+catalogue grows; that is a decision, not a task. 4.5 and 4.6 are device UI, and
+no machine in this project has the Ndless toolchain, so their code could be
+written but not compiled — which is how a feature ends up looking done.
 
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84

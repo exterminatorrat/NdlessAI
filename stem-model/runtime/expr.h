@@ -169,6 +169,17 @@ int gexpr_rk4(const gexpr_t *f, q16_t x0, q16_t y0, q16_t xn, int steps,
 int gexpr_ode_answer(const char *text, char *out, int outlen);
 
 /*
+ * The closed form of y' = a*y + c, or of the logistic a*y + b*y^2, as an
+ * expression in x: growth, decay, Newton cooling and population growth, which
+ * are the constant-coefficient cases the syllabus asks for. Refused for
+ * anything that is not polynomial in y with x-free coefficients.
+ */
+int gexpr_ode_closed(const gexpr_t *f, q16_t x0, q16_t y0, gexpr_t *out);
+
+/* Answers "desolve(<expr>,x0,y0)" with that closed form, printed. */
+int gexpr_desolve_answer(const char *text, char *out, int outlen);
+
+/*
  * Prints a tree in the syntax gexpr_parse accepts, with brackets where
  * precedence needs them and implicit multiplication where it reads better, so
  * a student sees "3x^2+2" rather than "3*x^2+2". A parse of the printed form

@@ -59,6 +59,61 @@ static void expect_final(const char *text, double y0, double x0, double xn,
  * three: f and every k are Q16, so the error floor is around 5e-4 whatever the
  * step count. That is why this compares numbers rather than strings.
  */
+
+/*
+ * The two methods are independent: RK4 steps numerically and the closed form is
+ * derived. If they agree over an interval, the closed form is right - a wrong
+ * one drifts away from the numerical solution immediately, which is why this is
+ * the check worth having rather than a hand-written expected value.
+ */
+static void expect_closed_agrees(const char *text, double y0, double x0,
+                                 double xn)
+{
+	char err[64];
+	gexpr_t f, sol;
+	q16_t ys[EXPR_MAX_ODE_STEPS + 1];
+	double closed, numeric;
+
+	if (gexpr_parse(text, &f, err, (int)sizeof err) < 0) {
+		fail(text, err);
+		return;
+	}
+	if (gexpr_ode_closed(&f, (q16_t)(x0 * Q16_ONE),
+	                     (q16_t)(y0 * Q16_ONE), &sol) != GEXPR_DIFF_OK) {
+		fail(text, "no closed form");
+		return;
+	}
+	if (gexpr_rk4(&f, (q16_t)(x0 * Q16_ONE), (q16_t)(y0 * Q16_ONE),
+	              (q16_t)(xn * Q16_ONE), 128, ys,
+	              (int)(sizeof ys / sizeof ys[0])) != GEXPR_DIFF_OK) {
+		fail(text, "rk4 refused a valid equation");
+		return;
+	}
+	closed = gexpr_eval(&sol, (q16_t)(xn * Q16_ONE)) / (double)Q16_ONE;
+	numeric = ys[128] / (double)Q16_ONE;
+	if (fabs(closed - numeric) > 5e-3 * fabs(numeric)) {
+		char detail[192];
+
+		snprintf(detail, sizeof detail,
+		         "closed form %g and RK4 %g disagree at x=%g",
+		         closed, numeric, xn);
+		fail(text, detail);
+	}
+}
+
+static void expect_no_closed(const char *text)
+{
+	char err[64];
+	gexpr_t f, sol;
+
+	if (gexpr_parse(text, &f, err, (int)sizeof err) < 0) {
+		fail(text, err);
+		return;
+	}
+	if (gexpr_ode_closed(&f, 0, Q16_ONE, &sol) == GEXPR_DIFF_OK)
+		fail(text, "solved an equation analytically it has no rule for");
+}
+
 static void expect_typed_near(const char *text, double want)
 {
 	char out[128];
@@ -118,6 +173,21 @@ int main(void)
 	expect_refused("ode(2y,0,1,1,999)");
 	expect_refused("ode(2y,0,1,1,2.5)");
 	expect_refused("ode(,0,1,1,8)");
+
+	/* Closed form against the numerical solution: two independent methods. */
+	expect_closed_agrees("2y", 1, 0, 1);
+	expect_closed_agrees("-y", 1, 0, 2);
+	expect_closed_agrees("-0.5y+2", 0, 0, 2);
+	expect_closed_agrees("-0.5y+2", 1, 0, 3);
+	expect_closed_agrees("3", 5, 0, 2);
+	expect_closed_agrees("0.5y-0.01y^2", 10, 0, 4);
+	expect_closed_agrees("0.2y-0.001y^2", 5, 0, 6);
+
+	/* Equations with no closed form here are refused rather than approximated
+	 * silently - the numerical `ode` form still answers them. */
+	expect_no_closed("x+y");
+	expect_no_closed("y^3");
+	expect_no_closed("sin(y)");
 
 	if (failures) {
 		printf("failures: %d\n", failures);

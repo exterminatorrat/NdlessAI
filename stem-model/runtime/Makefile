@@ -25,12 +25,12 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # model and the expression evaluator, and matrix.c answers linear algebra
 # before any of them runs.
 PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c \
-	   expr.c callmask.c matrix.c steps.c
+	   diagram.c expr.c callmask.c matrix.c steps.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
      test_matrix test_steps test_symbolic test_series test_ode test_alt \
-     test_screen test_ui bench_kernel
+     test_screen test_ui test_diagram bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -87,6 +87,9 @@ test_screen: test_screen.c screen.c screen.h
 test_ui: test_ui.c ui.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_ui.c ui.c $(PIPELINE) $(LDLIBS)
 
+test_diagram: test_diagram.c diagram.c screen.c expr.c diagram.h $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_diagram.c diagram.c screen.c expr.c $(LDLIBS)
+
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
 
@@ -113,6 +116,7 @@ check: all
 	./test_guard
 	./test_callmask
 	./test_graph
+	./test_diagram
 	./test_typed
 	./test_screen
 	./test_ui
@@ -123,6 +127,6 @@ check: all
 clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
-	      test_equation test_alt test_screen test_ui bench_kernel
+	      test_equation test_alt test_screen test_ui test_diagram bench_kernel
 
 .PHONY: all clean check

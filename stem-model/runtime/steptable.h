@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 9095ee9d44bbd618
+ * STEP_SOURCE_SHA 86673c63c1d75876
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 89
+#define STEP_NUM_ROWS 98
 
 typedef struct {
 	const char *name;
@@ -20,9 +20,12 @@ typedef struct {
 
 #ifdef STEPTABLE_IMPL
 const step_row_t step_rows[STEP_NUM_ROWS] = {
+	{"activity_bq", "A = 0.693*N/t_half", "0.693*@1/@2"},
 	{"arc_length", "s = r*theta*pi/180", "@1*@2*pi/180"},
 	{"average", "mean = (a + b + c + d)/4", "(@1 + @2 + @3 + @4) / 4"},
 	{"avg_rate", "rate = change/time", "@1 / @2"},
+	{"bohr_energy_ev", "E_n = -13.6/n^2", "-13.6/@1^2"},
+	{"bohr_transition_nm", "lambda = 1240/(13.6*(1/n1^2 - 1/n2^2))", "1240/(13.6*(1/@1^2 - 1/@2^2))"},
 	{"boyles", "P2 = P1*V1/V2", "@1*@2/@3"},
 	{"buffer_ph", "pH = pKa + log10(base/acid)", "@1 + log10(@2/@3)"},
 	{"calorimetry_c", "c = q/(m*dT)", "@1/(@2*@3)"},
@@ -39,6 +42,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"continuous_growth", "A = P*e^(r*t)", "@1*exp(@2/100*@3)"},
 	{"cos_eval", "cos(a)", "cos(@1)"},
 	{"coulomb_force", "F = k*q1*q2/r^2", "8.99e9*(@1*1e-6)*(@2*1e-6)/@3^2"},
+	{"de_broglie_electron", "lambda = 1.226/sqrt(V)", "1.226/sqrt(@1)"},
 	{"density", "d = m/V", "@1/@2"},
 	{"deriv_poly3", "f'(x) = 3a*x^2 + 2b*x + c", "3*@1*@5^2 + 2*@2*@5 + @3"},
 	{"dilution", "c2 = c1 * v1 / v2", "@1 * @2 / @3"},
@@ -58,6 +62,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"gibbs", "dG = dH - T*dS/1000", "@1 - @2*@3/1000"},
 	{"h_from_ph", "[H+] = 10^(-pH)", "10^(-@1)"},
 	{"half_life", "N = N0*(1/2)^(t/hl)", "@1*(1/2)^(@3/@2)"},
+	{"half_life_fraction", "f = 0.5^(t/t_half)", "0.5^(@1/@2)"},
 	{"heat_pump_cop", "COP = Tc/(Th - Tc)", "@1 / (@2 - @1)"},
 	{"heat_reaction", "q = n * dH", "@1 * @2"},
 	{"impulse", "J = F*t", "@1 * @2"},
@@ -75,6 +80,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"log10_eval", "log10(x)", "log10(@1)"},
 	{"log_eval", "log_b(x) = ln(x)/ln(b)", "ln(@2)/ln(@1)"},
 	{"m_to_cm", "cm = m*100", "@1*100"},
+	{"mass_energy_mev", "E = 931.5*m", "931.5*@1"},
 	{"mass_percent", "mass% = solute/solution * 100", "@1 / @2 * 100"},
 	{"molality", "m = n / kg", "@1 / @2"},
 	{"molarity", "M = n/V", "@1 / @2"},
@@ -92,6 +98,8 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"percent_yield", "yield% = actual/theoretical*100", "@1/@2*100"},
 	{"ph", "pH = -log10[H+]", "-log10(@1)"},
 	{"ph_from_poh", "pH = 14 - pOH", "14 - @1"},
+	{"photoelectric_kev", "K = 1240/lambda - phi", "1240/@1 - @2"},
+	{"photon_energy_ev", "E = 1240/lambda", "1240/@1"},
 	{"poh", "pOH = -log10[OH-]", "-log10(@1)"},
 	{"potential_energy", "PE = m*g*h", "@1 * @2 * @3"},
 	{"power", "P = W/t", "@1 / @2"},
@@ -105,6 +113,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"stoich_mass", "mass = mass_given*ratio*mm_product/mm_given", "@1*@4*@3/@2"},
 	{"stoichiometry", "product = moles*ratio", "@1*@2"},
 	{"tan_eval", "tan(a)", "tan(@1)"},
+	{"threshold_wavelength", "lambda_max = 1240/phi", "1240/@1"},
 	{"torque", "tau = F*r*sin(theta)", "@1*@2*sin(@3)"},
 	{"wave_speed", "v = f*lambda", "@1*@2"},
 	{"work", "W = F*d*cos(theta)", "@1*@2*cos(@3)"},

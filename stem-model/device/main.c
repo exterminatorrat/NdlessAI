@@ -1,29 +1,24 @@
 /*
  * STEM helper for the TI-Nspire CX II under Ndless.
  *
- * Two modes, chosen at startup:
+ * Two modes, chosen from the screen's own menu:
  *
- *   Solve - asks for a problem, runs the on-device pipeline (BPE ->
- *           fixed-point transformer -> call -> C solver) and shows the
- *           answer. The pipeline is the same code the host tests exercise,
- *           so behaviour here matches what was measured off-device.
+ *   Ask  - a problem in words runs the on-device pipeline (BPE ->
+ *          fixed-point transformer -> call -> C solver); an expression is
+ *          answered directly, without the model. The pipeline is the same
+ *          code the host tests exercise, so behaviour here matches what was
+ *          measured off-device.
  *   Graph - plots y = f(x). Pure C, no model and no weights file.
+ *
+ * This file only finds and loads the model; the screen is runtime/ui.c and
+ * the keypad is device/ui_ndless.c.
  */
 #include <libndls.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "pipeline.h"
-#include "graph_ui.h"
+#include "ui.h"
 
 #define SEQ 160
-
-/*
- * Shown in the title bar so it is obvious which build is on the calculator.
- * Bump this whenever behaviour changes; a stale .tns is otherwise
- * indistinguishable from a broken fix.
- */
-#define BUILD_STAMP "stemhelp v8"
 
 /*
  * TI's transfer software only accepts files ending in .tns, so the model
@@ -37,124 +32,30 @@ static const char *const weight_names[] = {
 	NULL
 };
 
-/*
- * Without the weights file there is no model, but typed arithmetic never
- * needed one: the expression evaluator answers it directly and cheaply.
- * Anything else is refused here rather than pushed through a pipeline that
- * was never initialised.
- */
-static void typed_mode(void)
-{
-	char answer[256];
-
-	for (;;) {
-		char *input = NULL;
-		int len = show_msg_user_input(BUILD_STAMP, "Enter an expression:", "", &input);
-
-		if (len < 0 || !input)
-			break;
-		if (pipeline_typed_answer(input, answer, (int)sizeof answer) == PIPELINE_OK)
-			show_msgbox("Answer", answer);
-		else
-			show_msgbox("No model file",
-			            "I can only evaluate arithmetic without\n"
-			            "the model. Word problems need\n"
-			            "weights.bin.tns beside this program.");
-		free(input);
-	}
-}
-
-static void solve_mode(void)
+int main(void)
 {
 	static pipeline_t p;
 	char path[256];
-	char answer[256];
-	char call[256];
-	char steps[256];
 	int found = 0;
+
+	assert_ndless_rev(801);
 
 	for (int i = 0; weight_names[i] && !found; i++)
 		found = locate(weight_names[i], path, sizeof path) == 0;
 
-	if (!found) {
-		show_msgbox("STEM helper",
-		            "The model file was not found.\n\n"
-		            "Arithmetic still works. Word problems\n"
-		            "need weights.bin.tns beside this\n"
-		            "program.");
-		typed_mode();
-		return;
-	}
+	/*
+	 * Without the weights file there is no model, but typed arithmetic never
+	 * needed one. The screen says so on its own; the app still starts, so a
+	 * student can evaluate an expression on a calculator that has nothing
+	 * copied onto it yet.
+	 */
+	if (!found)
+		return ui_run(NULL, "weights.bin.tns is not beside this program.");
 
-	if (pipeline_init(&p, path, SEQ) < 0) {
-		show_msgbox("STEM helper",
-		            "Could not load the model.\n\n"
-		            "The calculator may be low on memory.");
-		return;
-	}
+	if (pipeline_init(&p, path, SEQ) < 0)
+		return ui_run(NULL, "weights.bin.tns would not load; the calculator may be low on memory.");
 
-	for (;;) {
-		char *input = NULL;
-		int len = show_msg_user_input(BUILD_STAMP, "Enter a problem:", "", &input);
-		int rc;
-
-		if (len < 0 || !input)
-			break;
-
-		rc = pipeline_answer(&p, input, answer, (int)sizeof answer,
-		                     call, (int)sizeof call);
-		free(input);
-
-		if (rc == PIPELINE_OK) {
-			/*
-			 * Show the working when this relation has a template: the formula,
-			 * the numbers in it, then the answer. check_steps.py proves the
-			 * arithmetic on the host, so nothing here needs verifying on screen.
-			 */
-			if (pipeline_steps(call, answer, steps, (int)sizeof steps) == 1)
-				show_msgbox("Working", steps);
-			else
-				show_msgbox("Answer", answer);
-		} else if (rc == PIPELINE_UNCERTAIN) {
-			show_msgbox("Not sure",
-			            "I could not match the numbers in your\n"
-			            "question, so I will not guess.");
-		} else {
-			/*
-			 * Show what the model produced. A malformed call usually means
-			 * the compiled tokenizer does not match the one the model was
-			 * trained with, and the call text is the only way to see that
-			 * from the calculator.
-			 */
-			char detail[384];
-
-			snprintf(detail, sizeof detail,
-			         "I could not work that one out.\n\n"
-			         "It produced:\n%s\n\n"
-			         "saturations: %lu",
-			         call, (unsigned long)fixed_sat_count);
-			show_msgbox("Sorry", detail);
-		}
-	}
-
+	ui_run(&p, NULL);
 	pipeline_free(&p);
-}
-
-int main(void)
-{
-	assert_ndless_rev(801);
-
-	for (;;) {
-		unsigned choice = show_msgbox_2b(BUILD_STAMP,
-		                                 "What do you want to do?",
-		                                 "Solve", "Graph");
-
-		if (choice == 1)
-			solve_mode();
-		else if (choice == 2)
-			graph_run();
-		else
-			break;
-	}
 	return 0;
 }

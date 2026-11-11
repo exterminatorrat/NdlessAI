@@ -676,8 +676,10 @@ static void test_integral_typed_refusals(void)
 	static const char *const refused[] = {
 		/* the whole text has to be the call */
 		"integrate(x^2,0,3)+1", "2*int(x^2,0,3)", "integrate (x^2,0,3)junk",
-		/* not three parts */
-		"integrate(x^2,0)", "integrate(x^2,0,3,4)", "int(x^2)", "",
+		/* malformed calls. "int(x^2)" used to be here, because the
+		 * indefinite form had no answer; it answers x^3/3 + C now and is
+		 * covered by test_symbolic. */
+		"integrate(x^2,0)", "integrate(x^2,0,3,4)", "int( )", "",
 		/* brackets that do not balance */
 		"integrate(x^2,0,3", "integrate(x^2,0,3))", "integrate(x^2,0,3,",
 		/* bounds that are not constant expressions, depend on x, have no
@@ -747,9 +749,12 @@ static void test_failures(void)
 	expect_derive("x^x", GEXPR_DIFF_UNSUPPORTED);
 	expect_derive("sin(x)^x", GEXPR_DIFF_UNSUPPORTED);
 
-	/* A product of enough factors does not fit beside its own source. */
+	/* A product of enough factors does not fit beside its own source. The
+	 * pool grew to 128 nodes for symbolic integration, so this is longer
+	 * than it used to be: the point is the refusal, not the length. */
 	expect_derive("sin(x)*cos(x)*tan(x)*exp(x)*ln(x+2)*sqrt(x+2)*(x^2+1)"
-	              "/(x+3)", GEXPR_DIFF_TOO_BIG);
+	              "*(x^2+2)*(x^2+3)*(x^2+4)*(x^2+5)/(x+3)",
+	              GEXPR_DIFF_TOO_BIG);
 
 	if (gexpr_derive(&empty, &d) == GEXPR_DIFF_OK ||
 	    gexpr_unparse(NULL, out, sizeof out) == 0 ||

@@ -117,6 +117,28 @@ int gexpr_derive(const gexpr_t *f, gexpr_t *out);
 int gexpr_integrate_symbolic(const gexpr_t *f, gexpr_t *out);
 
 /*
+ * How many terms a Taylor series may ask for. Each term costs a derivative and
+ * a factorial, and the polynomial is a DAG over one shared (x-a), so this is a
+ * reply-length limit rather than a node limit.
+ */
+#define EXPR_MAX_TAYLOR_TERMS 8
+
+/*
+ * The Taylor polynomial of f about a with `terms` coefficients. Same return
+ * codes as gexpr_derive: OK, TOO_BIG when the polynomial does not fit,
+ * UNSUPPORTED for a function with no derivative rule. Coefficients are fixed
+ * point, so the result approximates; compare values, not text.
+ */
+int gexpr_taylor(const gexpr_t *f, q16_t a, int terms, gexpr_t *out);
+
+/*
+ * Answers "series(<expr>,<a>,<n>)" and "taylor(...)" as a typed expression:
+ * the polynomial, printed. Returns 0 on success, -1 when the text is not that
+ * call or the series cannot be built.
+ */
+int gexpr_series_answer(const char *text, char *out, int outlen);
+
+/*
  * Prints a tree in the syntax gexpr_parse accepts, with brackets where
  * precedence needs them and implicit multiplication where it reads better, so
  * a student sees "3x^2+2" rather than "3*x^2+2". A parse of the printed form

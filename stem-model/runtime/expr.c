@@ -882,6 +882,10 @@ static int node_has_x(const gexpr_t *f, int i)
 	case G_X:
 		return 1;
 	case G_NUM:
+	/* y is an input like x, so it is not a constant either; every path that
+	 * may not see one checks gexpr_has_y first. A leaf that falls through to
+	 * its own child index recurses forever, which is how sin(y) hung. */
+	case G_Y:
 		return 0;
 	case G_ADD:
 	case G_SUB:
@@ -1035,6 +1039,16 @@ int gexpr_derive(const gexpr_t *f, gexpr_t *out)
 static int gx_node(dv_t *d)
 {
 	return gnew(d, G_X, 0, 0, 0);
+}
+
+/* k*node, with k = 1 and k = -1 keeping the printed form short. */
+static int scale(dv_t *d, q16_t k, int node)
+{
+	if (k == Q16_ONE)
+		return node;
+	if (k == -Q16_ONE)
+		return gneg(d, node);
+	return gmul(d, gnum(d, k), node);
 }
 
 /* The factor a linear argument is multiplied by: x counts as 1. */
@@ -1317,6 +1331,201 @@ int gexpr_rk4(const gexpr_t *f, q16_t x0, q16_t y0, q16_t xn, int steps,
 		y = (q16_t)(y24 >> 8);
 	}
 	return GEXPR_DIFF_OK;
+}
+
+/* ---- differential equations, closed form ---- */
+
+/*
+ * Whether a subtree mentions y. Mirrors node_has_x exactly: a leaf's child
+ * index points at node 0, so the op has to be tested before descending or this
+ * recurses into itself forever.
+ */
+static int node_has_y(const gexpr_t *f, int i)
+{
+	const gnode_t *n;
+
+	if (i < 0)
+		return 0;
+	n = &f->node[i];
+	switch (n->op) {
+	case G_Y:
+		return 1;
+	case G_NUM:
+		return 0;
+	case G_ADD:
+	case G_SUB:
+	case G_MUL:
+	case G_DIV:
+	case G_POW:
+		return node_has_y(f, n->a) || node_has_y(f, n->b);
+	default:
+		return node_has_y(f, n->a);
+	}
+}
+
+/*
+ * Decomposes f into coef[0] + coef[1]*y + coef[2]*y^2, with coefficients that
+ * do not mention x. That is the shape every analytically solvable equation in
+ * the syllabus has, so the recogniser is a polynomial decomposition rather than
+ * a rewrite engine - and anything that does not decompose is refused.
+ */
+static int poly_in_y(const gexpr_t *f, int i, q16_t coef[3])
+{
+	const gnode_t *n;
+	q16_t t[3];
+
+	if (i < 0)
+		return -1;
+	n = &f->node[i];
+
+	switch (n->op) {
+	case G_NUM:
+		coef[0] = n->num;
+		coef[1] = 0;
+		coef[2] = 0;
+		return 0;
+	case G_Y:
+		coef[0] = 0;
+		coef[1] = Q16_ONE;
+		coef[2] = 0;
+		return 0;
+	case G_ADD:
+	case G_SUB: {
+		int64_t sign = (n->op == G_SUB) ? -1 : 1;
+
+		if (poly_in_y(f, n->a, coef) < 0 || poly_in_y(f, n->b, t) < 0)
+			return -1;
+		coef[0] = gq_sat((int64_t)coef[0] + sign * t[0]);
+		coef[1] = gq_sat((int64_t)coef[1] + sign * t[1]);
+		coef[2] = gq_sat((int64_t)coef[2] + sign * t[2]);
+		return 0;
+	}
+	case G_NEG:
+		if (poly_in_y(f, n->a, coef) < 0)
+			return -1;
+		coef[0] = gq_sat(-(int64_t)coef[0]);
+		coef[1] = gq_sat(-(int64_t)coef[1]);
+		coef[2] = gq_sat(-(int64_t)coef[2]);
+		return 0;
+	case G_MUL: {
+		q16_t l[3], r[3];
+
+		if (poly_in_y(f, n->a, l) < 0 || poly_in_y(f, n->b, r) < 0)
+			return -1;
+		/* y*y is y^2 and fine; anything that lands past y^2 is not. */
+		if (l[2] != 0 && r[1] != 0)
+			return -1;
+		if (r[2] != 0 && l[1] != 0)
+			return -1;
+		coef[0] = gq_mul(l[0], r[0]);
+		coef[1] = gq_sat((int64_t)gq_mul(l[0], r[1]) + gq_mul(l[1], r[0]));
+		coef[2] = gq_sat((int64_t)gq_mul(l[0], r[2]) +
+		                 gq_mul(l[1], r[1]) + gq_mul(l[2], r[0]));
+		return 0;
+	}
+	case G_POW:
+		if (f->node[n->a].op == G_Y && gnum_is(f, n->b) &&
+		    gnum_of(f, n->b) == 2 * Q16_ONE) {
+			coef[0] = 0;
+			coef[1] = 0;
+			coef[2] = Q16_ONE;
+			return 0;
+		}
+		return -1;
+	default:
+		break;
+	}
+
+	/* Anything else is a coefficient, and only if it mentions neither input. */
+	if (!node_has_x(f, i) && !node_has_y(f, i)) {
+		coef[0] = gexpr_eval(f, 0);
+		coef[1] = 0;
+		coef[2] = 0;
+		return 0;
+	}
+	return -1;
+}
+
+/*
+ * y(x) for y' = a*y + c, and for the logistic a*y + b*y^2 when c is 0. This is
+ * the analytical counterpart of gexpr_rk4, and the two are checked against each
+ * other: a closed form that does not agree with the numerical solution over the
+ * interval is a wrong closed form.
+ */
+int gexpr_ode_closed(const gexpr_t *f, q16_t x0, q16_t y0, gexpr_t *out)
+{
+	q16_t coef[3];
+	dv_t d;
+	int i, delta, body;
+
+	if (!f || !out || out == f || f->root < 0)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (poly_in_y(f, f->root, coef) < 0)
+		return GEXPR_DIFF_UNSUPPORTED;
+
+	out->root = -1;
+	out->n = 0;
+	d.o = out;
+	d.err = 0;
+	for (i = 0; i < EXPR_MAX_NODES; i++)
+		d.memo[i] = -1;
+
+	delta = gsub(&d, gx_node(&d), gnum(&d, x0));
+
+	if (coef[2] == 0) {
+		if (coef[1] == 0) {
+			/* y' = c: a line, and the only case with no exponential. */
+			body = gadd(&d, gnum(&d, y0),
+			            scale(&d, coef[0], delta));
+		} else {
+			/* y(x) = (y0 + c/a) e^(a(x-x0)) - c/a, written so a
+			 * negative constant reads as a sum rather than "--4". */
+			int ek = gnew(&d, G_EXP,
+			              scale(&d, coef[1], delta), 0, 0);
+			q16_t aabs = coef[1] > 0 ? coef[1] : (q16_t)-coef[1];
+			q16_t cabs = coef[0] > 0 ? coef[0] : (q16_t)-coef[0];
+			int mag = gdiv(&d, gnum(&d, cabs), gnum(&d, aabs));
+			/* c/a is positive when a and c share a sign. */
+			int same = (coef[0] > 0) == (coef[1] > 0);
+			int mul;
+
+			if (coef[0] == 0) {
+				body = gmul(&d, gnum(&d, y0), ek);
+			} else if (same) {
+				mul = gmul(&d, gadd(&d, gnum(&d, y0), mag), ek);
+				body = gsub(&d, mul, mag);
+			} else {
+				mul = gsub(&d, gnum(&d, y0), mag);
+				body = gadd(&d, gmul(&d, mul, ek), mag);
+			}
+		}
+		if (body < 0)
+			return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+		out->root = body;
+		return GEXPR_DIFF_OK;
+	}
+
+	/* Logistic: y' = a*y + b*y^2 with no constant term.
+	 * y(x) = L / (1 + ((L - y0)/y0) e^(-a(x-x0))),  L = -a/b. */
+	if (coef[0] != 0 || y0 == 0)
+		return GEXPR_DIFF_UNSUPPORTED;
+	{
+		q16_t L = gq_sat(-(int64_t)gq_div(coef[1], coef[2]));
+		int ek, ratio, denom;
+
+		if (L == 0)
+			return GEXPR_DIFF_UNSUPPORTED;
+		ek = gnew(&d, G_EXP,
+		          gmul(&d, gneg(&d, gnum(&d, coef[1])), delta), 0, 0);
+		ratio = gdiv(&d, gsub(&d, gnum(&d, L), gnum(&d, y0)),
+		             gnum(&d, y0));
+		denom = gadd(&d, gnum(&d, Q16_ONE), gmul(&d, ratio, ek));
+		body = gdiv(&d, gnum(&d, L), denom);
+		if (body < 0)
+			return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+		out->root = body;
+		return GEXPR_DIFF_OK;
+	}
 }
 
 /* ---- printing ---- */
@@ -2161,4 +2370,61 @@ int gexpr_ode_answer(const char *text, char *out, int outlen)
 		y = ys[steps];
 	}
 	return gexpr_format(y, out, outlen);
+}
+
+/* ---- desolve(expr, x0, y0) as a typed answer ---- */
+
+int gexpr_desolve_answer(const char *text, char *out, int outlen)
+{
+	char inner[EXPR_TEXT_MAX];
+	char expr_text[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[3];
+	int plen[3];
+	gexpr_t f, sol;
+	const char *p;
+	size_t n, room;
+	q16_t x0, y0;
+	int i;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+	if (room < 9 || text[n - 1] != ')' || strncmp(p, "desolve", 7) != 0)
+		return -1;
+	p += 7;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	if (*p != '(')
+		return -1;
+	p++;
+	{
+		size_t inner_len = (size_t)(text + n - 1 - p);
+
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			return -1;
+		memcpy(inner, p, inner_len);
+		inner[inner_len] = 0;
+	}
+	if (split_n(inner, (int)strlen(inner), 3, part, plen) < 0)
+		return -1;
+	if (parse_bound(part[1], plen[1], &x0) < 0 ||
+	    parse_bound(part[2], plen[2], &y0) < 0)
+		return -1;
+	for (i = 0; i < plen[0] && i < (int)sizeof expr_text - 1; i++)
+		expr_text[i] = part[0][i];
+	expr_text[i] = 0;
+	if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
+		return -1;
+	if (gexpr_ode_closed(&f, x0, y0, &sol) != GEXPR_DIFF_OK)
+		return -1;
+	return gexpr_unparse(&sol, out, outlen);
 }

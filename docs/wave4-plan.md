@@ -1,8 +1,32 @@
 # Wave 4: the plan
 
-Planning document. Nothing here is implemented yet; `docs/waves.md` holds the
-workstream list this expands, and its status table is the truth about what is on
-master.
+`docs/waves.md` holds the workstream list this expands, and its status table is
+the truth about what is on master. This page is the shape of the work and where
+each piece stopped.
+
+## Where wave 4 stands
+
+| # | Workstream | State | What is left |
+| --- | --- | --- | --- |
+| 4.1 | Symbolic integration | **done** | powers of x, sums, constant multiples, `1/x` to `ln(x)`, and sin/cos/exp of a linear argument; anything else is refused |
+| 4.2 | Series | **half** | Taylor and Maclaurin answer as expressions. Convergence tests are not built: a real ratio test needs limits and this engine has none |
+| 4.3 | Differential equations | **half** | RK4 answers a value at a point; `desolve` answers the closed form for constant-coefficient growth, decay, cooling and logistic equations. Separable equations with x-dependent coefficients are not covered |
+| 4.4 | Waves, optics, fluids, modern physics | **not started** | about 34 relations, gated on the capacity decision: the evidence says a 136-relation catalogue on this model gets worse at what already works |
+| 4.5 | Interface | **not started** | device-only code; not one line of it can be compiled on a machine without the Ndless toolchain |
+| 4.6 | Graphing from the problem | **not started** | same, plus 4.6c needs the decoder to keep its top-three call tokens |
+
+Everything above that is marked done or half is host-verifiable and gated. The
+two that are not started are not started for a reason worth stating plainly:
+4.4 needs a decision about model capacity that the project cannot make from
+this machine, and 4.5 and 4.6 are UI work on a device nobody has yet built for
+from here. Writing either of them blind would produce code that cannot be
+compiled, let alone run.
+
+The gate each engine piece carries is worth more than the feature: integration
+differentiates its own answer back, series compares against the function it
+approximates, and the ODE closed form is checked against the numerical solution
+it was derived independently of. Each one caught wrong work of mine on the run
+that introduced it.
 
 Wave 4 is the last wave in the plan, and it is not one kind of work. It contains
 three of the hardest things in the project (4.1–4.3), the last big block of

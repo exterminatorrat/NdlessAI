@@ -119,6 +119,15 @@ linear algebra over integer stoichiometry, not a numeric call.
 D5, D8 and D12 are the three highest-value interface entries: the answer is
 already correct in most cases, and the interface is what makes it believed.
 
+Wave 4.5 shipped four of these in the host-testable form: D5 (the answer pane
+prints the call, the formula with the numbers substituted, and the result), D6
+as RAM only — eight pairs of question and answer with one-key recall, lost when
+the app exits, because persistence needs a writable file on a filesystem this
+project has not yet touched — D8 as three scrollable pages of typed syntax
+rather than a keypad grid, and D12 for the three pipeline failures. D2 and D3
+are the graph overlays and the table view: the shaded integral and the marked
+answer exist in 4.6, the scrollable table does not.
+
 ## E. Platform and Ndless
 
 | # | Capability | Notes |

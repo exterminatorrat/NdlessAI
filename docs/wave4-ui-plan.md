@@ -188,6 +188,35 @@ condition.
 | `test_diagram` | arrow lengths and directions, strobe spacing, shaded region bounds |
 | `ARM cross-compile` | every device source compiles for `arm926ej-s` under `-Werror` |
 
+## Where it ended
+
+Both workstreams landed on one branch, and the gate rows they added are the
+argument that they are real: `screen primitives`, `interface model`, `diagram
+answers`, `candidate margins` and the extended `graph` row, plus `ARM
+cross-compile` covering every device source and `-Werror` over the two new
+runtime modules.
+
+Two keys reach the new screens from the answer:
+
+| Key | What it does | Where the decision lives |
+| --- | --- | --- |
+| TAB | toggles the subject diagram over the answer, if the relation has one | `ui_key` → `diagram_render` in `runtime/` |
+| VAR | leaves the model and hands the answer's call to the plotter | `ui_key` returns `UI_KEY_GRAPH`; `device/graph_ui.c` draws it |
+
+Any key other than TAB puts the answer back, so the picture cannot eat the
+answer a student asked for, and both keys are advertised on the answer screen's
+own hint line — a key nobody can find is not a feature.
+
+4.6c is data, not a picture yet: `pipeline_alternatives` returns the top three
+calls the decoder weighed with their margins, and `test_alt` checks them, but
+the dimmed overlay it exists for has nowhere to go while the plotter only ever
+receives the one call that won.
+
+One thing the plan asked for is deliberately still open: the plotter's *menu*
+path still prompts for `y = f(x)` through a message box, because that is the
+expression workflow the device already had. The answer path is the one that
+skips the formula, and it is the one 4.6 is about.
+
 ## What this still cannot prove
 
 Nothing here proves the screens *look* right on a 320x240 calculator, because

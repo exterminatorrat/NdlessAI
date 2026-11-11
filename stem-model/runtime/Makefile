@@ -24,7 +24,7 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # Everything the typed path needs: the pipeline pulls in the tokenizer, the
 # model and the expression evaluator, and matrix.c answers linear algebra
 # before any of them runs.
-PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c \
+PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c expr.c \
 	   callmask.c matrix.c steps.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \

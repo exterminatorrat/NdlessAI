@@ -56,6 +56,7 @@ if [ -d runtime ]; then
     run "typed answers"          sh -c 'cd runtime && ./test_typed | grep -q "all cases passed"'
     run "linear algebra"         sh -c 'cd runtime && ./test_matrix | grep -q "all cases passed"'
     run "step rendering"         sh -c 'cd runtime && ./test_steps | grep -q "all cases passed"'
+    run "symbolic integration"   sh -c 'cd runtime && ./test_symbolic | grep -q "all cases passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"

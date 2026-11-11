@@ -17,11 +17,18 @@ BPE merges for text.
 
 ## Where it stands
 
-66 relations across six subjects, all verified byte-identical between the
-Python reference and the C solvers (13,335 generated assertions). The model is
-retrained on the expanded set and passes the held-out phrasing (91.6% exact)
-and wrong-relation (2.9%) gates over 1,000 held-out problems; see
-`PROGRESS.md` for the per-relation state and `TIER1_PLAN.md` for the design.
+102 relations across ten subject modules, all verified byte-identical between
+the Python reference and the C solvers, with every C test and parity gate
+passing (`sh gate.sh`). On the 1,840 hand-written rows the model reads 72.3%
+exact and 9.8% wrong relation; the generated-phrasing gate is 90.5%, down from
+95.0% at 84 relations, because the catalogue outgrew the model rather than the
+training budget — `../docs/waves.md` records that measurement and what it
+implies. See `PROGRESS.md` for the per-relation state and `TIER1_PLAN.md` for
+the design.
+
+The subject list below is the original 66-relation Tier 1 baseline, kept because
+the tier descriptions refer to it; `../docs/status.md` lists the current
+catalogue by module.
 
 | Subject | Relations |
 |---|---|

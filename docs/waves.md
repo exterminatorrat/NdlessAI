@@ -160,30 +160,37 @@ deliberately rather than by another authoring round.
 
 ## Status
 
-`open` means a pull request exists and is verified locally; `merged` means it is
-on master. Nothing here is called done before it is merged.
+Every row was checked against master at `2beba30`, not against the state of a
+pull request. A closed pull request is not a missing workstream: most of the
+wave-1 and wave-2 pulls were closed once their content reached an integration
+branch, and that branch is what merged. The `Where it lives` column names the
+file or gate that proves the row, so the claim can be rechecked without trusting
+this table.
 
-| Workstream | State | Pull request |
+Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
+102 relations in ten subject modules.
+
+| Workstream | State on master | Where it lives |
 | --- | --- | --- |
-| Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | open, green once the crosscheck fix reached the integration base | #15 |
-| 0.1 split the solver and formula tables by subject | open, move-only, tests byte-identical | #19 |
-| 0.2 build the artifacts | done on the build machine: dataset, 6,000-step checkpoint, `weights.bin` 5.91 MB, fixed-point parity 6/6 | — |
-| 0.3 record the baseline | done, numbers below | — |
-| 1.1 invalid output blocking | open, review fixes applied | #20 |
-| 1.2 faster multiply-accumulate | open, honest size of win is ~3% per MAC | #21 |
-| 1.3 vocabulary 1,024 | **closed as a measured regression**: 87.9% exact against 92.5% at 512 on the same 2,000 rows. The capacity bug it exposed is a separate open pull | #18 closed, #23 open |
-| 1.4 typed maths without the weights file | open, stacked on #15 | #17 |
-| 2.1 solve for any variable (equation engine) | open; three math relations routed through it with `test_solvers` byte-identical | #25 |
-| 2.2 differentiation | open; typed `d/dx`, `diff`, `derivative`, worst finite-difference disagreement 15 permille | #27 |
-| 2.3 curve analysis | **not started**, and the wave closed without it — see below | — |
-| 2.4 AP Physics 1 mechanics | 8 relations landed with the retrain; the solver/relation parity gate shipped separately, because a checker is reviewable without a vocabulary rebuild | #24, #29 |
-| 3.1 pulled forward: definite integrals | open; `integrate(x^2,0,3)` answers 9, worst relative error 1.08e-4 | #30 |
-| 3.2 exact linear algebra | open, stacked on #58; typed `det`/`inv`/`rank`/`solve` on exact rationals, 4x4 cap, 47 host cases, device cross-compiles (+3.5 KB text) | #59 |
-| 3.3 and 3.4 pulled forward: chemistry and thermodynamics | 10 relations landed with the retrain | #29 |
-| 3.3 the rest of AP Chemistry: solutions, stoichiometry, equilibrium, kinetics | open; 6 relations (mass percent, mass-to-mass stoichiometry, mole fraction, Kc from concentrations, average rate, heat of reaction), trained at 12,000 steps because 6,000 left both gates worse than master | — |
-| 3.4 the rest of thermodynamics: work, entropy, conduction, radiation, heat pumps | open; 6 relations, trained with 3.5 in one run | — |
-| 3.5 electricity and magnetism: Coulomb, field, capacitors, parallel resistance, motional emf | open; 6 relations; the catalogue is now 102 and the generated gate says so — see below | — |
-| Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
+| Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | merged, #15 | `runtime/expr.c`; `typed_mode()` answers without `weights.bin` |
+| 0.1 split the solver and formula tables by subject | merged, #19 | ten `relations/*.py` modules, seven `runtime/solvers_*.c` units |
+| 0.2 build the artifacts | on the build machine only, not committed | `weights.bin` and `data/` are gitignored, so `gate.sh` skips parity and accuracy on a fresh clone |
+| 0.3 record the baseline | done | the numbers under "Baseline measured on the build machine" |
+| 1.1 invalid output blocking | merged, #20; linked into the device app in #58 | `runtime/callmask.c`, `callmask.o` in `device/Makefile` |
+| 1.2 faster multiply-accumulate | merged, #21 | `runtime/fixed.c` |
+| 1.3 vocabulary 1,024 | **closed as a measured regression**: 87.9% exact against 92.5% at 512 on the same 2,000 rows. The capacity bug it exposed is fixed in #23 | 512-token vocabulary |
+| 1.4 typed maths without the weights file | merged with #15; #17 closed as folded | `typed_mode()` in `device/main.c` |
+| 2.1 solve for any variable (equation engine) | merged; #25 closed as folded into the wave-2 integration | `runtime/equation.c` |
+| 2.2 differentiation | merged; #27 closed as folded | `d_node()` in `runtime/expr.c` |
+| 2.3 curve analysis | **never started**, dropped deliberately — see below | — |
+| 2.4 AP Physics 1 mechanics | merged; #24 and #29 closed as folded | 23 relations in `relations/physics.py` |
+| 3.1 pulled forward: definite integrals | merged; #30 closed as folded | `gexpr_integrate()` and `integr_poly3` |
+| 3.2 exact linear algebra | merged, #59 and #60 | `runtime/matrix.c`; typed `det`/`inv`/`rank`/`solve` on exact rationals |
+| 3.3 the rest of AP Chemistry | merged, #61 | `relations/chemistry.py`, 29 relations |
+| 3.4 the rest of thermodynamics | merged, #62 | `relations/thermo.py`, 6 relations |
+| 3.5 electricity and magnetism | merged, #62 | `relations/em.py`, 6 relations |
+| 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate | `gate.sh` gates generated phrasing and wrong relation only |
+| Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
 
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
@@ -199,9 +206,10 @@ That is the state wave 4 starts from.
 Wave 1's six code pulls verified together, with the trained weights present: the
 combined tree builds, every C test passes, fixed-point parity is 6/6, the
 tokenizer header matches, the Python suite is 36 passed and 1 skipped, and
-`gate.sh` reports `ALL GATES PASS` including both accuracy gates. That tree is
-the branch `capy/wave1-integrated`, and every wave 2 pull is based on it,
-because master cannot take wave 2 until wave 1 merges.
+`gate.sh` reports `ALL GATES PASS` including both accuracy gates. That tree was
+the branch `capy/wave1-integrated`, which merged as #51; wave 2 followed through
+#53, and waves 3.2 through 3.5 through #59–#62, so master now carries everything
+this file tracks rather than an integration branch.
 
 **2.3 was dropped deliberately.** Curve analysis in `graph.c` is the one slice of
 this wave that adds no answering power: extrema and roots already appear on the

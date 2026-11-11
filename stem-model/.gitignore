@@ -40,3 +40,5 @@ runtime/test_symbolic
 runtime/test_series
 runtime/test_ode
 runtime/test_alt
+runtime/test_screen
+runtime/test_ui

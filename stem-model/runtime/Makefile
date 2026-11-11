@@ -72,8 +72,8 @@ test_guard: test_guard.c $(PIPELINE) $(HEADERS)
 test_callmask: test_callmask.c callmask.c bpe.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_callmask.c callmask.c bpe.c
 
-test_graph: test_graph.c graph.c expr.c $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c expr.c $(LDLIBS)
+test_graph: test_graph.c graph.c screen.c expr.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c $(LDLIBS)
 
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)

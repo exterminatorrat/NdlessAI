@@ -180,6 +180,15 @@ int gexpr_ode_closed(const gexpr_t *f, q16_t x0, q16_t y0, gexpr_t *out);
 int gexpr_desolve_answer(const char *text, char *out, int outlen);
 
 /*
+ * Slope-field segments for y' = f(x,y) on a cols*rows grid over the window
+ * [x0,x1] x [y0,y1]. dx and dy receive each segment's half-extents in 1/64
+ * pixel; row 0 is the top of the window. Returns GEXPR_DIFF_OK on success.
+ */
+#define EXPR_FIELD_MAX 32
+int gexpr_slope_field(const gexpr_t *f, q16_t x0, q16_t x1, q16_t y0, q16_t y1,
+                      int cols, int rows, int16_t *dx, int16_t *dy);
+
+/*
  * Prints a tree in the syntax gexpr_parse accepts, with brackets where
  * precedence needs them and implicit multiplication where it reads better, so
  * a student sees "3x^2+2" rather than "3*x^2+2". A parse of the printed form

@@ -31,6 +31,7 @@ static int failures;
 #define PANE_H (UI_PANE_ROWS * SCREEN_LINE_H)
 
 static void test_diagram_screen(void);
+static void test_plot_key(void);
 static void check(int cond, const char *what)
 {
 	if (!cond) {
@@ -630,6 +631,38 @@ static void test_diagram_screen(void)
 	check(u.diagram == 0, "no diagram for arithmetic");
 }
 
+/*
+ * 4.6a from the answer: the plot key has to leave the model, because the
+ * plotter runs its own loop on the device. So the only thing worth asserting
+ * here is whether the model asks for it, which it may do only when the call
+ * the answer came from has a curve.
+ */
+static void test_plot_key(void)
+{
+	ui_init(&u, NULL, "no model");
+	u.mode = UI_MODE_ASK;
+	ui_result(&u, "friction force", PIPELINE_OK,
+	          "6 N", "CALL friction_force 0.3 20");
+	check(strcmp(ui_last_call(&u), "CALL friction_force 0.3 20") == 0,
+	      "the model kept the call");
+	check(ui_key(&u, UI_KEY_GRAPH) == UI_KEY_GRAPH,
+	      "an answer from a relation offers its plot");
+	/* The key is not on the keypad's own label, so the screen has to say it. */
+	render();
+	check(ink(0, UI_FOOTER_Y + 22, SCREEN_W, 8) > 0,
+	      "the answer advertises the keys it offers");
+
+	/* A call whose arguments are not numbers has no curve. */
+	ui_result(&u, "integrate", PIPELINE_OK, "x^3/3", "CALL integrate(x^2)");
+	check(ui_key(&u, UI_KEY_GRAPH) == UI_KEY_NONE,
+	      "a call that does not plot asks for nothing");
+
+	/* Arithmetic never had a call, so the key is inert rather than an error. */
+	ui_result(&u, "2+2", PIPELINE_OK, "4", "");
+	check(ui_last_call(&u)[0] == '\0', "arithmetic leaves no call behind");
+	check(ui_key(&u, UI_KEY_GRAPH) == UI_KEY_NONE, "no plot for arithmetic");
+}
+
 int main(void)
 {
 	test_menu();
@@ -641,6 +674,7 @@ int main(void)
 	test_steps();
 	test_render_frame();
 	test_diagram_screen();
+	test_plot_key();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

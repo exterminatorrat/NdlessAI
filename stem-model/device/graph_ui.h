@@ -7,4 +7,11 @@
  */
 int graph_run(void);
 
+/*
+ * Plots the curve behind an answer: the same screen, but opened on the call
+ * the answer came from instead of on a typed function, so 4.6a is reachable
+ * from the answer the student is looking at.
+ */
+int graph_run_call(const char *call);
+
 #endif

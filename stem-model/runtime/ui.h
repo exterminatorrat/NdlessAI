@@ -30,7 +30,7 @@
  * stale .tns is otherwise indistinguishable from a broken fix, so bump this
  * whenever the screen's behaviour changes. */
 #define UI_TITLE "STEM HELPER"
-#define UI_STAMP "V9"
+#define UI_STAMP "V10"
 
 /* The pane's text box: 51 six-pixel columns, with a scroll bar to the right. */
 #define UI_PANE_X     4
@@ -55,9 +55,10 @@ typedef enum {
 	UI_KEY_NONE, UI_KEY_ACCEPT, UI_KEY_BACK, UI_KEY_UP, UI_KEY_DOWN,
 	UI_KEY_LEFT, UI_KEY_RIGHT, UI_KEY_DELETE, UI_KEY_MODE,
 	/*
-	 * Returned by ui_key for the menu's Graph entry, never fed into it: the
-	 * plotter owns the LCD through its own loop on the Ndless side, so the
-	 * host has to step out of this model to run it.
+	 * Returned by ui_key, never fed into it: the plotter owns the LCD through
+	 * its own loop on the Ndless side, so the host has to step out of this
+	 * model to run it. The menu returns it for its Graph entry, and an answer
+	 * returns it when the call it came from has a curve to draw.
 	 */
 	UI_KEY_GRAPH,
 	/*
@@ -123,6 +124,12 @@ void ui_init(ui_t *u, pipeline_t *p, const char *missing_model_note);
  * value means the model changed and the caller should redraw.
  */
 ui_key_t ui_key(ui_t *u, ui_key_t k);
+
+/*
+ * The call the last answer came from, or an empty string when it came from
+ * arithmetic. The device plotter needs it to draw the answer's own curve.
+ */
+const char *ui_last_call(const ui_t *u);
 
 /* Inserts a printable character at the input cursor. Returns 1 if it went in. */
 int ui_type(ui_t *u, char c);

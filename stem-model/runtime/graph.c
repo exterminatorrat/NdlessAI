@@ -1188,6 +1188,29 @@ int graph_from_call(gstate_t *g, const char *call, int sweep, char *err, int err
 	return G_CALL_OK;
 }
 
+int graph_call_plottable(const char *call)
+{
+	char work[G_CALL_MAX];
+	const char *name = NULL;
+	const char *args[G_MAX_ARGS];
+	const step_row_t *row;
+	q16_t value;
+	int nargs = 0, sweep;
+
+	if (!call || split_call(work, call, &name, args, &nargs) < 0)
+		return 0;
+	row = find_step(name);
+	if (!row || !row->expr || !row->expr[0])
+		return 0;
+	sweep = template_last_arg(row->expr);
+	if (sweep < 1 || sweep > nargs)
+		return 0;
+	for (int k = 0; k < nargs; k++)
+		if (arg_value(args[k], &value) < 0)
+			return 0;
+	return 1;
+}
+
 int graph_family_add(gstate_t *g, int arg, q16_t value, char *err, int errlen)
 {
 	char work[G_CALL_MAX];

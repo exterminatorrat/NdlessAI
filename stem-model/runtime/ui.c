@@ -11,6 +11,7 @@
 #include "screen.h"
 #include "ui.h"
 #include "diagram.h"
+#include "graph.h"
 
 #define UI_BG      SCREEN_BLACK
 #define UI_FG      SCREEN_WHITE
@@ -515,6 +516,11 @@ static ui_key_t ask_key(ui_t *u, ui_key_t k)
 	case UI_KEY_DIAGRAM:
 		u->diagram = !u->diagram && call_has_diagram(u->last_call);
 		break;
+	case UI_KEY_GRAPH:
+		/* The plotter is the device's loop, so the model can only ask for
+		 * it. An answer that came from arithmetic has no curve to show. */
+		return graph_call_plottable(u->last_call) ? UI_KEY_GRAPH
+		                                        : UI_KEY_NONE;
 	case UI_KEY_UP:
 		scroll_pane(u, -1);
 		break;
@@ -572,6 +578,11 @@ ui_key_t ui_key(ui_t *u, ui_key_t k)
 		return ask_key(u, k);
 	}
 	return UI_KEY_NONE;
+}
+
+const char *ui_last_call(const ui_t *u)
+{
+	return u->last_call;
 }
 
 int ui_type(ui_t *u, char c)
@@ -727,8 +738,20 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 	}
 	screen_text(fb, 4, UI_FOOTER_Y, first, UI_DIM);
 	screen_text(fb, 4, UI_FOOTER_Y + 11, second, UI_DIM);
-	if (u->mode != UI_MODE_MENU && !has_model(u))
-		screen_text(fb, 4, UI_FOOTER_Y + 22, "NO MODEL: ARITHMETIC ONLY", UI_ACCENT);
+	/* The answer screen has two pictures on offer, and neither is guessable
+	 * from the keypad, so the line that advertises them is the last text row
+	 * on the screen. A build without a model gets the warning there instead. */
+	if (u->mode == UI_MODE_ASK && call_has_diagram(u->last_call) &&
+	    graph_call_plottable(u->last_call))
+		screen_text(fb, 4, UI_FOOTER_Y + 22, "TAB diagram   VAR plot",
+		            UI_DIM);
+	else if (u->mode == UI_MODE_ASK && call_has_diagram(u->last_call))
+		screen_text(fb, 4, UI_FOOTER_Y + 22, "TAB diagram", UI_DIM);
+	else if (u->mode == UI_MODE_ASK && graph_call_plottable(u->last_call))
+		screen_text(fb, 4, UI_FOOTER_Y + 22, "VAR plot", UI_DIM);
+	else if (u->mode != UI_MODE_MENU && !has_model(u))
+		screen_text(fb, 4, UI_FOOTER_Y + 22, "NO MODEL: ARITHMETIC ONLY",
+		            UI_ACCENT);
 }
 
 int ui_render(ui_t *u, uint16_t *fb)

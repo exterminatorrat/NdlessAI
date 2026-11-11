@@ -92,6 +92,12 @@ static int read_key(ui_key_t *k, char *ch)
 		*k = UI_KEY_DIAGRAM;
 		return 1;
 	}
+	/* VAR is the closest thing this keypad has to "show me the curve": the
+	 * answer screen advertises it on its hint line, so it is learnable. */
+	if (isKeyPressed(KEY_NSPIRE_VAR)) {
+		*k = UI_KEY_GRAPH;
+		return 1;
+	}
 	for (unsigned i = 0; i < sizeof char_keys / sizeof char_keys[0]; i++) {
 		if (isKeyPressed(*char_keys[i].key)) {
 			*ch = char_keys[i].ch;
@@ -115,6 +121,7 @@ int ui_run(pipeline_t *p, const char *note)
 	for (;;) {
 		ui_key_t k = UI_KEY_NONE;
 		ui_key_t act;
+		ui_mode_t mode_before;
 		char ch = 0;
 
 		ui_render(&u, fb);
@@ -131,14 +138,20 @@ int ui_run(pipeline_t *p, const char *note)
 			ui_type(&u, ch);
 			continue;
 		}
+		mode_before = u.mode;
 		act = ui_key(&u, k);
 		if (act == UI_KEY_BACK)
 			break;
 		if (act == UI_KEY_GRAPH) {
 			/* The plotter owns the LCD mode through its own loop; hand the
-			 * screen back afterwards or this loop blits into the wrong one. */
+			 * screen back afterwards or this loop blits into the wrong one.
+			 * From the menu it prompts for a function; from an answer it
+			 * draws the curve behind the call that answer came from. */
 			lcd_init(SCR_TYPE_INVALID);
-			graph_run();
+			if (mode_before == UI_MODE_ASK)
+				graph_run_call(ui_last_call(&u));
+			else
+				graph_run();
 			if (!lcd_init(SCR_320x240_565))
 				break;
 		}

@@ -155,6 +155,12 @@ int graph_init(gstate_t *g, const char *text, char *err, int errlen);
 int graph_from_call(gstate_t *g, const char *call, int sweep, char *err, int errlen);
 
 /*
+ * Whether graph_from_call would accept `call`: the same checks without a graph
+ * state, so a screen can offer the plot key only for an answer that has one.
+ */
+int graph_call_plottable(const char *call);
+
+/*
  * Adds the same call with argument `arg` at `value`, one curve each, so a
  * relation can be seen at several values of a parameter at once. The swept
  * argument stays the x axis. Returns G_CALL_OK or a negative G_CALL_* code.

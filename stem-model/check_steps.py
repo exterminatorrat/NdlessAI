@@ -40,6 +40,8 @@ FUNCS = {
     "sin": lambda d: math.sin(math.radians(d)),
     "cos": lambda d: math.cos(math.radians(d)),
     "tan": lambda d: math.tan(math.radians(d)),
+    "asin": lambda x: math.degrees(math.asin(x)),
+    "acos": lambda x: math.degrees(math.acos(x)),
     "pi": math.pi,
 }
 

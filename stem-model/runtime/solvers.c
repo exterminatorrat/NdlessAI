@@ -567,6 +567,63 @@ long long exp_9(long long x9, int *rc)
 }
 
 
+
+
+
+/*
+ * atan(num/den) in degrees at 1e9 scale, for num, den > 0.
+ * Reduces to the first octant, then applies atan(x) = 2*atan(x/(1+sqrt(1+x^2)))
+ * twice so the Taylor series converges quickly, then converts to degrees.
+ */
+long long atan_deg9(long long num, long long den, int *rc)
+{
+	long long x9, x2, t9, sum9, root9;
+	int i, k;
+
+	if (num <= 0 || den <= 0) {
+		*rc = -4;
+		return 0;
+	}
+	if (num > den) {
+		long long r = atan_deg9(den, num, rc);
+
+		if (*rc != 0)
+			return 0;
+		return 90000000000LL - r;
+	}
+	/* The bound is what keeps num*1e9 inside a long long. It used to be a
+	 * thousandth of that, which no caller noticed while every argument was
+	 * a small integer; the optics solver passes a 1e9-scaled ratio and
+	 * needs the real limit. */
+	if (num > 9200000000000000000LL / 1000000000LL) {
+		*rc = -4;
+		return 0;
+	}
+	x9 = num * 1000000000LL / den;
+	for (k = 0; k < 2; k++) {
+		x2 = x9 * x9 / 1000000000LL;
+		if (x2 > 9000000000LL) {
+			*rc = -4;
+			return 0;
+		}
+		root9 = (long long)isqrt64((unsigned long long)(1000000000000000000LL
+		                                              + x2 * 1000000000LL));
+		x9 = x9 * 1000000000LL / (1000000000LL + root9);
+	}
+	x2 = x9 * x9 / 1000000000LL;
+	t9 = x9;
+	sum9 = x9;
+	for (i = 1; i <= 15; i++) {
+		t9 = -t9 * x2 / 1000000000LL;
+		if (t9 == 0)
+			break;
+		sum9 += t9 / (2 * i + 1);
+	}
+	sum9 *= 4;
+	return div_round(sum9 * 180LL * 1000000LL, 3141592653LL) * 1000;
+}
+
+
 int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
@@ -577,6 +634,10 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
 		solvers_chem_solve,
 		solvers_thermo_solve,
 		solvers_em_solve,
+		solvers_optics_solve,
+		solvers_waves_solve,
+		solvers_fluids_solve,
+		solvers_modern_solve,
 		solvers_units_solve
 	};
 	size_t i;

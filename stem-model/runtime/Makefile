@@ -17,7 +17,9 @@ HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 	  steptable.h
 
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
-	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c
+	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c \
+	  solvers_optics.c solvers_waves.c solvers_fluids.c \
+	  solvers_modern.c
 
 # Everything the typed path needs: the pipeline pulls in the tokenizer, the
 # model and the expression evaluator, and matrix.c answers linear algebra

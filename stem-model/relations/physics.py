@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, _exact, dec, dec_exact
 
 
-@relation("kinematic_v", "physics", ["v0", "a", "t"], exact=False)
+@relation("kinematic_v", "physics", ["v0", "a", "t"], exact=False,
+          step=dict(line="v = v0 + a*t", expr="@1 + @2*@3"))
 class KinematicV:
     @staticmethod
     def gen(rng):
@@ -16,7 +17,8 @@ class KinematicV:
     def solve(v0, a, t):
         return f"{dec(sp.Float(v0 + a * t))} m/s"
 
-@relation("proj_range", "physics", ["v0", "theta", "g"], exact=False)
+@relation("proj_range", "physics", ["v0", "theta", "g"], exact=False,
+          step=dict(line="R = v0^2*sin(2*theta)/g", expr="@1^2*sin(2*@2)/@3"))
 class ProjRange:
     @staticmethod
     def gen(rng):
@@ -33,7 +35,8 @@ class ProjRange:
         r = sp.Integer(v0) ** 2 * sp.sin(2 * rad) / sp.Float(g)
         return f"{dec(r)} m"
 
-@relation("ohm_i", "physics", ["V", "R"], exact=False)
+@relation("ohm_i", "physics", ["V", "R"], exact=False,
+          step=dict(line="I = V/R", expr="@1/@2"))
 class OhmI:
     @staticmethod
     def gen(rng):
@@ -73,7 +76,8 @@ class PotentialEnergy:
     def solve(m, h, g):
         return f"{dec_exact(sp.Rational(m) * sp.Rational(h) * _exact(g))} J"
 
-@relation("work", "physics", ["F", "d", "theta"], exact=False)
+@relation("work", "physics", ["F", "d", "theta"], exact=False,
+          step=dict(line="W = F*d*cos(theta)", expr="@1*@2*cos(@3)"))
 class Work:
     @staticmethod
     def gen(rng):
@@ -130,7 +134,8 @@ class Newton2:
     def solve(m, a):
         return f"{dec(m * a)} N"
 
-@relation("circular_accel", "physics", ["v", "r"], exact=False)
+@relation("circular_accel", "physics", ["v", "r"], exact=False,
+          step=dict(line="a = v^2/r", expr="@1^2/@2"))
 class CircularAccel:
     @staticmethod
     def gen(rng):
@@ -143,7 +148,8 @@ class CircularAccel:
     def solve(v, r):
         return f"{dec(sp.Rational(v * v, r))} m/s^2"
 
-@relation("wave_speed", "physics", ["f", "lam"], exact=False)
+@relation("wave_speed", "physics", ["f", "lam"], exact=False,
+          step=dict(line="v = f*lambda", expr="@1*@2"))
 class WaveSpeed:
     @staticmethod
     def gen(rng):
@@ -172,7 +178,8 @@ class SpecificHeat:
     def solve(m, c, dT):
         return f"{dec_exact(sp.Rational(m) * _exact(c) * sp.Rational(dT))} J"
 
-@relation("ohm_v", "physics", ["I", "R"], exact=False)
+@relation("ohm_v", "physics", ["I", "R"], exact=False,
+          step=dict(line="V = I*R", expr="@1*@2"))
 class OhmV:
     @staticmethod
     def gen(rng):
@@ -185,7 +192,8 @@ class OhmV:
     def solve(I, R):
         return f"{dec(I * R)} V"
 
-@relation("ohm_power", "physics", ["I", "V"], exact=False)
+@relation("ohm_power", "physics", ["I", "V"], exact=False,
+          step=dict(line="P = I*V", expr="@1*@2"))
 class OhmPower:
     @staticmethod
     def gen(rng):
@@ -198,7 +206,8 @@ class OhmPower:
     def solve(I, V):
         return f"{dec(I * V)} W"
 
-@relation("free_fall", "physics", ["h", "g"], exact=False)
+@relation("free_fall", "physics", ["h", "g"], exact=False,
+          step=dict(line="v = sqrt(2*g*h)", expr="sqrt(2*@2*@1)"))
 class FreeFall:
     @staticmethod
     def gen(rng):
@@ -211,7 +220,8 @@ class FreeFall:
     def solve(h, g):
         return f"{dec(sp.sqrt(2 * sp.Float(h) * sp.Float(g)))} m/s"
 
-@relation("friction_force", "physics", ["mu", "N"], exact=False)
+@relation("friction_force", "physics", ["mu", "N"], exact=False,
+          step=dict(line="f = mu*N", expr="@1*@2"))
 class FrictionForce:
     @staticmethod
     def gen(rng):
@@ -225,7 +235,8 @@ class FrictionForce:
     def solve(mu, N):
         return f"{dec_exact(_exact(mu) * sp.Rational(N))} N"
 
-@relation("work_energy", "physics", ["m", "v0", "v"], exact=False)
+@relation("work_energy", "physics", ["m", "v0", "v"], exact=False,
+          step=dict(line="W = m*(v^2 - v0^2)/2", expr="@1*(@3^2 - @2^2)/2"))
 class WorkEnergy:
     @staticmethod
     def gen(rng):
@@ -240,7 +251,8 @@ class WorkEnergy:
         gain = sp.Rational(v * v - v0 * v0, 2)
         return f"{dec_exact(sp.Rational(m) * gain)} J"
 
-@relation("power_force", "physics", ["F", "v"], exact=False)
+@relation("power_force", "physics", ["F", "v"], exact=False,
+          step=dict(line="P = F*v", expr="@1*@2"))
 class PowerForce:
     @staticmethod
     def gen(rng):
@@ -253,7 +265,8 @@ class PowerForce:
     def solve(F, v):
         return f"{dec_exact(sp.Rational(F) * sp.Rational(v))} W"
 
-@relation("energy_friction", "physics", ["m", "v0", "f", "d"], exact=False)
+@relation("energy_friction", "physics", ["m", "v0", "f", "d"], exact=False,
+          step=dict(line="v = sqrt(v0^2 - 2*f*d/m)", expr="sqrt(@2^2 - 2*@3*@4/@1)"))
 class EnergyFriction:
     @staticmethod
     def gen(rng):
@@ -308,7 +321,8 @@ class SpringEnergy:
     def solve(k, x):
         return f"{dec_exact(sp.Rational(k) * _exact(x) ** 2 / 2)} J"
 
-@relation("pendulum_period", "physics", ["L", "g"], exact=False)
+@relation("pendulum_period", "physics", ["L", "g"], exact=False,
+          step=dict(line="T = 2*pi*sqrt(L/g)", expr="2*pi*sqrt(@1/@2)"))
 class PendulumPeriod:
     @staticmethod
     def gen(rng):
@@ -321,7 +335,8 @@ class PendulumPeriod:
     def solve(L, g):
         return f"{dec(2 * sp.pi * sp.sqrt(sp.Float(L) / sp.Float(g)))} s"
 
-@relation("torque", "physics", ["F", "r", "theta"], exact=False)
+@relation("torque", "physics", ["F", "r", "theta"], exact=False,
+          step=dict(line="tau = F*r*sin(theta)", expr="@1*@2*sin(@3)"))
 class Torque:
     @staticmethod
     def gen(rng):

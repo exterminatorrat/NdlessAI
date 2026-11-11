@@ -32,7 +32,8 @@ class Dilution:
     def solve(c1, v1, v2):
         return f"{dec(sp.Float(c1) * sp.Float(v1) / sp.Float(v2))} M"
 
-@relation("gas_p", "chemistry", ["n", "T", "V"], exact=False)
+@relation("gas_p", "chemistry", ["n", "T", "V"], exact=False,
+          step=dict(line="P = n*R*T/V, R = 0.08206", expr="@1*0.08206*@2/@3"))
 class GasP:
     @staticmethod
     def gen(rng):
@@ -62,7 +63,8 @@ class Molarity:
     def solve(n, V):
         return f"{dec_exact(_exact(n) / _exact(V))} mol/L"
 
-@relation("ph", "chemistry", ["H"], exact=False)
+@relation("ph", "chemistry", ["H"], exact=False,
+          step=dict(line="pH = -log10[H+]", expr="-log10(@1)"))
 class Ph:
     @staticmethod
     def gen(rng):
@@ -75,7 +77,8 @@ class Ph:
     def solve(H):
         return dec(-sp.log(_exact(H), 10))
 
-@relation("poh", "chemistry", ["OH"], exact=False)
+@relation("poh", "chemistry", ["OH"], exact=False,
+          step=dict(line="pOH = -log10[OH-]", expr="-log10(@1)"))
 class Poh:
     @staticmethod
     def gen(rng):
@@ -88,7 +91,8 @@ class Poh:
     def solve(OH):
         return dec(-sp.log(_exact(OH), 10))
 
-@relation("ph_from_poh", "chemistry", ["poh"], exact=False)
+@relation("ph_from_poh", "chemistry", ["poh"], exact=False,
+          step=dict(line="pH = 14 - pOH", expr="14 - @1"))
 class PhFromPoh:
     @staticmethod
     def gen(rng):
@@ -99,7 +103,8 @@ class PhFromPoh:
     def solve(poh):
         return dec_exact(14 - _exact(poh))
 
-@relation("percent_yield", "chemistry", ["actual", "theoretical"], exact=False)
+@relation("percent_yield", "chemistry", ["actual", "theoretical"], exact=False,
+          step=dict(line="yield% = actual/theoretical*100", expr="@1/@2*100"))
 class PercentYield:
     @staticmethod
     def gen(rng):
@@ -113,7 +118,8 @@ class PercentYield:
     def solve(actual, theoretical):
         return f"{dec_exact(sp.Rational(100 * actual, theoretical))}%"
 
-@relation("boyles", "chemistry", ["P1", "V1", "V2"], exact=False)
+@relation("boyles", "chemistry", ["P1", "V1", "V2"], exact=False,
+          step=dict(line="P2 = P1*V1/V2", expr="@1*@2/@3"))
 class Boyles:
     @staticmethod
     def gen(rng):
@@ -128,7 +134,8 @@ class Boyles:
     def solve(P1, V1, V2):
         return f"{dec_exact(sp.Rational(P1 * V1, V2))} atm"
 
-@relation("charles", "chemistry", ["V1", "T1", "T2"], exact=False)
+@relation("charles", "chemistry", ["V1", "T1", "T2"], exact=False,
+          step=dict(line="V2 = V1*T2/T1", expr="@1*@3/@2"))
 class Charles:
     @staticmethod
     def gen(rng):
@@ -144,7 +151,9 @@ class Charles:
         return f"{dec_exact(sp.Rational(V1 * T2, T1))} L"
 
 @relation("combined_gas", "chemistry", ["P1", "V1", "T1", "P2", "T2"],
-          exact=False)
+          exact=False,
+          step=dict(line="P2 = P1*V1*T2/(T1*V2)",
+                    expr="@1*@2*@5/(@3*@4)"))
 class CombinedGas:
     @staticmethod
     def gen(rng):
@@ -161,7 +170,8 @@ class CombinedGas:
     def solve(P1, V1, T1, P2, T2):
         return f"{dec_exact(sp.Rational(P1 * V1 * T2, T1 * P2))} L"
 
-@relation("density", "chemistry", ["m", "V"], exact=False)
+@relation("density", "chemistry", ["m", "V"], exact=False,
+          step=dict(line="d = m/V", expr="@1/@2"))
 class Density:
     @staticmethod
     def gen(rng):
@@ -174,7 +184,8 @@ class Density:
     def solve(m, V):
         return f"{dec_exact(sp.Rational(m, V))} g/mL"
 
-@relation("stoichiometry", "chemistry", ["moles_given", "ratio"], exact=False)
+@relation("stoichiometry", "chemistry", ["moles_given", "ratio"], exact=False,
+          step=dict(line="product = moles*ratio", expr="@1*@2"))
 class Stoichiometry:
     @staticmethod
     def gen(rng):
@@ -195,7 +206,8 @@ def _num(value):
     r = _exact(value)
     return int(r) if r.q == 1 else float(r)
 
-@relation("dilution_v1", "chemistry", ["m1", "m2", "v2"], exact=False)
+@relation("dilution_v1", "chemistry", ["m1", "m2", "v2"], exact=False,
+          step=dict(line="V1 = M2*V2/M1", expr="@2*@3/@1"))
 class DilutionV1:
     @staticmethod
     def gen(rng):
@@ -224,7 +236,8 @@ class Molality:
     def solve(n, kg):
         return f"{dec_exact(_exact(n) / _exact(kg))} mol/kg"
 
-@relation("h_from_ph", "chemistry", ["ph"], exact=False)
+@relation("h_from_ph", "chemistry", ["ph"], exact=False,
+          step=dict(line="[H+] = 10^(-pH)", expr="10^(-@1)"))
 class HFromPh:
     @staticmethod
     def gen(rng):
@@ -242,7 +255,8 @@ class HFromPh:
             raise ValueError("h_from_ph takes an integer pH")
         return f"{dec_exact(sp.Rational(10) ** -int(ph))} mol/L"
 
-@relation("buffer_ph", "chemistry", ["pka", "base", "acid"], exact=False)
+@relation("buffer_ph", "chemistry", ["pka", "base", "acid"], exact=False,
+          step=dict(line="pH = pKa + log10(base/acid)", expr="@1 + log10(@2/@3)"))
 class BufferPh:
     @staticmethod
     def gen(rng):
@@ -257,7 +271,8 @@ class BufferPh:
     def solve(pka, base, acid):
         return dec(_exact(pka) + sp.log(_exact(base) / _exact(acid), 10))
 
-@relation("calorimetry_mass", "chemistry", ["q", "c", "dT"], exact=False)
+@relation("calorimetry_mass", "chemistry", ["q", "c", "dT"], exact=False,
+          step=dict(line="m = q/(c*dT)", expr="@1/(@2*@3)"))
 class CalorimetryMass:
     @staticmethod
     def gen(rng):
@@ -272,7 +287,8 @@ class CalorimetryMass:
     def solve(q, c, dT):
         return f"{dec_exact(_exact(q) / (_exact(c) * _exact(dT)))} g"
 
-@relation("calorimetry_c", "chemistry", ["q", "m", "dT"], exact=False)
+@relation("calorimetry_c", "chemistry", ["q", "m", "dT"], exact=False,
+          step=dict(line="c = q/(m*dT)", expr="@1/(@2*@3)"))
 class CalorimetryC:
     @staticmethod
     def gen(rng):
@@ -301,7 +317,8 @@ class LatentHeat:
     def solve(m, L):
         return f"{dec_exact(_exact(m) * _exact(L))} J"
 
-@relation("first_law", "chemistry", ["q", "w"], exact=False)
+@relation("first_law", "chemistry", ["q", "w"], exact=False,
+          step=dict(line="dU = q + w", expr="@1 + @2"))
 class FirstLaw:
     @staticmethod
     def gen(rng):
@@ -315,7 +332,8 @@ class FirstLaw:
     def solve(q, w):
         return f"{dec_exact(_exact(q) + _exact(w))} J"
 
-@relation("gibbs", "chemistry", ["dH", "T", "dS"], exact=False)
+@relation("gibbs", "chemistry", ["dH", "T", "dS"], exact=False,
+          step=dict(line="dG = dH - T*dS/1000", expr="@1 - @2*@3/1000"))
 class Gibbs:
     @staticmethod
     def gen(rng):
@@ -373,7 +391,9 @@ class MassPercent:
 
 
 @relation("stoich_mass", "chemistry",
-          ["mass", "mm_given", "mm_product", "ratio"], exact=False)
+          ["mass", "mm_given", "mm_product", "ratio"], exact=False,
+          step=dict(line="mass = mass_given*ratio*mm_product/mm_given",
+                    expr="@1*@4*@3/@2"))
 class StoichMass:
     @staticmethod
     def gen(rng):

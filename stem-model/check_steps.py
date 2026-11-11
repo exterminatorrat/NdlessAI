@@ -14,6 +14,7 @@ has the wrong number of placeholders.
 """
 
 import argparse
+import math
 import random
 import re
 import sys
@@ -24,10 +25,32 @@ ROWS = 25
 REL_TOL = 5e-4  # answers render to four significant digits
 
 NUM = re.compile(r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+FRAC = re.compile(r"(-?\d+)/(\d+)")
+
+# The namespace an `expr` may use. Trigonometry is in DEGREES, matching the
+# relations themselves, and `ln`/`log10` are named rather than imported so a
+# template reads like the formula on the paper. Nothing else is available: an
+# expr is arithmetic, not code.
+FUNCS = {
+    "abs": abs,
+    "ln": math.log,
+    "log10": math.log10,
+    "exp": math.exp,
+    "sqrt": math.sqrt,
+    "sin": lambda d: math.sin(math.radians(d)),
+    "cos": lambda d: math.cos(math.radians(d)),
+    "tan": lambda d: math.tan(math.radians(d)),
+    "pi": math.pi,
+}
 
 
 def first_number(text):
-    m = NUM.search(text.replace(",", ""))
+    """The answer as a number: exact fractions are values, not numerators."""
+    flat = text.replace(",", "")
+    m = FRAC.match(flat.strip())
+    if m:
+        return int(m.group(1)) / int(m.group(2))
+    m = NUM.search(flat)
     return float(m.group(0)) if m else None
 
 
@@ -56,17 +79,16 @@ def check_one(name, rel):
             return f"bad template: {e}"
         try:
             want_expr = eval(rendered.replace("^", "**"),
-                             {"__builtins__": {}}, {"abs": abs})
+                             {"__builtins__": {}}, FUNCS)
         except Exception as e:
             return f"template does not evaluate ({rendered}): {e}"
         answer = rel.solve(*args)
         want_solver = first_number(answer)
         if want_solver is None:
             return f"solver answer {answer!r} has no number to compare against"
-        if want_expr == 0:
-            ok = abs(want_solver) < 1e-9
-        else:
-            ok = abs(want_expr - want_solver) <= REL_TOL * abs(want_expr)
+        # Trigonometry at a right angle lands on 1e-17 rather than 0, so an
+        # absolute floor is as necessary as the relative one.
+        ok = abs(want_expr - want_solver) <= max(REL_TOL * abs(want_expr), 1e-6)
         if not ok:
             return (f"mismatch for {args}: template says {want_expr:g}, "
                     f"solver says {answer!r} ({rendered})")

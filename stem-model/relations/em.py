@@ -17,7 +17,8 @@ from .core import relation, _exact, dec_exact
 # ---------------------------------------------------------------------------
 
 
-@relation("coulomb_force", "physics", ["q1", "q2", "r"], exact=False)
+@relation("coulomb_force", "physics", ["q1", "q2", "r"], exact=False,
+          step=dict(line="F = k*q1*q2/r^2", expr="8.99e9*(@1*1e-6)*(@2*1e-6)/@3^2"))
 class CoulombForce:
     @staticmethod
     def gen(rng):
@@ -34,7 +35,8 @@ class CoulombForce:
         return f"{dec_exact(k * _exact(q1) * _exact(q2) / _exact(r) ** 2)} N"
 
 
-@relation("electric_field_point", "physics", ["q", "r"], exact=False)
+@relation("electric_field_point", "physics", ["q", "r"], exact=False,
+          step=dict(line="E = k*q/r^2", expr="8.99e9*@1*1e-6/@2^2"))
 class ElectricFieldPoint:
     @staticmethod
     def gen(rng):

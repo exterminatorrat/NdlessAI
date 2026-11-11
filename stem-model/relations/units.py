@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, _exact, sig_render, dec_exact
 
 
-@relation("km_to_m", "units", ["km"], exact=False)
+@relation("km_to_m", "units", ["km"], exact=False,
+          step=dict(line="m = km*1000", expr="@1*1000"))
 class KmToM:
     @staticmethod
     def gen(rng):
@@ -14,7 +15,8 @@ class KmToM:
     def solve(km):
         return f"{dec_exact(_exact(km) * 1000)} m"
 
-@relation("m_to_cm", "units", ["m"], exact=False)
+@relation("m_to_cm", "units", ["m"], exact=False,
+          step=dict(line="cm = m*100", expr="@1*100"))
 class MToCm:
     @staticmethod
     def gen(rng):
@@ -25,7 +27,8 @@ class MToCm:
     def solve(m):
         return f"{dec_exact(_exact(m) * 100)} cm"
 
-@relation("celsius_to_fahrenheit", "units", ["c"], exact=False)
+@relation("celsius_to_fahrenheit", "units", ["c"], exact=False,
+          step=dict(line="F = C*9/5 + 32", expr="@1*9/5 + 32"))
 class CelsiusToFahrenheit:
     @staticmethod
     def gen(rng):
@@ -37,7 +40,8 @@ class CelsiusToFahrenheit:
     def solve(c):
         return f"{dec_exact(sp.Rational(9 * c, 5) + 32)} F"
 
-@relation("fahrenheit_to_celsius", "units", ["f"], exact=False)
+@relation("fahrenheit_to_celsius", "units", ["f"], exact=False,
+          step=dict(line="C = (F - 32)*5/9", expr="(@1 - 32)*5/9"))
 class FahrenheitToCelsius:
     @staticmethod
     def gen(rng):

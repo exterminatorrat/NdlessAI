@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, dec, dec_exact
 
 
-@relation("log_eval", "logs", ["base", "x"], exact=False)
+@relation("log_eval", "logs", ["base", "x"], exact=False,
+          step=dict(line="log_b(x) = ln(x)/ln(b)", expr="ln(@2)/ln(@1)"))
 class LogEval:
     @staticmethod
     def gen(rng):
@@ -16,7 +17,8 @@ class LogEval:
     def solve(base, x):
         return dec(sp.log(x, base))
 
-@relation("ln_eval", "logs", ["x"], exact=False)
+@relation("ln_eval", "logs", ["x"], exact=False,
+          step=dict(line="ln(x)", expr="ln(@1)"))
 class LnEval:
     @staticmethod
     def gen(rng):
@@ -27,7 +29,8 @@ class LnEval:
     def solve(x):
         return dec(sp.log(x))
 
-@relation("log10_eval", "logs", ["x"], exact=False)
+@relation("log10_eval", "logs", ["x"], exact=False,
+          step=dict(line="log10(x)", expr="log10(@1)"))
 class Log10Eval:
     @staticmethod
     def gen(rng):
@@ -39,7 +42,8 @@ class Log10Eval:
     def solve(x):
         return dec(sp.log(x, 10))
 
-@relation("compound_interest", "logs", ["P", "r", "n", "t"], exact=False)
+@relation("compound_interest", "logs", ["P", "r", "n", "t"], exact=False,
+          step=dict(line="A = P*(1 + r/n)^(n*t)", expr="@1*(1 + @2/100/@3)^(@3*@4)"))
 class CompoundInterest:
     @staticmethod
     def gen(rng):
@@ -56,7 +60,8 @@ class CompoundInterest:
         A = sp.Rational(P) * (1 + sp.Rational(r, 100 * n)) ** (n * t)
         return dec_exact(A)
 
-@relation("continuous_growth", "logs", ["P", "r", "t"], exact=False)
+@relation("continuous_growth", "logs", ["P", "r", "t"], exact=False,
+          step=dict(line="A = P*e^(r*t)", expr="@1*exp(@2/100*@3)"))
 class ContinuousGrowth:
     @staticmethod
     def gen(rng):
@@ -71,7 +76,8 @@ class ContinuousGrowth:
     def solve(P, r, t):
         return dec(sp.Float(P) * sp.exp(sp.Float(r) / 100 * t))
 
-@relation("half_life", "logs", ["initial", "hl", "t"], exact=False)
+@relation("half_life", "logs", ["initial", "hl", "t"], exact=False,
+          step=dict(line="N = N0*(1/2)^(t/hl)", expr="@1*(1/2)^(@3/@2)"))
 class HalfLife:
     @staticmethod
     def gen(rng):
@@ -86,7 +92,8 @@ class HalfLife:
     def solve(initial, hl, t):
         return dec(sp.Float(initial) * sp.Float("0.5") ** (sp.Float(t) / hl))
 
-@relation("doubling_time", "logs", ["r"], exact=False)
+@relation("doubling_time", "logs", ["r"], exact=False,
+          step=dict(line="t = ln(2)/ln(1 + r/100)", expr="ln(2)/ln(1 + @1/100)"))
 class DoublingTime:
     @staticmethod
     def gen(rng):

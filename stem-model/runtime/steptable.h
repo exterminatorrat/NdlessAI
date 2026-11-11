@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 3344ffa3debba2e5
+ * STEP_SOURCE_SHA 9095ee9d44bbd618
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 30
+#define STEP_NUM_ROWS 89
 
 typedef struct {
 	const char *name;
@@ -20,22 +20,61 @@ typedef struct {
 
 #ifdef STEPTABLE_IMPL
 const step_row_t step_rows[STEP_NUM_ROWS] = {
+	{"arc_length", "s = r*theta*pi/180", "@1*@2*pi/180"},
 	{"average", "mean = (a + b + c + d)/4", "(@1 + @2 + @3 + @4) / 4"},
 	{"avg_rate", "rate = change/time", "@1 / @2"},
+	{"boyles", "P2 = P1*V1/V2", "@1*@2/@3"},
+	{"buffer_ph", "pH = pKa + log10(base/acid)", "@1 + log10(@2/@3)"},
+	{"calorimetry_c", "c = q/(m*dT)", "@1/(@2*@3)"},
+	{"calorimetry_mass", "m = q/(c*dT)", "@1/(@2*@3)"},
 	{"capacitor_charge", "Q = C*V", "@1 * @2"},
 	{"capacitor_energy", "E = Q*V / 2", "@1 * @2 / 2"},
 	{"carnot", "eff = (Th - Tc)/Th * 100", "(@1 - @2) / @1 * 100"},
+	{"celsius_to_fahrenheit", "F = C*9/5 + 32", "@1*9/5 + 32"},
+	{"charles", "V2 = V1*T2/T1", "@1*@3/@2"},
+	{"circular_accel", "a = v^2/r", "@1^2/@2"},
+	{"combined_gas", "P2 = P1*V1*T2/(T1*V2)", "@1*@2*@5/(@3*@4)"},
+	{"compound_interest", "A = P*(1 + r/n)^(n*t)", "@1*(1 + @2/100/@3)^(@3*@4)"},
+	{"conduction_rate", "P = k*A*dT/d", "@1*@2*@3/@4"},
+	{"continuous_growth", "A = P*e^(r*t)", "@1*exp(@2/100*@3)"},
+	{"cos_eval", "cos(a)", "cos(@1)"},
+	{"coulomb_force", "F = k*q1*q2/r^2", "8.99e9*(@1*1e-6)*(@2*1e-6)/@3^2"},
+	{"density", "d = m/V", "@1/@2"},
+	{"deriv_poly3", "f'(x) = 3a*x^2 + 2b*x + c", "3*@1*@5^2 + 2*@2*@5 + @3"},
 	{"dilution", "c2 = c1 * v1 / v2", "@1 * @2 / @3"},
+	{"dilution_v1", "V1 = M2*V2/M1", "@2*@3/@1"},
+	{"doubling_time", "t = ln(2)/ln(1 + r/100)", "ln(2)/ln(1 + @1/100)"},
+	{"electric_field_point", "E = k*q/r^2", "8.99e9*@1*1e-6/@2^2"},
+	{"energy_friction", "v = sqrt(v0^2 - 2*f*d/m)", "sqrt(@2^2 - 2*@3*@4/@1)"},
 	{"entropy_change", "dS = Q/T", "@1 / @2"},
+	{"exp_solve", "x = ln(k)/ln(b)", "ln(@2)/ln(@1)"},
+	{"fahrenheit_to_celsius", "C = (F - 32)*5/9", "(@1 - 32)*5/9"},
+	{"first_law", "dU = q + w", "@1 + @2"},
+	{"free_fall", "v = sqrt(2*g*h)", "sqrt(2*@2*@1)"},
+	{"friction_force", "f = mu*N", "@1*@2"},
+	{"gas_heat_cp", "Q = n*cp*dT", "@1*@2*@3"},
+	{"gas_p", "P = n*R*T/V, R = 0.08206", "@1*0.08206*@2/@3"},
 	{"gas_work_isobaric", "W = P*dV", "@1 * @2"},
+	{"gibbs", "dG = dH - T*dS/1000", "@1 - @2*@3/1000"},
+	{"h_from_ph", "[H+] = 10^(-pH)", "10^(-@1)"},
+	{"half_life", "N = N0*(1/2)^(t/hl)", "@1*(1/2)^(@3/@2)"},
 	{"heat_pump_cop", "COP = Tc/(Th - Tc)", "@1 / (@2 - @1)"},
 	{"heat_reaction", "q = n * dH", "@1 * @2"},
 	{"impulse", "J = F*t", "@1 * @2"},
+	{"integr_poly3", "int(a*x^3 + b*x^2 + c*x + d) from lo to hi", "(@1*@6^4/4 + @2*@6^3/3 + @3*@6^2/2 + @4*@6) - (@1*@5^4/4 + @2*@5^3/3 + @3*@5^2/2 + @4*@5)"},
 	{"kc_from_conc", "Kc = product^coef / reactant", "@1^@3 / @2"},
 	{"kg_to_lb", "lb = kg * 2.205", "@1 * 2.205"},
+	{"kinematic_v", "v = v0 + a*t", "@1 + @2*@3"},
 	{"kinetic_energy", "KE = m*v^2 / 2", "@1 * @2^2 / 2"},
+	{"km_to_m", "m = km*1000", "@1*1000"},
 	{"latent_heat", "Q = m * L", "@1 * @2"},
+	{"law_cosines", "c = sqrt(a^2 + b^2 - 2ab*cos(C))", "sqrt(@1^2 + @2^2 - 2*@1*@2*cos(@3))"},
+	{"law_sines", "b = a*sin(B)/sin(A)", "@1*sin(@3)/sin(@2)"},
 	{"liters_to_ml", "mL = L * 1000", "@1 * 1000"},
+	{"ln_eval", "ln(x)", "ln(@1)"},
+	{"log10_eval", "log10(x)", "log10(@1)"},
+	{"log_eval", "log_b(x) = ln(x)/ln(b)", "ln(@2)/ln(@1)"},
+	{"m_to_cm", "cm = m*100", "@1*100"},
 	{"mass_percent", "mass% = solute/solution * 100", "@1 / @2 * 100"},
 	{"molality", "m = n / kg", "@1 / @2"},
 	{"molarity", "M = n/V", "@1 / @2"},
@@ -44,12 +83,32 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"momentum", "p = m*v", "@1 * @2"},
 	{"motional_emf", "emf = B*L*v", "@1 * @2 * @3"},
 	{"newton2", "F = m*a", "@1 * @2"},
+	{"ohm_i", "I = V/R", "@1/@2"},
+	{"ohm_power", "P = I*V", "@1*@2"},
+	{"ohm_v", "V = I*R", "@1*@2"},
 	{"parallel_resistance", "R = 1/(1/R1 + 1/R2)", "1 / (1/@1 + 1/@2)"},
+	{"pendulum_period", "T = 2*pi*sqrt(L/g)", "2*pi*sqrt(@1/@2)"},
 	{"percent_error", "error% = |m - a| / a * 100", "abs(@1 - @2) / @2 * 100"},
+	{"percent_yield", "yield% = actual/theoretical*100", "@1/@2*100"},
+	{"ph", "pH = -log10[H+]", "-log10(@1)"},
+	{"ph_from_poh", "pH = 14 - pOH", "14 - @1"},
+	{"poh", "pOH = -log10[OH-]", "-log10(@1)"},
 	{"potential_energy", "PE = m*g*h", "@1 * @2 * @3"},
 	{"power", "P = W/t", "@1 / @2"},
+	{"power_force", "P = F*v", "@1*@2"},
+	{"proj_range", "R = v0^2*sin(2*theta)/g", "@1^2*sin(2*@2)/@3"},
+	{"pythagoras", "c = sqrt(a^2 + b^2)", "sqrt(@1^2 + @2^2)"},
+	{"radiation_power", "P = sigma*A*T^4", "5.67e-8*@2*@1^4"},
+	{"sin_eval", "sin(a)", "sin(@1)"},
 	{"specific_heat", "Q = m*c*dT", "@1 * @2 * @3"},
 	{"spring_energy", "E = k*x^2 / 2", "@1 * @2^2 / 2"},
+	{"stoich_mass", "mass = mass_given*ratio*mm_product/mm_given", "@1*@4*@3/@2"},
+	{"stoichiometry", "product = moles*ratio", "@1*@2"},
+	{"tan_eval", "tan(a)", "tan(@1)"},
+	{"torque", "tau = F*r*sin(theta)", "@1*@2*sin(@3)"},
+	{"wave_speed", "v = f*lambda", "@1*@2"},
+	{"work", "W = F*d*cos(theta)", "@1*@2*cos(@3)"},
+	{"work_energy", "W = m*(v^2 - v0^2)/2", "@1*(@3^2 - @2^2)/2"},
 };
 #else
 extern const step_row_t step_rows[STEP_NUM_ROWS];

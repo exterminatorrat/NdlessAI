@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, poly, amp, fmt, dec
 
 
-@relation("sin_eval", "trig", ["a"], exact=False)
+@relation("sin_eval", "trig", ["a"], exact=False,
+          step=dict(line="sin(a)", expr="sin(@1)"))
 class SinEval:
     @staticmethod
     def gen(rng):
@@ -15,7 +16,8 @@ class SinEval:
     def solve(a):
         return dec(sp.sin(sp.rad(a)))
 
-@relation("cos_eval", "trig", ["a"], exact=False)
+@relation("cos_eval", "trig", ["a"], exact=False,
+          step=dict(line="cos(a)", expr="cos(@1)"))
 class CosEval:
     @staticmethod
     def gen(rng):
@@ -27,7 +29,8 @@ class CosEval:
     def solve(a):
         return dec(sp.cos(sp.rad(a)))
 
-@relation("tan_eval", "trig", ["a"], exact=False)
+@relation("tan_eval", "trig", ["a"], exact=False,
+          step=dict(line="tan(a)", expr="tan(@1)"))
 class TanEval:
     @staticmethod
     def gen(rng):
@@ -39,7 +42,8 @@ class TanEval:
     def solve(a):
         return dec(sp.tan(sp.rad(a)))
 
-@relation("pythagoras", "trig", ["a", "b"], exact=False)
+@relation("pythagoras", "trig", ["a", "b"], exact=False,
+          step=dict(line="c = sqrt(a^2 + b^2)", expr="sqrt(@1^2 + @2^2)"))
 class Pythagoras:
     @staticmethod
     def gen(rng):
@@ -51,7 +55,8 @@ class Pythagoras:
     def solve(a, b):
         return dec(sp.sqrt(a ** 2 + b ** 2))
 
-@relation("law_sines", "trig", ["a", "A", "B"], exact=False)
+@relation("law_sines", "trig", ["a", "A", "B"], exact=False,
+          step=dict(line="b = a*sin(B)/sin(A)", expr="@1*sin(@3)/sin(@2)"))
 class LawSines:
     @staticmethod
     def gen(rng):
@@ -67,7 +72,8 @@ class LawSines:
         b = sp.Float(a) * sp.sin(sp.rad(B)) / sp.sin(sp.rad(A))
         return dec(b)
 
-@relation("law_cosines", "trig", ["a", "b", "C"], exact=False)
+@relation("law_cosines", "trig", ["a", "b", "C"], exact=False,
+          step=dict(line="c = sqrt(a^2 + b^2 - 2ab*cos(C))", expr="sqrt(@1^2 + @2^2 - 2*@1*@2*cos(@3))"))
 class LawCosines:
     @staticmethod
     def gen(rng):
@@ -82,7 +88,8 @@ class LawCosines:
         c2 = a ** 2 + b ** 2 - 2 * a * b * sp.cos(sp.rad(C))
         return dec(sp.sqrt(c2))
 
-@relation("arc_length", "trig", ["r", "theta"], exact=False)
+@relation("arc_length", "trig", ["r", "theta"], exact=False,
+          step=dict(line="s = r*theta*pi/180", expr="@1*@2*pi/180"))
 class ArcLength:
     @staticmethod
     def gen(rng):

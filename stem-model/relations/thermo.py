@@ -28,7 +28,8 @@ class GasWorkIsobaric:
         return f"{dec_exact(_exact(P) * _exact(dV))} J"
 
 
-@relation("gas_heat_cp", "physics", ["n", "cp", "dT"], exact=False)
+@relation("gas_heat_cp", "physics", ["n", "cp", "dT"], exact=False,
+          step=dict(line="Q = n*cp*dT", expr="@1*@2*@3"))
 class GasHeatCp:
     @staticmethod
     def gen(rng):
@@ -59,7 +60,8 @@ class EntropyChange:
         return f"{dec_exact(_exact(q) / _exact(T))} J/K"
 
 
-@relation("conduction_rate", "physics", ["k", "A", "dT", "d"], exact=False)
+@relation("conduction_rate", "physics", ["k", "A", "dT", "d"], exact=False,
+          step=dict(line="P = k*A*dT/d", expr="@1*@2*@3/@4"))
 class ConductionRate:
     @staticmethod
     def gen(rng):
@@ -77,7 +79,8 @@ class ConductionRate:
         return f"{dec_exact(_exact(k) * _exact(A) * _exact(dT) / _exact(d))} W"
 
 
-@relation("radiation_power", "physics", ["T", "area"], exact=False)
+@relation("radiation_power", "physics", ["T", "area"], exact=False,
+          step=dict(line="P = sigma*A*T^4", expr="5.67e-8*@2*@1^4"))
 class RadiationPower:
     @staticmethod
     def gen(rng):

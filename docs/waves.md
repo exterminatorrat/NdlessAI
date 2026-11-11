@@ -240,6 +240,19 @@ solver takes dS in J/K, R = 0.0821 against the solver's 0.08206, `doubling_time`
 modelled as ln(2)/r rather than ln(2)/ln(1 + r/100), and `energy_friction`
 answering a speed when the formula described an energy.
 
+**4.1 is in flight too.** Symbolic integration now answers the indefinite form:
+`integrate(x^2)` gives `x^3/3 + C` and the bounded form still gives a number.
+The rules cover powers of x, sums, constant multiples, `c/x^k` (which is where
+`1/x` and `ln(x)` come from) and sin, cos and exp of a linear argument; anything
+else is refused rather than guessed. Its gate is a round trip - differentiate
+the antiderivative and compare it against the integrand at six points - so a
+rule that is off by a factor fails instead of printing nearly-right working.
+Three supporting changes came with it: the node pool grew from 48 to 128
+because 48 ran out differentiating an answer back, the quotient rule now
+specialises a constant denominator because the full rule overflowed Q16 at
+`x^6/6`, and coefficients stay exact so `2x` prints `x^2` rather than
+`2(x^2/2)`.
+
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
 relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the

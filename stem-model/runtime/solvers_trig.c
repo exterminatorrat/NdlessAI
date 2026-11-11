@@ -190,54 +190,6 @@ static int solve_arc_length(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
-/*
- * atan(num/den) in degrees at 1e9 scale, for num, den > 0.
- * Reduces to the first octant, then applies atan(x) = 2*atan(x/(1+sqrt(1+x^2)))
- * twice so the Taylor series converges quickly, then converts to degrees.
- */
-static long long atan_deg9(long long num, long long den, int *rc)
-{
-	long long x9, x2, t9, sum9, root9;
-	int i, k;
-
-	if (num <= 0 || den <= 0) {
-		*rc = -4;
-		return 0;
-	}
-	if (num > den) {
-		long long r = atan_deg9(den, num, rc);
-
-		if (*rc != 0)
-			return 0;
-		return 90000000000LL - r;
-	}
-	if (num > 9000000000000000LL / 1000000000LL) {
-		*rc = -4;
-		return 0;
-	}
-	x9 = num * 1000000000LL / den;
-	for (k = 0; k < 2; k++) {
-		x2 = x9 * x9 / 1000000000LL;
-		if (x2 > 9000000000LL) {
-			*rc = -4;
-			return 0;
-		}
-		root9 = (long long)isqrt64((unsigned long long)(1000000000000000000LL
-		                                              + x2 * 1000000000LL));
-		x9 = x9 * 1000000000LL / (1000000000LL + root9);
-	}
-	x2 = x9 * x9 / 1000000000LL;
-	t9 = x9;
-	sum9 = x9;
-	for (i = 1; i <= 15; i++) {
-		t9 = -t9 * x2 / 1000000000LL;
-		if (t9 == 0)
-			break;
-		sum9 += t9 / (2 * i + 1);
-	}
-	sum9 *= 4;
-	return div_round(sum9 * 180LL * 1000000LL, 3141592653LL) * 1000;
-}
 
 static int solve_sinusoid(const char *const *args, char *out, size_t outlen)
 {

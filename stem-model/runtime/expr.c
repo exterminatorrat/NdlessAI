@@ -1333,6 +1333,56 @@ int gexpr_rk4(const gexpr_t *f, q16_t x0, q16_t y0, q16_t xn, int steps,
 	return GEXPR_DIFF_OK;
 }
 
+/*
+ * Slope-field data: one short segment per cell of a window, each following
+ * dy/dx = f(x,y) at that cell.
+ *
+ * Nothing draws this yet - 4.6f is device UI - so the gate checks the part a
+ * drawing bug would hide: that every segment's direction is the slope the
+ * evaluator gives at its own cell, including the ones that stand almost
+ * upright. The half-extents are in 1/64 pixel, so the caller picks the scale
+ * and this file stays free of pixel sizes; row 0 is the top of the window, so
+ * a renderer can walk the grid in screen order.
+ */
+int gexpr_slope_field(const gexpr_t *f, q16_t x0, q16_t x1, q16_t y0, q16_t y1,
+                      int cols, int rows, int16_t *dx, int16_t *dy)
+{
+	const q16_t half = 6 * Q16_ONE;
+	int r, c;
+
+	if (!f || !dx || !dy || f->root < 0)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (cols < 1 || rows < 1 || cols > EXPR_FIELD_MAX || rows > EXPR_FIELD_MAX)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (x1 <= x0 || y1 <= y0)
+		return GEXPR_DIFF_UNSUPPORTED;
+
+	for (r = 0; r < rows; r++) {
+		/* Cell centres, interpolated in 64 bits: the product of a window
+		 * span and a row count overflows 32 bits on a real screen. */
+		q16_t yv = (q16_t)((int64_t)y1 -
+		                   (((int64_t)y1 - y0) * (2 * r + 1)) / (2 * rows));
+		for (c = 0; c < cols; c++) {
+			q16_t xv = (q16_t)((int64_t)x0 +
+			                   (((int64_t)x1 - x0) * (2 * c + 1)) / (2 * cols));
+			q16_t m = gexpr_eval2(f, xv, yv);
+			q16_t len = gq_sqrt(gq_sat((int64_t)Q16_ONE + gq_mul(m, m)));
+			q16_t hx = len > 0 ? gq_div(half, len) : half;
+			int32_t px = hx / (Q16_ONE / 64);
+			int32_t py = gq_mul(m, hx) / (Q16_ONE / 64);
+			int i = r * cols + c;
+
+			/* A saturated slope, or one the fixed point rounds past a
+			 * segment's half-length, still draws as a segment rather
+			 * than as a wraparound into an unrelated direction. */
+			dx[i] = (int16_t)(px > 6 * 64 ? 6 * 64 : px);
+			dy[i] = (int16_t)(py > 6 * 64 ? 6 * 64
+			                            : (py < -6 * 64 ? -6 * 64 : py));
+		}
+	}
+	return GEXPR_DIFF_OK;
+}
+
 /* ---- differential equations, closed form ---- */
 
 /*
@@ -1350,7 +1400,13 @@ static int node_has_y(const gexpr_t *f, int i)
 	switch (n->op) {
 	case G_Y:
 		return 1;
+	/* Both leaves have to be tested before descending, and for the same
+	 * reason node_has_x needed it: a leaf's child index points at node 0, so
+	 * an unhandled x leaf recurses into node 0 and from there into itself.
+	 * This is the mirror of the hang sin(y) caused, found by asking the
+	 * y question of a tree that contains x instead of the other way round. */
 	case G_NUM:
+	case G_X:
 		return 0;
 	case G_ADD:
 	case G_SUB:
@@ -1364,10 +1420,14 @@ static int node_has_y(const gexpr_t *f, int i)
 }
 
 /*
- * Decomposes f into coef[0] + coef[1]*y + coef[2]*y^2, with coefficients that
- * do not mention x. That is the shape every analytically solvable equation in
- * the syllabus has, so the recogniser is a polynomial decomposition rather than
- * a rewrite engine - and anything that does not decompose is refused.
+ * Decomposes a subtree into coef[0] + coef[1]*y + coef[2]*y^2, with
+ * coefficients that do not mention x.
+ *
+ * The subtree is a factor of the right-hand side, not necessarily the whole of
+ * it, so a constant coefficient is evaluated at its own index. Evaluating from
+ * the root - which is what this did while the right-hand side was always a
+ * polynomial in y - reads the whole equation and silently answers the wrong
+ * one once a factor is handed in.
  */
 static int poly_in_y(const gexpr_t *f, int i, q16_t coef[3])
 {
@@ -1438,7 +1498,11 @@ static int poly_in_y(const gexpr_t *f, int i, q16_t coef[3])
 
 	/* Anything else is a coefficient, and only if it mentions neither input. */
 	if (!node_has_x(f, i) && !node_has_y(f, i)) {
-		coef[0] = gexpr_eval(f, 0);
+		gvars_t v;
+
+		v.x = 0;
+		v.y = 0;
+		coef[0] = eval_node(f, i, v);
 		coef[1] = 0;
 		coef[2] = 0;
 		return 0;
@@ -1447,45 +1511,361 @@ static int poly_in_y(const gexpr_t *f, int i, q16_t coef[3])
 }
 
 /*
- * y(x) for y' = a*y + c, and for the logistic a*y + b*y^2 when c is 0. This is
- * the analytical counterpart of gexpr_rk4, and the two are checked against each
- * other: a closed form that does not agree with the numerical solution over the
- * interval is a wrong closed form.
+ * Copies a subtree of the source into the tree being built, sharing nothing:
+ * a separated factor has to exist in the output before the answer can mention
+ * it, and the source is read-only. A DAG on the way in stays a DAG, because
+ * the memo means a subtree reached twice is copied once.
+ */
+static int copy_sub(dv_t *d, const gexpr_t *f, int i)
+{
+	const gnode_t *n;
+	int a, b, r;
+
+	if (d->err || i < 0)
+		return -1;
+	if (d->memo[i] >= 0)
+		return d->memo[i];
+	n = &f->node[i];
+	switch (n->op) {
+	case G_NUM:
+	case G_X:
+	case G_Y:
+		r = gnew(d, n->op, 0, 0, n->num);
+		break;
+	case G_ADD:
+	case G_SUB:
+	case G_MUL:
+	case G_DIV:
+	case G_POW:
+		a = copy_sub(d, f, n->a);
+		b = copy_sub(d, f, n->b);
+		r = gnew(d, n->op, a, b, 0);
+		break;
+	default:
+		a = copy_sub(d, f, n->a);
+		r = gnew(d, n->op, a, 0, 0);
+		break;
+	}
+	if (r >= 0)
+		d->memo[i] = r;
+	return r;
+}
+
+/* Whether two subtrees of the output are the same expression. */
+static int tree_eq(const gexpr_t *o, int i, int j)
+{
+	if (i == j)
+		return 1;
+	if (i < 0 || j < 0)
+		return 0;
+	if (o->node[i].op != o->node[j].op || o->node[i].num != o->node[j].num)
+		return 0;
+	switch (o->node[i].op) {
+	case G_NUM:
+	case G_X:
+	case G_Y:
+		return 1;
+	case G_ADD:
+	case G_SUB:
+	case G_MUL:
+	case G_DIV:
+	case G_POW:
+		return tree_eq(o, o->node[i].a, o->node[j].a) &&
+		       tree_eq(o, o->node[i].b, o->node[j].b);
+	default:
+		return tree_eq(o, o->node[i].a, o->node[j].a);
+	}
+}
+
+/*
+ * The numeric factor in front of an x factor, and the factor behind it. A sum
+ * of products separates when its terms share that trailing factor, and 0.01x
+ * and x have to compare equal for x*y - 0.01x*y^2 to reach the logistic - so
+ * the number is lifted out and folded into the y polynomial instead.
+ */
+static void factor_num(const gexpr_t *o, int i, q16_t *k, int *rest)
+{
+	*k = Q16_ONE;
+	*rest = i;
+	if (i >= 0 && o->node[i].op == G_MUL && gnum_is(o, o->node[i].a)) {
+		*k = gnum_of(o, o->node[i].a);
+		*rest = o->node[i].b;
+	}
+}
+
+/* The product of two x factors, where -1 stands for "this side was 1". */
+static int mul_x(dv_t *d, int a, int b)
+{
+	if (a < 0)
+		return b;
+	if (b < 0)
+		return a;
+	return gmul(d, a, b);
+}
+
+/*
+ * Splits the right-hand side into an x-only factor and a y-only factor, so the
+ * two sides can be integrated separately.
+ *
+ * It separates when every product factors that way. A sum that mixes the two
+ * inputs does not: x + y is a perfectly good equation and not a separable one,
+ * so it is refused here and answered by the numerical form instead. The return
+ * is the index of the x factor in the output tree, or -1 when there is none -
+ * which is how y' = a*y + b, with no x in it at all, arrives at the same code
+ * as y' = x*y.
+ */
+static int sep_node(dv_t *d, const gexpr_t *f, int i, q16_t coef[3], int *recip)
+{
+	const gnode_t *n;
+	q16_t l[3], r[3];
+	int a, b;
+
+	if (d->err || i < 0) {
+		d->err = GEXPR_DIFF_UNSUPPORTED;
+		return -1;
+	}
+	if (!node_has_y(f, i)) {
+		coef[0] = Q16_ONE;
+		coef[1] = 0;
+		coef[2] = 0;
+		return copy_sub(d, f, i);
+	}
+	if (!node_has_x(f, i)) {
+		if (poly_in_y(f, i, coef) == 0)
+			return -1;
+		/* c/y is the one shape outside the polynomials whose integral in
+		 * y inverts to something printable: a square root. */
+		n = &f->node[i];
+		if (!*recip && n->op == G_DIV &&
+		    f->node[n->b].op == G_Y &&
+		    !node_has_x(f, n->a) && !node_has_y(f, n->a)) {
+			*recip = 1;
+			coef[0] = Q16_ONE;
+			coef[1] = 0;
+			coef[2] = 0;
+			return copy_sub(d, f, n->a);
+		}
+		d->err = GEXPR_DIFF_UNSUPPORTED;
+		return -1;
+	}
+
+	n = &f->node[i];
+	switch (n->op) {
+	case G_MUL:
+		a = sep_node(d, f, n->a, l, recip);
+		if (d->err)
+			return -1;
+		b = sep_node(d, f, n->b, r, recip);
+		if (d->err)
+			return -1;
+		if ((l[2] != 0 && r[1] != 0) || (l[1] != 0 && r[2] != 0)) {
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		coef[0] = gq_mul(l[0], r[0]);
+		coef[1] = gq_sat((int64_t)gq_mul(l[0], r[1]) + gq_mul(l[1], r[0]));
+		coef[2] = gq_sat((int64_t)gq_mul(l[0], r[2]) +
+		                 gq_mul(l[1], r[1]) + gq_mul(l[2], r[0]));
+		if (*recip && (coef[0] != Q16_ONE || coef[1] != 0 || coef[2] != 0)) {
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		return mul_x(d, a, b);
+	case G_DIV:
+		if (node_has_y(f, n->b)) {
+			/* 3x/y parses as (3x)/y, and that numerator is a
+			 * factor, not a divisor: only c/y inverts. */
+			if (!*recip && f->node[n->b].op == G_Y &&
+			    !node_has_y(f, n->a)) {
+				int g = sep_node(d, f, n->a, l, recip);
+
+				if (d->err)
+					return -1;
+				if (l[0] != Q16_ONE || l[1] != 0 || l[2] != 0) {
+					d->err = GEXPR_DIFF_UNSUPPORTED;
+					return -1;
+				}
+				*recip = 1;
+				coef[0] = Q16_ONE;
+				coef[1] = 0;
+				coef[2] = 0;
+				return g;
+			}
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		a = sep_node(d, f, n->a, l, recip);
+		if (d->err)
+			return -1;
+		b = copy_sub(d, f, n->b);
+		if (b < 0)
+			return -1;
+		coef[0] = l[0];
+		coef[1] = l[1];
+		coef[2] = l[2];
+		return gdiv(d, a < 0 ? gnum(d, Q16_ONE) : a, b);
+	case G_ADD:
+	case G_SUB: {
+		/* A sum separates only when its terms share one x factor. That is
+		 * how x*y - 0.01x*y^2 arrives as the logistic rather than as a
+		 * difference of two products, and it is where the recogniser
+		 * stops: y*(x + 3) separates too, and factoring it is a rewrite
+		 * this engine does not do. */
+		int64_t sign = (n->op == G_SUB) ? -1 : 1;
+		q16_t ka, kb;
+		int ra, rb;
+
+		a = sep_node(d, f, n->a, l, recip);
+		if (d->err)
+			return -1;
+		b = sep_node(d, f, n->b, r, recip);
+		if (d->err)
+			return -1;
+		factor_num(d->o, a, &ka, &ra);
+		factor_num(d->o, b, &kb, &rb);
+		if (ra != rb && !(ra >= 0 && rb >= 0 && tree_eq(d->o, ra, rb))) {
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		coef[0] = gq_sat((int64_t)gq_mul(ka, l[0]) +
+		                 sign * (int64_t)gq_mul(kb, r[0]));
+		coef[1] = gq_sat((int64_t)gq_mul(ka, l[1]) +
+		                 sign * (int64_t)gq_mul(kb, r[1]));
+		coef[2] = gq_sat((int64_t)gq_mul(ka, l[2]) +
+		                 sign * (int64_t)gq_mul(kb, r[2]));
+		if (*recip && (coef[0] != Q16_ONE || coef[1] != 0 || coef[2] != 0)) {
+			d->err = GEXPR_DIFF_UNSUPPORTED;
+			return -1;
+		}
+		return ra;
+	}
+	case G_NEG:
+		a = sep_node(d, f, n->a, coef, recip);
+		if (d->err)
+			return -1;
+		coef[0] = gq_sat(-(int64_t)coef[0]);
+		coef[1] = gq_sat(-(int64_t)coef[1]);
+		coef[2] = gq_sat(-(int64_t)coef[2]);
+		return a < 0 ? -1 : gneg(d, a);
+	default:
+		d->err = GEXPR_DIFF_UNSUPPORTED;
+		return -1;
+	}
+}
+
+/*
+ * G(x), the antiderivative of the x factor taken as zero at x0.
+ *
+ * A rate with no x in it is the case the closed forms were written for, and it
+ * keeps the exact shape they printed - c*(x - x0), not whatever an integration
+ * happens to produce. A rate that mentions x is integrated symbolically, which
+ * is why this needed 4.1, and then shifted so G(x0) = 0.
+ */
+static int build_G(dv_t *d, gexpr_t *g, q16_t x0)
+{
+	gvars_t v;
+	int delta;
+	q16_t c0;
+
+	v.x = x0;
+	v.y = 0;
+	if (g->n == 0 || !node_has_x(g, g->root)) {
+		c0 = g->n == 0 ? Q16_ONE : eval_node(g, g->root, v);
+		delta = gsub(d, gx_node(d), gnum(d, x0));
+		if (delta < 0)
+			return -1;
+		return c0 == Q16_ONE ? delta : gmul(d, gnum(d, c0), delta);
+	}
+	if (gexpr_integrate_symbolic(g, d->o) != GEXPR_DIFF_OK)
+		return -1;
+	c0 = eval_node(d->o, d->o->root, v);
+	return gsub(d, d->o->root, gnum(d, c0));
+}
+
+/*
+ * y(x) for a separable first-order equation, as an expression in x.
+ *
+ * The right-hand side factors into g(x)*h(y), and h is one of the shapes whose
+ * integral in y inverts:
+ *
+ *   h = 1        y = y0 + G                    (already reachable, now with
+ *                                              an x-dependent rate)
+ *   h = a1*y + a0   the shifted exponential, which covers growth, decay and
+ *                   Newton cooling
+ *   h = a1*y + a2*y^2   the logistic, so population growth works with an
+ *                       x-dependent rate as well
+ *   h = c/y      y^2 = y0^2 + 2G, taking the branch y0's sign picks
+ *
+ * with G(x) the antiderivative of the x factor. Anything else - x + y, y^3,
+ * sin(y) - is refused; the numerical form still answers those.
  */
 int gexpr_ode_closed(const gexpr_t *f, q16_t x0, q16_t y0, gexpr_t *out)
 {
-	q16_t coef[3];
+	gexpr_t ge;
 	dv_t d;
-	int i, delta, body;
+	q16_t coef[3];
+	int i, gi, recip = 0, body, G;
 
 	if (!f || !out || out == f || f->root < 0)
 		return GEXPR_DIFF_UNSUPPORTED;
-	if (poly_in_y(f, f->root, coef) < 0)
-		return GEXPR_DIFF_UNSUPPORTED;
+	if (f->n > EXPR_MAX_NODES)
+		return GEXPR_DIFF_TOO_BIG;
 
-	out->root = -1;
+	ge.n = 0;
+	ge.root = -1;
+	d.o = &ge;
+	d.err = 0;
+	for (i = 0; i < EXPR_MAX_NODES; i++)
+		d.memo[i] = -1;
+	gi = sep_node(&d, f, f->root, coef, &recip);
+	if (d.err)
+		return d.err;
+	if (gi >= 0)
+		ge.root = gi;
+
+	/* The square-root case needs 2*G, so the integrand is doubled before it
+	 * is integrated; doubling the antiderivative afterwards prints as 2x^2/2
+	 * and reads as if nothing had been simplified. */
+	if (recip) {
+		dv_t ds;
+		int base;
+
+		ds.o = &ge;
+		ds.err = 0;
+		base = ge.n == 0 ? gnum(&ds, Q16_ONE) : ge.root;
+		ge.root = gmul(&ds, gnum(&ds, 2 * Q16_ONE), base);
+		if (ds.err)
+			return ds.err;
+	}
+
 	out->n = 0;
+	out->root = -1;
 	d.o = out;
 	d.err = 0;
 	for (i = 0; i < EXPR_MAX_NODES; i++)
 		d.memo[i] = -1;
+	G = build_G(&d, &ge, x0);
+	if (G < 0)
+		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
 
-	delta = gsub(&d, gx_node(&d), gnum(&d, x0));
+	if (recip) {
+		int sq;
 
-	if (coef[2] == 0) {
+		if (y0 == 0)
+			return GEXPR_DIFF_UNSUPPORTED;
+		sq = gnew(&d, G_SQRT, gadd(&d, gnum(&d, gq_mul(y0, y0)), G), 0, 0);
+		body = y0 < 0 ? gneg(&d, sq) : sq;
+	} else if (coef[2] == 0) {
 		if (coef[1] == 0) {
-			/* y' = c: a line, and the only case with no exponential. */
-			body = gadd(&d, gnum(&d, y0),
-			            scale(&d, coef[0], delta));
+			/* y' = a*g: the shifted line. */
+			body = gadd(&d, gnum(&d, y0), scale(&d, coef[0], G));
 		} else {
-			/* y(x) = (y0 + c/a) e^(a(x-x0)) - c/a, written so a
-			 * negative constant reads as a sum rather than "--4". */
-			int ek = gnew(&d, G_EXP,
-			              scale(&d, coef[1], delta), 0, 0);
+			/* y(x) = (y0 + c/a) e^(a*G) - c/a, written so a negative
+			 * constant reads as a sum rather than "--4". */
+			int ek = gnew(&d, G_EXP, scale(&d, coef[1], G), 0, 0);
 			q16_t aabs = coef[1] > 0 ? coef[1] : (q16_t)-coef[1];
 			q16_t cabs = coef[0] > 0 ? coef[0] : (q16_t)-coef[0];
 			int mag = gdiv(&d, gnum(&d, cabs), gnum(&d, aabs));
-			/* c/a is positive when a and c share a sign. */
 			int same = (coef[0] > 0) == (coef[1] > 0);
 			int mul;
 
@@ -1499,33 +1879,24 @@ int gexpr_ode_closed(const gexpr_t *f, q16_t x0, q16_t y0, gexpr_t *out)
 				body = gadd(&d, gmul(&d, mul, ek), mag);
 			}
 		}
-		if (body < 0)
-			return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
-		out->root = body;
-		return GEXPR_DIFF_OK;
-	}
-
-	/* Logistic: y' = a*y + b*y^2 with no constant term.
-	 * y(x) = L / (1 + ((L - y0)/y0) e^(-a(x-x0))),  L = -a/b. */
-	if (coef[0] != 0 || y0 == 0)
-		return GEXPR_DIFF_UNSUPPORTED;
-	{
+	} else {
+		/* Logistic: y' = g*(a*y + b*y^2) with no constant term.
+		 * y(x) = L / (1 + ((L - y0)/y0) e^(-a*G)),  L = -a/b. */
 		q16_t L = gq_sat(-(int64_t)gq_div(coef[1], coef[2]));
 		int ek, ratio, denom;
 
-		if (L == 0)
+		if (coef[0] != 0 || y0 == 0 || L == 0)
 			return GEXPR_DIFF_UNSUPPORTED;
-		ek = gnew(&d, G_EXP,
-		          gmul(&d, gneg(&d, gnum(&d, coef[1])), delta), 0, 0);
+		ek = gnew(&d, G_EXP, gneg(&d, scale(&d, coef[1], G)), 0, 0);
 		ratio = gdiv(&d, gsub(&d, gnum(&d, L), gnum(&d, y0)),
 		             gnum(&d, y0));
 		denom = gadd(&d, gnum(&d, Q16_ONE), gmul(&d, ratio, ek));
 		body = gdiv(&d, gnum(&d, L), denom);
-		if (body < 0)
-			return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
-		out->root = body;
-		return GEXPR_DIFF_OK;
 	}
+	if (body < 0)
+		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+	out->root = body;
+	return GEXPR_DIFF_OK;
 }
 
 /* ---- printing ---- */

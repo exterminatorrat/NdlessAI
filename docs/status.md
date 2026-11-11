@@ -10,7 +10,7 @@ Last updated: 2026-11-11, at commit `2beba30`.
 
 The system reads an English word problem, a 5.2M-parameter model picks one of
 102 exact solvers, and C code computes the answer. Waves 1 through 3 are on
-master: 102 relations across ten subject modules, the typed expression path for
+master: 136 relations across thirteen subject modules, the typed expression path for
 calculus and linear algebra, and the wording work that took hand-written
 accuracy from 43.4% to 72.3%. The generated-phrasing gate is 90.5%, down from
 95.0% at 84 relations, because the catalogue outgrew the model rather than the
@@ -22,10 +22,10 @@ calculator, and it takes Ndless on a supported OS to get that far.
 
 | Capability | State | Evidence |
 |---|---|---|
-| 102 relations, Python reference | done | `sh stem-model/gate.sh` |
-| 102 relations, C solvers | done | seven per-subject units; `test_solvers` reports its assertion count on every run |
+| 136 relations, Python reference | done | `sh stem-model/gate.sh` |
+| 136 relations, C solvers | done | eleven per-subject units; `test_solvers` reports its assertion count on every run |
 | Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
-| Model picks the right tool | done, and the limit of the current model | 72.3% exact and 9.8% wrong relation on 1,840 hand-written rows; 90.5% exact on the generated gate |
+| Model picks the right tool | done, and the current limit | 71.8% exact on 1,942 hand-written rows; 90.3% exact and 1.7% wrong relation on the generated gate; 60/60 through the full on-device path |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
 | Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9 and `d/dx`, `det`, `inv`, `rank`, `solve` answer on exact rationals; `integrate(x^2)` answers `x^3/3 + C`, `series(exp(x),0,5)` a Taylor polynomial, `ode(2y,0,1,1,64)` a numerical solution and `desolve(2y,0,1)` its closed form `exp(2x)` |
 | Function graphing | done | `test_graph`, merged in PR #8 |
@@ -34,26 +34,28 @@ calculator, and it takes Ndless on a supported OS to get that far.
 
 ## The relation set
 
-102 relations, in ten subject modules:
+136 relations, in thirteen subject modules:
 
 | Subject | Count | Examples |
 |---|---|---|
+| Physics | 54 | kinetic energy, momentum, projectile range, springs, waves and sound, Snell's law, lenses, fluid pressure, Bernoulli |
 | Chemistry | 29 | molarity, pH, gas laws, stoichiometry, equilibrium, kinetics, thermochemistry |
-| Physics | 23 | kinetic energy, momentum, projectile range, friction, torque, springs, Ohm's law |
 | Units | 10 | km/m, Celsius/Fahrenheit, significant figures, mean |
+| Modern physics | 9 | photon energy, photoelectric effect, de Broglie wavelength, Bohr levels, mass-energy, activity |
 | Trig | 9 | sin/cos/tan, law of cosines, arc length |
 | Algebra | 7 | sequences, factoring, completing the square |
 | Logs | 7 | log base b, ln, half-life, compound interest |
+| Optics | 6 | Snell's law, critical angle, lens and mirror equations, magnification, index from speed |
 | Electricity and magnetism | 6 | Coulomb force, field strength, capacitors, parallel resistance, motional EMF |
 | Thermodynamics | 6 | work at constant pressure, entropy, conduction, radiation, heat pumps |
 | Precalc | 3 | quadratic roots, 2x2 system, `b^x = k` |
 | Calculus | 2 | derivative and integral of a cubic |
 
 Adding relations is not free: each one renumbers the vocabulary and forces a
-retrain, and past 84 relations the retrain started losing ground on the
-generated gate. `docs/waves.md` records the three measurements that establish
-it, and they are the reason wave 4 is ordered by what it answers rather than by
-how many formulas it adds.
+retrain, which is why a catalogue change is never a source-only pull. What the
+retrain costs in accuracy is now measured rather than assumed: 84, 90 and 102
+relations read 95.0%, 94.2% and 90.5% on the generated gate, and 136 relations
+reads 90.3%. `docs/waves.md` holds the table and the protocol behind it.
 
 ## The tiers, and where each stands
 

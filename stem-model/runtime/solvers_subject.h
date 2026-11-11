@@ -36,6 +36,7 @@ int dec4_render(long long num, long long den, char *out, size_t outlen);
 void fmt_rat(const rat *r, char *out, size_t outlen);
 int parse_rat(const char *s, rat *r, int *flt);
 long long sin9(long long tnum, int texp, int *rc);
+long long atan_deg9(long long num, long long den, int *rc);
 long long sqrt12(long long n, long long d, int *rc);
 long long log_core_9(long long num, long long den, long long *k_out,
                      int *rc);
@@ -60,5 +61,13 @@ int solvers_em_solve(const char *name, const char *const *args, int nargs,
                      char *out, size_t outlen);
 int solvers_units_solve(const char *name, const char *const *args, int nargs,
                         char *out, size_t outlen);
+int solvers_optics_solve(const char *name, const char *const *args, int nargs,
+                         char *out, size_t outlen);
+int solvers_waves_solve(const char *name, const char *const *args, int nargs,
+                        char *out, size_t outlen);
+int solvers_fluids_solve(const char *name, const char *const *args, int nargs,
+                         char *out, size_t outlen);
+int solvers_modern_solve(const char *name, const char *const *args, int nargs,
+                         char *out, size_t outlen);
 
 #endif

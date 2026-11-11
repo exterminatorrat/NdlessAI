@@ -141,6 +141,107 @@ static void expect_refused(const char *text)
 		fail(text, "answered an equation it cannot step");
 }
 
+
+/*
+ * The printed closed form, as a student would read it. The text matters as
+ * much as the value: an expression that is right and unreadable is a wrong
+ * answer on this screen.
+ */
+static void expect_desolve(const char *call, const char *want)
+{
+	char got[128];
+
+	if (gexpr_desolve_answer(call, got, (int)sizeof got) != 0) {
+		fail(call, "desolve refused a solvable equation");
+		return;
+	}
+	if (strcmp(got, want) != 0) {
+		char detail[320];
+
+		snprintf(detail, sizeof detail, "got \"%s\", wanted \"%s\"", got, want);
+		fail(call, detail);
+	}
+}
+
+static void expect_desolve_refused(const char *call)
+{
+	char got[128];
+
+	if (gexpr_desolve_answer(call, got, (int)sizeof got) == 0)
+		fail(call, "answered an equation it has no rule for");
+}
+
+/*
+ * The slope field, checked against the evaluator rather than against a picture:
+ * every segment has to point along the slope at its own cell. That is the part
+ * a renderer cannot check for itself, and the part that would otherwise be
+ * discovered on the device.
+ */
+static void expect_field(const char *text, double x0, double x1, double y0,
+                         double y1, int cols, int rows)
+{
+	int16_t dx[EXPR_FIELD_MAX * EXPR_FIELD_MAX];
+	int16_t dy[EXPR_FIELD_MAX * EXPR_FIELD_MAX];
+	char err[64], detail[192];
+	gexpr_t f;
+	int r, c;
+
+	if (gexpr_parse(text, &f, err, (int)sizeof err) < 0) {
+		fail(text, err);
+		return;
+	}
+	if (gexpr_slope_field(&f, (q16_t)(x0 * Q16_ONE), (q16_t)(x1 * Q16_ONE),
+	                      (q16_t)(y0 * Q16_ONE), (q16_t)(y1 * Q16_ONE),
+	                      cols, rows, dx, dy) != GEXPR_DIFF_OK) {
+		fail(text, "slope field refused a valid window");
+		return;
+	}
+	for (r = 0; r < rows; r++) {
+		q16_t yv = (q16_t)((int64_t)(y1 * Q16_ONE) -
+		                   (((int64_t)(y1 * Q16_ONE) - (int64_t)(y0 * Q16_ONE)) *
+		                    (2 * r + 1)) / (2 * rows));
+		for (c = 0; c < cols; c++) {
+			q16_t xv = (q16_t)((int64_t)(x0 * Q16_ONE) +
+			                   (((int64_t)(x1 * Q16_ONE) - (int64_t)(x0 * Q16_ONE)) *
+			                    (2 * c + 1)) / (2 * cols));
+			double m = gexpr_eval2(&f, xv, yv) / (double)Q16_ONE;
+			int i = r * cols + c;
+			double got;
+
+			if (dx[i] == 0) {
+				/* Almost vertical: the segment must be near its full
+				 * half-length, not collapsed to a dot. */
+				if (dy[i] < 6 * 64 - 2 || dy[i] > 6 * 64)
+					fail(text, "vertical segment is not drawn");
+				continue;
+			}
+			got = (double)dy[i] / (double)dx[i];
+			if (fabs(got - m) > 0.05 * (1.0 + fabs(m)))
+				snprintf(detail, sizeof detail,
+				         "cell %d,%d: slope %g drawn as %g", r, c, m, got);
+			else
+				continue;
+			fail(text, detail);
+			return;
+		}
+	}
+}
+
+static void expect_field_refused(const char *text, double x0, double x1)
+{
+	char err[64];
+	gexpr_t f;
+	int16_t dx[4], dy[4];
+
+	if (gexpr_parse(text, &f, err, (int)sizeof err) < 0) {
+		fail(text, err);
+		return;
+	}
+	if (gexpr_slope_field(&f, (q16_t)(x0 * Q16_ONE), (q16_t)(x1 * Q16_ONE),
+	                      0, Q16_ONE, 2, 2, dx, dy) == GEXPR_DIFF_OK)
+		fail(text, "accepted a window with no width");
+}
+
 int main(void)
 {
 	/* Growth and decay: the closed forms are e^2 and e^-1. */
@@ -183,11 +284,47 @@ int main(void)
 	expect_closed_agrees("0.5y-0.01y^2", 10, 0, 4);
 	expect_closed_agrees("0.2y-0.001y^2", 5, 0, 6);
 
+	/* Separable with an x-dependent rate. RK4 knows nothing about how the
+	 * closed form was derived, so agreement is two methods rather than one
+	 * formula checked against itself. */
+	expect_closed_agrees("x*y", 1, 0, 1);
+	expect_closed_agrees("x*y", 2, 0, 2);
+	expect_closed_agrees("-x*y", 1, 0, 2);
+	expect_closed_agrees("x", 1, 0, 2);
+	expect_closed_agrees("x/y", 1, 0, 1);
+	expect_closed_agrees("x/y", 3, 0, 2);
+	expect_closed_agrees("x/y", -1, 0, 1);
+	expect_closed_agrees("2/y", 1, 0, 2);
+	expect_closed_agrees("x*(1-y)", 0, 0, 1);
+	expect_closed_agrees("x*y-0.01x*y^2", 5, 0, 2);
+
 	/* Equations with no closed form here are refused rather than approximated
 	 * silently - the numerical `ode` form still answers them. */
 	expect_no_closed("x+y");
 	expect_no_closed("y^3");
 	expect_no_closed("sin(y)");
+	expect_no_closed("x/y^2");
+	expect_no_closed("y*sin(y)");
+	expect_no_closed("sin(x*y)");
+
+	/* The printed forms, because these are what a student reads. */
+	expect_desolve("desolve(2y,0,1)", "exp(2x)");
+	expect_desolve("desolve(-0.5y+2,0,0)", "-4exp(-0.5x)+4");
+	expect_desolve("desolve(x*y,0,2)", "2exp(x^2/2)");
+	expect_desolve("desolve(-x*y,0,1)", "exp(-x^2/2)");
+	expect_desolve("desolve(x,0,1)", "1+x^2/2");
+	expect_desolve("desolve(x/y,0,1)", "sqrt(1+x^2)");
+	expect_desolve("desolve(x/y,0,-1)", "-sqrt(1+x^2)");
+	expect_desolve("desolve(2/y,0,1)", "sqrt(1+4x)");
+	expect_desolve_refused("desolve(x+y,0,1)");
+	expect_desolve_refused("desolve(x/y^2,0,1)");
+	expect_desolve_refused("desolve(y^3,0,1)");
+
+	/* The slope field the graph mode will draw from, checked cell by cell. */
+	expect_field("x-y", -2, 2, -2, 2, 8, 8);
+	expect_field("y^2", -2, 2, -1, 1, 6, 6);
+	expect_field("2y", -1, 1, -1, 1, 5, 4);
+	expect_field_refused("x-y", 1, 1);
 
 	if (failures) {
 		printf("failures: %d\n", failures);

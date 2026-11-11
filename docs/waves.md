@@ -253,6 +253,15 @@ specialises a constant denominator because the full rule overflowed Q16 at
 `x^6/6`, and coefficients stay exact so `2x` prints `x^2` rather than
 `2(x^2/2)`.
 
+**4.2 is in flight as well.** `series(exp(x),0,5)` and `taylor(sin(x),0,7)`
+answer with the Taylor polynomial as a printed expression, built the same way
+as a derivative: coefficients from repeated differentiation at the centre,
+divided by the factorial, over one shared `(x-a)` subtree. Coefficients are
+fixed point, so the gate compares values against the function on the interval
+rather than text against a hand-written answer, and it also re-parses what the
+series prints. Convergence answers are not here yet: a real ratio test needs
+limits, and this engine has none.
+
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
 relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the

@@ -1154,6 +1154,65 @@ int gexpr_integrate_symbolic(const gexpr_t *f, gexpr_t *out)
 	return GEXPR_DIFF_OK;
 }
 
+/* ---- Taylor series ---- */
+
+/*
+ * The Taylor polynomial of f about a, with `terms` coefficients. A series is
+ * only worth printing if the printed form is also an expression the parser
+ * accepts, so it is built as a tree like everything else: the coefficients are
+ * f^(k)(a)/k! evaluated in Q16, and the powers share one (x-a) subtree.
+ *
+ * The coefficients are fixed point, so a printed series is an approximation of
+ * an approximation - the test compares values rather than text.
+ */
+int gexpr_taylor(const gexpr_t *f, q16_t a, int terms, gexpr_t *out)
+{
+	dv_t d;
+	gexpr_t cur, der;
+	int i, sum, k;
+	int64_t fact = 1;
+
+	if (!f || !out || out == f || terms < 1 || terms > EXPR_MAX_TAYLOR_TERMS)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (f->n > EXPR_MAX_NODES)
+		return GEXPR_DIFF_TOO_BIG;
+
+	out->root = -1;
+	for (i = 0; i < f->n; i++)
+		out->node[i] = f->node[i];
+	out->n = f->n;
+
+	d.o = out;
+	d.err = 0;
+	for (i = 0; i < f->n; i++)
+		d.memo[i] = -1;
+
+	sum = gnum(&d, gexpr_eval(f, a));
+	if (sum < 0)
+		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+
+	cur = *f;
+	for (k = 1; k < terms; k++) {
+		int32_t coef, sub, pw, term;
+		int rc = gexpr_derive(&cur, &der);
+
+		if (rc != GEXPR_DIFF_OK)
+			return rc;
+		fact *= k;
+		coef = (int32_t)(gexpr_eval(&der, a) / fact);
+
+		sub = gsub(&d, gx_node(&d), gnum(&d, a));
+		pw = gpow(&d, sub, gnum(&d, gq_sat((int64_t)k << 16)));
+		term = gmul(&d, gnum(&d, coef), pw);
+		sum = gadd(&d, sum, term);
+		if (sum < 0)
+			return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+		cur = der;
+	}
+	out->root = sum;
+	return GEXPR_DIFF_OK;
+}
+
 /* ---- printing ---- */
 
 /*
@@ -1805,6 +1864,76 @@ int gexpr_integral_answer(const char *text, char *out, int outlen)
 		if (gexpr_integrate(&f, a, b, &v) != GEXPR_INT_OK)
 			continue;
 		return gexpr_format(v, out, outlen);
+	}
+	return -1;
+}
+
+/* ---- series(expr, a, n) as a typed answer ---- */
+
+int gexpr_series_answer(const char *text, char *out, int outlen)
+{
+	static const char *const forms[] = { "series", "taylor" };
+	char inner[EXPR_TEXT_MAX];
+	char expr_text[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[3];
+	int plen[3];
+	gexpr_t f, poly;
+	const char *p;
+	size_t n, room;
+	q16_t a, cnt;
+	int k;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+
+	for (k = 0; k < (int)(sizeof forms / sizeof forms[0]); k++) {
+		size_t flen = strlen(forms[k]);
+		size_t inner_len;
+		const char *open;
+		int i, terms;
+
+		if (room < flen + 2 || text[n - 1] != ')')
+			continue;
+		if (strncmp(p, forms[k], flen) != 0)
+			continue;
+		open = p + flen;
+		while (*open == ' ' || *open == '\t')
+			open++;
+		if (*open != '(')
+			continue;
+		inner_len = (size_t)(text + n - 1 - (open + 1));
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			continue;
+		memcpy(inner, open + 1, inner_len);
+		inner[inner_len] = 0;
+		if (split_three(inner, (int)inner_len, part, plen) < 0)
+			continue;
+		if (parse_bound(part[1], plen[1], &a) < 0 ||
+		    parse_bound(part[2], plen[2], &cnt) < 0)
+			continue;
+		terms = (int)(cnt >> 16);
+		if (terms < 1 || (cnt & 0xFFFF) != 0)
+			continue;
+		for (i = 0; i < plen[0]; i++)
+			expr_text[i] = part[0][i];
+		expr_text[i] = 0;
+		if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
+			continue;
+		if (gexpr_taylor(&f, a, terms, &poly) != GEXPR_DIFF_OK)
+			continue;
+		if (gexpr_unparse(&poly, out, outlen) < 0)
+			continue;
+		return 0;
 	}
 	return -1;
 }

@@ -265,6 +265,10 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	 * "integrate" or "int" function, so the form is recognised first. */
 	if (gexpr_integral_answer(text, answer, answer_max) == 0)
 		return PIPELINE_OK;
+	/* A series is a form too: "series" is not a function the parser knows, and
+	 * the answer is an expression rather than a value. */
+	if (gexpr_series_answer(text, answer, answer_max) == 0)
+		return PIPELINE_OK;
 	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
 		return PIPELINE_ERR;
 	if (gexpr_has_x(&e))

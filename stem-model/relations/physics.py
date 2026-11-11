@@ -44,7 +44,8 @@ class OhmI:
     def solve(V, R):
         return f"{dec(sp.Float(V) / sp.Float(R))} A"
 
-@relation("kinetic_energy", "physics", ["m", "v"], exact=False)
+@relation("kinetic_energy", "physics", ["m", "v"], exact=False,
+          step=dict(line="KE = m*v^2 / 2", expr="@1 * @2^2 / 2"))
 class KineticEnergy:
     @staticmethod
     def gen(rng):
@@ -57,7 +58,8 @@ class KineticEnergy:
     def solve(m, v):
         return f"{dec(sp.Rational(m * v * v, 2))} J"
 
-@relation("potential_energy", "physics", ["m", "h", "g"], exact=False)
+@relation("potential_energy", "physics", ["m", "h", "g"], exact=False,
+          step=dict(line="PE = m*g*h", expr="@1 * @2 * @3"))
 class PotentialEnergy:
     @staticmethod
     def gen(rng):
@@ -86,7 +88,8 @@ class Work:
     def solve(F, d, theta):
         return f"{dec(sp.Float(F) * sp.Float(d) * sp.cos(sp.rad(theta)))} J"
 
-@relation("power", "physics", ["W", "t"], exact=False)
+@relation("power", "physics", ["W", "t"], exact=False,
+          step=dict(line="P = W/t", expr="@1 / @2"))
 class Power:
     @staticmethod
     def gen(rng):
@@ -99,7 +102,8 @@ class Power:
     def solve(W, t):
         return f"{dec(sp.Rational(W, t))} W"
 
-@relation("momentum", "physics", ["m", "v"], exact=False)
+@relation("momentum", "physics", ["m", "v"], exact=False,
+          step=dict(line="p = m*v", expr="@1 * @2"))
 class Momentum:
     @staticmethod
     def gen(rng):
@@ -112,7 +116,8 @@ class Momentum:
     def solve(m, v):
         return f"{dec(m * v)} kg m/s"
 
-@relation("newton2", "physics", ["m", "a"], exact=False)
+@relation("newton2", "physics", ["m", "a"], exact=False,
+          step=dict(line="F = m*a", expr="@1 * @2"))
 class Newton2:
     @staticmethod
     def gen(rng):
@@ -151,7 +156,8 @@ class WaveSpeed:
     def solve(f, lam):
         return f"{dec(f * lam)} m/s"
 
-@relation("specific_heat", "physics", ["m", "c", "dT"], exact=False)
+@relation("specific_heat", "physics", ["m", "c", "dT"], exact=False,
+          step=dict(line="Q = m*c*dT", expr="@1 * @2 * @3"))
 class SpecificHeat:
     @staticmethod
     def gen(rng):
@@ -274,7 +280,8 @@ class EnergyFriction:
             return "0 m/s"
         return f"{dec(sp.sqrt(sp.Float(left)))} m/s"
 
-@relation("impulse", "physics", ["F", "t"], exact=False)
+@relation("impulse", "physics", ["F", "t"], exact=False,
+          step=dict(line="J = F*t", expr="@1 * @2"))
 class Impulse:
     @staticmethod
     def gen(rng):
@@ -287,7 +294,8 @@ class Impulse:
     def solve(F, t):
         return f"{dec_exact(sp.Rational(F) * sp.Rational(t))} N s"
 
-@relation("spring_energy", "physics", ["k", "x"], exact=False)
+@relation("spring_energy", "physics", ["k", "x"], exact=False,
+          step=dict(line="E = k*x^2 / 2", expr="@1 * @2^2 / 2"))
 class SpringEnergy:
     @staticmethod
     def gen(rng):

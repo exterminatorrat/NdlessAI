@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, _exact, dec, dec_exact
 
 
-@relation("moles", "chemistry", ["mass", "molar_mass"], exact=False)
+@relation("moles", "chemistry", ["mass", "molar_mass"], exact=False,
+          step=dict(line="n = m/M", expr="@1 / @2"))
 class Moles:
     @staticmethod
     def gen(rng):
@@ -15,7 +16,8 @@ class Moles:
     def solve(mass, molar_mass):
         return f"{dec(sp.Float(mass) / sp.Float(molar_mass))} mol"
 
-@relation("dilution", "chemistry", ["c1", "v1", "v2"], exact=False)
+@relation("dilution", "chemistry", ["c1", "v1", "v2"], exact=False,
+          step=dict(line="c2 = c1 * v1 / v2", expr="@1 * @2 / @3"))
 class Dilution:
     @staticmethod
     def gen(rng):
@@ -46,7 +48,8 @@ class GasP:
         p = sp.Float(n) * sp.Float("0.08206") * sp.Float(T) / sp.Float(V)
         return f"{dec(p)} atm"
 
-@relation("molarity", "chemistry", ["n", "V"], exact=False)
+@relation("molarity", "chemistry", ["n", "V"], exact=False,
+          step=dict(line="M = n/V", expr="@1 / @2"))
 class Molarity:
     @staticmethod
     def gen(rng):
@@ -207,7 +210,8 @@ class DilutionV1:
     def solve(m1, m2, v2):
         return f"{dec_exact(_exact(m2) * _exact(v2) / _exact(m1))} mL"
 
-@relation("molality", "chemistry", ["n", "kg"], exact=False)
+@relation("molality", "chemistry", ["n", "kg"], exact=False,
+          step=dict(line="m = n / kg", expr="@1 / @2"))
 class Molality:
     @staticmethod
     def gen(rng):
@@ -283,7 +287,8 @@ class CalorimetryC:
     def solve(q, m, dT):
         return f"{dec_exact(_exact(q) / (_exact(m) * _exact(dT)))} J/(g C)"
 
-@relation("latent_heat", "chemistry", ["m", "L"], exact=False)
+@relation("latent_heat", "chemistry", ["m", "L"], exact=False,
+          step=dict(line="Q = m * L", expr="@1 * @2"))
 class LatentHeat:
     @staticmethod
     def gen(rng):
@@ -326,7 +331,8 @@ class Gibbs:
     def solve(dH, T, dS):
         return f"{dec_exact(_exact(dH) - _exact(dS) * _exact(T) / 1000)} kJ"
 
-@relation("carnot", "chemistry", ["t_hot", "t_cold"], exact=False)
+@relation("carnot", "chemistry", ["t_hot", "t_cold"], exact=False,
+          step=dict(line="eff = (Th - Tc)/Th * 100", expr="(@1 - @2) / @1 * 100"))
 class Carnot:
     @staticmethod
     def gen(rng):
@@ -350,7 +356,8 @@ class Carnot:
 # ---------------------------------------------------------------------------
 
 
-@relation("mass_percent", "chemistry", ["solute", "solution"], exact=False)
+@relation("mass_percent", "chemistry", ["solute", "solution"], exact=False,
+          step=dict(line="mass% = solute/solution * 100", expr="@1 / @2 * 100"))
 class MassPercent:
     @staticmethod
     def gen(rng):
@@ -385,7 +392,8 @@ class StoichMass:
         return f"{dec_exact(moles * _exact(ratio) * _exact(mm_product))} g"
 
 
-@relation("mole_fraction", "chemistry", ["na", "nb"], exact=False)
+@relation("mole_fraction", "chemistry", ["na", "nb"], exact=False,
+          step=dict(line="xA = nA/(nA + nB)", expr="@1 / (@1 + @2)"))
 class MoleFraction:
     @staticmethod
     def gen(rng):
@@ -400,7 +408,8 @@ class MoleFraction:
 
 
 @relation("kc_from_conc", "chemistry", ["product", "reactant", "coefficient"],
-          exact=False)
+          exact=False,
+          step=dict(line="Kc = product^coef / reactant", expr="@1^@3 / @2"))
 class KcFromConc:
     @staticmethod
     def gen(rng):
@@ -417,7 +426,8 @@ class KcFromConc:
         return dec_exact(_exact(product) ** coefficient / _exact(reactant))
 
 
-@relation("avg_rate", "chemistry", ["change", "time"], exact=False)
+@relation("avg_rate", "chemistry", ["change", "time"], exact=False,
+          step=dict(line="rate = change/time", expr="@1 / @2"))
 class AvgRate:
     @staticmethod
     def gen(rng):
@@ -432,7 +442,8 @@ class AvgRate:
         return f"{dec_exact(_exact(change) / _exact(time))} M/s"
 
 
-@relation("heat_reaction", "chemistry", ["moles", "enthalpy"], exact=False)
+@relation("heat_reaction", "chemistry", ["moles", "enthalpy"], exact=False,
+          step=dict(line="q = n * dH", expr="@1 * @2"))
 class HeatReaction:
     @staticmethod
     def gen(rng):

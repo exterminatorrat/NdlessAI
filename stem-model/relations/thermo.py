@@ -12,7 +12,8 @@ from .core import relation, _exact, dec_exact
 # ---------------------------------------------------------------------------
 
 
-@relation("gas_work_isobaric", "physics", ["P", "dV"], exact=False)
+@relation("gas_work_isobaric", "physics", ["P", "dV"], exact=False,
+          step=dict(line="W = P*dV", expr="@1 * @2"))
 class GasWorkIsobaric:
     @staticmethod
     def gen(rng):
@@ -43,7 +44,8 @@ class GasHeatCp:
         return f"{dec_exact(_exact(n) * _exact(cp) * _exact(dT))} J"
 
 
-@relation("entropy_change", "physics", ["q", "T"], exact=False)
+@relation("entropy_change", "physics", ["q", "T"], exact=False,
+          step=dict(line="dS = Q/T", expr="@1 / @2"))
 class EntropyChange:
     @staticmethod
     def gen(rng):
@@ -91,7 +93,8 @@ class RadiationPower:
         return f"{dec_exact(sigma * _exact(area) * _exact(T) ** 4)} W"
 
 
-@relation("heat_pump_cop", "physics", ["t_cold", "t_hot"], exact=False)
+@relation("heat_pump_cop", "physics", ["t_cold", "t_hot"], exact=False,
+          step=dict(line="COP = Tc/(Th - Tc)", expr="@1 / (@2 - @1)"))
 class HeatPumpCop:
     @staticmethod
     def gen(rng):

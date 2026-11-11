@@ -4,21 +4,39 @@ import sympy as sp
 
 
 class Relation:
-    def __init__(self, name, subject, params, gen, solve, exact):
+    def __init__(self, name, subject, params, gen, solve, exact, step):
         self.name = name
         self.subject = subject
         self.params = tuple(params)
         self.gen = gen
         self.solve = solve
         self.exact = exact
+        self.step = step or {}
 
 
 RELATIONS = {}
 
 
-def relation(name, subject, params, exact=True):
+def relation(name, subject, params, exact=True, step=None):
+    """Register a relation.
+
+    `step` shows the working: both keys are plain strings and both are
+    optional.
+
+      line  the formula as it is written on paper, e.g. "Q = m*L"
+      expr  the same formula as arithmetic over the arguments, one '@' per
+            argument in declaration order, e.g. "@*@"
+
+    `expr` is not just text: check_steps.py evaluates it against the solver's
+    own answer on generated rows, so a wrong formula fails a gate instead of
+    printing confidently wrong working. Leave `step` out when the answer is
+    not a single number - multiple outputs, or an exact fraction - because
+    there is nothing for the gate to compare against.
+    """
+
     def register(cls):
-        RELATIONS[name] = Relation(name, subject, params, cls.gen, cls.solve, exact)
+        RELATIONS[name] = Relation(name, subject, params, cls.gen, cls.solve,
+                                   exact, step)
         return cls
 
     return register

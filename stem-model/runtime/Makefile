@@ -13,7 +13,8 @@ VEC_OFF := $(shell $(CC) -fno-vectorize -fno-slp-vectorize -x c -c /dev/null \
 BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
 HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
-	  graph.h expr.h equation.h callmask.h reltable.h matrix.h
+	  graph.h expr.h equation.h callmask.h reltable.h matrix.h steps.h \
+	  steptable.h
 
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c
@@ -22,11 +23,11 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # model and the expression evaluator, and matrix.c answers linear algebra
 # before any of them runs.
 PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c \
-	   callmask.c matrix.c
+	   callmask.c matrix.c steps.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
-     test_matrix bench_kernel
+     test_matrix test_steps bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -36,6 +37,9 @@ main_device: main_device.c $(PIPELINE) $(HEADERS)
 
 test_solvers: test_solvers.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_solvers.c $(SOLVERS) $(LDLIBS)
+
+test_steps: test_steps.c steps.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_steps.c steps.c
 
 test_equation: test_equation.c expr.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_equation.c expr.c $(SOLVERS) $(LDLIBS)

@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include "pipeline.h"
 #include "solvers.h"
+#include "steps.h"
 
 #define PROMPT_SUFFIX " <sep>"
 #define MAX_GEN 20
@@ -66,15 +67,20 @@ static void mask_logits(pipeline_t *p, const char *sofar)
 			p->logits[i] = INT32_MIN;
 }
 
-static int run_call_text(const char *call, char *answer, int answer_max)
+typedef struct {
+	const char *name;
+	const char *args[8];
+	int nargs;
+} call_t;
+
+/* Splits "CALL name a b c" into its name and arguments, in place in work. */
+static int parse_call(const char *call, char *work, size_t worklen, call_t *c)
 {
-	char work[256];
 	char *parts[10];
 	int n = 0;
-	const char *args[8];
 	size_t len = strlen(call);
 
-	if (len + 1 > sizeof work)
+	if (len + 1 > worklen)
 		return -1;
 	memcpy(work, call, len + 1);
 
@@ -91,9 +97,36 @@ static int run_call_text(const char *call, char *answer, int answer_max)
 		return -1;
 	if (n - 2 > 8)
 		return -1;
-	for (int i = 0; i < n - 2; i++)
-		args[i] = parts[i + 2];
-	return solvers_solve(parts[1], args, n - 2, answer, answer_max);
+	c->name = parts[1];
+	c->nargs = n - 2;
+	for (int i = 0; i < c->nargs; i++)
+		c->args[i] = parts[i + 2];
+	return 0;
+}
+
+static int run_call_text(const char *call, char *answer, int answer_max)
+{
+	char work[256];
+	call_t c;
+
+	if (parse_call(call, work, sizeof work, &c) < 0)
+		return -1;
+	return solvers_solve(c.name, c.args, c.nargs, answer, answer_max);
+}
+
+int pipeline_steps(const char *call, const char *answer, char *out, int outlen)
+{
+	char work[256];
+	call_t c;
+
+	if (out == NULL || outlen < 1)
+		return -1;
+	out[0] = 0;
+	if (call == NULL || call[0] == 0)
+		return 0;
+	if (parse_call(call, work, sizeof work, &c) < 0)
+		return 0;
+	return steps_render(c.name, c.args, c.nargs, answer, out, outlen);
 }
 
 /*

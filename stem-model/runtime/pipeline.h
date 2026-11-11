@@ -34,6 +34,13 @@ enum {
 };
 
 int pipeline_init(pipeline_t *p, const char *weights_path, int seq);
+
+/*
+ * The working for the call pipeline_answer just made: the formula, the numbers
+ * substituted, and the answer. Returns 1 when a block was written, 0 when this
+ * relation has no template (show the answer alone), -1 on truncation.
+ */
+int pipeline_steps(const char *call, const char *answer, char *out, int outlen);
 void pipeline_free(pipeline_t *p);
 
 /*

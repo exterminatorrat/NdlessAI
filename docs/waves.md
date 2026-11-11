@@ -185,6 +185,17 @@ on master. Nothing here is called done before it is merged.
 | 3.5 electricity and magnetism: Coulomb, field, capacitors, parallel resistance, motional emf | open; 6 relations; the catalogue is now 102 and the generated gate says so — see below | — |
 | Free-fall zero-height division by zero | open, 5 lines, reproduced under `-fsanitize=undefined` before the fix | #26 |
 
+**Wave 4 is in flight, in small slices.** The map is `wave4-plan.md`. The
+first slice is 4.5c, step display: relations may now carry a `step` template -
+the formula, and the same formula as arithmetic over the arguments - which the
+device prints as the working above the answer. `check_steps.py` evaluates each
+template against its solver's own output on generated rows, and caught both a
+wrong placeholder order and a formula that reused an argument, so the templates
+are checked data rather than prose; `steptable.h` is generated from them and
+`gate.sh` fails when it drifts. Thirty of the 102 relations carry a template so
+far; the rest are data entry against that gate, left out where the answer is
+not a single number (multiple outputs, exact fractions).
+
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
 relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the

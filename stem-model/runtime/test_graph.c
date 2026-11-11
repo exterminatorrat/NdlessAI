@@ -18,6 +18,11 @@
 
 static int failures;
 
+static void test_from_call(void);
+static void test_marker_pixels(void);
+static void test_family(void);
+static void test_field(void);
+
 static void check(int cond, const char *what)
 {
 	if (!cond) {
@@ -372,7 +377,7 @@ static void test_render(void)
 	/* The curve must appear at the transform's position in every column. */
 	for (int px = 0; px < G_PLOT_W; px++) {
 		q16_t x = gunmap_x(&g.view, px);
-		int py = gmap_y(&g.view, gexpr_eval(&g.expr, x));
+		int py = gmap_y(&g.view, gexpr_eval(&g.curve[0].expr, x));
 
 		if (py < 0 || py >= G_PLOT_H)
 			continue;
@@ -432,7 +437,7 @@ static void test_render(void)
 	g.cursor_px = 100;
 	graph_render(&g, fb);
 	check(fb[10 * G_SCREEN_W + 100] == 0x4208, "trace column drawn");
-	check(has_color(fb, 100, gmap_y(&g.view, gexpr_eval(&g.expr, gunmap_x(&g.view, 100))),
+	check(has_color(fb, 100, gmap_y(&g.view, gexpr_eval(&g.curve[0].expr, gunmap_x(&g.view, 100))),
 	                0xFFFF, 1), "trace cursor on curve");
 
 	/* A pole must not be bridged by a vertical line. */
@@ -499,6 +504,144 @@ static void dump(const char *dir)
 	}
 }
 
+/*
+ * 4.6a: a call the pipeline produced plots as the relation it named.
+ *
+ * The curve has to be the relation's own formula, not a lookalike: kinetic
+ * energy at 5 kg evaluated at 3 m/s must be the 22.5 the solver returns. If
+ * this drifts, the graph and the answer on the same screen disagree, which is
+ * worse than having no graph at all.
+ */
+static void test_from_call(void)
+{
+	gstate_t g;
+	char err[64];
+	q16_t at3;
+
+	check(graph_from_call(&g, "CALL kinetic_energy 5 3", 0, err, sizeof err) ==
+	      G_CALL_OK, "call plots");
+	check(g.ncurves == 1, "one curve from a call");
+	check(g.sweep == 2, "sweeps the last argument by default");
+	at3 = gexpr_eval(&g.curve[0].expr, 3 * Q16_ONE);
+	near_q16(at3, 22.5, 0.01, "curve is the relation it named");
+
+	/* 4.6b: the student's own point, marked where the curve says it is. */
+	check(g.has_mark == 1, "answer marked");
+	near_q16(g.mark_x, 3.0, 0.001, "mark at the swept value");
+	near_q16(g.mark_y, 22.5, 0.01, "mark at the answer");
+	check(g.mark_label[0] != 0, "mark carries its label");
+
+	/* A formula the template does not have, and a line that is not a call. */
+	check(graph_from_call(&g, "CALL no_such_relation 1 2", 0, err, sizeof err) < 0,
+	      "unknown relation refused");
+	check(graph_from_call(&g, "kinetic energy", 0, err, sizeof err) < 0,
+	      "text that is not a call refused");
+	check(graph_from_call(&g, "CALL kinetic_energy 5", 0, err, sizeof err) < 0,
+	      "a call with too few arguments refused");
+
+	/* A typed expression still plots on the old path. */
+	check(graph_init(&g, "x^2-4", err, sizeof err) == 0, "typed path still works");
+	check(g.ncurves == 1 && g.has_mark == 0, "a typed curve has no answer mark");
+}
+
+/* 4.6b as pixels: the mark is drawn where the view mapping puts it. */
+static void test_marker_pixels(void)
+{
+	static uint16_t fb[G_SCREEN_W * G_SCREEN_H];
+	gstate_t g;
+	char err[64];
+	int px, py;
+
+	check(graph_from_call(&g, "CALL kinetic_energy 5 3", 0, err, sizeof err) ==
+	      G_CALL_OK, "marker: call plots");
+	graph_render(&g, fb);
+	px = gmap_x(&g.view, g.mark_x);
+	py = gmap_y(&g.view, g.mark_y);
+	check(px >= 0 && px < G_PLOT_W && py >= 0 && py < G_PLOT_H,
+	      "answer point inside the plot");
+	if (px >= 0 && px < G_PLOT_W && py >= 0 && py < G_PLOT_H)
+		check(has_color(fb, px, py, 0x07FF, 1), "answer disc drawn at its point");
+}
+
+/* 4.6d: a family is the same relation at several values of one argument. */
+static void test_family(void)
+{
+	gstate_t g;
+	char err[64];
+	q16_t m5, m10;
+
+	check(graph_from_call(&g, "CALL kinetic_energy 5 3", 0, err, sizeof err) ==
+	      G_CALL_OK, "family: base curve");
+	check(graph_family_add(&g, 1, 10 * Q16_ONE, err, sizeof err) == G_CALL_OK,
+	      "family: second member");
+	check(g.ncurves == 2, "family holds both curves");
+	m5 = gexpr_eval(&g.curve[0].expr, 4 * Q16_ONE);
+	m10 = gexpr_eval(&g.curve[1].expr, 4 * Q16_ONE);
+	near_q16(m5, 40.0, 0.01, "first member at 4 m/s");
+	near_q16(m10, 80.0, 0.01, "second member at 4 m/s");
+	check(strcmp(g.curve[0].label, g.curve[1].label) != 0,
+	      "family members are labelled apart");
+	check(graph_family_add(&g, 99, Q16_ONE, err, sizeof err) < 0,
+	      "family entry past the last argument refused");
+}
+
+/* 4.6f: a slope field is the evaluator's slopes, drawn. */
+static void test_field(void)
+{
+	gstate_t g;
+	gview_t v;
+	char err[64];
+	int bad = 0, inside = 0;
+
+	v.xmin = -2 * Q16_ONE;
+	v.xmax = 2 * Q16_ONE;
+	v.ymin = -2 * Q16_ONE;
+	v.ymax = 2 * Q16_ONE;
+	check(graph_field(&g, "2y", &v, 0, Q16_ONE, G_FIELD_STEPS, err,
+	                  sizeof err) == G_CALL_OK, "field builds");
+	check(g.field.on == 1 && g.field.cols == G_FIELD_COLS &&
+	      g.field.rows == G_FIELD_ROWS, "field grid");
+
+	for (int r = 0; r < g.field.rows; r++) {
+		q16_t y = (q16_t)((int64_t)v.ymax -
+		                  (((int64_t)v.ymax - v.ymin) * (2 * r + 1)) /
+		                  (2 * g.field.rows));
+		for (int c = 0; c < g.field.cols; c++) {
+			q16_t x = (q16_t)((int64_t)v.xmin +
+			                  (((int64_t)v.xmax - v.xmin) * (2 * c + 1)) /
+			                  (2 * g.field.cols));
+			int i = r * g.field.cols + c;
+			double m = gexpr_eval2(&g.field.expr, x, y) / (double)Q16_ONE;
+			double got, tol;
+
+			if (g.field.dx[i] == 0)
+				continue;
+			got = (double)g.field.dy[i] / (double)g.field.dx[i];
+			tol = 0.05 * (1.0 + (m < 0 ? -m : m));
+			if (got < m - tol || got > m + tol)
+				bad++;
+		}
+	}
+	check(bad == 0, "every field segment follows the evaluator");
+	if (bad)
+		printf("  %d segments off the slope\n", bad);
+
+	/* The traced solution is y = e^(2x) from (0, 1), to a few percent. */
+	for (int i = 0; i < g.field.ntrace; i++) {
+		double x = g.field.tx[i] / (double)Q16_ONE;
+		double y = g.field.ty[i] / (double)Q16_ONE;
+		double want = exp(2.0 * x);
+
+		if (y > want * 0.9 && y < want * 1.1)
+			inside++;
+	}
+	check(g.field.ntrace > 0 && inside == g.field.ntrace,
+	      "traced solution follows the closed form");
+
+	check(graph_field(&g, "x+y+z", &v, 0, 0, G_FIELD_STEPS, err,
+	                  sizeof err) < 0, "an unparseable field is refused");
+}
+
 int main(int argc, char **argv)
 {
 	test_arith();
@@ -509,6 +652,10 @@ int main(int argc, char **argv)
 	test_analysis();
 	test_zoom_pan();
 	test_render();
+	test_from_call();
+	test_marker_pixels();
+	test_family();
+	test_field();
 
 	if (argc >= 3 && strcmp(argv[1], "--ppm") == 0)
 		dump(argv[2]);

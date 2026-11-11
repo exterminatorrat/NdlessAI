@@ -26,6 +26,19 @@ done
 $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
+# The Ndless user interface is compile-checked, not linked: libndls itself is a
+# binary the SDK ships separately and this tree does not carry, so the calls
+# into it can only be resolved on a machine with the real SDK. Compiling the
+# sources here still checks every type, every API signature and every buffer,
+# which is the part an author cannot check by reading. The UI objects go into
+# their own directory so they cannot confuse the link above.
+mkdir -p "$OUT/ui"
+for f in ../device/*.c; do
+    # shellcheck disable=SC2086
+    $CC $ARCH -I../device -I../../ndless-sdk/include -I. \
+        -c "$f" -o "$OUT/ui/$(basename "$f" .c).o"
+done
+
 status=0
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
          solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern graph expr callmask matrix steps; do

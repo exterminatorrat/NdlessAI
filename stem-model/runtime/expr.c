@@ -884,6 +884,16 @@ static int d_node(dv_t *d, const gexpr_t *f, int i)
 		         gmul(d, n->a, d_node(d, f, n->b)));
 		break;
 	case G_DIV:
+		/*
+		 * A constant denominator needs no quotient rule: (u/c)' is u'/c.
+		 * The full rule multiplies through by the denominator twice and
+		 * squares it, which both costs nodes and overflows Q16 earlier
+		 * than the answer does, so x^6/6 would not survive the trip.
+		 */
+		if (!node_has_x(f, n->b)) {
+			r = gdiv(d, d_node(d, f, n->a), n->b);
+			break;
+		}
 		/* (u'v - uv') / v^2 */
 		r = gdiv(d, gsub(d, gmul(d, d_node(d, f, n->a), n->b),
 		                 gmul(d, n->a, d_node(d, f, n->b))),
@@ -963,6 +973,181 @@ int gexpr_derive(const gexpr_t *f, gexpr_t *out)
 	for (i = 0; i < f->n; i++)
 		d.memo[i] = -1;
 	r = d_node(&d, f, root);
+	if (r < 0)
+		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
+	out->root = r;
+	return GEXPR_DIFF_OK;
+}
+
+/* ---- symbolic integration ---- */
+
+/*
+ * Antiderivatives, as expressions rather than numbers. The rules are the ones
+ * a Calc AB paper needs: powers, sums, constant multiples, 1/x, and sin, cos
+ * and exp of a linear argument. Anything else is refused (-1) rather than
+ * guessed, because a wrong antiderivative differentiates into something that
+ * is nearly the integrand and looks right.
+ *
+ * The output is exact where the input is: x^2 integrates to x^3/3 as a
+ * division node, not to a Q16 coefficient of 0.3333, so printing and
+ * differentiating the answer both stay exact. Evaluating it at a point is
+ * still fixed point, like everything else here.
+ */
+static int gx_node(dv_t *d)
+{
+	return gnew(d, G_X, 0, 0, 0);
+}
+
+/* The factor a linear argument is multiplied by: x counts as 1. */
+static int linear_scale(const gexpr_t *f, int i)
+{
+	if (i < 0)
+		return -1;
+	if (f->node[i].op == G_X)
+		return Q16_ONE;
+	if (f->node[i].op == G_MUL && gnum_is(f, f->node[i].a) &&
+	    f->node[f->node[i].b].op == G_X) {
+		int32_t k = gnum_of(f, f->node[i].a);
+
+		return k > 0 ? k : -1;
+	}
+	return -1;
+}
+
+/*
+ * The exponent of a bare x^k subtree, in Q16 units, or INT32_MIN when the
+ * subtree is not a power of x alone.
+ */
+static int32_t pow_exponent(const gexpr_t *f, int i)
+{
+	if (i < 0)
+		return INT32_MIN;
+	if (f->node[i].op == G_X)
+		return Q16_ONE;
+	if (f->node[i].op == G_POW && f->node[f->node[i].a].op == G_X &&
+	    gnum_is(f, f->node[i].b))
+		return gnum_of(f, f->node[i].b);
+	return INT32_MIN;
+}
+
+/*
+ * coef * x^e, integrated. The coefficient division is kept exact where it can
+ * be: 3x^2 integrates to x^3 rather than to 1.0000x^3, and 2x to x^2 rather
+ * than to 2(x^2/2), because a student reads the printed form.
+ */
+static int integrate_pow(dv_t *d, int32_t coef, int32_t e)
+{
+	int64_t e1 = (int64_t)e + Q16_ONE;
+	int p;
+
+	if (e1 == 0) {
+		int ln = gnew(d, G_LN, gx_node(d), 0, 0);
+
+		if (ln < 0)
+			return -1;
+		return coef == Q16_ONE ? ln : gmul(d, gnum(d, coef), ln);
+	}
+	p = gpow(d, gx_node(d), gnum(d, (int32_t)e1));
+	if (p < 0)
+		return -1;
+	/* Both divisions below are exact in Q16: e1 is an integer count of
+	 * Q16 units, and a coefficient that divides by it gives an integer. */
+	if (coef % e1 == 0)
+		return gmul(d, gnum(d, (int32_t)((int64_t)coef * Q16_ONE / e1)), p);
+	if (coef == Q16_ONE)
+		return gdiv(d, p, gnum(d, (int32_t)e1));
+	return gdiv(d, gmul(d, gnum(d, coef), p), gnum(d, (int32_t)e1));
+}
+
+static int i_node(dv_t *d, const gexpr_t *f, int i)
+{
+	const gnode_t *n;
+	int32_t e;
+
+	if (d->err || i < 0)
+		return -1;
+	if (!node_has_x(f, i))
+		return gmul(d, i, gx_node(d));
+
+	n = &f->node[i];
+	switch (n->op) {
+	case G_X:
+		return integrate_pow(d, Q16_ONE, Q16_ONE);
+	case G_ADD:
+		return gadd(d, i_node(d, f, n->a), i_node(d, f, n->b));
+	case G_SUB:
+		return gsub(d, i_node(d, f, n->a), i_node(d, f, n->b));
+	case G_NEG:
+		return gneg(d, i_node(d, f, n->a));
+	case G_MUL:
+		/* A numeric factor over a power of x is the common shape:
+		 * 3x^2, 2x. Anything else in a product needs expanding first. */
+		if (gnum_is(f, n->a) && (e = pow_exponent(f, n->b)) != INT32_MIN)
+			return integrate_pow(d, gnum_of(f, n->a), e);
+		if (gnum_is(f, n->b) && (e = pow_exponent(f, n->a)) != INT32_MIN)
+			return integrate_pow(d, gnum_of(f, n->b), e);
+		if (!node_has_x(f, n->a))
+			return gmul(d, n->a, i_node(d, f, n->b));
+		if (!node_has_x(f, n->b))
+			return gmul(d, n->b, i_node(d, f, n->a));
+		return -1;
+	case G_DIV:
+		if (!node_has_x(f, n->b))
+			return gdiv(d, i_node(d, f, n->a), n->b);
+		/* c / x^k is c * x^-k, which is where 1/x comes from. */
+		if (!node_has_x(f, n->a) &&
+		    (e = pow_exponent(f, n->b)) != INT32_MIN && e != 0)
+			return integrate_pow(d, gnum_is(f, n->a) ? gnum_of(f, n->a)
+			                                         : Q16_ONE,
+			                     -e);
+		return -1;
+	case G_POW:
+		if ((e = pow_exponent(f, i)) == INT32_MIN)
+			return -1;
+		return integrate_pow(d, Q16_ONE, e);
+	case G_SIN:
+	case G_COS:
+	case G_EXP: {
+		int k = linear_scale(f, n->a);
+		int r;
+
+		if (k <= 0)
+			return -1;
+		if (n->op == G_SIN)
+			r = gneg(d, gnew(d, G_COS, n->a, 0, 0));
+		else if (n->op == G_COS)
+			r = gnew(d, G_SIN, n->a, 0, 0);
+		else
+			r = gnew(d, G_EXP, n->a, 0, 0);
+		if (r < 0)
+			return -1;
+		return k == Q16_ONE ? r : gdiv(d, r, gnum(d, k));
+	}
+	default:
+		return -1;
+	}
+}
+
+int gexpr_integrate_symbolic(const gexpr_t *f, gexpr_t *out)
+{
+	dv_t d;
+	int i, root, r;
+
+	if (!f || !out || out == f || f->root < 0 || f->root >= f->n)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (f->n > EXPR_MAX_NODES)
+		return GEXPR_DIFF_TOO_BIG;
+	root = f->root;
+	out->root = -1;
+	for (i = 0; i < f->n; i++)
+		out->node[i] = f->node[i];
+	out->n = f->n;
+
+	d.o = out;
+	d.err = 0;
+	for (i = 0; i < f->n; i++)
+		d.memo[i] = -1;
+	r = i_node(&d, f, root);
 	if (r < 0)
 		return d.err ? d.err : GEXPR_DIFF_UNSUPPORTED;
 	out->root = r;
@@ -1586,8 +1771,29 @@ int gexpr_integral_answer(const char *text, char *out, int outlen)
 			continue;
 		memcpy(inner, open + 1, inner_len);
 		inner[inner_len] = 0;
-		if (split_three(inner, (int)inner_len, part, plen) < 0)
-			continue;
+		if (split_three(inner, (int)inner_len, part, plen) < 0) {
+			/*
+			 * One expression and no bounds: the indefinite form. The
+			 * answer is the antiderivative as an expression, which is
+			 * what "+ C" stands for.
+			 */
+			gexpr_t anti;
+			char sym[EXPR_TEXT_MAX];
+			size_t slen;
+
+			if (gexpr_parse(inner, &f, err, sizeof err) < 0)
+				continue;
+			if (gexpr_integrate_symbolic(&f, &anti) != GEXPR_DIFF_OK)
+				continue;
+			if (gexpr_unparse(&anti, sym, (int)sizeof sym) < 0)
+				continue;
+			slen = strlen(sym);
+			if (slen + 5 > (size_t)outlen)
+				continue;
+			memcpy(out, sym, slen);
+			memcpy(out + slen, " + C", 5);
+			return 0;
+		}
 		if (parse_bound(part[1], plen[1], &a) < 0 ||
 		    parse_bound(part[2], plen[2], &b) < 0)
 			continue;

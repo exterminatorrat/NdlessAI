@@ -36,3 +36,4 @@ runtime/test_callmask
 runtime/bench_kernel
 runtime/test_matrix
 runtime/test_steps
+runtime/test_symbolic

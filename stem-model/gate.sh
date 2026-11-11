@@ -55,7 +55,14 @@ if [ -d runtime ]; then
     run "graph"                  sh -c 'cd runtime && make -s test_graph >/dev/null 2>&1 && ./test_graph | grep -q "all checks passed"'
     run "typed answers"          sh -c 'cd runtime && ./test_typed | grep -q "all cases passed"'
     run "linear algebra"         sh -c 'cd runtime && ./test_matrix | grep -q "all cases passed"'
+    # These were built by `make all` but never run by this script, so a break
+    # in the expression engine or the equation engine passed here and failed in
+    # CI instead. A gate that is not run is not a gate.
+    run "expression engine"      sh -c 'cd runtime && ./test_expr | grep -q "all checks passed"'
+    run "equation engine"        sh -c 'cd runtime && ./test_equation | grep -q "0 failures"'
+    run "solver parity"          sh -c 'cd runtime && ./test_parity | grep -q "0 mismatches"'
     run "step rendering"         sh -c 'cd runtime && ./test_steps | grep -q "all cases passed"'
+    run "symbolic integration"   sh -c 'cd runtime && ./test_symbolic | grep -q "all cases passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"

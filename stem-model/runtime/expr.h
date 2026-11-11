@@ -13,7 +13,15 @@
  * saturates, which callers treat as "no value here".
  */
 
-#define EXPR_MAX_NODES 48
+/*
+ * The node pool is a fixed array because the target has no heap worth using
+ * for this. 48 was enough to differentiate a typed expression; an
+ * antiderivative is larger than its integrand and differentiating it back
+ * larger again, so the pool is sized for "integrate, then differentiate the
+ * result" rather than for one tree. A gexpr_t is 8 bytes a node, so this is
+ * 1 KB per tree against 384 bytes before.
+ */
+#define EXPR_MAX_NODES 128
 
 typedef int32_t q16_t;
 
@@ -89,6 +97,24 @@ enum {
  * failure out->root is -1, so a half-built tree is never readable.
  */
 int gexpr_derive(const gexpr_t *f, gexpr_t *out);
+
+/*
+ * The antiderivative of f, as an expression. Same return codes as
+ * gexpr_derive, and the same promise that out->root is -1 on failure.
+ *
+ * Exact where the input is exact: x^2 becomes x^3/3 as a division node rather
+ * than a fixed-point coefficient, so printing it and differentiating it back
+ * both stay exact.
+ *
+ * Handles sums, differences, negations, constant multiples, powers of x with a
+ * constant exponent, 1/x, and sin, cos and exp of a linear argument. Anything
+ * else is refused rather than guessed - a wrong antiderivative differentiates
+ * into something close to the integrand and looks right.
+ *
+ * out may not alias f: the result is larger than the input and is built while
+ * the input is still being read.
+ */
+int gexpr_integrate_symbolic(const gexpr_t *f, gexpr_t *out);
 
 /*
  * Prints a tree in the syntax gexpr_parse accepts, with brackets where

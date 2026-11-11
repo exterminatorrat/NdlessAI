@@ -16,6 +16,7 @@
 #include "pipeline.h"
 #include "screen.h"
 #include "ui.h"
+#include "diagram.h"
 
 #define PAD 8
 #define CANARY 0xA5A5u
@@ -29,6 +30,7 @@ static int failures;
 #define PANE_W SCREEN_W
 #define PANE_H (UI_PANE_ROWS * SCREEN_LINE_H)
 
+static void test_diagram_screen(void);
 static void check(int cond, const char *what)
 {
 	if (!cond) {
@@ -584,6 +586,50 @@ static void test_render_frame(void)
 	}
 }
 
+
+/*
+ * 4.6e reached from the answer screen: a relation with a diagram takes over
+ * the pane on the diagram key, and a relation without one ignores the key
+ * rather than showing a blank screen. Leaving the diagram puts the answer
+ * back, which is what stops the key from eating the answer a student asked
+ * for.
+ */
+static void test_diagram_screen(void)
+{
+	unsigned after_answer;
+
+	ui_init(&u, NULL, "no model");
+	/* Ask mode is where an answer lives; ui_result is called from there in the
+	 * real flow, and the diagram key is only handled on that screen. */
+	u.mode = UI_MODE_ASK;
+	ui_result(&u, "friction force", PIPELINE_OK,
+	          "6 N", "CALL friction_force 0.3 20");
+	check(u.diagram == 0, "diagram starts hidden");
+	ui_key(&u, UI_KEY_DIAGRAM);
+	check(u.diagram == 1, "diagram key shows it");
+	render();
+	check(ink_of(0, 0, SCREEN_W, SCREEN_HEIGHT, DIAGRAM_HEAD) > 0,
+	      "the diagram drew its arrows");
+	after_answer = (unsigned)ink(0, 0, SCREEN_W, SCREEN_HEIGHT);
+
+	/* Any other key returns to the answer. */
+	ui_key(&u, UI_KEY_DOWN);
+	check(u.diagram == 0, "a key returns to the answer");
+	render();
+	check((unsigned)ink(0, 0, SCREEN_W, SCREEN_HEIGHT) != after_answer,
+	      "the pane came back");
+
+	/* A relation with no diagram keeps the answer on screen. */
+	ui_result(&u, "molarity", PIPELINE_OK, "2 M", "CALL molarity 4 2");
+	ui_key(&u, UI_KEY_DIAGRAM);
+	check(u.diagram == 0, "no diagram for a relation without one");
+
+	/* And a typed answer, which has no call at all. */
+	ui_result(&u, "2+2", PIPELINE_OK, "4", "");
+	ui_key(&u, UI_KEY_DIAGRAM);
+	check(u.diagram == 0, "no diagram for arithmetic");
+}
+
 int main(void)
 {
 	test_menu();
@@ -594,6 +640,7 @@ int main(void)
 	test_errors();
 	test_steps();
 	test_render_frame();
+	test_diagram_screen();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

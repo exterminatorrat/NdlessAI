@@ -49,6 +49,7 @@
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048
 #define UI_HELP_PAGES 3
+#define UI_CALL_MAX   128
 
 typedef enum {
 	UI_KEY_NONE, UI_KEY_ACCEPT, UI_KEY_BACK, UI_KEY_UP, UI_KEY_DOWN,
@@ -58,7 +59,13 @@ typedef enum {
 	 * plotter owns the LCD through its own loop on the Ndless side, so the
 	 * host has to step out of this model to run it.
 	 */
-	UI_KEY_GRAPH
+	UI_KEY_GRAPH,
+	/*
+	 * Toggles the diagram over the answer pane. A relation with no diagram
+	 * ignores it rather than showing an empty screen, so the key is safe to
+	 * press on every answer.
+	 */
+	UI_KEY_DIAGRAM
 } ui_key_t;
 
 typedef enum {
@@ -96,6 +103,11 @@ typedef struct {
 	 * has to be possible to put the answer back when the student returns. */
 	char pane_src[UI_HIST_PANE];
 	int16_t pane_dim_from, pane_dim_to;
+
+	/* The call the last answer came from: a diagram is drawn from it, and an
+	 * answer that did not come from a relation has none. */
+	char last_call[UI_CALL_MAX];
+	int diagram;
 
 	ui_hist_t hist[UI_HISTORY];
 	int hist_n;

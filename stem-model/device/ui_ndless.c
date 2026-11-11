@@ -88,6 +88,10 @@ static int read_key(ui_key_t *k, char *ch)
 		*k = UI_KEY_MODE;
 		return 1;
 	}
+	if (isKeyPressed(KEY_NSPIRE_TAB)) {
+		*k = UI_KEY_DIAGRAM;
+		return 1;
+	}
 	for (unsigned i = 0; i < sizeof char_keys / sizeof char_keys[0]; i++) {
 		if (isKeyPressed(*char_keys[i].key)) {
 			*ch = char_keys[i].ch;

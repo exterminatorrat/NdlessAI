@@ -10,6 +10,7 @@
 #include "pipeline.h"
 #include "screen.h"
 #include "ui.h"
+#include "diagram.h"
 
 #define UI_BG      SCREEN_BLACK
 #define UI_FG      SCREEN_WHITE
@@ -286,6 +287,9 @@ void ui_result(ui_t *u, const char *question, int rc,
 	const char *end = src + sizeof src - 1;
 	int dim_from = 0, dim_to = 0;
 
+	/* A new answer replaces whatever diagram the last one was showing. */
+	u->diagram = 0;
+	copy_trunc(u->last_call, sizeof u->last_call, call ? call : "");
 	if (rc == PIPELINE_OK) {
 		if (pipeline_steps(call, answer ? answer : "", block, (int)sizeof block) == 1) {
 			char *last;
@@ -376,6 +380,25 @@ static void ask(ui_t *u)
 	u->input[0] = '\0';
 	u->input_len = 0;
 	u->cursor = 0;
+}
+
+/* Whether the relation a call named has a diagram. The call is "CALL name
+ * args...", so the name is the second token; a call that is not that shape has
+ * no diagram either. */
+static int call_has_diagram(const char *call)
+{
+	char name[48];
+	int i = 0;
+
+	if (!call || strncmp(call, "CALL ", 5) != 0)
+		return 0;
+	call += 5;
+	while (call[i] && call[i] != ' ' && i < (int)sizeof name - 1) {
+		name[i] = call[i];
+		i++;
+	}
+	name[i] = '\0';
+	return i > 0 && diagram_supports(name);
 }
 
 /* ---- keys ---- */
@@ -489,6 +512,9 @@ static ui_key_t ask_key(ui_t *u, ui_key_t k)
 	case UI_KEY_MODE:
 		u->mode = UI_MODE_MENU;
 		break;
+	case UI_KEY_DIAGRAM:
+		u->diagram = !u->diagram && call_has_diagram(u->last_call);
+		break;
 	case UI_KEY_UP:
 		scroll_pane(u, -1);
 		break;
@@ -537,6 +563,12 @@ ui_key_t ui_key(ui_t *u, ui_key_t k)
 	case UI_MODE_HELP:
 		return help_key(u, k);
 	case UI_MODE_ASK:
+		/* A diagram covers the answer, so any other key has to bring the
+		 * answer back rather than act on a screen the student cannot see. */
+		if (u->diagram && k != UI_KEY_DIAGRAM) {
+			u->diagram = 0;
+			return UI_KEY_NONE;
+		}
 		return ask_key(u, k);
 	}
 	return UI_KEY_NONE;
@@ -705,6 +737,12 @@ int ui_render(ui_t *u, uint16_t *fb)
 
 	screen_clear(fb, UI_BG);
 	draw_header(u, fb);
+	if (u->mode == UI_MODE_ASK && u->diagram &&
+	    diagram_render(u->last_call, fb, NULL, 0) == 0) {
+		screen_text(fb, 4, UI_FOOTER_Y - 6,
+		            "any key returns to the answer", UI_DIM);
+		return 0;
+	}
 	if (u->mode == UI_MODE_MENU) {
 		draw_menu(u, fb);
 	} else {

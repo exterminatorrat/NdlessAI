@@ -52,7 +52,7 @@ if [ -d runtime ]; then
     # `make` merely warns about - an empty-bodied if reached CI this way. This
     # is the host compiler's -Werror over the same set, so the cheap half of
     # that gate runs here too.
-    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph steps matrix callmask; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
+    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph screen ui steps matrix callmask; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
     run "solvers match Python"   sh -c 'cd runtime && ./test_solvers | grep -q "0 mismatches"'
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
@@ -70,6 +70,12 @@ if [ -d runtime ]; then
     run "symbolic integration"   sh -c 'cd runtime && ./test_symbolic | grep -q "all cases passed"'
     run "series"                 sh -c 'cd runtime && ./test_series | grep -q "all cases passed"'
     run "differential equations" sh -c 'cd runtime && ./test_ode | grep -q "all cases passed"'
+    # The interface and the candidates the graph dims. They were written after
+    # this script and would have been built but never run, which is exactly the
+    # gap this file's own comment complains about.
+    run "screen primitives"      sh -c 'cd runtime && ./test_screen | grep -q "all checks passed"'
+    run "interface model"        sh -c 'cd runtime && ./test_ui | grep -q "all checks passed"'
+    run "candidate margins"      sh -c 'cd runtime && ./test_alt | grep -q "all cases passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"

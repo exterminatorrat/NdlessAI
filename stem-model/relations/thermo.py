@@ -12,7 +12,8 @@ from .core import relation, _exact, dec_exact
 # ---------------------------------------------------------------------------
 
 
-@relation("gas_work_isobaric", "physics", ["P", "dV"], exact=False)
+@relation("gas_work_isobaric", "physics", ["P", "dV"], exact=False,
+          step=dict(line="W = P*dV", expr="@1 * @2"))
 class GasWorkIsobaric:
     @staticmethod
     def gen(rng):
@@ -27,7 +28,8 @@ class GasWorkIsobaric:
         return f"{dec_exact(_exact(P) * _exact(dV))} J"
 
 
-@relation("gas_heat_cp", "physics", ["n", "cp", "dT"], exact=False)
+@relation("gas_heat_cp", "physics", ["n", "cp", "dT"], exact=False,
+          step=dict(line="Q = n*cp*dT", expr="@1*@2*@3"))
 class GasHeatCp:
     @staticmethod
     def gen(rng):
@@ -43,7 +45,8 @@ class GasHeatCp:
         return f"{dec_exact(_exact(n) * _exact(cp) * _exact(dT))} J"
 
 
-@relation("entropy_change", "physics", ["q", "T"], exact=False)
+@relation("entropy_change", "physics", ["q", "T"], exact=False,
+          step=dict(line="dS = Q/T", expr="@1 / @2"))
 class EntropyChange:
     @staticmethod
     def gen(rng):
@@ -57,7 +60,8 @@ class EntropyChange:
         return f"{dec_exact(_exact(q) / _exact(T))} J/K"
 
 
-@relation("conduction_rate", "physics", ["k", "A", "dT", "d"], exact=False)
+@relation("conduction_rate", "physics", ["k", "A", "dT", "d"], exact=False,
+          step=dict(line="P = k*A*dT/d", expr="@1*@2*@3/@4"))
 class ConductionRate:
     @staticmethod
     def gen(rng):
@@ -75,7 +79,8 @@ class ConductionRate:
         return f"{dec_exact(_exact(k) * _exact(A) * _exact(dT) / _exact(d))} W"
 
 
-@relation("radiation_power", "physics", ["T", "area"], exact=False)
+@relation("radiation_power", "physics", ["T", "area"], exact=False,
+          step=dict(line="P = sigma*A*T^4", expr="5.67e-8*@2*@1^4"))
 class RadiationPower:
     @staticmethod
     def gen(rng):
@@ -91,7 +96,8 @@ class RadiationPower:
         return f"{dec_exact(sigma * _exact(area) * _exact(T) ** 4)} W"
 
 
-@relation("heat_pump_cop", "physics", ["t_cold", "t_hot"], exact=False)
+@relation("heat_pump_cop", "physics", ["t_cold", "t_hot"], exact=False,
+          step=dict(line="COP = Tc/(Th - Tc)", expr="@1 / (@2 - @1)"))
 class HeatPumpCop:
     @staticmethod
     def gen(rng):

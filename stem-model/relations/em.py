@@ -17,7 +17,8 @@ from .core import relation, _exact, dec_exact
 # ---------------------------------------------------------------------------
 
 
-@relation("coulomb_force", "physics", ["q1", "q2", "r"], exact=False)
+@relation("coulomb_force", "physics", ["q1", "q2", "r"], exact=False,
+          step=dict(line="F = k*q1*q2/r^2", expr="8.99e9*(@1*1e-6)*(@2*1e-6)/@3^2"))
 class CoulombForce:
     @staticmethod
     def gen(rng):
@@ -34,7 +35,8 @@ class CoulombForce:
         return f"{dec_exact(k * _exact(q1) * _exact(q2) / _exact(r) ** 2)} N"
 
 
-@relation("electric_field_point", "physics", ["q", "r"], exact=False)
+@relation("electric_field_point", "physics", ["q", "r"], exact=False,
+          step=dict(line="E = k*q/r^2", expr="8.99e9*@1*1e-6/@2^2"))
 class ElectricFieldPoint:
     @staticmethod
     def gen(rng):
@@ -49,7 +51,8 @@ class ElectricFieldPoint:
         return f"{dec_exact(k * _exact(q) / _exact(r) ** 2)} N/C"
 
 
-@relation("capacitor_charge", "physics", ["C", "V"], exact=False)
+@relation("capacitor_charge", "physics", ["C", "V"], exact=False,
+          step=dict(line="Q = C*V", expr="@1 * @2"))
 class CapacitorCharge:
     @staticmethod
     def gen(rng):
@@ -63,7 +66,8 @@ class CapacitorCharge:
         return f"{dec_exact(_exact(C) * _exact(V))} uC"
 
 
-@relation("capacitor_energy", "physics", ["Q", "V"], exact=False)
+@relation("capacitor_energy", "physics", ["Q", "V"], exact=False,
+          step=dict(line="E = Q*V / 2", expr="@1 * @2 / 2"))
 class CapacitorEnergy:
     @staticmethod
     def gen(rng):
@@ -77,7 +81,8 @@ class CapacitorEnergy:
         return f"{dec_exact(_exact(Q) * _exact(V) / 2)} uJ"
 
 
-@relation("parallel_resistance", "physics", ["r1", "r2"], exact=False)
+@relation("parallel_resistance", "physics", ["r1", "r2"], exact=False,
+          step=dict(line="R = 1/(1/R1 + 1/R2)", expr="1 / (1/@1 + 1/@2)"))
 class ParallelResistance:
     @staticmethod
     def gen(rng):
@@ -92,7 +97,8 @@ class ParallelResistance:
         return f"{dec_exact(_exact(r1) * _exact(r2) / (_exact(r1) + _exact(r2)))} ohm"
 
 
-@relation("motional_emf", "physics", ["B", "L", "v"], exact=False)
+@relation("motional_emf", "physics", ["B", "L", "v"], exact=False,
+          step=dict(line="emf = B*L*v", expr="@1 * @2 * @3"))
 class MotionalEmf:
     @staticmethod
     def gen(rng):

@@ -37,7 +37,8 @@ class Linear2:
         sol = sp.solve([sp.Eq(a1 * x + b1 * y, c1), sp.Eq(a2 * x + b2 * y, c2)], [x, y])
         return f"x={fmt(sol[x])}, y={fmt(sol[y])}"
 
-@relation("exp_solve", "precalc", ["base", "k"])
+@relation("exp_solve", "precalc", ["base", "k"],
+          step=dict(line="x = ln(k)/ln(b)", expr="ln(@2)/ln(@1)"))
 class ExpSolve:
     @staticmethod
     def gen(rng):

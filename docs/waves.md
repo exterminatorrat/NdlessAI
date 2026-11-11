@@ -220,6 +220,26 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate | `gate.sh` gates generated phrasing and wrong relation only |
 | Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
 
+**Wave 4 is in flight, in small slices.** The map is `wave4-plan.md`. The
+first slice is 4.5c, step display: relations may now carry a `step` template -
+the formula, and the same formula as arithmetic over the arguments - which the
+device prints as the working above the answer. `check_steps.py` evaluates each
+template against its solver's own output on generated rows, and caught both a
+wrong placeholder order and a formula that reused an argument, so the templates
+are checked data rather than prose; `steptable.h` is generated from them and
+`gate.sh` fails when it drifts. Eighty-nine of the 102 relations carry a
+template. The thirteen that do not are the answers that are not a single
+number: `quad_solve`, `cubic_solve`, `linear2`, `abs_value_eq`, `linear_ineq`,
+`complete_square`, `factor_quadratic`, `arith_seq`, `geom_seq`, `sinusoid`,
+`right_triangle`, `sig_figs` and `scientific_notation`. There is nothing for the
+gate to compare against in those, and unchecked working is worse than none.
+
+Nine templates were wrong on the first pass and the gate caught every one:
+`dU = q - w` when the solver uses dU = q + w, `dG = dH - T dS` where the
+solver takes dS in J/K, R = 0.0821 against the solver's 0.08206, `doubling_time`
+modelled as ln(2)/r rather than ln(2)/ln(1 + r/100), and `energy_friction`
+answering a speed when the formula described an energy.
+
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
 relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the

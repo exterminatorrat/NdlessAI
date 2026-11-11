@@ -70,6 +70,7 @@ static void solve_mode(void)
 	char path[256];
 	char answer[256];
 	char call[256];
+	char steps[256];
 	int found = 0;
 
 	for (int i = 0; weight_names[i] && !found; i++)
@@ -105,7 +106,15 @@ static void solve_mode(void)
 		free(input);
 
 		if (rc == PIPELINE_OK) {
-			show_msgbox("Answer", answer);
+			/*
+			 * Show the working when this relation has a template: the formula,
+			 * the numbers in it, then the answer. check_steps.py proves the
+			 * arithmetic on the host, so nothing here needs verifying on screen.
+			 */
+			if (pipeline_steps(call, answer, steps, (int)sizeof steps) == 1)
+				show_msgbox("Working", steps);
+			else
+				show_msgbox("Answer", answer);
 		} else if (rc == PIPELINE_UNCERTAIN) {
 			show_msgbox("Not sure",
 			            "I could not match the numbers in your\n"

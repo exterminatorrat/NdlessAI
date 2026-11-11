@@ -3,7 +3,8 @@ import sympy as sp
 from .core import relation, _exact, sig_render, dec_exact
 
 
-@relation("km_to_m", "units", ["km"], exact=False)
+@relation("km_to_m", "units", ["km"], exact=False,
+          step=dict(line="m = km*1000", expr="@1*1000"))
 class KmToM:
     @staticmethod
     def gen(rng):
@@ -14,7 +15,8 @@ class KmToM:
     def solve(km):
         return f"{dec_exact(_exact(km) * 1000)} m"
 
-@relation("m_to_cm", "units", ["m"], exact=False)
+@relation("m_to_cm", "units", ["m"], exact=False,
+          step=dict(line="cm = m*100", expr="@1*100"))
 class MToCm:
     @staticmethod
     def gen(rng):
@@ -25,7 +27,8 @@ class MToCm:
     def solve(m):
         return f"{dec_exact(_exact(m) * 100)} cm"
 
-@relation("celsius_to_fahrenheit", "units", ["c"], exact=False)
+@relation("celsius_to_fahrenheit", "units", ["c"], exact=False,
+          step=dict(line="F = C*9/5 + 32", expr="@1*9/5 + 32"))
 class CelsiusToFahrenheit:
     @staticmethod
     def gen(rng):
@@ -37,7 +40,8 @@ class CelsiusToFahrenheit:
     def solve(c):
         return f"{dec_exact(sp.Rational(9 * c, 5) + 32)} F"
 
-@relation("fahrenheit_to_celsius", "units", ["f"], exact=False)
+@relation("fahrenheit_to_celsius", "units", ["f"], exact=False,
+          step=dict(line="C = (F - 32)*5/9", expr="(@1 - 32)*5/9"))
 class FahrenheitToCelsius:
     @staticmethod
     def gen(rng):
@@ -48,7 +52,8 @@ class FahrenheitToCelsius:
     def solve(f):
         return f"{dec_exact(sp.Rational(5 * (f - 32), 9))} C"
 
-@relation("kg_to_lb", "units", ["kg"], exact=False)
+@relation("kg_to_lb", "units", ["kg"], exact=False,
+          step=dict(line="lb = kg * 2.205", expr="@1 * 2.205"))
 class KgToLb:
     @staticmethod
     def gen(rng):
@@ -59,7 +64,8 @@ class KgToLb:
     def solve(kg):
         return f"{dec_exact(_exact(kg) * sp.Rational(2205, 1000))} lb"
 
-@relation("liters_to_ml", "units", ["L"], exact=False)
+@relation("liters_to_ml", "units", ["L"], exact=False,
+          step=dict(line="mL = L * 1000", expr="@1 * 1000"))
 class LitersToMl:
     @staticmethod
     def gen(rng):
@@ -70,7 +76,8 @@ class LitersToMl:
     def solve(L):
         return f"{dec_exact(_exact(L) * 1000)} mL"
 
-@relation("percent_error", "units", ["measured", "accepted"], exact=False)
+@relation("percent_error", "units", ["measured", "accepted"], exact=False,
+          step=dict(line="error% = |m - a| / a * 100", expr="abs(@1 - @2) / @2 * 100"))
 class PercentError:
     @staticmethod
     def gen(rng):
@@ -100,7 +107,8 @@ class ScientificNotation:
         v = _exact(mantissa) * sp.Rational(10) ** exponent
         return dec_exact(v)
 
-@relation("average", "units", ["a", "b", "c", "d"], exact=False)
+@relation("average", "units", ["a", "b", "c", "d"], exact=False,
+          step=dict(line="mean = (a + b + c + d)/4", expr="(@1 + @2 + @3 + @4) / 4"))
 class Average:
     @staticmethod
     def gen(rng):

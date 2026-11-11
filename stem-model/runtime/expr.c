@@ -328,6 +328,12 @@ static int parse_atom(gp_t *g)
 		g->p++;
 		return node(g, G_X, 0, 0, 0);
 	}
+	/* y exists only for differential equations. Every other path checks
+	 * gexpr_has_y and refuses, so a stray y cannot quietly evaluate as 0. */
+	if (c == 'y') {
+		g->p++;
+		return node(g, G_Y, 0, 0, 0);
+	}
 	if ((c >= '0' && c <= '9') || c == '.')
 		return parse_number(g);
 	if (c == 'p') {
@@ -388,7 +394,8 @@ static int parse_unary(gp_t *g)
 
 static int starts_atom(char c)
 {
-	return (c >= '0' && c <= '9') || c == '.' || c == 'x' || c == '(' ||
+	return (c >= '0' && c <= '9') || c == '.' || c == 'x' || c == 'y' ||
+	       c == '(' ||
 	       c == 's' || c == 'c' || c == 't' || c == 'a' || c == 'l' ||
 	       c == 'e' || c == 'p';
 }
@@ -534,7 +541,12 @@ static q16_t qpow(q16_t b, q16_t ex)
 	return gq_exp(gq_mul(ex, gq_ln(b)));
 }
 
-static q16_t eval_node(const gexpr_t *e, int i, q16_t x)
+typedef struct {
+	q16_t x;
+	q16_t y;
+} gvars_t;
+
+static q16_t eval_node(const gexpr_t *e, int i, gvars_t v)
 {
 	const gnode_t *n = &e->node[i];
 
@@ -542,36 +554,38 @@ static q16_t eval_node(const gexpr_t *e, int i, q16_t x)
 	case G_NUM:
 		return n->num;
 	case G_X:
-		return x;
+		return v.x;
+	case G_Y:
+		return v.y;
 	case G_ADD:
-		return gq_sat((int64_t)eval_node(e, n->a, x) + eval_node(e, n->b, x));
+		return gq_sat((int64_t)eval_node(e, n->a, v) + eval_node(e, n->b, v));
 	case G_SUB:
-		return gq_sat((int64_t)eval_node(e, n->a, x) - eval_node(e, n->b, x));
+		return gq_sat((int64_t)eval_node(e, n->a, v) - eval_node(e, n->b, v));
 	case G_MUL:
-		return gq_mul(eval_node(e, n->a, x), eval_node(e, n->b, x));
+		return gq_mul(eval_node(e, n->a, v), eval_node(e, n->b, v));
 	case G_DIV:
-		return gq_div(eval_node(e, n->a, x), eval_node(e, n->b, x));
+		return gq_div(eval_node(e, n->a, v), eval_node(e, n->b, v));
 	case G_POW:
-		return qpow(eval_node(e, n->a, x), eval_node(e, n->b, x));
+		return qpow(eval_node(e, n->a, v), eval_node(e, n->b, v));
 	case G_SIN:
-		return gq_sin(eval_node(e, n->a, x));
+		return gq_sin(eval_node(e, n->a, v));
 	case G_COS:
-		return gq_cos(eval_node(e, n->a, x));
+		return gq_cos(eval_node(e, n->a, v));
 	case G_TAN:
-		return gq_tan(eval_node(e, n->a, x));
+		return gq_tan(eval_node(e, n->a, v));
 	case G_NEG:
-		return gq_sat(-(int64_t)eval_node(e, n->a, x));
+		return gq_sat(-(int64_t)eval_node(e, n->a, v));
 	case G_SQRT:
-		return gq_sqrt(eval_node(e, n->a, x));
+		return gq_sqrt(eval_node(e, n->a, v));
 	case G_ABS: {
-		q16_t v = eval_node(e, n->a, x);
+		q16_t a = eval_node(e, n->a, v);
 
-		return v < 0 ? gq_sat(-(int64_t)v) : v;
+		return a < 0 ? gq_sat(-(int64_t)a) : a;
 	}
 	case G_LN:
-		return gq_ln(eval_node(e, n->a, x));
+		return gq_ln(eval_node(e, n->a, v));
 	case G_EXP:
-		return gq_exp(eval_node(e, n->a, x));
+		return gq_exp(eval_node(e, n->a, v));
 	default:
 		return 0;
 	}
@@ -579,9 +593,34 @@ static q16_t eval_node(const gexpr_t *e, int i, q16_t x)
 
 q16_t gexpr_eval(const gexpr_t *e, q16_t x)
 {
+	gvars_t v;
+
+	v.x = x;
+	v.y = 0;
 	if (e->root < 0)
 		return 0;
-	return eval_node(e, e->root, x);
+	return eval_node(e, e->root, v);
+}
+
+q16_t gexpr_eval2(const gexpr_t *e, q16_t x, q16_t y)
+{
+	gvars_t v;
+
+	v.x = x;
+	v.y = y;
+	if (e->root < 0)
+		return 0;
+	return eval_node(e, e->root, v);
+}
+
+int gexpr_has_y(const gexpr_t *e)
+{
+	if (e->root < 0)
+		return 0;
+	for (int i = 0; i < e->n; i++)
+		if (e->node[i].op == G_Y)
+			return 1;
+	return 0;
 }
 
 int gexpr_has_x(const gexpr_t *e)
@@ -1213,6 +1252,73 @@ int gexpr_taylor(const gexpr_t *f, q16_t a, int terms, gexpr_t *out)
 	return GEXPR_DIFF_OK;
 }
 
+/* ---- differential equations ---- */
+
+/*
+ * y' = f(x,y), stepped with classic RK4 at a fixed step. Fourth order is the
+ * point of doing it numerically at all: a student's answer wants four
+ * significant digits, and Euler at a step small enough for that would need
+ * thousands of steps on a 132 MHz processor.
+ *
+ * The table is written into ys when it is supplied: steps + 1 values, y[0]
+ * being the initial condition. x is not stored, because the step is uniform
+ * and x0 is the caller's.
+ */
+int gexpr_rk4(const gexpr_t *f, q16_t x0, q16_t y0, q16_t xn, int steps,
+              q16_t *ys, int ys_max)
+{
+	q16_t x, y;
+	q16_t h, half;
+	int i;
+
+	if (!f || f->root < 0 || steps < 1 || steps > EXPR_MAX_ODE_STEPS)
+		return GEXPR_DIFF_UNSUPPORTED;
+	if (ys && ys_max < steps + 1)
+		return GEXPR_DIFF_UNSUPPORTED;
+
+	h = gq_sat(((int64_t)(xn - x0)) / steps);
+	if (h == 0)
+		return GEXPR_DIFF_UNSUPPORTED;
+	half = h >> 1;
+
+	x = x0;
+	y = y0;
+	if (ys)
+		ys[0] = y;
+
+	/*
+	 * y accumulates in Q24 even though everything it is built from is Q16.
+	 * Rounding the state to Q16 at every step costs about 1.5e-5 each time
+	 * and it is a random walk, so sixty-four steps drifted four digits of a
+	 * decay curve; carrying eight more fractional bits moves that error
+	 * below the rounding of the answer.
+	 */
+	{
+		int64_t y24 = (int64_t)y0 << 8;
+
+		for (i = 0; i < steps; i++) {
+			q16_t ya = (q16_t)(y24 >> 8);
+			q16_t k1 = gexpr_eval2(f, x, ya);
+			q16_t k2 = gexpr_eval2(f, x + half,
+			                        gq_sat(ya + gq_mul(k1, half)));
+			q16_t k3 = gexpr_eval2(f, x + half,
+			                        gq_sat(ya + gq_mul(k2, half)));
+			q16_t k4 = gexpr_eval2(f, x + h,
+			                        gq_sat(ya + gq_mul(k3, h)));
+			int64_t sum = (int64_t)k1 + 2 * (int64_t)k2 +
+			              2 * (int64_t)k3 + (int64_t)k4;
+
+			/* sum/6 is the Q16 slope; times h is Q32, kept as Q24. */
+			y24 += (sum * (int64_t)h) / (6 * (int64_t)Q16_ONE) * 256;
+			x = gq_sat(x + h);
+			if (ys)
+				ys[i + 1] = (q16_t)(y24 >> 8);
+		}
+		y = (q16_t)(y24 >> 8);
+	}
+	return GEXPR_DIFF_OK;
+}
+
 /* ---- printing ---- */
 
 /*
@@ -1363,7 +1469,8 @@ static void up_node(up_t *u, const gexpr_t *e, int i, int min)
 		up_num(u, n->num);
 		break;
 	case G_X:
-		up_char(u, 'x');
+	case G_Y:
+		up_char(u, n->op == G_Y ? 'y' : 'x');
 		break;
 	case G_ADD:
 	case G_SUB:
@@ -1936,4 +2043,122 @@ int gexpr_series_answer(const char *text, char *out, int outlen)
 		return 0;
 	}
 	return -1;
+}
+
+/* ---- ode(expr, x0, y0, xn, n) as a typed answer ---- */
+
+/*
+ * Splits "ode(f,x0,y0,xn,n)": four constants and an expression that may
+ * mention both x and y. Kept next to the other forms rather than in a shared
+ * helper because each form takes a different number of parts and a different
+ * mix of expression and number.
+ */
+static int split_n(const char *s, int n, int count, const char **part, int *plen)
+{
+	int depth = 0;
+	int field = 0;
+	int i;
+
+	plen[0] = 0;
+	for (i = 0; i < n; i++) {
+		char c = s[i];
+
+		if (c == '(') {
+			depth++;
+		} else if (c == ')') {
+			if (--depth < 0)
+				return -1;
+		} else if (c == ',' && depth == 0) {
+			if (++field >= count)
+				return -1;
+			part[field] = s + i + 1;
+			plen[field] = 0;
+			continue;
+		}
+		if (field < count) {
+			if (plen[field] == 0)
+				part[field] = s + i;
+			plen[field]++;
+		}
+	}
+	if (depth != 0 || field != count - 1)
+		return -1;
+	for (i = 0; i < count; i++)
+		if (plen[i] == 0)
+			return -1;
+	return 0;
+}
+
+int gexpr_ode_answer(const char *text, char *out, int outlen)
+{
+	char inner[EXPR_TEXT_MAX];
+	char expr_text[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[5];
+	int plen[5];
+	gexpr_t f;
+	const char *p;
+	size_t n, room;
+	q16_t x0, y0, xn, cnt, y;
+	int i, steps, flen = 3;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+
+	if (room < (size_t)flen + 2 || text[n - 1] != ')')
+		return -1;
+	if (strncmp(p, "ode", flen) != 0)
+		return -1;
+	p += flen;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	if (*p != '(')
+		return -1;
+	p++;
+
+	{
+		size_t inner_len = (size_t)(text + n - 1 - p);
+
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			return -1;
+		memcpy(inner, p, inner_len);
+		inner[inner_len] = 0;
+	}
+	if (split_n(inner, (int)strlen(inner), 5, part, plen) < 0)
+		return -1;
+	if (parse_bound(part[1], plen[1], &x0) < 0 ||
+	    parse_bound(part[2], plen[2], &y0) < 0 ||
+	    parse_bound(part[3], plen[3], &xn) < 0 ||
+	    parse_bound(part[4], plen[4], &cnt) < 0)
+		return -1;
+	if ((cnt & 0xFFFF) != 0)
+		return -1;
+	steps = (int)(cnt >> 16);
+	for (i = 0; i < plen[0] && i < (int)sizeof expr_text - 1; i++)
+		expr_text[i] = part[0][i];
+	expr_text[i] = 0;
+	if (gexpr_parse(expr_text, &f, err, sizeof err) < 0)
+		return -1;
+	/*
+	 * y' = f(x) alone is legitimate - a pure integral with a step - so there
+	 * is no requirement that y appears.
+	 */
+	{
+		q16_t ys[EXPR_MAX_ODE_STEPS + 1];
+
+		if (gexpr_rk4(&f, x0, y0, xn, steps, ys,
+		              (int)(sizeof ys / sizeof ys[0])) != GEXPR_DIFF_OK)
+			return -1;
+		y = ys[steps];
+	}
+	return gexpr_format(y, out, outlen);
 }

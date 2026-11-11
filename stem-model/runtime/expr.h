@@ -31,7 +31,10 @@ typedef int32_t q16_t;
 
 enum {
 	G_NUM, G_X, G_ADD, G_SUB, G_MUL, G_DIV, G_POW, G_SIN, G_COS, G_TAN, G_NEG,
-	G_SQRT, G_ABS, G_LN, G_EXP
+	G_SQRT, G_ABS, G_LN, G_EXP,
+	/* y is the second input, and only differential equations use it. Every
+	 * other entry point refuses an expression that has one. */
+	G_Y
 };
 
 typedef struct {
@@ -64,6 +67,15 @@ q16_t gq_tan(q16_t x);
  */
 int gexpr_parse(const char *text, gexpr_t *e, char *err, int errlen);
 q16_t gexpr_eval(const gexpr_t *e, q16_t x);
+
+/*
+ * y' = f(x,y) needs both inputs. gexpr_eval is this with y = 0, so a formula
+ * that only mentions x evaluates identically either way.
+ */
+q16_t gexpr_eval2(const gexpr_t *e, q16_t x, q16_t y);
+
+/* True when the expression mentions y, which only the ODE path accepts. */
+int gexpr_has_y(const gexpr_t *e);
 
 /* True when the expression depends on x, so it has no single value. */
 int gexpr_has_x(const gexpr_t *e);
@@ -123,6 +135,9 @@ int gexpr_integrate_symbolic(const gexpr_t *f, gexpr_t *out);
  */
 #define EXPR_MAX_TAYLOR_TERMS 8
 
+/* Steps a numerical ODE run may take; each one is four evaluations of f. */
+#define EXPR_MAX_ODE_STEPS 256
+
 /*
  * The Taylor polynomial of f about a with `terms` coefficients. Same return
  * codes as gexpr_derive: OK, TOO_BIG when the polynomial does not fit,
@@ -137,6 +152,21 @@ int gexpr_taylor(const gexpr_t *f, q16_t a, int terms, gexpr_t *out);
  * call or the series cannot be built.
  */
 int gexpr_series_answer(const char *text, char *out, int outlen);
+
+/*
+ * y' = f(x,y) from x0 to xn in `steps` RK4 steps, with y0 as the initial
+ * condition. Writes steps + 1 values into ys when it is supplied, ys[0] being
+ * y0. Returns GEXPR_DIFF_OK, or UNSUPPORTED for a bad step count or a step
+ * that rounds to zero.
+ */
+int gexpr_rk4(const gexpr_t *f, q16_t x0, q16_t y0, q16_t xn, int steps,
+              q16_t *ys, int ys_max);
+
+/*
+ * Answers "ode(<expr>,x0,y0,xn,n)" with the final value of y. The expression
+ * may mention y as well as x; no other typed form accepts y.
+ */
+int gexpr_ode_answer(const char *text, char *out, int outlen);
 
 /*
  * Prints a tree in the syntax gexpr_parse accepts, with brackets where

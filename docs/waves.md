@@ -262,6 +262,16 @@ rather than text against a hand-written answer, and it also re-parses what the
 series prints. Convergence answers are not here yet: a real ratio test needs
 limits, and this engine has none.
 
+**4.3 is up as well, numerically.** `ode(2y,0,1,1,64)` steps `y' = f(x,y)` with
+RK4 and answers the final value; the expression may mention `y` as well as `x`,
+which no other typed form accepts, and a stray `y` elsewhere is refused rather
+than read as zero. Accuracy is about three significant digits, not four: every
+`k` is evaluated in Q16, so the error floor sits near 5e-4 whatever the step
+count, and the gate compares numbers rather than the printed string for that
+reason. Separable and first-order linear closed forms are not here yet — they
+need the symbolic integration from 4.1 plus a pattern matcher, and they are the
+next piece of this workstream.
+
 **The catalogue outgrew the model, and the numbers say so.** Wave 3 closes at
 102 relations. Measured on the same 1,840 hand-written rows: 72.6% with 84
 relations, 73.8% at 90, 72.3% at 102 — flat, within noise. Measured on the

@@ -269,9 +269,13 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	 * the answer is an expression rather than a value. */
 	if (gexpr_series_answer(text, answer, answer_max) == 0)
 		return PIPELINE_OK;
+	/* A differential equation is its own form: y is not an input the graph or
+	 * a plain expression accepts. */
+	if (gexpr_ode_answer(text, answer, answer_max) == 0)
+		return PIPELINE_OK;
 	if (!text || gexpr_parse(text, &e, err, sizeof err) < 0)
 		return PIPELINE_ERR;
-	if (gexpr_has_x(&e))
+	if (gexpr_has_x(&e) || gexpr_has_y(&e))
 		return PIPELINE_ERR;
 	if (gexpr_format(gexpr_eval(&e, 0), answer, answer_max) < 0)
 		return PIPELINE_ERR;

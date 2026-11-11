@@ -64,6 +64,7 @@ if [ -d runtime ]; then
     run "step rendering"         sh -c 'cd runtime && ./test_steps | grep -q "all cases passed"'
     run "symbolic integration"   sh -c 'cd runtime && ./test_symbolic | grep -q "all cases passed"'
     run "series"                 sh -c 'cd runtime && ./test_series | grep -q "all cases passed"'
+    run "differential equations" sh -c 'cd runtime && ./test_ode | grep -q "all cases passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"

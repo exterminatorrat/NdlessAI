@@ -27,7 +27,7 @@ PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c \
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
-     test_matrix test_steps test_symbolic test_series bench_kernel
+     test_matrix test_steps test_symbolic test_series test_ode bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -40,6 +40,9 @@ test_solvers: test_solvers.c $(SOLVERS) $(HEADERS)
 
 test_steps: test_steps.c steps.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_steps.c steps.c
+test_ode: test_ode.c expr.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_ode.c expr.c $(LDLIBS)
+
 test_series: test_series.c expr.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_series.c expr.c $(LDLIBS)
 

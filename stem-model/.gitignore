@@ -38,3 +38,4 @@ runtime/test_matrix
 runtime/test_steps
 runtime/test_symbolic
 runtime/test_series
+runtime/test_ode

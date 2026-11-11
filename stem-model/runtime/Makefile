@@ -29,7 +29,8 @@ PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c \
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
-     test_matrix test_steps test_symbolic test_series test_ode bench_kernel
+     test_matrix test_steps test_symbolic test_series test_ode test_diagram \
+     bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -75,6 +76,9 @@ test_callmask: test_callmask.c callmask.c bpe.c $(HEADERS)
 test_graph: test_graph.c graph.c screen.c expr.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c $(LDLIBS)
 
+test_diagram: test_diagram.c diagram.c screen.c expr.c diagram.h $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_diagram.c diagram.c screen.c expr.c $(LDLIBS)
+
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
 
@@ -98,6 +102,7 @@ check: all
 	./test_guard
 	./test_callmask
 	./test_graph
+	./test_diagram
 	./test_typed
 	./test_expr
 	./test_equation
@@ -106,6 +111,6 @@ check: all
 clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
-	      test_equation bench_kernel
+	      test_equation test_diagram bench_kernel
 
 .PHONY: all clean check

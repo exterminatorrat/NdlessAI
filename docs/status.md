@@ -4,49 +4,56 @@ Where the project stands, what was planned, and what is left. Read this first
 when resuming work; it is the map, and `stem-model/PROGRESS.md` is the
 per-relation ledger.
 
-Last updated: 2026-11-06, at commit `a8424b9`.
+Last updated: 2026-11-11, at commit `2beba30`.
 
 ## One paragraph
 
 The system reads an English word problem, a 5.2M-parameter model picks one of
-66 exact solvers, and C code computes the answer. Tier 1 (breadth) is
-complete: 66 relations across eight subjects, every gate green, and the model
-retrained and measured at 91.6% exact calls and 2.9% wrong relation over 1,000
-held-out problems. The device app builds to `stemhelp.tns`. The one thing
-never done is running it on a physical calculator.
+102 exact solvers, and C code computes the answer. Waves 1 through 3 are on
+master: 102 relations across ten subject modules, the typed expression path for
+calculus and linear algebra, and the wording work that took hand-written
+accuracy from 43.4% to 72.3%. The generated-phrasing gate is 90.5%, down from
+95.0% at 84 relations, because the catalogue outgrew the model rather than the
+training budget — `docs/waves.md` carries that measurement. The device app
+builds to `stemhelp.tns`. The one thing never done is running it on a physical
+calculator, and it takes Ndless on a supported OS to get that far.
 
 ## What works today
 
 | Capability | State | Evidence |
 |---|---|---|
-| 66 relations, Python reference | done | `sh stem-model/gate.sh` |
-| 66 relations, C solvers | done | 13,335 assertions, 0 mismatches |
-| Tokenizer, Python and C | done | 542/542 fixtures, sha `f2fdbea1be78763c` |
-| Model picks the right tool | done | 91.6% exact, 2.9% wrong relation (1,000 held-out) |
+| 102 relations, Python reference | done | `sh stem-model/gate.sh` |
+| 102 relations, C solvers | done | seven per-subject units; `test_solvers` reports its assertion count on every run |
+| Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
+| Model picks the right tool | done, and the limit of the current model | 72.3% exact and 9.8% wrong relation on 1,840 hand-written rows; 90.5% exact on the generated gate |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
+| Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9; `d/dx`, `det`, `inv`, `rank` and `solve` on exact rationals |
 | Function graphing | done | `test_graph`, merged in PR #8 |
-| Device build | done | `stemhelp.tns`, 201,632 bytes, valid Zehn header |
-| On-calculator run | **not done** | no hardware in the build environment |
+| Device build | done | `stemhelp.tns` and `weights.bin.tns`, cross-compiled for `arm926ej-s` |
+| On-calculator run | **not done** | no hardware in the build environment, and it needs Ndless on a supported OS |
 
 ## The relation set
 
-66 relations, by subject:
+102 relations, in ten subject modules:
 
 | Subject | Count | Examples |
 |---|---|---|
-| Physics | 15 | kinetic energy, momentum, projectile range, Ohm's law |
-| Chemistry | 13 | molarity, pH, gas laws, stoichiometry |
+| Chemistry | 29 | molarity, pH, gas laws, stoichiometry, equilibrium, kinetics, thermochemistry |
+| Physics | 23 | kinetic energy, momentum, projectile range, friction, torque, springs, Ohm's law |
 | Units | 10 | km/m, Celsius/Fahrenheit, significant figures, mean |
 | Trig | 9 | sin/cos/tan, law of cosines, arc length |
 | Algebra | 7 | sequences, factoring, completing the square |
 | Logs | 7 | log base b, ln, half-life, compound interest |
+| Electricity and magnetism | 6 | Coulomb force, field strength, capacitors, parallel resistance, motional EMF |
+| Thermodynamics | 6 | work at constant pressure, entropy, conduction, radiation, heat pumps |
 | Precalc | 3 | quadratic roots, 2x2 system, `b^x = k` |
 | Calculus | 2 | derivative and integral of a cubic |
 
-Nothing from the Tier 1 catalogue is deferred. `right_triangle`, `sinusoid`,
-`cubic_solve` and `sig_figs` were each blocked on a missing helper (`atan`, a
-multi-value output, rational-root deflation, an n-significant-figure
-formatter); all four helpers now exist.
+Adding relations is not free: each one renumbers the vocabulary and forces a
+retrain, and past 84 relations the retrain started losing ground on the
+generated gate. `docs/waves.md` records the three measurements that establish
+it, and they are the reason wave 4 is ordered by what it answers rather than by
+how many formulas it adds.
 
 ## The tiers, and where each stands
 
@@ -54,16 +61,18 @@ formatter); all four helpers now exist.
 
 | Tier | What it is | State |
 |---|---|---|
-| 1 | Breadth: 66 relations, model unchanged | **complete** |
+| 1 | Breadth: relations, model unchanged | **complete**, and well past it at 102 |
 | 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8) |
-| 3 | Expression engine: parse, differentiate, integrate | not started |
+| 3 | Expression engine: parse, differentiate, integrate | **partly complete**: the Q16 parser, symbolic differentiation, numeric integration, and exact rational linear algebra are on master |
 | 4 | Full CAS | not started, and deliberately last |
 
-Tier 3 is the next real increment. It is the jump from "pick a formula" to
-"understand an expression": a tokeniser and parser for infix expressions with
-precedence, symbolic differentiation, numeric evaluation with a root finder,
-and numeric integration. It needs no model change, which is why it is
-attractive.
+Tier 3 is the increment that pays without a retrain, because none of it touches
+the model: the parser and evaluator answer expressions nobody anticipated, and
+the linear-algebra path answers systems, determinants and inverses exactly.
+What is left of it is wave 4.1–4.3 in `docs/waves.md` — symbolic integration,
+series, and differential equations — which `ROADMAP.md` files under "a different
+project that happens to share a screen", because it is a small CAS rather than
+more formulas.
 
 ## Known gaps
 
@@ -72,23 +81,31 @@ Ordered by how much they matter, not by how easy they are.
 1. **Never run on hardware.** The app cross-compiles, links for `arm926ej-s`,
    and has a valid Zehn header, but no one has run it on a CX II. Timing,
    memory pressure, and the actual UI are unmeasured. This is the largest
-   unknown in the project.
-2. **`sig_figs` is the weakest relation**, at 80% exact calls against 91.6%
-   overall. Every failure is a digit-copying error on a 4-digit number
-   (`4188` becomes `418`). The guard rejects all of them, so the user sees
-   "uncertain" rather than a wrong answer, but coverage is lost.
-3. **`proj_range` is the largest single error class** among wrong-relation
-   cases (25 of 66 in a 2,000-problem diagnostic). It passes the gate but is
-   the most confusable relation.
-4. **Digit copying generally.** The dominant failure mode is copying a
+   unknown in the project. It also needs Ndless installed and matching the OS —
+   see "Why the calculator refuses the file" below.
+2. **The model is out of capacity, not out of data or steps.** Hand-written
+   accuracy sits at 72.3% and moved inside the noise across 84, 90 and 102
+   relations (72.6%, 73.8%, 72.3%) while the generated gate fell from 95.0% to
+   90.5%. Four rounds of wording data flattened at round three; round four is
+   parked on a branch. The next lever is a wider model, which costs answer time
+   on a 132 MHz ARM9, or argument verification in the runtime, which is code
+   rather than data. Neither is decided.
+3. **Hand-written accuracy is not a gate.** `gate.sh` gates generated phrasing
+   at 80% and wrong relation at 5%, both on the generated set. Nothing fails a
+   build when the number a student experiences gets worse, which is why every
+   wording comparison in this project is quoted with the set it came from.
+4. **`sig_figs` is the weakest relation** by exact calls. Every failure is a
+   digit-copying error on a 4-digit number (`4188` becomes `418`). The guard
+   rejects all of them, so the user sees "uncertain" rather than a wrong
+   answer, but coverage is lost.
+5. **`proj_range` is the largest single error class** among wrong-relation
+   cases (25 of 66 in a 2,000-problem diagnostic on the 66-relation set). It
+   passes the gate but is the most confusable relation.
+6. **Digit copying generally.** The dominant failure mode is copying a
    plausible number from a distractor rather than choosing the wrong relation.
    The guard trades coverage for correctness by design.
-5. **Closed phrasing set.** The phrasing banks are broad but finite.
+7. **Closed phrasing set.** The phrasing banks are broad but finite.
    Performance on wording outside them is the main accuracy unknown.
-6. **The retrain stopped at step 5,000 of 6,000.** The step-5,000 checkpoint
-   (validation loss 0.0008) is what was exported and gated. The learning rate
-   was already at 4.9e-05 of a 3e-04 peak, so the schedule was effectively
-   complete, but the final 1,000 steps were not run.
 
 ## How to verify the recorded state
 
@@ -129,6 +146,33 @@ uv run --with torch --with numpy --with sympy python export_model.py \
 compiles cleanly and produces garbage calls, which looks exactly like a broken
 model. The `tokenizer` target in `device/Makefile` regenerates `bpe.h` on every
 build for this reason. Check `check_tokenizer_sync.py` if calls look wrong.
+
+## Why the calculator refuses the file
+
+`stemhelp.tns` is an Ndless program, not a TI document. On a calculator without
+a working Ndless installation the OS cannot recognise it, and the message is
+"This document format is not supported" — the same message it gives for any
+Ndless app, and not a sign that the build is corrupt.
+
+Two things must be true before the app will open:
+
+1. **Ndless is installed and matches the OS.** This repository is a fork of
+   Ndless r2023, which supports OS 6.2.0.333 and 6.4.0.74 on the CX II, CX II-T
+   and CX II CAS. The install is the upstream one, unchanged: transfer
+   `ndless_installer_4.5.5-6.2.0-6.4.0.tns` and `ndless_resources.tns` into a
+   top-level folder named `ndless`, open the installer, and press an
+   alphanumeric key. Check the OS version under Settings → Status before
+   anything else; a newer OS rejects both the installer and every app built
+   here.
+2. **`ndless_resources.tns` runs.** Opening it on a working installation offers
+   to uninstall Ndless. If it shows the same "format is not supported" message,
+   Ndless is not installed correctly, and no `stemhelp.tns` will open until it
+   is.
+
+`weights.bin.tns` will always produce that message if opened, because it is the
+model's raw bytes renamed to a `.tns` extension so TI's transfer software will
+accept it. Place it in the same folder as `stemhelp.tns` and leave it alone; the
+app loads it from disk on startup.
 
 ## Conventions that are easy to get wrong
 

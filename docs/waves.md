@@ -157,6 +157,34 @@ deliberately rather than by another authoring round.
 | 4.3 | **Differential equations** — separable, first-order linear, logistic, RK4 | Cooling, kinetics, RC, populations | `runtime/expr.c` |
 | 4.4 | **Waves, optics, fluids, modern physics** | The rest of AP Physics 2 | `relations/waves.py`, `runtime/solvers_waves.c` |
 | 4.5 | **Interface** — keypad templates, step display, error explanations, history | A correct answer nobody believes is not a product | `device/*.c` |
+| 4.6 | **Graphing from the problem, not from a formula** — see below | The one graph feature a competitor cannot copy from its own UI | `device/graph_ui.c`, `runtime/graph.c` |
+
+### 4.6 — graphing that only this architecture allows
+
+TI-Nspire's Graphs application is already good at plotting an expression the
+student types: window settings, trace, zeros, extrema, intersections, `dy/dx`,
+shaded integrals, area between curves, and on the newer OS, slope fields and
+sliders. Rebuilding that is not worth the pixels, and on a 320x240 screen at
+132 MHz it would be a worse copy.
+
+The asymmetry worth exploiting is that this system knows **which relation the
+question used and with what arguments**. So the graph can be of the problem
+rather than of an expression the student had to derive first.
+
+| # | Idea | Why it beats the TI graph app | Cost |
+| --- | --- | --- | --- |
+| a | **Words to curve**: the model picks the relation, its arguments fill in, and the result is plotted with no formula typed | TI needs the expression, and a student who can produce it usually did not need the calculator | medium — feed the chosen call into `graph.c` |
+| b | **The answer drawn where it belongs**: the solved value appears as a labelled point on the curve it came from | The number and the picture agree visibly, which is the trust problem 4.5 exists to fix | small — one overlay path |
+| c | **Why this formula**: plot the top three candidate relations the model weighed, dimmed, with the chosen one solid | TI has no concept of a candidate, so a near miss is silent; here it is visible | medium — needs the call-token margins |
+| d | **Parameter families**: the same relation at 15, 30, 45 and 60 degrees on one screen, or three values of a friction coefficient | TI's sliders animate a function you typed; this sweeps the catalogue's own arguments | small — loop over one argument |
+| e | **Diagram answers**: force vectors from `friction_force`, a motion strobe from `kinematic_v`, a shaded region from `integr_poly3` | The answer stops being a number on a text screen | large — per-subject drawing |
+| f | **Slope fields and Euler traces**, so 4.3 has somewhere to show itself | Par with TI rather than ahead; listed because ODE work needs a display | medium |
+
+What this deliberately is not: a CAS plotter. It stays behind TI on 3D
+graphing, polar and parametric entry, and animated sliders, all of which assume
+a keyboard workflow this device does not have. The claim worth making is
+narrower and true — it graphs the problem, not just a function, and it shows
+why one formula was chosen over the others.
 
 ## Status
 

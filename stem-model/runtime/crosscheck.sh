@@ -17,8 +17,8 @@ mkdir -p "$OUT"
 # Every source file on the device path. A new one must be added here or the
 # link below fails with undefined references, which is how expr.c was caught.
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
-         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern infer pipeline main_device graph expr \
-         callmask matrix steps; do
+         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern infer pipeline main_device graph diagram expr \
+         callmask matrix steps screen ui; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -26,9 +26,22 @@ done
 $CC -mcpu=arm926ej-s -marm -O3 --specs=rdimon.specs -o "$OUT/app.elf" \
     "$OUT"/*.o -lm
 
+# The Ndless user interface is compile-checked, not linked: libndls itself is a
+# binary the SDK ships separately and this tree does not carry, so the calls
+# into it can only be resolved on a machine with the real SDK. Compiling the
+# sources here still checks every type, every API signature and every buffer,
+# which is the part an author cannot check by reading. The UI objects go into
+# their own directory so they cannot confuse the link above.
+mkdir -p "$OUT/ui"
+for f in ../device/*.c; do
+    # shellcheck disable=SC2086
+    $CC $ARCH -I../device -I../../ndless-sdk/include -I. \
+        -c "$f" -o "$OUT/ui/$(basename "$f" .c).o"
+done
+
 status=0
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
-         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern graph expr callmask matrix steps; do
+         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern graph diagram expr callmask matrix steps screen ui; do
     # Two named functions own their soft-float, and nothing else may: qstate_init
     # builds the rope and activation tables once at startup, and solve_exp's
     # fallback for an exponent that is not a rational power of the base renders

@@ -17,6 +17,18 @@
  * No float in the arithmetic and no libm in the per-token loop.
  */
 
+/*
+ * How many relations the decode keeps from the step that names one. The
+ * graphing screen shows the winner plus two runners-up, so a fixed three keeps
+ * the whole feature in the object and off the heap.
+ */
+#define PIPELINE_ALTS 3
+
+typedef struct {
+	uint16_t token;
+	int32_t margin;   /* logit gap to the winner, >= 0 */
+} pipeline_alt_t;
+
 typedef struct {
 	model_t model;
 	bpe_tok tok;
@@ -25,6 +37,8 @@ typedef struct {
 	int32_t *logits;
 	int seq;
 	int ready;
+	int n_alts;
+	pipeline_alt_t alts[PIPELINE_ALTS];
 } pipeline_t;
 
 enum {
@@ -51,6 +65,20 @@ void pipeline_free(pipeline_t *p);
 int pipeline_answer(pipeline_t *p, const char *question,
                     char *answer, int answer_max,
                     char *call, int call_max);
+
+/*
+ * The relations the last pipeline_answer weighed, best first: the one it used
+ * with margin 0, then the runners-up and how far behind they were. The screen
+ * draws the winner solid and the rest dimmed, so a near miss is visible instead
+ * of silent.
+ *
+ * Returns the number of entries written, at most max. Zero means the model
+ * never weighed a relation: typed arithmetic and the other closed forms answer
+ * before inference runs, an unloaded pipeline cannot answer at all, and a
+ * decode that failed before the header finished named nothing. The entries
+ * always describe the answer just produced, never an earlier one.
+ */
+int pipeline_alternatives(const pipeline_t *p, pipeline_alt_t *out, int max);
 
 /*
  * Answers text that is already an expression rather than a word problem, with

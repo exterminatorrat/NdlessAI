@@ -28,9 +28,26 @@ jobs:
         uses: actions/checkout@v6
       - name: Install the ARM cross compiler
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            gcc-arm-none-eabi libnewlib-arm-none-eabi libnewlib-dev
+          # Three ways to get the same compiler, because the first one depends
+          # on this runner being able to resolve the distro archive: on
+          # 2026-11-11 that DNS broke and took the whole lane with it. Use what
+          # the image already has, then apt, then ARM's own tarball, and print
+          # the version so the log says which one ran.
+          if command -v arm-none-eabi-gcc >/dev/null; then
+            echo "using the image's own cross compiler"
+          elif sudo apt-get update -qq &&
+               sudo apt-get install -y --no-install-recommends \
+                 gcc-arm-none-eabi libnewlib-arm-none-eabi libnewlib-dev; then
+            echo "installed the cross compiler from apt"
+          else
+            echo "apt could not install it; using ARM's tarball"
+            curl -fsSL -o /tmp/arm.tar.xz \
+              https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz
+            mkdir -p "$HOME/arm"
+            tar -xJf /tmp/arm.tar.xz -C "$HOME/arm" --strip-components=1
+            echo "$HOME/arm/bin" >> "$GITHUB_PATH"
+          fi
+          arm-none-eabi-gcc --version | head -1
       - name: Host tests
         working-directory: stem-model/runtime
         run: |
@@ -40,12 +57,17 @@ jobs:
           for t in test_*; do
             case "$t" in *.c) continue ;; esac
             [ -x "$t" ] || continue
-            # The parity binary needs the exported weights, which this lane has
-            # no way to build; gate.sh skips the same check for the same reason.
-            if [ "$t" = test_fixed ] && [ ! -f ../weights.bin ]; then
-              echo "== $t (skipped: no weights.bin)"
-              continue
-            fi
+            # test_fixed and test_alt need the exported weights, which this
+            # lane has no way to build; gate.sh skips the same checks for the
+            # same reason.
+            case "$t" in
+              test_fixed|test_alt)
+                if [ ! -f ../weights.bin ]; then
+                  echo "== $t (skipped: no weights.bin)"
+                  continue
+                fi
+                ;;
+            esac
             echo "== $t"
             ./"$t"
           done

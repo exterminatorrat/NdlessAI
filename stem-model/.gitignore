@@ -28,6 +28,7 @@ device/*.zehn
 device/weights.bin.tns
 runtime/test_guard
 runtime/test_graph
+runtime/test_diagram
 runtime/test_typed
 runtime/test_parity
 runtime/test_expr
@@ -39,3 +40,6 @@ runtime/test_steps
 runtime/test_symbolic
 runtime/test_series
 runtime/test_ode
+runtime/test_alt
+runtime/test_screen
+runtime/test_ui

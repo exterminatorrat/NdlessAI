@@ -10,17 +10,25 @@ each piece stopped.
 | --- | --- | --- | --- |
 | 4.1 | Symbolic integration | **done** | powers of x, sums, constant multiples, `1/x` to `ln(x)`, and sin/cos/exp of a linear argument; anything else is refused |
 | 4.2 | Series | **half** | Taylor and Maclaurin answer as expressions. Convergence tests are not built: a real ratio test needs limits and this engine has none |
-| 4.3 | Differential equations | **done** | RK4 answers a value at a point; `desolve` answers the closed form for growth, decay, cooling and logistic equations, including a rate that depends on x (`desolve(x*y,0,2)` is `2exp(x^2/2)`, `desolve(x/y,0,1)` is `sqrt(1+x^2)`). First-order linear with a non-zero x-dependent forcing term is still refused, and slope-field data exists for 4.6f with nothing yet drawing it |
+| 4.3 | Differential equations | **done** | RK4 answers a value at a point; `desolve` answers the closed form for growth, decay, cooling and logistic equations, including a rate that depends on x (`desolve(x*y,0,2)` is `2exp(x^2/2)`, `desolve(x/y,0,1)` is `sqrt(1+x^2)`). First-order linear with a non-zero x-dependent forcing term is still refused; the slope field 4.3's data feeds is drawn by 4.6f |
 | 4.4 | Waves, optics, fluids, modern physics | **done** | 34 relations, 136 in the catalogue, and the predicted capacity cost did not appear: at the recorded training protocol both accuracy gates sit within a point of wave 3's. Three relations were cut for the numeric range, not for time |
-| 4.5 | Interface | **not started** | device-only code; not one line of it can be compiled on a machine without the Ndless toolchain |
-| 4.6 | Graphing from the problem | **not started** | same, plus 4.6c needs the decoder to keep its top-three call tokens |
+| 4.5 | Interface | **done** | a screen model in `runtime/ui.c` — menu, editing input line, paged answer pane with a scroll bar, eight-pair history, three pages of keypad help — with `device/main.c` down to 61 lines of key mapping and blit. `test_screen` and `test_ui` are gate rows, and `crosscheck.sh` compiles and links the device path for `arm926ej-s`. Not verified: nothing has run on a calculator |
+| 4.6 | Graphing from the problem | **done** | 4.6a `graph_from_call` plots the relation a call named and 4.6b marks the point the answer is, both reachable from the answer screen with VAR; 4.6c `pipeline_alternatives` keeps the top three candidates and their margins; 4.6d `graph_family_add` sweeps one argument; 4.6e `diagram.c` draws force arrows, motion strobes and shaded integrals on TAB; 4.6f `graph_field` draws a slope field. Each has a host test; none has been looked at on hardware |
 
-Everything above that is marked done or half is host-verifiable and gated. The
-two that are not started are not started for a reason worth stating plainly:
-4.4 needs a decision about model capacity that the project cannot make from
-this machine, and 4.5 and 4.6 are UI work on a device nobody has yet built for
-from here. Writing either of them blind would produce code that cannot be
-compiled, let alone run.
+Everything in that table is host-verifiable and gated, and the last two rows are
+no longer the exception they were planned as. The plan said 4.5 and 4.6 could be
+written here but not compiled, because no machine had the Ndless toolchain. That
+was wrong, and `docs/wave4-ui-plan.md` records why: the device sources compile
+for `arm926ej-s` against the vendored SDK headers alone, and `crosscheck.sh` now
+compiles and links them on every gate run, so a missing module breaks the gate
+instead of the calculator.
+
+The rule that made both workstreams buildable is the one `graph.c` already
+followed: all the logic lives in `runtime/`, where a host test can drive it with
+synthetic keys and assert on the framebuffer, and the Ndless file is reduced to a
+binding with no decisions in it. What is still out of reach is running the
+result. A `.tns` needs Ndless's own libraries and a calculator, so no screen in
+this wave has been seen by a person and no timing has been measured.
 
 The gate each engine piece carries is worth more than the feature: integration
 differentiates its own answer back, series compares against the function it

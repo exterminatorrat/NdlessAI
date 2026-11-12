@@ -64,8 +64,8 @@ reads 90.3%. `docs/waves.md` holds the table and the protocol behind it.
 | Tier | What it is | State |
 |---|---|---|
 | 1 | Breadth: relations, model unchanged | **complete**, and well past it at 102 |
-| 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8) |
-| 3 | Expression engine: parse, differentiate, integrate | **done for what the roadmap asked**: Q16 parser, symbolic differentiation and integration, numeric integration, Taylor series, exact rational linear algebra, and constant-coefficient differential equations. What is not there is convergence tests, separable equations with x-dependent coefficients, and a computer algebra system, which is the next tier |
+| 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8), and wave 4.6 added the plot of a relation's own call with the answer marked on it, parameter families, slope fields and subject diagrams |
+| 3 | Expression engine: parse, differentiate, integrate | **done for what the roadmap asked**: Q16 parser, symbolic differentiation and integration, numeric integration, Taylor series, exact rational linear algebra, and differential equations — RK4, constant-coefficient closed forms, and separable forms including a rate that depends on x. What is not there is convergence tests, first-order linear equations with a non-zero x-dependent forcing term, and a computer algebra system, which is the next tier |
 | 4 | Full CAS | not started, and deliberately last |
 
 Tier 3 is the increment that pays without a retrain, because none of it touches
@@ -83,9 +83,11 @@ Ordered by how much they matter, not by how easy they are.
 
 1. **Never run on hardware.** The app cross-compiles, links for `arm926ej-s`,
    and has a valid Zehn header, but no one has run it on a CX II. Timing,
-   memory pressure, and the actual UI are unmeasured. This is the largest
-   unknown in the project. It also needs Ndless installed and matching the OS —
-   see "Why the calculator refuses the file" below.
+   memory pressure, and the actual UI are unmeasured — the 4.5 screen and the
+   4.6 plots are asserted by host tests over a 320x240 framebuffer, which proves
+   the values and the layout arithmetic, not that they read well on glass. This
+   is the largest unknown in the project. It also needs Ndless installed and
+   matching the OS — see "Why the calculator refuses the file" below.
 2. **The model is out of capacity, not out of data or steps.** Hand-written
    accuracy sits at 72.3% and moved inside the noise across 84, 90 and 102
    relations (72.6%, 73.8%, 72.3%) while the generated gate fell from 95.0% to

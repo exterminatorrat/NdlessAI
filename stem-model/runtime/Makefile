@@ -14,7 +14,7 @@ BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
 HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 	  graph.h expr.h equation.h callmask.h reltable.h matrix.h steps.h \
-	  steptable.h
+	  steptable.h screen.h ui.h
 
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c \
@@ -24,12 +24,13 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # Everything the typed path needs: the pipeline pulls in the tokenizer, the
 # model and the expression evaluator, and matrix.c answers linear algebra
 # before any of them runs.
-PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c expr.c \
-	   callmask.c matrix.c steps.c
+PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c \
+	   diagram.c expr.c callmask.c matrix.c steps.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
-     test_matrix test_steps test_symbolic test_series test_ode bench_kernel
+     test_matrix test_steps test_symbolic test_series test_ode test_alt \
+     test_screen test_ui test_diagram bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -72,11 +73,28 @@ test_guard: test_guard.c $(PIPELINE) $(HEADERS)
 test_callmask: test_callmask.c callmask.c bpe.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_callmask.c callmask.c bpe.c
 
-test_graph: test_graph.c graph.c expr.c $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c expr.c $(LDLIBS)
+test_graph: test_graph.c graph.c screen.c expr.c steps.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c steps.c $(LDLIBS)
+
+# The font and the primitives on their own: the UI and the plotter both draw
+# through them, so a clipping bug there is a bug in two screens.
+test_screen: test_screen.c screen.c screen.h
+	$(CC) $(CFLAGS) -I. -o $@ test_screen.c screen.c
+
+# The screen model needs the typed path behind it: the input line answers an
+# expression with no model at all, and that is asserted here rather than
+# assumed.
+test_ui: test_ui.c ui.c $(PIPELINE) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_ui.c ui.c $(PIPELINE) $(LDLIBS)
+
+test_diagram: test_diagram.c diagram.c screen.c expr.c diagram.h $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_diagram.c diagram.c screen.c expr.c $(LDLIBS)
 
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
+
+test_alt: test_alt.c $(PIPELINE) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_alt.c $(PIPELINE) $(LDLIBS)
 
 test_matrix: test_matrix.c matrix.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_matrix.c matrix.c $(SOLVERS) $(LDLIBS)
@@ -98,7 +116,10 @@ check: all
 	./test_guard
 	./test_callmask
 	./test_graph
+	./test_diagram
 	./test_typed
+	./test_screen
+	./test_ui
 	./test_expr
 	./test_equation
 	sh crosscheck.sh
@@ -106,6 +127,6 @@ check: all
 clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
-	      test_equation bench_kernel
+	      test_equation test_alt test_screen test_ui test_diagram bench_kernel
 
 .PHONY: all clean check

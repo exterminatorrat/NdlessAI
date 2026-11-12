@@ -247,9 +247,29 @@ workstreams are done or half done and everything they touch is gated:
   engine's number parser. Parity is 54,400 cases with no mismatch, and every
   relation carries the working line the step display prints.
 
-**4.5 and 4.6 are not started, on purpose.** They are device UI, and no machine
-in this project has the Ndless toolchain, so their code could be written but not
-compiled — which is how a feature ends up looking done.
+- **4.5 interface** replaces the two message boxes with a screen model in
+  `runtime/ui.c`: a menu, an input line with cursor editing, an answer pane that
+  scrolls by whole rows with a bar saying where the window sits, eight pairs of
+  history, three pages of keypad help, and the three pipeline failures told
+  apart in words. `device/main.c` fell from 151 lines to 61 of key mapping.
+  `test_screen` and `test_ui` drive it with synthetic keys and assert on the
+  framebuffer, including that no render strays outside it.
+- **4.6 graphing from the problem** is five renderers and one probe: plot the
+  relation a call named with the answer marked on it, sweep one argument into a
+  family, keep the decoder's top three candidates with their margins, draw the
+  subject diagrams (force arrows, motion strobes, shaded integrals) and render a
+  slope field. They hang off `runtime/graph.c` and `runtime/diagram.c`, each
+  with a host test, and two keys reach them from the answer screen.
+
+**The device half compiles, and that correction is worth recording.** The plan
+said 4.5 and 4.6 could not be compiled without the Ndless toolchain. The runtime
+path had been cross-compiled in CI all along, and `device/*.c` compiles for
+`arm926ej-s` against the vendored SDK headers with nothing else installed, which
+is how `expr.c` and then `diagram.c` were caught before they could break a link.
+`crosscheck.sh` now compiles the device sources as part of the gate. What still
+cannot happen here is *running* the result: a `.tns` needs Ndless's libraries and
+a calculator, so every screen claim in this wave rests on host tests over a
+320x240 framebuffer, not on a screen anyone has looked at.
 
 **The catalogue did not outgrow the model after all.** Wave 3 closed at 102
 relations with a worrying shape: hand-written accuracy flat at 72.6%, 73.8% and

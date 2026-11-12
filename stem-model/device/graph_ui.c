@@ -33,6 +33,54 @@ static int poll_key(void)
 	return GK_NONE;
 }
 
+/* The screen itself, once a state exists: draw, wait for a key, draw again. */
+static void plot_loop(gstate_t *g)
+{
+	for (;;) {
+		int k;
+
+		graph_render(g, fb);
+		lcd_blit(fb, SCR_320x240_565);
+		do {
+			k = poll_key();
+			if (k != GK_NONE)
+				break;
+			idle();
+		} while (1);
+		wait_no_key_pressed();
+		if (graph_key(g, k))
+			break;
+	}
+}
+
+int graph_run_call(const char *call)
+{
+	char err[64];
+	gstate_t *g;
+	int rc;
+
+	if (!call || !*call)
+		return 0;
+	g = malloc(sizeof *g);
+	if (!g)
+		return 0;
+	rc = graph_from_call(g, call, 0, err, sizeof err);
+	if (rc != G_CALL_OK) {
+		show_msgbox("Graph", err);
+		free(g);
+		return 0;
+	}
+	if (!lcd_init(SCR_320x240_565)) {
+		show_msgbox("Graph", "This screen mode is not available.");
+		free(g);
+		return 0;
+	}
+	plot_loop(g);
+	lcd_init(SCR_TYPE_INVALID);
+	free(g);
+	return 0;
+}
+
 int graph_run(void)
 {
 	char *input = NULL;
@@ -62,23 +110,7 @@ int graph_run(void)
 		free(g);
 		return 0;
 	}
-
-	for (;;) {
-		int k;
-
-		graph_render(g, fb);
-		lcd_blit(fb, SCR_320x240_565);
-		do {
-			k = poll_key();
-			if (k != GK_NONE)
-				break;
-			idle();
-		} while (1);
-		wait_no_key_pressed();
-		if (graph_key(g, k))
-			break;
-	}
-
+	plot_loop(g);
 	lcd_init(SCR_TYPE_INVALID);
 	free(g);
 	return 0;

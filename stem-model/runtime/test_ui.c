@@ -17,6 +17,7 @@
 #include "screen.h"
 #include "ui.h"
 #include "diagram.h"
+#include "reltable.h"
 
 #define PAD 8
 #define CANARY 0xA5A5u
@@ -32,6 +33,7 @@ static int failures;
 
 static void test_diagram_screen(void);
 static void test_plot_key(void);
+static void test_template(void);
 static void check(int cond, const char *what)
 {
 	if (!cond) {
@@ -143,7 +145,7 @@ static void test_menu(void)
 	check(u.menu_sel == 1, "down moves the selection");
 	for (int i = 0; i < 10; i++)
 		ui_key(&u, UI_KEY_DOWN);
-	check(u.menu_sel == 3, "down at the bottom stops at the bottom");
+	check(u.menu_sel == 4, "down at the bottom stops at the bottom");
 
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_MODE);
@@ -154,14 +156,14 @@ static void test_menu(void)
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
 	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE,
 	      "the menu opens the graph screen without leaving");
 	check(u.mode == UI_MODE_GRAPH, "the graph screen is its own mode");
 
 	ui_init(&u, NULL, NULL);
-	ui_key(&u, UI_KEY_DOWN);
-	ui_key(&u, UI_KEY_DOWN);
-	ui_key(&u, UI_KEY_DOWN);
+	for (int i = 0; i < 4; i++)
+		ui_key(&u, UI_KEY_DOWN);
 	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_BACK, "the menu can leave the app");
 	check(ui_key(&u, UI_KEY_BACK) == UI_KEY_BACK, "back from the menu leaves the app");
 }
@@ -183,6 +185,7 @@ static void test_help(void)
 	int found[sizeof want / sizeof want[0]] = { 0 };
 
 	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
 	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "help opens without leaving");
 	check(u.mode == UI_MODE_HELP && u.help_page == 0, "help starts on the first page");
@@ -232,6 +235,7 @@ static void test_help(void)
 	 * scrolls with the same keys. */
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_ACCEPT);
 	render();
 	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the help page reaches the pane");
@@ -249,10 +253,12 @@ static void test_help(void)
 	ui_result(&u, "q", PIPELINE_OK, "42", "");
 	ui_key(&u, UI_KEY_MODE);
 	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_ACCEPT);
 	check(strcmp(ui_row(&u, 0), "Calculus and series") == 0,
 	      "help takes over the pane while it is open");
 	ui_key(&u, UI_KEY_BACK);
+	ui_key(&u, UI_KEY_UP);
 	ui_key(&u, UI_KEY_UP);
 	ui_key(&u, UI_KEY_ACCEPT);
 	check(u.mode == UI_MODE_ASK, "the menu returns to the input line");
@@ -567,6 +573,8 @@ static void test_steps(void)
 static void test_graph_mode(void)
 {
 	ui_init(&u, NULL, NULL);
+	/* Third entry: Ask, Solve by formula, Keypad help, Graph, Quit. */
+	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_ACCEPT);
@@ -631,6 +639,7 @@ static void test_graph_returns_to_answer(void)
 
 	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_ACCEPT);
 	check(strcmp(ui_row(&u, 0), "Graphing") == 0,
 	      "the graph page takes over the pane while it is open");
@@ -638,6 +647,7 @@ static void test_graph_returns_to_answer(void)
 	ui_key(&u, UI_KEY_BACK);
 	check(u.mode == UI_MODE_MENU, "back from an empty line returns to the menu");
 
+	ui_key(&u, UI_KEY_UP);
 	ui_key(&u, UI_KEY_UP);
 	ui_key(&u, UI_KEY_UP);
 	ui_key(&u, UI_KEY_ACCEPT);
@@ -756,6 +766,107 @@ static void test_plot_key(void)
 	check(ui_key(&u, UI_KEY_GRAPH) == UI_KEY_NONE, "no plot for arithmetic");
 }
 
+
+/*
+ * Solve by formula: pick a subject, pick a relation, answer one prompt per
+ * argument. The point of the test is that it works with no pipeline at all —
+ * the picker never decodes anything — and that the answer arrives on the
+ * answer screen with the call the rest of the program keys off.
+ */
+static void test_template(void)
+{
+	const char *want_subject = "physics";
+	int subject = -1, n = 0, seen = 0;
+
+	/* The subject list is the relation table's own order, first appearance.
+	 * Find physics in it so the test names what it picks. */
+	for (int i = 0; i < REL_NUM_RELATIONS; i++) {
+		int dup = 0;
+
+		for (int j = 0; j < i && !dup; j++)
+			if (strcmp(rel_rows[j].subject, rel_rows[i].subject) == 0)
+				dup = 1;
+		if (dup)
+			continue;
+		if (strcmp(rel_rows[i].subject, want_subject) == 0) {
+			subject = n;
+			break;
+		}
+		n++;
+	}
+	check(subject > 0, "physics is in the subject list");
+
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_DOWN);            /* Solve by formula */
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.mode == UI_MODE_TMPL, "the menu opens the picker");
+	check(u.tmpl_step == UI_TMPL_STEP_SUBJECT, "on the subject list");
+	render();
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the subjects are drawn");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "choosing does not leave the screen");
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "and moves to the relations");
+
+	/* Walk to physics: the list starts at the first subject. */
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_SUBJECT, "back returns to the subjects");
+	for (int i = 0; i < subject; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_count > 0, "physics has relations");
+	check(strcmp(rel_rows[u.tmpl_rels[0]].subject, "physics") == 0,
+	      "every row in the list is in that subject");
+
+	/* Find friction_force in the list and choose it. */
+	seen = 0;
+	for (int i = 0; i < u.tmpl_count; i++) {
+		if (strcmp(rel_rows[u.tmpl_rels[u.tmpl_sel]].name, "friction_force") == 0) {
+			seen = 1;
+			break;
+		}
+		ui_key(&u, UI_KEY_DOWN);
+	}
+	check(seen, "friction_force is under physics");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_step == UI_TMPL_STEP_ARGS, "choosing a relation starts its prompts");
+	check(u.tmpl_arg == 0, "at the first argument");
+	render();
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the prompts are drawn");
+
+	/* The prompt takes numbers only. */
+	check(ui_type(&u, 'a') == 0, "a letter is not an argument");
+	ui_type(&u, '0');
+	ui_type(&u, '.');
+	ui_type(&u, '4');
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_arg == 1, "ENTER moves to the second argument");
+	ui_type(&u, '5');
+	ui_type(&u, '0');
+	ui_type(&u, '0');
+	ui_key(&u, UI_KEY_ACCEPT);
+
+	check(u.mode == UI_MODE_ASK, "the last argument answers");
+	check(strcmp(ui_last_call(&u), "CALL friction_force 0.4 500") == 0,
+	      "and the answer carries the call");
+	check(strcmp(ui_row(&u, u.nrows - 1), "= 200 N") == 0, "with the right number");
+	check(strstr(ui_row(&u, 0), "f = mu*N") != NULL, "and the working above it");
+
+	/* Esc inside the prompts walks back out, one level at a time. */
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	ui_key(&u, UI_KEY_ACCEPT);
+	ui_key(&u, UI_KEY_ACCEPT);
+	ui_type(&u, '1');
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_arg == 0 && u.input_len == 0, "ESC clears a half-typed argument");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "and then returns to the relations");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_SUBJECT, "and to the subjects");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.mode == UI_MODE_MENU, "and to the menu");
+}
+
 int main(void)
 {
 	test_menu();
@@ -768,6 +879,7 @@ int main(void)
 	test_render_frame();
 	test_diagram_screen();
 	test_plot_key();
+	test_template();
 	test_graph_mode();
 	test_graph_returns_to_answer();
 

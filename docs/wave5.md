@@ -5,9 +5,9 @@ friction force has to type thirty characters of English, and the decoder then
 has to read them back correctly. Both halves of that are expensive, and only one
 of them is a model problem.
 
-So wave 5 is about entry, not accuracy. The first piece is in this branch: **a
-typed call**, where the student names the relation and gives its numbers, and
-nothing is decoded at all.
+So wave 5 is about entry, not accuracy. The first piece is **a typed call**,
+where the student names the relation and gives its numbers, and nothing is
+decoded at all.
 
 ## What a typed call is
 
@@ -42,21 +42,43 @@ Two properties fall out of this and both matter more than the typing saved:
 - **It is exact and instant.** One comparison and one solver call, against a
   decode that costs seconds and can be wrong.
 
-The other entry paths, neither built yet, in the order they earn their keep:
+## Solve by formula
 
-| Next | What it is | Why it is second |
+The second piece: **MENU → Solve by formula → subject → relation → one prompt
+per argument**, and the answer arrives with its working.
+
+```
+SOLVE 1/3   algebra   calculus   chemistry   logs   modern   ...
+SOLVE 2/3   friction_force   free_fall   grav_force   ...
+SOLVE 3/3   friction_force
+            1. mu  = 0.4
+            2. N   = _
+```
+
+Every relation already declared its arguments — `friction_force` is
+`["mu", "N"]` — so the prompts are the catalogue's own names rather than a
+second list to keep in sync. They travel in `reltable.h`, the table the decoder
+already masks from, so a relation cannot be answerable in English and missing
+from the picker: adding one adds it to both, or the export gate fails.
+
+This is the D8 "template keypad" the roadmap asked for, and it is what makes the
+catalogue reachable by a student who does not know a relation is called
+`friction_force`. Like the typed call, it needs no model.
+
+One entry path is left, and it is the most expensive:
+
+| Next | What it is | Why it is last |
 | --- | --- | --- |
-| **Solve by formula** | MENU → subject → relation → one prompt per argument, labelled from the formula (`f = mu*N` asks for `mu`, then `N`), then the solver answers | The data already exists: every relation declares `params` and its step line, and `export_steps.py` can carry them into the C table. It costs a UI mode rather than a parser, and it is the D8 "template keypad" the roadmap asked for |
-| **Sentence templates** | A phrasing from the bank with its numbers blanked: "A mass of __ kg accelerates at __ m/s^2" — fill the blanks with the arrows | Keeps natural language, but it needs template storage on the device and a blank-navigation UI, and it still routes through the decoder for everything after the blanks |
+| **Sentence templates** | A phrasing from the bank with its numbers blanked: "A mass of __ kg accelerates at __ m/s^2" — fill the blanks with the arrows | It keeps natural language, but it needs template storage on the device and a blank-navigation UI, and everything after the blanks still routes through the decoder |
 
 The order is deliberate: each step removes more typing per unit of change than
-the one after it. Typed calls remove the decoder entirely for the questions a
-student can name; the picker removes the need to know the name; templates remove
-the need to know the phrasing.
+the one after it. Typed calls remove the decoder for the questions a student can
+name; the picker removes the need to know the name; templates remove the need to
+know the phrasing.
 
 ## What it does not fix
 
-A student who does not know the relation is called `friction_force` still cannot
-use a typed call, which is exactly what the picker is for. And a shorthand
-answer prints the working from `steps.c`, so it is as good as the step template
-for that relation and no better — 123 of 136 relations have one.
+A typed call still needs the relation's name, and a picker still needs the right
+subject and relation to be guessable from a list. Neither helps a student who
+does not know which quantity they are after; that is a phrasing problem, and the
+decoder is the only thing in the program that solves it.

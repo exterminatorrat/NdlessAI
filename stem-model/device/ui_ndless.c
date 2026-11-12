@@ -145,13 +145,14 @@ int ui_run(pipeline_t *p, const char *note)
 		if (act == UI_KEY_GRAPH) {
 			/* The plotter owns the LCD mode through its own loop; hand the
 			 * screen back afterwards or this loop blits into the wrong one.
-			 * From the menu it prompts for a function; from an answer it
-			 * draws the curve behind the call that answer came from. */
+			 * From an answer it draws the curve behind the call that answer
+			 * came from; from the graph screen it draws what was typed there,
+			 * which that screen has already parsed once. */
 			lcd_init(SCR_TYPE_INVALID);
 			if (mode_before == UI_MODE_ASK)
 				graph_run_call(ui_last_call(&u));
 			else
-				graph_run();
+				graph_run_text(ui_graph_text(&u));
 			if (!lcd_init(SCR_320x240_565))
 				break;
 		}

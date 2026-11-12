@@ -246,9 +246,24 @@ int gclip_seg(int *x0, int *y0, int *x1, int *y1, int w, int h)
 
 /* ---- drawing ---- */
 
+/*
+ * One pixel in plot coordinates. The plot rect is a window onto the
+ * framebuffer rather than the whole of it, so a mark that falls outside is
+ * dropped here instead of landing in the title bar or under the hints.
+ */
 static void px_set(uint16_t *fb, int x, int y, uint16_t c)
 {
-	screen_px(fb, x, y, c);
+	if (x < 0 || x >= G_PLOT_W || y < 0 || y >= G_PLOT_H)
+		return;
+	screen_px(fb, x, y + G_PLOT_Y, c);
+}
+
+/* Text placed in plot coordinates, dropped when it would not fit the rect. */
+static void text_at(uint16_t *fb, int x, int y, const char *s, uint16_t c)
+{
+	if (y < 0 || y + SCREEN_GLYPH_H > G_PLOT_H)
+		return;
+	screen_text(fb, x, y + G_PLOT_Y, s, c);
 }
 
 static void line(uint16_t *fb, int x0, int y0, int x1, int y1, uint16_t c)
@@ -483,7 +498,7 @@ static void draw_axes(const gstate_t *g, uint16_t *fb)
 		ly = xaxis ? ay + 4 : G_PLOT_H - 10;
 		if (ly + SCREEN_GLYPH_H > G_PLOT_H)
 			ly = G_PLOT_H - SCREEN_GLYPH_H - 1;
-		screen_text(fb, px - w / 2, ly, buf, G_TEXT);
+		text_at(fb, px - w / 2, ly, buf, G_TEXT);
 	}
 
 	for (int64_t k = first_tick(v->ymin, ys); k * ys <= v->ymax; k++) {
@@ -506,7 +521,7 @@ static void draw_axes(const gstate_t *g, uint16_t *fb)
 			continue;
 		fmt_fixed((q16_t)t, buf, (int)sizeof buf, 3);
 		lx = yaxis ? ax + 4 : 2;
-		screen_text(fb, lx, py - 3, buf, G_TEXT);
+		text_at(fb, lx, py - 3, buf, G_TEXT);
 	}
 
 	if (xaxis)
@@ -565,7 +580,7 @@ static void draw_curve(const gstate_t *g, const gcurve_t *c, uint16_t *fb)
 			ly = end_y + 3;
 		if (ly + SCREEN_GLYPH_H > G_PLOT_H)
 			ly = G_PLOT_H - SCREEN_GLYPH_H;
-		screen_text(fb, lx, ly, c->label, c->colour);
+		text_at(fb, lx, ly, c->label, c->colour);
 	}
 }
 
@@ -616,7 +631,7 @@ static void draw_answer(const gstate_t *g, uint16_t *fb)
 		ly = py + 4;
 	if (ly + SCREEN_GLYPH_H > G_PLOT_H)
 		ly = G_PLOT_H - SCREEN_GLYPH_H;
-	screen_text(fb, lx, ly, g->mark_label, G_MARK);
+	text_at(fb, lx, ly, g->mark_label, G_MARK);
 }
 
 static void draw_trace(const gstate_t *g, uint16_t *fb)
@@ -633,14 +648,31 @@ static void draw_trace(const gstate_t *g, uint16_t *fb)
 		box(fb, px, py, G_TRACE);
 }
 
-static void draw_status(const gstate_t *g, uint16_t *fb)
+/*
+ * The two bands around the plot, in the same palette as the rest of the
+ * program: the title and stamp on the left of the header, what the screen is
+ * currently doing on the right, then the accent rule. Under the plot, what is
+ * drawn and the keys that change it — the plot screen is reachable from the
+ * menu with no other text on it, so a key nobody advertises is a key nobody
+ * finds.
+ */
+static const char *const plot_hints = "ARROWS PAN  +/- ZOOM  T TRACE  R RESET  ESC BACK";
+static const char *const trace_hints = "ARROWS MOVE  T STOP TRACE  R RESET  ESC BACK";
+
+static void draw_header(const gstate_t *g, uint16_t *fb)
+{
+	const char *label = g->field.on ? "SLOPE FIELD" : (g->trace ? "TRACE" : "GRAPH");
+	int w = screen_text_w(label);
+
+	screen_text(fb, 4, 3, SCREEN_TITLE " " SCREEN_STAMP, SCREEN_WHITE);
+	screen_text(fb, G_SCREEN_W - 4 - w, 3, label, SCREEN_ACCENT);
+	screen_hline(fb, 0, G_HEADER_H - 1, G_SCREEN_W, SCREEN_ACCENT);
+}
+
+static void draw_footer(const gstate_t *g, uint16_t *fb)
 {
 	char buf[G_TEXT_MAX + 24];
 	sbuf_t s;
-
-	for (int y = G_STATUS_Y; y < G_SCREEN_H; y++)
-		for (int x = 0; x < G_SCREEN_W; x++)
-			fb[y * G_SCREEN_W + x] = G_BG;
 
 	s.b = buf;
 	s.n = (int)sizeof buf;
@@ -656,7 +688,9 @@ static void draw_status(const gstate_t *g, uint16_t *fb)
 		sb_str(&s, g->text);
 	}
 	buf[s.i] = 0;
-	screen_text(fb, 2, G_STATUS_Y + 4, buf, G_TEXT);
+	screen_text(fb, 4, G_FOOTER_Y + 3, buf, SCREEN_WHITE);
+	screen_text(fb, 4, G_FOOTER_Y + 14, g->trace ? trace_hints : plot_hints,
+	            SCREEN_DIM);
 }
 
 /* ---- analysis ---- */
@@ -1538,7 +1572,8 @@ void graph_render(const gstate_t *g, uint16_t *fb)
 	draw_markers(g, fb);
 	draw_trace(g, fb);
 	draw_answer(g, fb);
-	draw_status(g, fb);
+	draw_header(g, fb);
+	draw_footer(g, fb);
 }
 
 /* ---- state ---- */

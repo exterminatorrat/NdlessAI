@@ -260,6 +260,13 @@ workstreams are done or half done and everything they touch is gated:
   subject diagrams (force arrows, motion strobes, shaded integrals) and render a
   slope field. They hang off `runtime/graph.c` and `runtime/diagram.c`, each
   with a host test, and two keys reach them from the answer screen.
+- **The plot screen's own interface** closed the last message box. A function is
+  now typed on the answer screen's input line in a third mode, checked against
+  the plotter's parser there (`test_ui` asserts both refusals), and the plot
+  itself carries the same title bar and hint rows as everything else — the key
+  hints are the part that was never discoverable, since the plot screen is
+  reached from the menu with no other text on it. `G_PLOT_H` fell from 224 to
+  201 to pay for the two bands.
 
 **The device half compiles, and that correction is worth recording.** The plan
 said 4.5 and 4.6 could not be compiled without the Ndless toolchain. The runtime

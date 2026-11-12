@@ -212,10 +212,22 @@ calls the decoder weighed with their margins, and `test_alt` checks them, but
 the dimmed overlay it exists for has nowhere to go while the plotter only ever
 receives the one call that won.
 
-One thing the plan asked for is deliberately still open: the plotter's *menu*
-path still prompts for `y = f(x)` through a message box, because that is the
-expression workflow the device already had. The answer path is the one that
-skips the formula, and it is the one 4.6 is about.
+The last message box is gone. The plotter used to open by prompting for
+`y = f(x)`, and that prompt was the only part of the program still outside the
+screen model. It is now a mode of it: `UI_MODE_GRAPH` is the answer screen's
+input line, checked against the plotter's own parser before anything takes the
+display, so a line that cannot be drawn is refused on the screen that holds it
+rather than in a box over a half-drawn plot. `y =` is accepted and dropped,
+history recalls previous functions, and leaving puts the answer back in the
+pane.
+
+The plot screen itself got the same chrome the rest of the program has: the
+title bar with the build stamp, the accent rule under it, and two rows
+underneath naming what is drawn and which keys change it. Its geometry moved
+with the chrome — `G_PLOT_Y`, `G_PLOT_H` and `G_FOOTER_Y` in `graph.h` — while
+mapping, clipping and analysis stayed in plot coordinates, which is why
+`test_graph`'s transform assertions did not change and only its pixel
+assertions needed the band offset.
 
 ## What this still cannot prove
 

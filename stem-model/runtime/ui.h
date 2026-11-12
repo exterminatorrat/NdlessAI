@@ -7,15 +7,16 @@
 #include "screen.h"
 
 /*
- * The calculator's screen: one menu, one input line, and one pane that either
- * shows an answer with its working or a page of keypad help.
+ * The calculator's screen: one menu, one input line, and one pane that shows an
+ * answer with its working, a page of keypad help, or what the plotter will
+ * accept.
  *
  * The model is a state machine over key events and draws into a 320x240 565
  * framebuffer, so every screen here can be driven from a host test with
  * synthetic keys and inspected pixel by pixel. Nothing in this file knows what
  * Ndless is; device/ui_ndless.c reads the keypad and blits the result.
  *
- * Two things are deliberate rather than incidental:
+ * Three things are deliberate rather than incidental:
  *
  *  - The pane is the only place text is shown, and it scrolls by whole rows.
  *    A worked answer is three lines of prose and numbers; a student should
@@ -24,13 +25,12 @@
  *  - History keeps the question, not just the answer. The question is what a
  *    student wants back in the input line after a typo, and eight pairs fit in
  *    a fixed array, so there is no allocation anywhere on this path.
+ *  - The graph screen is the same screen in another mode, not a second screen.
+ *    Its function is typed, edited, recovered from history and checked for
+ *    parse errors by the code above; the plotter draws the curve, and the model
+ *    refuses to hand it something that is not a function of x rather than
+ *    leaving that to a message box after the plot screen has taken the display.
  */
-
-/* Shown in the title bar so it is obvious which build is on the calculator. A
- * stale .tns is otherwise indistinguishable from a broken fix, so bump this
- * whenever the screen's behaviour changes. */
-#define UI_TITLE "STEM HELPER"
-#define UI_STAMP "V10"
 
 /* The pane's text box: 51 six-pixel columns, with a scroll bar to the right. */
 #define UI_PANE_X     4
@@ -87,7 +87,8 @@ typedef enum {
 	 * weights file, which is what makes the whole catalogue reachable without
 	 * the model.
 	 */
-	UI_MODE_TMPL
+	UI_MODE_TMPL,
+	UI_MODE_GRAPH
 } ui_mode_t;
 
 typedef struct {
@@ -156,6 +157,14 @@ ui_key_t ui_key(ui_t *u, ui_key_t k);
  * arithmetic. The device plotter needs it to draw the answer's own curve.
  */
 const char *ui_last_call(const ui_t *u);
+
+/*
+ * The function the graph screen has been asked to plot, as the plotter parses
+ * it: the input line with a leading "y =" removed, because the screen asks for
+ * the right-hand side and a student types the whole thing anyway. Valid until
+ * the next key.
+ */
+const char *ui_graph_text(const ui_t *u);
 
 /* Inserts a printable character at the input cursor. Returns 1 if it went in. */
 int ui_type(ui_t *u, char c);

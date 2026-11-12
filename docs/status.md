@@ -64,7 +64,7 @@ reads 90.3%. `docs/waves.md` holds the table and the protocol behind it.
 | Tier | What it is | State |
 |---|---|---|
 | 1 | Breadth: relations, model unchanged | **complete**, and well past it at 102 |
-| 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8), and wave 4.6 added the plot of a relation's own call with the answer marked on it, parameter families, slope fields and subject diagrams |
+| 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8), and wave 4.6 added the plot of a relation's own call with the answer marked on it, parameter families, slope fields and subject diagrams. The function is typed on the screen's own input line and the plot carries the same title bar and key hints as the rest of the program, so no path enters through a message box |
 | 3 | Expression engine: parse, differentiate, integrate | **done for what the roadmap asked**: Q16 parser, symbolic differentiation and integration, numeric integration, Taylor series, exact rational linear algebra, and differential equations — RK4, constant-coefficient closed forms, and separable forms including a rate that depends on x. What is not there is convergence tests, first-order linear equations with a non-zero x-dependent forcing term, and a computer algebra system, which is the next tier |
 | 4 | Full CAS | not started, and deliberately last |
 

@@ -22,6 +22,16 @@
 #define SCREEN_ADVANCE 6     /* glyph plus one column of spacing */
 #define SCREEN_LINE_H 9      /* glyph plus two rows of leading */
 
+/*
+ * The app's name and build stamp, as the calculator shows them. Every screen
+ * prints this string in its title bar, so it is defined once: a stale .tns is
+ * otherwise indistinguishable from a broken fix, and two screens drifting apart
+ * would make the stamp worthless on whichever one nobody looked at. Bump the
+ * stamp whenever a screen's behaviour changes.
+ */
+#define SCREEN_TITLE "STEM HELPER"
+#define SCREEN_STAMP "V11"
+
 /* Colour in 565, the format lcd_init(SCR_320x240_565) gives the program. */
 #define SCREEN_WHITE 0xFFFFu
 #define SCREEN_BLACK 0x0000u

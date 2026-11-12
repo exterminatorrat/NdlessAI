@@ -52,7 +52,7 @@ if [ -d runtime ]; then
     # `make` merely warns about - an empty-bodied if reached CI this way. This
     # is the host compiler's -Werror over the same set, so the cheap half of
     # that gate runs here too.
-    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph screen ui diagram steps matrix callmask; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
+    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph screen ui diagram shorthand steps matrix callmask; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
     run "solvers match Python"   sh -c 'cd runtime && ./test_solvers | grep -q "0 mismatches"'
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
@@ -77,6 +77,7 @@ if [ -d runtime ]; then
     run "interface model"        sh -c 'cd runtime && ./test_ui | grep -q "all checks passed"'
     run "candidate margins"      sh -c 'cd runtime && ./test_alt | grep -q "all cases passed"'
     run "diagram answers"        sh -c 'cd runtime && ./test_diagram | grep -q "all checks passed"'
+    run "typed calls"            sh -c 'cd runtime && ./test_shorthand | grep -q "all checks passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"

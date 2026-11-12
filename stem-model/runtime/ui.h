@@ -48,7 +48,7 @@
 #define UI_ROWS_MAX   64
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048
-#define UI_HELP_PAGES 3
+#define UI_HELP_PAGES 4
 #define UI_CALL_MAX   128
 
 typedef enum {

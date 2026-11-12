@@ -89,6 +89,17 @@ int pipeline_alternatives(const pipeline_t *p, pipeline_alt_t *out, int max);
 int pipeline_typed_answer(const char *text, char *answer, int answer_max);
 
 /*
+ * Anything answerable with no model: typed arithmetic first, then a typed
+ * call ("ff 0.4 500", or the relation's own name). Returns 0 when it answered,
+ * 2 when it understood the question but had to refuse it, and 1 when the
+ * question is neither, which is the caller's cue to use the model — or, on a
+ * calculator with no weights file, to give up. `call` holds the call it made
+ * in the first two cases.
+ */
+int pipeline_answer_offline(const char *question, char *answer, int answer_max,
+                            char *call, int call_max);
+
+/*
  * Exposed for testing: true when every argument in `call` is a number that
  * appears in `question`, allowing for implicit polynomial coefficients.
  */

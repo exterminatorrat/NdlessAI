@@ -83,7 +83,22 @@ static const char *const help_pages[UI_HELP_PAGES] = {
 	"\n"
 	"These work with no weights.bin.tns.\n"
 	"Word problems need it: put the file\n"
-	"beside this program."
+	"beside this program.",
+
+	"Name a relation, then its numbers\n"
+	"\n"
+	"fri 0.4 500\n"
+	"  friction force, mu 0.4, N 500\n"
+	"kv 9 2 8\n"
+	"  velocity after 8 s from 9 m/s\n"
+	"ov 5 5\n"
+	"  voltage for 5 A through 5 ohm\n"
+	"newton2 5 2\n"
+	"  the whole name works too\n"
+	"\n"
+	"Leave out spaces: every call above\n"
+	"answers with no model and no words.\n"
+	"Next page: the same, longer."
 };
 
 static int has_model(const ui_t *u)
@@ -370,13 +385,15 @@ static void ask(ui_t *u)
 		return;
 	answer[0] = '\0';
 	call[0] = '\0';
-	if (u->p)
+	if (u->p) {
 		rc = pipeline_answer(u->p, u->input, answer, (int)sizeof answer,
 		                     call, (int)sizeof call);
-	else if (pipeline_typed_answer(u->input, answer, (int)sizeof answer) == PIPELINE_OK)
+	} else if (pipeline_answer_offline(u->input, answer, (int)sizeof answer,
+	                                   call, (int)sizeof call) == 0) {
 		rc = PIPELINE_OK;
-	else
+	} else {
 		rc = PIPELINE_ERR;
+	}
 	ui_result(u, u->input, rc, answer, call);
 	u->input[0] = '\0';
 	u->input_len = 0;

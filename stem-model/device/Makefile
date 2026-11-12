@@ -9,7 +9,9 @@ PYTHON = python3
 RUNTIME = ../runtime
 DATA = ../data
 GCCFLAGS = -Wall -W -marm -I$(RUNTIME)
-LDFLAGS = -Wl,--nspireio
+# No --nspireio: the app draws into its own framebuffer and uses libndls's
+# lcd_* calls, so it needs neither the console library nor its syscalls variant.
+LDFLAGS =
 ZEHNFLAGS = --name "stemhelp"
 
 ifeq ($(DEBUG),FALSE)
@@ -21,7 +23,8 @@ endif
 OBJS = main.o ui_ndless.o ui.o screen.o graph_ui.o diagram.o pipeline.o bpe.o fixed.o infer.o \
        graph.o expr.o callmask.o matrix.o steps.o solvers.o solvers_math.o equation.o \
        solvers_trig.o solvers_physics.o solvers_chem.o solvers_thermo.o solvers_em.o \
-       solvers_units.o
+       solvers_units.o solvers_optics.o solvers_waves.o solvers_fluids.o \
+       solvers_modern.o
 EXE = stemhelp
 DISTDIR = .
 

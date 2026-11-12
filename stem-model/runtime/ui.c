@@ -5,6 +5,7 @@
  * because the calculator cannot be debugged interactively. device/ui_ndless.c
  * reads keys and blits this file's framebuffer; it makes no choices.
  */
+#include <stdio.h>
 #include <string.h>
 
 #include "pipeline.h"
@@ -12,6 +13,8 @@
 #include "ui.h"
 #include "diagram.h"
 #include "graph.h"
+#include "reltable.h"
+#include "solvers.h"
 
 #define UI_BG      SCREEN_BLACK
 #define UI_FG      SCREEN_WHITE
@@ -19,11 +22,12 @@
 #define UI_ACCENT  SCREEN_ACCENT
 #define UI_SCROLL  0x2104
 
-#define UI_MENU_N   4
+#define UI_MENU_N   5
 #define UI_MENU_Y   24
 
 static const char *const menu_items[UI_MENU_N] = {
 	"Ask a question",
+	"Solve by formula",
 	"Keypad help",
 	"Graph",
 	"Quit"
@@ -419,6 +423,178 @@ static int call_has_diagram(const char *call)
 	return i > 0 && diagram_supports(name);
 }
 
+/* ---- solve by formula ---- */
+
+/*
+ * The picker walks the relation table the decoder already masks from, so a
+ * relation cannot be answerable in English and missing from the list. The
+ * subjects come out of that table too, in the order they first appear, which
+ * keeps physics before chemistry without a hand-kept list to drift.
+ */
+/* Defined with the drawing, used by the key handler. */
+static void pick_follow(ui_t *u, int count);
+
+static int subject_count(void)
+{
+	int n = 0;
+
+	for (int i = 0; i < REL_NUM_RELATIONS; i++) {
+		int seen = 0;
+
+		for (int j = 0; j < i && !seen; j++)
+			if (strcmp(rel_rows[j].subject, rel_rows[i].subject) == 0)
+				seen = 1;
+		if (!seen)
+			n++;
+	}
+	return n;
+}
+
+static const char *subject_name(int index)
+{
+	int n = -1;
+
+	for (int i = 0; i < REL_NUM_RELATIONS; i++) {
+		int seen = 0;
+
+		for (int j = 0; j < i && !seen; j++)
+			if (strcmp(rel_rows[j].subject, rel_rows[i].subject) == 0)
+				seen = 1;
+		if (!seen && ++n == index)
+			return rel_rows[i].subject;
+	}
+	return "";
+}
+
+static void tmpl_load(ui_t *u, int subject)
+{
+	const char *name = subject_name(subject);
+
+	u->tmpl_subject = subject;
+	u->tmpl_count = 0;
+	u->tmpl_sel = 0;
+	u->tmpl_top = 0;
+	for (int i = 0; i < REL_NUM_RELATIONS && u->tmpl_count < UI_TMPL_ROWS; i++)
+		if (strcmp(rel_rows[i].subject, name) == 0)
+			u->tmpl_rels[u->tmpl_count++] = (unsigned char)i;
+}
+
+/* The i-th argument's name, out of the row's space-separated parameter list. */
+static void arg_label(const rel_row_t *row, int i, char *out, int outlen)
+{
+	const char *p = row->params;
+	int n = 0;
+
+	out[0] = '\0';
+	while (p && *p) {
+		int len = 0;
+
+		while (p[len] && p[len] != ' ')
+			len++;
+		if (n == i) {
+			if (len > outlen - 1)
+				len = outlen - 1;
+			memcpy(out, p, (size_t)len);
+			out[len] = '\0';
+			return;
+		}
+		n++;
+		p += len;
+		while (*p == ' ')
+			p++;
+	}
+}
+
+/*
+ * The last prompt answered: build the call, let the solver answer it, and show
+ * the result on the answer screen with its working. ui_result reads the call
+ * from the pane's own state, so TAB and VAR work on it like any other answer.
+ */
+static void tmpl_solve(ui_t *u)
+{
+	const rel_row_t *row = &rel_rows[u->tmpl_rels[u->tmpl_rel]];
+	const char *args[UI_TMPL_STEP_ARGS];
+	char call[UI_CALL_MAX];
+	char answer[128];
+	int used, rc, i;
+
+	for (i = 0; i < row->arity; i++)
+		args[i] = u->tmpl_args[i];
+	used = snprintf(call, sizeof call, "CALL %s", row->name);
+	for (i = 0; i < row->arity && used > 0 && used < (int)sizeof call; i++)
+		used += snprintf(call + used, (size_t)((int)sizeof call - used), " %s",
+		                 args[i]);
+	answer[0] = '\0';
+	rc = solvers_solve(row->name, args, row->arity, answer, sizeof answer) < 0
+	     ? PIPELINE_ERR : PIPELINE_OK;
+	u->mode = UI_MODE_ASK;
+	ui_result(u, row->name, rc, answer, call);
+}
+
+static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
+{
+	int arity;
+
+	switch (u->tmpl_step) {
+	case UI_TMPL_STEP_SUBJECT:
+		if (k == UI_KEY_UP && u->tmpl_sel > 0) {
+			u->tmpl_sel--;
+			pick_follow(u, subject_count());
+		} else if (k == UI_KEY_DOWN && u->tmpl_sel < subject_count() - 1) {
+			u->tmpl_sel++;
+			pick_follow(u, subject_count());
+		} else if (k == UI_KEY_ACCEPT) {
+			tmpl_load(u, u->tmpl_sel);
+			u->tmpl_step = UI_TMPL_STEP_RELATION;
+		} else if (k == UI_KEY_BACK)
+			u->mode = UI_MODE_MENU;
+		break;
+	case UI_TMPL_STEP_RELATION:
+		if (k == UI_KEY_UP && u->tmpl_sel > 0) {
+			u->tmpl_sel--;
+			pick_follow(u, u->tmpl_count);
+		} else if (k == UI_KEY_DOWN && u->tmpl_sel < u->tmpl_count - 1) {
+			u->tmpl_sel++;
+			pick_follow(u, u->tmpl_count);
+		}
+		else if (k == UI_KEY_ACCEPT) {
+			u->tmpl_rel = u->tmpl_sel;
+			u->tmpl_arg = 0;
+			u->input[0] = '\0';
+			u->input_len = 0;
+			u->cursor = 0;
+			u->tmpl_step = UI_TMPL_STEP_ARGS;
+		} else if (k == UI_KEY_BACK) {
+			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
+			u->tmpl_sel = u->tmpl_subject;
+		}
+		break;
+	case UI_TMPL_STEP_ARGS:
+		arity = rel_rows[u->tmpl_rels[u->tmpl_rel]].arity;
+		if (k == UI_KEY_ACCEPT) {
+			if (u->input_len == 0)
+				break;
+			copy_trunc(u->tmpl_args[u->tmpl_arg], UI_TMPL_ARG, u->input);
+			u->input[0] = '\0';
+			u->input_len = 0;
+			u->cursor = 0;
+			if (++u->tmpl_arg >= arity)
+				tmpl_solve(u);
+		} else if (k == UI_KEY_BACK) {
+			if (u->input_len > 0) {
+				u->input[0] = '\0';
+				u->input_len = 0;
+				u->cursor = 0;
+			} else {
+				u->tmpl_step = UI_TMPL_STEP_RELATION;
+				u->tmpl_sel = u->tmpl_rel;
+			}
+		}
+		break;
+	}
+	return UI_KEY_NONE;
+}
+
 /* ---- keys ---- */
 
 static void scroll_pane(ui_t *u, int delta)
@@ -461,10 +637,18 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			u->mode = UI_MODE_ASK;
 			break;
 		case 1:
+			/* Solve by formula opens on the subject list. Nothing is
+			 * typed but numbers, and the model is never involved. */
+			u->mode = UI_MODE_TMPL;
+			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
+			u->tmpl_sel = 0;
+			u->tmpl_top = 0;
+			break;
+		case 2:
 			u->mode = UI_MODE_HELP;
 			help_open(u, 0);
 			break;
-		case 2:
+		case 3:
 			return UI_KEY_GRAPH;
 		default:
 			return UI_KEY_BACK;
@@ -593,6 +777,8 @@ ui_key_t ui_key(ui_t *u, ui_key_t k)
 			return UI_KEY_NONE;
 		}
 		return ask_key(u, k);
+	case UI_MODE_TMPL:
+		return tmpl_key(u, k);
 	}
 	return UI_KEY_NONE;
 }
@@ -604,9 +790,15 @@ const char *ui_last_call(const ui_t *u)
 
 int ui_type(ui_t *u, char c)
 {
-	if (u->mode != UI_MODE_ASK)
+	if (u->mode != UI_MODE_ASK &&
+	    !(u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS))
 		return 0;
 	if (c < 32 || c > 126)
+		return 0;
+	/* An argument is a number. A letter here would only reach the solver as a
+	 * parse error, so it never reaches the line. */
+	if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS &&
+	    !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e'))
 		return 0;
 	if (u->input_len >= UI_INPUT_MAX - 1)
 		return 0;
@@ -634,6 +826,140 @@ void ui_init(ui_t *u, pipeline_t *p, const char *missing_model_note)
 
 /* ---- drawing ---- */
 
+/* Keeps the highlighted row inside the visible window as the arrows move. */
+static void pick_follow(ui_t *u, int count)
+{
+	if (u->tmpl_sel < u->tmpl_top)
+		u->tmpl_top = u->tmpl_sel;
+	if (u->tmpl_sel >= u->tmpl_top + UI_PANE_ROWS)
+		u->tmpl_top = u->tmpl_sel - UI_PANE_ROWS + 1;
+	if (u->tmpl_top > count - UI_PANE_ROWS)
+		u->tmpl_top = count - UI_PANE_ROWS;
+	if (u->tmpl_top < 0)
+		u->tmpl_top = 0;
+}
+
+static void pick_scrollbar(int count, int top, uint16_t *fb)
+{
+	int track = UI_PANE_ROWS * SCREEN_LINE_H;
+	int thumb, span, y;
+
+	if (count <= UI_PANE_ROWS)
+		return;
+	thumb = track * UI_PANE_ROWS / count;
+	if (thumb < 10)
+		thumb = 10;
+	span = track - thumb;
+	y = UI_PANE_Y + span * top / (count - UI_PANE_ROWS);
+	screen_fill(fb, SCREEN_W - 5, UI_PANE_Y, 2, track, UI_SCROLL);
+	screen_fill(fb, SCREEN_W - 5, y, 2, thumb, UI_ACCENT);
+}
+
+/*
+ * The subject list, then the relations of the chosen subject. The selected
+ * row is inverted the way the menu's is, so the two screens read as one
+ * program.
+ */
+static void draw_pick(const ui_t *u, uint16_t *fb)
+{
+	int subjects = subject_count();
+	int count = u->tmpl_step == UI_TMPL_STEP_SUBJECT ? subjects : u->tmpl_count;
+	int y = UI_PANE_Y;
+
+	for (int i = 0; i < UI_PANE_ROWS; i++) {
+		int r = u->tmpl_top + i;
+		const char *text;
+		int on;
+
+		if (r >= count)
+			break;
+		text = u->tmpl_step == UI_TMPL_STEP_SUBJECT
+		       ? subject_name(r) : rel_rows[u->tmpl_rels[r]].name;
+		on = r == u->tmpl_sel;
+		if (on)
+			screen_fill(fb, 0, y - 3, SCREEN_W, SCREEN_LINE_H, UI_ACCENT);
+		if (on)
+			screen_text(fb, 4, y, ">", UI_BG);
+		screen_text(fb, 14, y, text, on ? UI_BG : UI_FG);
+		y += SCREEN_LINE_H;
+	}
+	pick_scrollbar(count, u->tmpl_top, fb);
+}
+
+/*
+ * The argument prompts: the relation's name, then one line per argument with
+ * the value already given. The current one is marked and gets the input line,
+ * so the student never has to remember how many arguments are left.
+ */
+static void draw_tmpl_form(const ui_t *u, uint16_t *fb)
+{
+	const rel_row_t *row = &rel_rows[u->tmpl_rels[u->tmpl_rel]];
+	int y = UI_PANE_Y;
+
+	screen_text(fb, UI_PANE_X, y, row->name, UI_FG);
+	y += SCREEN_LINE_H * 2;
+	for (int i = 0; i < row->arity && i < UI_TMPL_ARGS; i++) {
+		char label[UI_TMPL_ARG];
+		char line[UI_TEXT_COLS + 1];
+		int on = i == u->tmpl_arg;
+		int at = 0;
+
+		arg_label(row, i, label, (int)sizeof label);
+		line[at++] = (char)('0' + (i + 1) % 10);
+		line[at++] = '.';
+		line[at++] = ' ';
+		for (int j = 0; label[j] && at < UI_TEXT_COLS - 2; j++)
+			line[at++] = label[j];
+		line[at++] = ' ';
+		line[at++] = '=';
+		line[at++] = ' ';
+		if (i < u->tmpl_arg)
+			for (int j = 0; u->tmpl_args[i][j] && at < UI_TEXT_COLS; j++)
+				line[at++] = u->tmpl_args[i][j];
+		else if (i > u->tmpl_arg)
+			line[at++] = '-';
+		line[at] = '\0';
+		if (on)
+			screen_fill(fb, 0, y - 3, SCREEN_W, SCREEN_LINE_H, UI_ACCENT);
+		screen_text(fb, UI_PANE_X, y, line, on ? UI_BG : UI_FG);
+		y += SCREEN_LINE_H;
+	}
+	screen_text(fb, UI_PANE_X, y + SCREEN_LINE_H,
+	            "type the number, ENTER next", UI_DIM);
+}
+
+/* The input line under an argument prompt, labelled with the argument's name. */
+static void draw_tmpl_input(const ui_t *u, uint16_t *fb)
+{
+	const rel_row_t *row = &rel_rows[u->tmpl_rels[u->tmpl_rel]];
+	char label[UI_TMPL_ARG];
+	char line[UI_INPUT_COLS + 1];
+	int x, cx, n;
+
+	arg_label(row, u->tmpl_arg, label, (int)sizeof label);
+	screen_text(fb, 4, UI_INPUT_Y, ">", UI_ACCENT);
+	screen_text(fb, UI_INPUT_X, UI_INPUT_Y, label, UI_ACCENT);
+	x = UI_INPUT_X + (int)strlen(label) * SCREEN_ADVANCE;
+	screen_text(fb, x, UI_INPUT_Y, "=", UI_ACCENT);
+	x += 2 * SCREEN_ADVANCE;
+
+	n = u->input_len;
+	if (n > UI_INPUT_COLS)
+		n = UI_INPUT_COLS;
+	memcpy(line, u->input, (size_t)n);
+	line[n] = '\0';
+	if (n == 0)
+		screen_text(fb, x, UI_INPUT_Y, "0", UI_DIM);
+	else
+		screen_text(fb, x, UI_INPUT_Y, line, UI_FG);
+	cx = x + u->cursor * SCREEN_ADVANCE;
+	if (cx > SCREEN_W - 5)
+		cx = SCREEN_W - 5;
+	screen_fill(fb, cx, UI_INPUT_Y + 8, 4, 2, UI_ACCENT);
+}
+
+/* ---- drawing ---- */
+
 static void draw_header(const ui_t *u, uint16_t *fb)
 {
 	char right[24];
@@ -649,6 +975,10 @@ static void draw_header(const ui_t *u, uint16_t *fb)
 		put_ch(&at, end, (char)('0' + UI_HELP_PAGES));
 	} else if (u->mode == UI_MODE_MENU) {
 		put(&at, end, "MENU");
+	} else if (u->mode == UI_MODE_TMPL) {
+		put(&at, end, "SOLVE ");
+		put_ch(&at, end, (char)('1' + u->tmpl_step));
+		put(&at, end, "/3");
 	} else if (has_model(u)) {
 		put(&at, end, "ASK");
 	} else {
@@ -749,6 +1079,15 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 	} else if (u->mode == UI_MODE_HELP) {
 		first = "UP/DOWN scroll   LEFT/RIGHT page";
 		second = "ESC menu";
+	} else if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_SUBJECT) {
+		first = "ENTER choose   UP/DOWN move";
+		second = "ESC menu";
+	} else if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_RELATION) {
+		first = "ENTER choose   UP/DOWN move";
+		second = "ESC back";
+	} else if (u->mode == UI_MODE_TMPL) {
+		first = "ENTER next number   DEL erase";
+		second = "ESC back";
 	} else {
 		first = "ENTER ask   DEL erase   ESC clear";
 		second = "LEFT/RIGHT history   UP/DOWN scroll";
@@ -781,6 +1120,18 @@ int ui_render(ui_t *u, uint16_t *fb)
 	    diagram_render(u->last_call, fb, NULL, 0) == 0) {
 		screen_text(fb, 4, UI_FOOTER_Y - 6,
 		            "any key returns to the answer", UI_DIM);
+		return 0;
+	}
+	if (u->mode == UI_MODE_TMPL) {
+		if (u->tmpl_step == UI_TMPL_STEP_ARGS) {
+			draw_tmpl_form(u, fb);
+			screen_hline(fb, 0, UI_INPUT_Y - 4, SCREEN_W, UI_DIM);
+			draw_tmpl_input(u, fb);
+			screen_hline(fb, 0, UI_INPUT_Y + 12, SCREEN_W, UI_DIM);
+		} else {
+			draw_pick(u, fb);
+		}
+		draw_footer(u, fb);
 		return 0;
 	}
 	if (u->mode == UI_MODE_MENU) {

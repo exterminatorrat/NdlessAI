@@ -25,8 +25,15 @@ DEFAULT_HEADER = os.path.join(ROOT, "runtime", "reltable.h")
 
 
 def rows():
-    """(name, arity, token id) per relation, in tokenizer id order."""
-    return [(name, len(RELATIONS[name].params), REL_BASE + i)
+    """(name, arity, id, subject, params) per relation, in tokenizer id order.
+
+    `subject` and `params` are for the screen, not the decoder: they are what
+    the solve-by-formula picker lists and the labels it prompts with. They ride
+    in this table rather than a second one so a new relation cannot be added to
+    the decoder and left out of the picker.
+    """
+    return [(name, len(RELATIONS[name].params), REL_BASE + i,
+             RELATIONS[name].subject, " ".join(RELATIONS[name].params))
             for i, name in enumerate(sorted(RELATIONS))]
 
 
@@ -55,13 +62,18 @@ def render(rows):
         "\tconst char *name;",
         "\tunsigned char arity;",
         "\tuint16_t id;",
+        "\t/* What the picker shows: the subject it is filed under, and the",
+        "\t * argument names in order, space-separated. */",
+        "\tconst char *subject;",
+        "\tconst char *params;",
         "} rel_row_t;",
         "",
         "#ifdef RELTABLE_IMPL",
         "const rel_row_t rel_rows[REL_NUM_RELATIONS] = {",
     ]
-    for name, arity, idx in rows:
-        lines.append('\t{"%s", %d, %d},' % (name, arity, idx))
+    for name, arity, idx, subject, params in rows:
+        lines.append('\t{"%s", %d, %d, "%s", "%s"},' % (name, arity, idx, subject,
+                                                        params))
     lines += [
         "};",
         "#else",

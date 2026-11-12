@@ -129,10 +129,10 @@ pipeline failures. D2 and D3 are the graph overlays and the table view: the
 shaded integral and the marked answer exist in 4.6, the scrollable table does
 not.
 
-D8's first piece landed in wave 5 as typed calls (`fri 0.4 500`), which need no
-model and no phrasing — see `wave5.md`. The grid the entry actually describes,
-a prompt per argument chosen from the catalogue, is the next piece and not
-built.
+D8 landed in wave 5 in two pieces, neither of which needs the model: typed calls
+(`fri 0.4 500`) and solve by formula (subject, then relation, then one prompt per
+argument, named from the relation's own `params`). See `wave5.md`. What is still
+missing is D8's last form, a phrasing with its numbers blanked.
 
 ## E. Platform and Ndless
 

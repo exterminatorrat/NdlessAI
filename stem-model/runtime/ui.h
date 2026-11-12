@@ -50,6 +50,14 @@
 #define UI_HIST_PANE  2048
 #define UI_HELP_PAGES 4
 #define UI_CALL_MAX   128
+/* The three steps of solve by formula: subject, relation, arguments. */
+#define UI_TMPL_STEP_SUBJECT  0
+#define UI_TMPL_STEP_RELATION 1
+#define UI_TMPL_STEP_ARGS     2
+
+#define UI_TMPL_ARGS  6
+#define UI_TMPL_ARG   16
+#define UI_TMPL_ROWS  64
 
 typedef enum {
 	UI_KEY_NONE, UI_KEY_ACCEPT, UI_KEY_BACK, UI_KEY_UP, UI_KEY_DOWN,
@@ -72,7 +80,14 @@ typedef enum {
 typedef enum {
 	UI_MODE_MENU,
 	UI_MODE_ASK,
-	UI_MODE_HELP
+	UI_MODE_HELP,
+	/*
+	 * Solve by formula: pick a subject, pick a relation, then one prompt per
+	 * argument. Nothing is decoded, so it works on a calculator with no
+	 * weights file, which is what makes the whole catalogue reachable without
+	 * the model.
+	 */
+	UI_MODE_TMPL
 } ui_mode_t;
 
 typedef struct {
@@ -109,6 +124,17 @@ typedef struct {
 	 * answer that did not come from a relation has none. */
 	char last_call[UI_CALL_MAX];
 	int diagram;
+
+	/* Solve by formula's three steps, and the state each one keeps. */
+	int tmpl_step;
+	int tmpl_sel;
+	int tmpl_top;
+	int tmpl_subject;
+	int tmpl_count;
+	int tmpl_rel;
+	int tmpl_arg;
+	unsigned char tmpl_rels[UI_TMPL_ROWS];
+	char tmpl_args[UI_TMPL_ARGS][UI_TMPL_ARG];
 
 	ui_hist_t hist[UI_HISTORY];
 	int hist_n;

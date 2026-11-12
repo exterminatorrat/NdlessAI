@@ -21,7 +21,7 @@ else
 endif
 
 OBJS = main.o ui_ndless.o ui.o screen.o graph_ui.o diagram.o pipeline.o bpe.o fixed.o infer.o \
-       graph.o expr.o callmask.o matrix.o steps.o solvers.o solvers_math.o equation.o \
+       graph.o expr.o callmask.o matrix.o shorthand.o steps.o solvers.o solvers_math.o equation.o \
        solvers_trig.o solvers_physics.o solvers_chem.o solvers_thermo.o solvers_em.o \
        solvers_units.o solvers_optics.o solvers_waves.o solvers_fluids.o \
        solvers_modern.o

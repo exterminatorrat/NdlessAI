@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -5,6 +6,7 @@
 #include "callmask.h"
 #include "matrix.h"
 #include "pipeline.h"
+#include "shorthand.h"
 #include "solvers.h"
 #include "steps.h"
 
@@ -329,6 +331,35 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	return PIPELINE_OK;
 }
 
+int pipeline_answer_offline(const char *question, char *answer, int answer_max,
+                            char *call, int call_max)
+{
+	char guess[64];
+	int rc;
+
+	if (call && call_max > 0)
+		call[0] = 0;
+	if (pipeline_typed_answer(question, answer, answer_max) == PIPELINE_OK)
+		return 0;
+
+	/*
+	 * A typed call: exact and instant, and the names it accepts are the ones
+	 * the answer pane already prints on its CALL line. A relation whose
+	 * arguments do not fit is refused rather than handed to the decoder,
+	 * which would guess at a sentence that was never one.
+	 */
+	rc = shorthand_build(question, guess, (int)sizeof guess);
+	if (rc < 0)
+		return 1;
+	if (call && call_max > 0)
+		snprintf(call, (size_t)call_max, "%s", guess);
+	if (rc == 1)
+		return 2;
+	if (run_call_text(guess, answer, answer_max) < 0)
+		return 2;
+	return 0;
+}
+
 int pipeline_answer(pipeline_t *p, const char *question,
                     char *answer, int answer_max,
                     char *call, int call_max)
@@ -336,6 +367,7 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	uint16_t ids[MAX_PROMPT];
 	char prompt[MAX_PROMPT + 16];
 	int n, pos = 0, gen = 0;
+	int rc_offline;
 	size_t qlen = strlen(question);
 
 	/* Every answer starts with nothing weighed, so a closed form that answers
@@ -348,11 +380,18 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	 * vocabulary and no inference, so it answers in microseconds instead of
 	 * the seconds a decode costs.
 	 */
-	if (pipeline_typed_answer(question, answer, answer_max) == PIPELINE_OK) {
-		if (call && call_max > 0)
-			call[0] = 0;
+	/*
+	 * Arithmetic and typed calls need no model: they answer in microseconds,
+	 * and a shorthand is exact where the decoder can be wrong. Both come
+	 * before the weights check so a calculator carrying only the app still
+	 * answers them.
+	 */
+	rc_offline = pipeline_answer_offline(question, answer, answer_max,
+	                                     call, call_max);
+	if (rc_offline == 0)
 		return PIPELINE_OK;
-	}
+	if (rc_offline == 2)
+		return PIPELINE_ERR;
 
 	if (!p->ready)
 		return PIPELINE_ERR;

@@ -123,10 +123,16 @@ Wave 4.5 shipped four of these in the host-testable form: D5 (the answer pane
 prints the call, the formula with the numbers substituted, and the result), D6
 as RAM only — eight pairs of question and answer with one-key recall, lost when
 the app exits, because persistence needs a writable file on a filesystem this
-project has not yet touched — D8 as three scrollable pages of typed syntax
-rather than a keypad grid, and D12 for the three pipeline failures. D2 and D3
-are the graph overlays and the table view: the shaded integral and the marked
-answer exist in 4.6, the scrollable table does not.
+project has not yet touched — D8 as four scrollable pages, three of typed syntax
+and one of typed calls, rather than a keypad grid, and D12 for the three
+pipeline failures. D2 and D3 are the graph overlays and the table view: the
+shaded integral and the marked answer exist in 4.6, the scrollable table does
+not.
+
+D8's first piece landed in wave 5 as typed calls (`fri 0.4 500`), which need no
+model and no phrasing — see `wave5.md`. The grid the entry actually describes,
+a prompt per argument chosen from the catalogue, is the next piece and not
+built.
 
 ## E. Platform and Ndless
 

@@ -280,6 +280,49 @@ hand-written chain suite (ten chains are asserted today, in `test_plan`), and
 plan verification before execution (S5) — steps are checked as they run, so a
 bad plan fails at the step, not before it.
 
+## Slice 2, as it stands
+
+Two of the slice's items are in; the rest are untouched.
+
+**W1, per-relation variance as a gate.** `stem-model/report_relations.py` scores
+the corpus's `eval` split per relation, and `gate.sh` now fails when more
+relations than a recorded budget fall below 50% on four or more rows. The
+budget is 12 today against 10 actual, so it catches a wording change that robs
+one relation to pay another without failing on the known state. The first table
+it printed is why the rest of this slice is ordered the way it is: the deficit
+is not spread evenly over 118 relations, it sits in a handful of
+argument-selection failures (`arith_seq`, `geom_seq`, `moles`, `gas_p`).
+
+**Digit repair, the smallest piece of W4's neighbourhood.** A wrong answer from
+hand-written wording is usually the right relation with one number a keystroke
+off — `0.1 mol in 0.25 L` comes back as `0.2`, `88 g at 44 g/mol` as `84` and
+`48`. `runtime/repair.c` snaps such an argument back to the one number in the
+sentence with the same sign, the same digit length and exactly one different
+character, and refuses when two candidates are that close. Measured on the
+1,942-question eval split, against a clean build of the commit before it:
+
+| | Before | After |
+| --- | --- | --- |
+| Exact call | 65.3% | 65.9% |
+| Questions refused as uncertain | 381 | 364 |
+| Relations under 50% on 4+ rows | 11 | 10 |
+
+Of the 23 calls it changed, 12 became correct, 0 broke a call that was already
+correct, and 5 turned a refusal into a confidently wrong answer — every one of
+them a question where the *other* argument was the wrong one, so the repair
+fixed the number and removed the refusal that was doing useful work. That trade
+is the open question in this slice. The rules are deliberately timid because of
+it: at most one argument per call, never a number the call already carries
+(`pythagoras 2 7` is one character from `7 7`), never across a sign change, and
+never two equally close candidates.
+
+What is left of slice 2 is the part that needs the retrain or a lexicon: W2's
+slot synonyms, W3's typo tolerance, W4's number words, W5's unit values, W6's
+engineering prefixes, W7's polarity words, and W20's distractor accounting. The
+slice's own success criterion — hand-written accuracy up 8 points, per-relation
+floor above 60% — is not met and will not be met by repair-shaped changes; it
+needs the model to know which slot a phrase fills.
+
 ## What this needs that the project does not have
 
 - **A multi-step corpus.** Every training row today is one question and one

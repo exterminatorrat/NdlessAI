@@ -11,6 +11,7 @@
 #include "screen.h"
 #include "ui.h"
 #include "diagram.h"
+#include "expr.h"
 #include "graph.h"
 
 #define UI_BG      SCREEN_BLACK
@@ -86,9 +87,42 @@ static const char *const help_pages[UI_HELP_PAGES] = {
 	"beside this program."
 };
 
+/*
+ * What the graph screen puts in the pane on the way in. The plot screen is the
+ * only screen with no text on it to explain itself, and an empty input line
+ * says nothing, so the page a student lands on names the forms the parser takes
+ * and the keys the plot listens to. It fits the window exactly: 18 rows in 18.
+ */
+static const char *const graph_page =
+	"Graphing\n"
+	"\n"
+	"Type the right-hand side:\n"
+	"a function of x, nothing else.\n"
+	"\n"
+	"x^2-3x+1   a parabola\n"
+	"sin(x)\n"
+	"1/x\n"
+	"abs(x)\n"
+	"sqrt(x)\n"
+	"\n"
+	"On the plot:\n"
+	"ARROWS pan the window\n"
+	"+/- zoom in and out\n"
+	"T traces a point as X and Y\n"
+	"R returns the first window\n"
+	"\n"
+	"VAR on an answer graphs its relation.";
+
 static int has_model(const ui_t *u)
 {
 	return u->p && u->p->ready;
+}
+
+/* The screens with an input line: the graph screen is the same one in another
+ * mode, so it draws and edits through the same rows. */
+static int has_input(const ui_t *u)
+{
+	return u->mode == UI_MODE_ASK || u->mode == UI_MODE_GRAPH;
 }
 
 /* ---- text building ---- */
@@ -402,6 +436,109 @@ static int call_has_diagram(const char *call)
 	return i > 0 && diagram_supports(name);
 }
 
+/* ---- the graph screen ---- */
+
+/*
+ * The input line as the plotter reads it. The old prompt asked for the whole
+ * "y = f(x)", so a student types the "y =" out of habit; dropping it is worth
+ * more than the paragraph it would take to talk them out of it.
+ */
+static const char *graph_expr(const ui_t *u)
+{
+	const char *s = u->input;
+
+	while (*s == ' ')
+		s++;
+	if (*s == 'y' || *s == 'Y') {
+		const char *p = s + 1;
+
+		while (*p == ' ')
+			p++;
+		if (*p == '=') {
+			s = p + 1;
+			while (*s == ' ')
+				s++;
+		}
+	}
+	return s;
+}
+
+const char *ui_graph_text(const ui_t *u)
+{
+	return graph_expr(u);
+}
+
+/*
+ * Refused functions stay on the screen with the reason. The plot screen takes
+ * the whole display, so a complaint raised after it opens is a complaint the
+ * student has already lost the input line to.
+ */
+static void graph_note(ui_t *u, const char *headline, const char *detail)
+{
+	char src[256];
+	char *at = src;
+	const char *end = src + sizeof src - 1;
+	int from;
+
+	put(&at, end, headline);
+	put(&at, end, "\n");
+	put(&at, end, detail);
+	from = (int)strlen(headline) + 1;
+	pane_set(u, src, from, (int)strlen(src) + 1);
+}
+
+static void graph_enter(ui_t *u)
+{
+	u->mode = UI_MODE_GRAPH;
+	pane_set(u, graph_page, 0, 0);
+}
+
+/*
+ * The help pages and the graph screen borrow the pane. Leaving puts back
+ * whatever was there: returning to the menu with a page of syntax sitting where
+ * the answer was would read as if that page were the result.
+ */
+static void pane_restore(ui_t *u)
+{
+	pane_set(u, u->pane_src, u->pane_dim_from, u->pane_dim_to);
+	u->mode = UI_MODE_MENU;
+}
+
+/*
+ * The parser the plot screen uses, so what this screen accepts is exactly what
+ * that one can draw, and the refusal is worded here instead of arriving as a
+ * message box over a half-drawn plot. The tree is a scratch: it is thrown away
+ * once the line parses, and the plotter parses again for itself.
+ */
+static gexpr_t graph_scratch;
+
+static ui_key_t graph_plot(ui_t *u)
+{
+	const char *src = graph_expr(u);
+	char err[64];
+
+	if (!src[0])
+		return UI_KEY_NONE;
+	if (gexpr_parse(src, &graph_scratch, err, (int)sizeof err) < 0) {
+		graph_note(u, "That is not an expression in x.", err);
+		return UI_KEY_NONE;
+	}
+	if (gexpr_has_y(&graph_scratch)) {
+		graph_note(u, "Use x only.",
+		           "y is the value, so y is what gets\n"
+		           "plotted. Try x^2-3x+1.");
+		return UI_KEY_NONE;
+	}
+	/* Rewrite the line as the plotter reads it: pressing ENTER twice then
+	 * plots the same curve twice, and the student sees the text that is being
+	 * plotted rather than the text they typed around it. */
+	memmove(u->input, src, strlen(src) + 1);
+	u->input_len = (int)strlen(u->input);
+	u->cursor = u->input_len;
+	history_push(u, u->input, graph_page, 0, 0);
+	return UI_KEY_GRAPH;
+}
+
 /* ---- keys ---- */
 
 static void scroll_pane(ui_t *u, int delta)
@@ -448,7 +585,8 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			help_open(u, 0);
 			break;
 		case 2:
-			return UI_KEY_GRAPH;
+			graph_enter(u);
+			break;
 		default:
 			return UI_KEY_BACK;
 		}
@@ -482,11 +620,7 @@ static ui_key_t help_key(ui_t *u, ui_key_t k)
 		break;
 	case UI_KEY_BACK:
 	case UI_KEY_MODE:
-		/* Put the answer back: the help borrowed the pane, and returning to
-		 * the menu with a page of syntax sitting where the answer was would
-		 * read as if that page were the result. */
-		pane_set(u, u->pane_src, u->pane_dim_from, u->pane_dim_to);
-		u->mode = UI_MODE_MENU;
+		pane_restore(u);
 		break;
 	default:
 		break;
@@ -494,46 +628,23 @@ static ui_key_t help_key(ui_t *u, ui_key_t k)
 	return UI_KEY_NONE;
 }
 
-static ui_key_t ask_key(ui_t *u, ui_key_t k)
+/*
+ * The keys the two text screens share: history paging and cursor movement on
+ * the same arrows, delete behind the cursor, and the pane scrolled by whole
+ * rows. While the line is empty or is a recalled entry, left and right walk the
+ * ring; once the student has typed or deleted, they move the cursor instead.
+ * Typing and deleting clear `recall`, so an edited entry is never silently
+ * replaced by the next arrow press.
+ */
+static void edit_key(ui_t *u, ui_key_t k)
 {
 	switch (k) {
-	case UI_KEY_ACCEPT:
-		ask(u);
-		break;
-	case UI_KEY_BACK:
-		if (u->input_len > 0) {
-			u->input[0] = '\0';
-			u->input_len = 0;
-			u->cursor = 0;
-			u->recall = -1;
-		} else {
-			u->mode = UI_MODE_MENU;
-		}
-		break;
-	case UI_KEY_MODE:
-		u->mode = UI_MODE_MENU;
-		break;
-	case UI_KEY_DIAGRAM:
-		u->diagram = !u->diagram && call_has_diagram(u->last_call);
-		break;
-	case UI_KEY_GRAPH:
-		/* The plotter is the device's loop, so the model can only ask for
-		 * it. An answer that came from arithmetic has no curve to show. */
-		return graph_call_plottable(u->last_call) ? UI_KEY_GRAPH
-		                                        : UI_KEY_NONE;
 	case UI_KEY_UP:
 		scroll_pane(u, -1);
 		break;
 	case UI_KEY_DOWN:
 		scroll_pane(u, 1);
 		break;
-	/*
-	 * History paging and cursor movement share the arrows: while the line is
-	 * empty or is a recalled entry, left and right walk the ring; once the
-	 * student has typed or deleted, they move the cursor instead. Typing and
-	 * deleting clear `recall`, so an edited entry is never silently replaced
-	 * by the next arrow press.
-	 */
 	case UI_KEY_LEFT:
 		if (u->recall >= 0 || u->input_len == 0)
 			recall_step(u, -1);
@@ -558,6 +669,74 @@ static ui_key_t ask_key(ui_t *u, ui_key_t k)
 	default:
 		break;
 	}
+}
+
+/* Back on a typed line clears it; back on an empty one leaves the screen. */
+static void back_key(ui_t *u, void (*leave)(ui_t *))
+{
+	if (u->input_len > 0) {
+		u->input[0] = '\0';
+		u->input_len = 0;
+		u->cursor = 0;
+		u->recall = -1;
+	} else {
+		leave(u);
+	}
+}
+
+static void ask_leave(ui_t *u)
+{
+	u->mode = UI_MODE_MENU;
+}
+
+static ui_key_t ask_key(ui_t *u, ui_key_t k)
+{
+	switch (k) {
+	case UI_KEY_ACCEPT:
+		ask(u);
+		break;
+	case UI_KEY_BACK:
+		back_key(u, ask_leave);
+		break;
+	case UI_KEY_MODE:
+		ask_leave(u);
+		break;
+	case UI_KEY_DIAGRAM:
+		u->diagram = !u->diagram && call_has_diagram(u->last_call);
+		break;
+	case UI_KEY_GRAPH:
+		/* The plotter is the device's loop, so the model can only ask for
+		 * it. An answer that came from arithmetic has no curve to show. */
+		return graph_call_plottable(u->last_call) ? UI_KEY_GRAPH
+		                                        : UI_KEY_NONE;
+	default:
+		edit_key(u, k);
+		break;
+	}
+	return UI_KEY_NONE;
+}
+
+/*
+ * The graph screen: the same input line, checked against the plotter's own
+ * parser, and a key that hands the line to the plot screen. The line is kept
+ * after a plot, so a parabola can be nudged into the next one without retyping
+ * it; ESC clears it, and ESC again goes back to the menu.
+ */
+static ui_key_t graph_screen_key(ui_t *u, ui_key_t k)
+{
+	switch (k) {
+	case UI_KEY_ACCEPT:
+		return graph_plot(u);
+	case UI_KEY_BACK:
+		back_key(u, pane_restore);
+		break;
+	case UI_KEY_MODE:
+		pane_restore(u);
+		break;
+	default:
+		edit_key(u, k);
+		break;
+	}
 	return UI_KEY_NONE;
 }
 
@@ -576,6 +755,8 @@ ui_key_t ui_key(ui_t *u, ui_key_t k)
 			return UI_KEY_NONE;
 		}
 		return ask_key(u, k);
+	case UI_MODE_GRAPH:
+		return graph_screen_key(u, k);
 	}
 	return UI_KEY_NONE;
 }
@@ -587,7 +768,7 @@ const char *ui_last_call(const ui_t *u)
 
 int ui_type(ui_t *u, char c)
 {
-	if (u->mode != UI_MODE_ASK)
+	if (u->mode != UI_MODE_ASK && u->mode != UI_MODE_GRAPH)
 		return 0;
 	if (c < 32 || c > 126)
 		return 0;
@@ -632,12 +813,16 @@ static void draw_header(const ui_t *u, uint16_t *fb)
 		put_ch(&at, end, (char)('0' + UI_HELP_PAGES));
 	} else if (u->mode == UI_MODE_MENU) {
 		put(&at, end, "MENU");
+	} else if (u->mode == UI_MODE_GRAPH) {
+		/* The graph screen never needs the model, so it never says whether
+		 * one was found. */
+		put(&at, end, "GRAPH");
 	} else if (has_model(u)) {
 		put(&at, end, "ASK");
 	} else {
 		put(&at, end, "ASK - NO MODEL");
 	}
-	screen_text(fb, 4, 3, UI_TITLE " " UI_STAMP, UI_FG);
+	screen_text(fb, 4, 3, SCREEN_TITLE " " SCREEN_STAMP, UI_FG);
 	w = screen_text_w(right);
 	screen_text(fb, SCREEN_W - 4 - w, 3, right, UI_ACCENT);
 	screen_hline(fb, 0, 12, SCREEN_W, UI_ACCENT);
@@ -710,7 +895,9 @@ static void draw_input(const ui_t *u, uint16_t *fb)
 
 	screen_text(fb, 4, UI_INPUT_Y, ">", UI_ACCENT);
 	if (u->input_len == 0) {
-		screen_text(fb, UI_INPUT_X, UI_INPUT_Y, "type a problem", UI_DIM);
+		screen_text(fb, UI_INPUT_X, UI_INPUT_Y,
+		            u->mode == UI_MODE_GRAPH ? "a function of x"
+		                                     : "type a problem", UI_DIM);
 	} else {
 		memcpy(line, u->input + off, (size_t)n);
 		line[n] = '\0';
@@ -732,6 +919,9 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 	} else if (u->mode == UI_MODE_HELP) {
 		first = "UP/DOWN scroll   LEFT/RIGHT page";
 		second = "ESC menu";
+	} else if (u->mode == UI_MODE_GRAPH) {
+		first = "ENTER plot   DEL erase   ESC clear";
+		second = "LEFT/RIGHT history   UP/DOWN scroll";
 	} else {
 		first = "ENTER ask   DEL erase   ESC clear";
 		second = "LEFT/RIGHT history   UP/DOWN scroll";
@@ -749,7 +939,7 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 		screen_text(fb, 4, UI_FOOTER_Y + 22, "TAB diagram", UI_DIM);
 	else if (u->mode == UI_MODE_ASK && graph_call_plottable(u->last_call))
 		screen_text(fb, 4, UI_FOOTER_Y + 22, "VAR plot", UI_DIM);
-	else if (u->mode != UI_MODE_MENU && !has_model(u))
+	else if (u->mode == UI_MODE_ASK && !has_model(u))
 		screen_text(fb, 4, UI_FOOTER_Y + 22, "NO MODEL: ARITHMETIC ONLY",
 		            UI_ACCENT);
 }
@@ -771,7 +961,7 @@ int ui_render(ui_t *u, uint16_t *fb)
 	} else {
 		draw_pane(u, fb);
 	}
-	if (u->mode == UI_MODE_ASK) {
+	if (has_input(u)) {
 		screen_hline(fb, 0, UI_INPUT_Y - 4, SCREEN_W, UI_DIM);
 		draw_input(u, fb);
 		screen_hline(fb, 0, UI_INPUT_Y + 12, SCREEN_W, UI_DIM);

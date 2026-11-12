@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "graph.h"
+#include "screen.h"
 
 static int failures;
 
@@ -364,6 +365,35 @@ static void test_zoom_pan(void)
 	check(gmap_y(&g.view, 0) > oy, "pan up moves the origin down");
 }
 
+/* The absolute framebuffer row a plot-space row lands on. The mapping, the
+ * clipping and the analysis all work in plot coordinates, so every assertion
+ * that looks at a pixel goes through this. */
+static int g_row(int y)
+{
+	return y + G_PLOT_Y;
+}
+
+static int band_colour(const uint16_t *fb, int y0, int h, uint16_t c)
+{
+	int n = 0;
+
+	for (int y = y0; y < y0 + h; y++)
+		for (int x = 0; x < G_SCREEN_W; x++)
+			if (fb[y * G_SCREEN_W + x] == c)
+				n++;
+	return n;
+}
+
+static unsigned long band_hash(const uint16_t *fb, int y0, int h)
+{
+	unsigned long v = 5381;
+
+	for (int y = y0; y < y0 + h; y++)
+		for (int x = 0; x < G_SCREEN_W; x++)
+			v = v * 33 + fb[y * G_SCREEN_W + x];
+	return v;
+}
+
 static void test_render(void)
 {
 	static uint16_t fb[G_SCREEN_W * G_SCREEN_H];
@@ -381,7 +411,7 @@ static void test_render(void)
 
 		if (py < 0 || py >= G_PLOT_H)
 			continue;
-		if (!has_color(fb, px, py, 0x07E0, 2))
+		if (!has_color(fb, px, g_row(py), 0x07E0, 2))
 			missing++;
 	}
 	check(missing == 0, "curve drawn in every column");
@@ -389,22 +419,18 @@ static void test_render(void)
 		printf("  %d columns without a curve pixel\n", missing);
 
 	/* Axes: the origin sits on both axis lines. */
-	check(fb[gmap_y(&g.view, 0) * G_SCREEN_W + gmap_x(&g.view, 0)] == 0x8410,
-	      "origin is axis coloured");
+	check(fb[g_row(gmap_y(&g.view, 0)) * G_SCREEN_W + gmap_x(&g.view, 0)] ==
+	      0x8410, "origin is axis coloured");
 
 	/* Root markers at y = 0. */
-	check(has_color(fb, gmap_x(&g.view, q(-2)), gmap_y(&g.view, 0), 0xF800, 1),
-	      "root marker at -2");
-	check(has_color(fb, gmap_x(&g.view, q(2)), gmap_y(&g.view, 0), 0xF800, 1),
-	      "root marker at 2");
+	check(has_color(fb, gmap_x(&g.view, q(-2)), g_row(gmap_y(&g.view, 0)),
+	                0xF800, 1), "root marker at -2");
+	check(has_color(fb, gmap_x(&g.view, q(2)), g_row(gmap_y(&g.view, 0)),
+	                0xF800, 1), "root marker at 2");
 
 	/* Vertex marker. */
-	check(has_color(fb, gmap_x(&g.view, 0), gmap_y(&g.view, q(-4)), 0xFFE0, 1),
-	      "vertex marker");
-
-	/* Status strip is cleared and the plot does not bleed into it. */
-	check(fb[(G_SCREEN_H - 1) * G_SCREEN_W + G_SCREEN_W - 1] == 0x0000,
-	      "status strip background");
+	check(has_color(fb, gmap_x(&g.view, 0), g_row(gmap_y(&g.view, q(-4))),
+	                0xFFE0, 1), "vertex marker");
 
 	/* Grid density: enough lines to read the scale, not a solid mesh. */
 	{
@@ -414,7 +440,7 @@ static void test_render(void)
 			int n = 0;
 
 			for (int y = 0; y < G_PLOT_H; y++)
-				if (fb[y * G_SCREEN_W + x] == 0x2104)
+				if (fb[g_row(y) * G_SCREEN_W + x] == 0x2104)
 					n++;
 			if (n > G_PLOT_H / 2)
 				gcols++;
@@ -423,7 +449,7 @@ static void test_render(void)
 			int n = 0;
 
 			for (int x = 0; x < G_PLOT_W; x++)
-				if (fb[y * G_SCREEN_W + x] == 0x2104)
+				if (fb[g_row(y) * G_SCREEN_W + x] == 0x2104)
 					n++;
 			if (n > G_PLOT_W / 2)
 				grows++;
@@ -436,9 +462,14 @@ static void test_render(void)
 	g.trace = 1;
 	g.cursor_px = 100;
 	graph_render(&g, fb);
-	check(fb[10 * G_SCREEN_W + 100] == 0x4208, "trace column drawn");
-	check(has_color(fb, 100, gmap_y(&g.view, gexpr_eval(&g.curve[0].expr, gunmap_x(&g.view, 100))),
+	check(fb[g_row(10) * G_SCREEN_W + 100] == 0x4208, "trace column drawn");
+	check(has_color(fb, 100,
+	                g_row(gmap_y(&g.view,
+	                             gexpr_eval(&g.curve[0].expr,
+	                                        gunmap_x(&g.view, 100)))),
 	                0xFFFF, 1), "trace cursor on curve");
+	check(band_colour(fb, G_FOOTER_Y + 3, 8, 0xFFFF) > 0,
+	      "the trace readout replaces the expression");
 
 	/* A pole must not be bridged by a vertical line. */
 	check(graph_init(&g, "1/x", err, sizeof err) == 0, "render 1/x");
@@ -448,10 +479,66 @@ static void test_render(void)
 		int hits = 0;
 
 		for (int y = 0; y < G_PLOT_H; y++)
-			if (fb[y * G_SCREEN_W + px] == 0x07E0)
+			if (fb[g_row(y) * G_SCREEN_W + px] == 0x07E0)
 				hits++;
 		check(hits < 4, "no vertical line through the pole");
 	}
+}
+
+/*
+ * The plot is framed the way the rest of the program is: a title bar carrying
+ * the build stamp, the accent rule under it, and two rows under the plot saying
+ * what is drawn and which keys change it. The plot screen is reached from the
+ * menu with no other text on it, so text the screen has to explain itself with
+ * belongs here, and a hint line that ran past the edge would be cut mid-key.
+ */
+static void test_chrome(void)
+{
+	static uint16_t fb[G_SCREEN_W * G_SCREEN_H];
+	gstate_t g;
+	char err[64];
+	unsigned long flat_header, flat_footer;
+	int bleed = 0;
+
+	check(graph_init(&g, "x^2-4", err, sizeof err) == 0, "chrome init");
+	graph_render(&g, fb);
+
+	check(band_colour(fb, 0, G_HEADER_H - 1, 0xFFFF) > 0,
+	      "the title and stamp are drawn");
+	check(band_colour(fb, 0, G_HEADER_H - 1, 0x07E0) > 0,
+	      "the mode label is drawn on the right");
+	check(fb[(G_HEADER_H - 1) * G_SCREEN_W + G_SCREEN_W / 2] == 0x07E0,
+	      "the accent rule closes the header");
+
+	check(band_colour(fb, G_FOOTER_Y + 3, SCREEN_GLYPH_H, 0xFFFF) > 0,
+	      "the footer names what is plotted");
+	check(band_colour(fb, G_FOOTER_Y + 14, SCREEN_GLYPH_H, 0x8410) > 0,
+	      "the footer names the keys");
+	for (int y = G_FOOTER_Y + 14; y < G_SCREEN_H; y++)
+		if (fb[y * G_SCREEN_W + G_SCREEN_W - 1] != 0x0000)
+			bleed = 1;
+	check(!bleed, "the hint line fits the screen width");
+
+	/* Nothing the plotter draws may land in either band, or the chrome would
+	 * flicker as the window pans. The rows between the title glyphs and the
+	 * accent rule, and above the footer's own text, stay empty. */
+	check(band_colour(fb, G_PLOT_Y - 2, 1, 0x0000) == G_SCREEN_W,
+	      "the row under the title is empty");
+	check(band_colour(fb, G_FOOTER_Y, 3, 0x0000) == 3 * G_SCREEN_W,
+	      "the plot stops above the footer");
+
+	/* The two labels follow the state: both bands say something different in
+	 * trace mode, because the readout replaces the expression and the header
+	 * says which key is doing it. */
+	flat_header = band_hash(fb, 0, G_HEADER_H - 1);
+	flat_footer = band_hash(fb, G_FOOTER_Y + 3, SCREEN_GLYPH_H);
+	g.trace = 1;
+	g.cursor_px = 100;
+	graph_render(&g, fb);
+	check(band_hash(fb, 0, G_HEADER_H - 1) != flat_header,
+	      "the header says TRACE while tracing");
+	check(band_hash(fb, G_FOOTER_Y + 3, SCREEN_GLYPH_H) != flat_footer,
+	      "the readout replaces the expression while tracing");
 }
 
 static void write_ppm(const char *path, const uint16_t *fb)
@@ -560,7 +647,8 @@ static void test_marker_pixels(void)
 	check(px >= 0 && px < G_PLOT_W && py >= 0 && py < G_PLOT_H,
 	      "answer point inside the plot");
 	if (px >= 0 && px < G_PLOT_W && py >= 0 && py < G_PLOT_H)
-		check(has_color(fb, px, py, 0x07FF, 1), "answer disc drawn at its point");
+		check(has_color(fb, px, g_row(py), 0x07FF, 1),
+		      "answer disc drawn at its point");
 }
 
 /* 4.6d: a family is the same relation at several values of one argument. */
@@ -652,6 +740,7 @@ int main(int argc, char **argv)
 	test_analysis();
 	test_zoom_pan();
 	test_render();
+	test_chrome();
 	test_from_call();
 	test_marker_pixels();
 	test_family();

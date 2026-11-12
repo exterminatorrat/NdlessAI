@@ -1,5 +1,5 @@
 /*
- * Ndless side of the graphing feature: keys, the LCD, and the prompt.
+ * Ndless side of the plotting screen: keys, the LCD, and the loop.
  * All plotting logic lives in runtime/graph.c so the host tests can run it.
  */
 #include <libndls.h>
@@ -33,9 +33,19 @@ static int poll_key(void)
 	return GK_NONE;
 }
 
-/* The screen itself, once a state exists: draw, wait for a key, draw again. */
-static void plot_loop(gstate_t *g)
+/*
+ * Draws a prepared state until the student leaves, then hands the display back
+ * in the mode the rest of the program draws in. Both entries below end here, so
+ * the screen mode is restored on every path, including the one where lcd_init
+ * refuses the mode in the first place.
+ */
+static void plot_screen(gstate_t *g)
 {
+	if (!lcd_init(SCR_320x240_565)) {
+		show_msgbox("Graph", "This screen mode is not available.");
+		return;
+	}
+
 	for (;;) {
 		int k;
 
@@ -51,67 +61,51 @@ static void plot_loop(gstate_t *g)
 		if (graph_key(g, k))
 			break;
 	}
+
+	lcd_init(SCR_TYPE_INVALID);
 }
 
+/* What the graph screen's own input line handed over. The line was checked
+ * against this same parser before the plot opened, so a failure here means the
+ * two disagreed rather than that the student typed something odd. */
+int graph_run_text(const char *text)
+{
+	char err[64];
+	gstate_t *g;
+
+	if (!text || !*text)
+		return 0;
+	g = malloc(sizeof *g);
+	if (!g)
+		return 0;
+	if (graph_init(g, text, err, sizeof err) < 0) {
+		show_msgbox("Graph", err);
+		free(g);
+		return 0;
+	}
+	plot_screen(g);
+	free(g);
+	return 0;
+}
+
+/* What the answer screen handed over: the curve behind the call the answer
+ * came from, with the answer marked on it. */
 int graph_run_call(const char *call)
 {
 	char err[64];
 	gstate_t *g;
-	int rc;
 
 	if (!call || !*call)
 		return 0;
 	g = malloc(sizeof *g);
 	if (!g)
 		return 0;
-	rc = graph_from_call(g, call, 0, err, sizeof err);
-	if (rc != G_CALL_OK) {
+	if (graph_from_call(g, call, 0, err, sizeof err) != G_CALL_OK) {
 		show_msgbox("Graph", err);
 		free(g);
 		return 0;
 	}
-	if (!lcd_init(SCR_320x240_565)) {
-		show_msgbox("Graph", "This screen mode is not available.");
-		free(g);
-		return 0;
-	}
-	plot_loop(g);
-	lcd_init(SCR_TYPE_INVALID);
-	free(g);
-	return 0;
-}
-
-int graph_run(void)
-{
-	char *input = NULL;
-	gstate_t *g;
-	char err[64];
-	int len;
-
-	len = show_msg_user_input("Graph", "Enter y = f(x):", "x^2-3x+1", &input);
-	if (len < 0 || !input)
-		return 0;
-
-	g = malloc(sizeof *g);
-	if (!g) {
-		free(input);
-		return 0;
-	}
-	if (graph_init(g, input, err, sizeof err) < 0) {
-		show_msgbox("Graph", err);
-		free(input);
-		free(g);
-		return 0;
-	}
-	free(input);
-
-	if (!lcd_init(SCR_320x240_565)) {
-		show_msgbox("Graph", "This screen mode is not available.");
-		free(g);
-		return 0;
-	}
-	plot_loop(g);
-	lcd_init(SCR_TYPE_INVALID);
+	plot_screen(g);
 	free(g);
 	return 0;
 }

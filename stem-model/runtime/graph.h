@@ -23,9 +23,20 @@
 
 #define G_SCREEN_W 320
 #define G_SCREEN_H 240
+
+/*
+ * The plot is framed the way the rest of the program is: a title bar on top and
+ * two rows of hints underneath. Every function below works in plot coordinates
+ * (0..G_PLOT_W-1 across, 0..G_PLOT_H-1 down) and the drawing helpers add
+ * G_PLOT_Y on the way to the framebuffer, so mapping, clipping and the analysis
+ * kept their meanings when the chrome arrived.
+ */
+#define G_HEADER_H 13
+#define G_FOOTER_H 26
 #define G_PLOT_W   320
-#define G_PLOT_H   224
-#define G_STATUS_Y 224
+#define G_PLOT_H   (G_SCREEN_H - G_HEADER_H - G_FOOTER_H)
+#define G_PLOT_Y   G_HEADER_H
+#define G_FOOTER_Y (G_PLOT_Y + G_PLOT_H)
 
 #define G_TEXT_MAX    64
 #define G_MAX_ROOTS   8
@@ -179,7 +190,7 @@ int graph_field(gstate_t *g, const char *text, const gview_t *window,
 /* Applies one key. Returns 1 when the caller should leave graph mode. */
 int graph_key(gstate_t *g, int key);
 
-/* Draws the whole screen into a 320x240 RGB565 buffer. */
+/* Draws the whole screen into a 320x240 RGB565 buffer, chrome included. */
 void graph_render(const gstate_t *g, uint16_t *fb);
 
 #endif

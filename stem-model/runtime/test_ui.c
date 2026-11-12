@@ -154,7 +154,9 @@ static void test_menu(void)
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_DOWN);
 	ui_key(&u, UI_KEY_DOWN);
-	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_GRAPH, "the menu asks for the plotter");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE,
+	      "the menu opens the graph screen without leaving");
+	check(u.mode == UI_MODE_GRAPH, "the graph screen is its own mode");
 
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_DOWN);
@@ -553,6 +555,97 @@ static void test_steps(void)
 	check(!ui_row_dim(&u, 0), "that answer is not dimmed");
 }
 
+/* ---- the graph screen ---- */
+
+/*
+ * The graph screen is the answer screen in another mode: same title bar, same
+ * input line, same hint rows. Its one difference is what ENTER does, and what
+ * this test is for is that the plotter is handed the text the screen shows, and
+ * that a line the plotter cannot draw is refused here rather than in a message
+ * box after the plot has taken the display.
+ */
+static void test_graph_mode(void)
+{
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+
+	check(ink(280, 0, 40, 12) > 0, "the graph screen labels itself");
+	check(ink(4, UI_FOOTER_Y, 300, 20) > 0, "the graph screen has key hints");
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0,
+	      "the pane says which functions the parser takes");
+	check(page_has("function of x"), "the page says what to type");
+	check(page_has("ARROWS pan"), "the page names the plot's keys");
+	check(u.nrows <= UI_PANE_ROWS, "the page fits the window without scrolling");
+
+	type_text("x^2-3x+1");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_GRAPH,
+	      "ENTER hands the function to the plotter");
+	check(strcmp(ui_graph_text(&u), "x^2-3x+1") == 0,
+	      "the plotter is handed what was typed");
+	check(u.mode == UI_MODE_GRAPH, "plotting leaves the screen where it was");
+	check(u.input_len == 8, "the line keeps the function, so it can be nudged");
+
+	/* "y =" is what the old prompt asked for and what a student types out of
+	 * habit; the line is rewritten to what the plotter reads. */
+	ui_key(&u, UI_KEY_BACK);
+	check(u.input_len == 0, "back clears the line before it leaves");
+	type_text("y = sin(x)");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_GRAPH, "a leading y = is accepted");
+	check(strcmp(ui_graph_text(&u), "sin(x)") == 0, "y = is dropped before plotting");
+	check(strcmp(u.input, "sin(x)") == 0, "the line shows what will be plotted");
+
+	/* Neither refusal leaves the screen, and both say so in the pane. */
+	ui_key(&u, UI_KEY_BACK);
+	type_text("x^^");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "a parse error stays on the screen");
+	check(u.mode == UI_MODE_GRAPH, "and does not leave it");
+	check(page_has("not an expression"), "the pane says what went wrong");
+	check(u.input_len == 3, "the line keeps the text to fix");
+
+	ui_key(&u, UI_KEY_BACK);
+	type_text("x+y");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "an expression in y is refused");
+	check(page_has("Use x only"), "the pane says to use x");
+
+	/* History is the same ring, so a function plotted once comes back. Only
+	 * the two that plotted are in it: a refused line was never a question. */
+	ui_key(&u, UI_KEY_BACK);
+	ui_key(&u, UI_KEY_LEFT);
+	check(strcmp(u.input, "sin(x)") == 0,
+	      "the newest plotted function comes back first");
+	ui_key(&u, UI_KEY_LEFT);
+	check(strcmp(u.input, "x^2-3x+1") == 0,
+	      "and the one before it comes back next");
+}
+
+/* Leaving puts the answer back: the graph page borrowed the pane. */
+static void test_graph_returns_to_answer(void)
+{
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ui_result(&u, "q", PIPELINE_OK, "42", "");
+	ui_key(&u, UI_KEY_MODE);
+
+	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(strcmp(ui_row(&u, 0), "Graphing") == 0,
+	      "the graph page takes over the pane while it is open");
+
+	ui_key(&u, UI_KEY_BACK);
+	check(u.mode == UI_MODE_MENU, "back from an empty line returns to the menu");
+
+	ui_key(&u, UI_KEY_UP);
+	ui_key(&u, UI_KEY_UP);
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.mode == UI_MODE_ASK, "the menu returns to the input line");
+	check(strcmp(ui_row(&u, 0), "42") == 0,
+	      "the answer is back where the graph screen left it");
+}
+
 /* ---- the frame as a whole ---- */
 
 static void test_render_frame(void)
@@ -675,6 +768,8 @@ int main(void)
 	test_render_frame();
 	test_diagram_screen();
 	test_plot_key();
+	test_graph_mode();
+	test_graph_returns_to_answer();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

@@ -84,6 +84,68 @@ def report(rows, args):
     return thin
 
 
+def arg_audit(rows, args):
+    """Which slot fails, and did the wrong value come from the sentence?
+
+    An answer can be wrong three ways: the wrong relation, the right relation
+    with the wrong numbers, or nothing at all. The middle one is where the
+    wording work lives, and counting it per relation per argument position is
+    the difference between "this relation is weak" and "this relation keeps
+    putting the mass where the volume goes".
+    """
+
+    calls = run_batch(args.binary, args.weights, args.seq,
+                      [q for _, q, _ in rows])
+    per = collections.defaultdict(lambda: collections.Counter())
+    slots = collections.defaultdict(lambda: collections.Counter())
+    for (relation, question, expected), got in zip(rows, calls):
+        if got == expected:
+            per[relation]["correct"] += 1
+            continue
+        want_parts = expected.split()
+        got_parts = got.split()
+        if len(got_parts) < 2 or got_parts[1] != relation:
+            per[relation]["wrong relation"] += 1
+            continue
+        want = want_parts[2:]
+        have = got_parts[2:]
+        per[relation]["wrong numbers"] += 1
+        for i in range(max(len(want), len(have))):
+            a = want[i] if i < len(want) else "-"
+            b = have[i] if i < len(have) else "-"
+            if a == b:
+                continue
+            slots[relation][i] += 1
+            # A value the question literally contains is a number picked from
+            # the wrong slot; one that is not is a number invented outright.
+            if b != "-" and b.lstrip("-") in question:
+                per[relation]["picked from text"] += 1
+            else:
+                per[relation]["invented"] += 1
+
+    print(f"{'relation':<24}{'correct':>8}{'wrong num':>11}{'wrong rel':>11}"
+          f"{'from text':>11}{'invented':>10}")
+    for relation, counts in sorted(per.items(),
+                                   key=lambda kv: -kv[1]["wrong numbers"]):
+        if not counts["wrong numbers"]:
+            continue
+        bad = slots[relation]
+        where = " ".join(f"a{i}:{n}" for i, n in sorted(bad.items()))
+        print(f"{relation:<24}{counts['correct']:>8}"
+              f"{counts['wrong numbers']:>11}{counts['wrong relation']:>11}"
+              f"{counts['picked from text']:>11}{counts['invented']:>10}"
+              f"   {where}")
+    total = collections.Counter()
+    for counts in per.values():
+        total.update(counts)
+    print()
+    print(f"{total['correct']} correct, {total['wrong numbers']} right relation "
+          f"with wrong numbers ({total['picked from text']} of those arguments "
+          f"came from the sentence, {total['invented']} did not), "
+          f"{total['wrong relation']} wrong relation")
+    print()
+
+
 def corpus_rows(args):
     """The eval split of the paraphrase corpus, as (relation, question, call)."""
 
@@ -125,6 +187,10 @@ def main():
                     help="a relation needs this many rows before the floor "
                          "judges it")
     ap.add_argument("--show-misses", type=int, default=0)
+    ap.add_argument("--arg-audit", action="store_true",
+                    help="for the right relation with the wrong numbers, which "
+                         "argument went wrong and where the wrong value came "
+                         "from (W20's measurement)")
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
 
@@ -137,6 +203,9 @@ def main():
         rows = rows[: args.limit]
     if not rows:
         raise SystemExit("no rows to score")
+
+    if args.arg_audit:
+        arg_audit(rows, args)
 
     thin = report(rows, args)
     if thin > args.max_thin:

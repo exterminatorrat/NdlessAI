@@ -318,12 +318,43 @@ it: at most one argument per call, never a number the call already carries
 (`pythagoras 2 7` is one character from `7 7`), never across a sign change, and
 never two equally close candidates.
 
-What is left of slice 2 is the part that needs the retrain or a lexicon: W2's
-slot synonyms, W3's typo tolerance, W4's number words, W5's unit values, W6's
-engineering prefixes, W7's polarity words, and W20's distractor accounting. The
+**W20, measured rather than assumed.** `report_relations.py --arg-audit` splits
+every miss three ways and, for the middle one, records which argument position
+was wrong and whether the wrong value appears verbatim in the question. On the
+eval split: 1,280 correct, 251 the right relation with the wrong numbers, 411
+the wrong relation. Of the 402 offending arguments in that middle class, 352
+(88%) were copied straight out of the sentence and 50 were invented. The worst
+offenders are argument-order problems, not arithmetic: `density` puts the volume
+where the mass goes (14 from text, 1 invented), `arith_seq` (12/1),
+`dilution_v1` (11/1), `calorimetry_c` (13/2), `work` (13/2).
+
+That single number settles the rest of this slice. Grounding structurally cannot
+catch a number that really is in the sentence, and no repair can either, because
+nothing about the call looks wrong. The failure is slot assignment, which is a
+model problem, not a runtime one.
+
+**Two code-only items measured and rejected.** W4's number words and W6's
+engineering prefixes are listed as cheap because they look like text munging. As
+a pre-pass on the prompt they are not cheap, they are harmful:
+
+| Change | Exact call |
+| --- | --- |
+| Nothing (shipped state) | 65.9% |
+| Number words digitised, bare "one" left alone | 64.6% |
+| Number words digitised, bare "one" included | 63.9% |
+
+The model was trained on the words, so digitising them hands it an input
+distribution it has never seen. W6 has no corpus presence at all — `4.7k` and
+`2 MΩ` appear in none of the 1,942 eval rows — and a naive multiplier rule eats
+molarity ("20 mL of 3 M acid" becomes "3000000 acid"), so any such code would be
+unmeasured and dangerous at once.
+
+What is genuinely left of slice 2 is the retrain and the lexicon: W2's slot
+synonyms, W3's typo tolerance, W5's unit values, W7's polarity words. The
 slice's own success criterion — hand-written accuracy up 8 points, per-relation
-floor above 60% — is not met and will not be met by repair-shaped changes; it
-needs the model to know which slot a phrase fills.
+floor above 60% — is not met and cannot be met by runtime changes, for the
+reason the argument audit gives: 88% of the wrong arguments are legitimately in
+the sentence. Those four items need the model to know which slot a phrase fills.
 
 ## What this needs that the project does not have
 

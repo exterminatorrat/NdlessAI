@@ -310,8 +310,10 @@ character, and refuses when two candidates are that close. Measured on the
 Of the 23 calls it changed, 12 became correct, 0 broke a call that was already
 correct, and 5 turned a refusal into a confidently wrong answer — every one of
 them a question where the *other* argument was the wrong one, so the repair
-fixed the number and removed the refusal that was doing useful work. That trade
-is the open question in this slice. The rules are deliberately timid because of
+fixed the number and removed the refusal that was doing useful work.
+Harry's call on 2026-11-12 was to keep it: 12 right for 5 wrong in 1,942 is
+worth the trade, and the guards stay because they are what makes the ratio that
+good. The number to watch is the wrong-answer count, not the refusal count. The rules are deliberately timid because of
 it: at most one argument per call, never a number the call already carries
 (`pythagoras 2 7` is one character from `7 7`), never across a sign change, and
 never two equally close candidates.

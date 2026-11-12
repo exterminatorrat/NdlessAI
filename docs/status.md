@@ -82,7 +82,7 @@ equation — and stopped at the boundary where honest refusal beats a guess.
 Ordered by how much they matter, not by how easy they are.
 
 1. **Never run on hardware.** The app cross-compiles, links for `arm926ej-s`,
-   and has a valid Zehn header, but no one has run it on a CX II. Timing,
+   and packages into a `.tns` — the recipe is in `development.md` — but no one has run it on a CX II. Timing,
    memory pressure, and the actual UI are unmeasured — the 4.5 screen and the
    4.6 plots are asserted by host tests over a 320x240 framebuffer, which proves
    the values and the layout arithmetic, not that they read well on glass. This

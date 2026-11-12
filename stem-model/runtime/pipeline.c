@@ -6,6 +6,9 @@
 #include "callmask.h"
 #include "matrix.h"
 #include "pipeline.h"
+#include "plan.h"
+#include "grounding.h"
+#include "repair.h"
 #include "shorthand.h"
 #include "solvers.h"
 #include "steps.h"
@@ -150,11 +153,21 @@ static int parse_call(const char *call, char *work, size_t worklen, call_t *c)
 	return 0;
 }
 
+/* A chain of calls is executed as a plan; a single call goes straight to the
+ * solver. Both end here so the model path and the typed path cannot diverge. */
 static int run_call_text(const char *call, char *answer, int answer_max)
 {
+	plan_t plan;
 	char work[256];
 	call_t c;
 
+	if (plan_is(call)) {
+		if (plan_execute(call, &plan) < 0)
+			return -1;
+		snprintf(answer, (size_t)answer_max, "%s",
+		         plan.step[plan.n - 1].answer);
+		return 0;
+	}
 	if (parse_call(call, work, sizeof work, &c) < 0)
 		return -1;
 	return solvers_solve(c.name, c.args, c.nargs, answer, answer_max);
@@ -170,6 +183,13 @@ int pipeline_steps(const char *call, const char *answer, char *out, int outlen)
 	out[0] = 0;
 	if (call == NULL || call[0] == 0)
 		return 0;
+	if (plan_is(call)) {
+		plan_t plan;
+
+		if (plan_execute(call, &plan) < 0)
+			return 0;
+		return plan_render(&plan, out, outlen);
+	}
 	if (parse_call(call, work, sizeof work, &c) < 0)
 		return 0;
 	return steps_render(c.name, c.args, c.nargs, answer, out, outlen);
@@ -193,67 +213,9 @@ int pipeline_steps(const char *call, const char *answer, char *out, int outlen)
  *    this, a model that flips a sign still passes: "x^2 - 3x + 2" contains a
  *    3, so an argument of +3 looked grounded when the answer needed -3.
  */
-static int is_digit(char c)
-{
-	return c >= '0' && c <= '9';
-}
-
-static int arg_in_text(const char *arg, const char *question)
-{
-	int negative = (*arg == '-');
-	const char *digits = negative ? arg + 1 : arg;
-	size_t n = strlen(digits);
-
-	if (!n)
-		return 0;
-	if (!strcmp(digits, "0") || !strcmp(digits, "1"))
-		return 1;
-
-	for (const char *p = question; (p = strstr(p, digits)) != NULL; p++) {
-		const char *before = p;
-		int has_minus = 0;
-
-		if (is_digit(p[n]))
-			continue;
-		while (before > question && before[-1] == ' ')
-			before--;
-		if (before > question && before[-1] == '-')
-			has_minus = 1;
-		else if (before > question && is_digit(before[-1]))
-			continue;
-		if (has_minus == negative)
-			return 1;
-	}
-	return 0;
-}
-
 int pipeline_args_grounded(const char *call, const char *question)
 {
-	char work[256];
-	size_t len = strlen(call), i = 0;
-	int word = 0;
-
-	if (len + 1 > sizeof work)
-		return 0;
-	memcpy(work, call, len + 1);
-
-	while (i <= len) {
-		char *start;
-
-		while (i < len && work[i] == ' ')
-			work[i++] = '\0';
-		if (i >= len)
-			break;
-		start = work + i;
-		while (i < len && work[i] != ' ')
-			i++;
-		if (i < len)
-			work[i++] = '\0';
-		if (word >= 2 && !arg_in_text(start, question))
-			return 0;
-		word++;
-	}
-	return 1;
+	return grounding_call_grounded(call, question);
 }
 
 int pipeline_init(pipeline_t *p, const char *weights_path, int seq)
@@ -348,6 +310,23 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 	 * arguments do not fit is refused rather than handed to the decoder,
 	 * which would guess at a sentence that was never one.
 	 */
+	/* A plan the student typed: calls separated by ';', each able to use the
+	 * number the step before it produced. */
+	if (plan_is(question)) {
+		plan_t plan;
+
+		if (plan_execute(question, &plan) < 0) {
+			if (call && call_max > 0)
+				snprintf(call, (size_t)call_max, "%s", question);
+			return 2;
+		}
+		if (call && call_max > 0)
+			snprintf(call, (size_t)call_max, "%s", question);
+		snprintf(answer, (size_t)answer_max, "%s",
+		         plan.step[plan.n - 1].answer);
+		return 0;
+	}
+
 	rc = shorthand_build(question, guess, (int)sizeof guess);
 	if (rc < 0)
 		return 1;
@@ -432,6 +411,19 @@ int pipeline_answer(pipeline_t *p, const char *question,
 
 	if (ids_to_text(&p->tok, ids + n, gen, call, call_max) < 0)
 		return PIPELINE_ERR;
+	/*
+	 * The dominant failure on hand-written wording is a digit one keystroke
+	 * off, not the wrong relation. Snap an ungrounded argument back to the one
+	 * number in the sentence it can only have meant, before the grounding
+	 * check decides the answer is uncertain.
+	 */
+	if (call && call_max > 0) {
+		char repaired[256];
+
+		if (repair_call(call, question, repaired, (int)sizeof repaired) > 0 &&
+		    strlen(repaired) < (size_t)call_max)
+			snprintf(call, (size_t)call_max, "%s", repaired);
+	}
 	if (run_call_text(call, answer, answer_max) < 0)
 		return PIPELINE_ERR;
 	if (!pipeline_args_grounded(call, question)) {

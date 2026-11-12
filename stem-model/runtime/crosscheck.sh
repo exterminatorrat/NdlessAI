@@ -18,7 +18,7 @@ mkdir -p "$OUT"
 # link below fails with undefined references, which is how expr.c was caught.
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
          solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern infer pipeline main_device graph diagram expr \
-         callmask matrix shorthand steps screen ui; do
+         callmask matrix shorthand plan grounding repair steps screen ui; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -41,7 +41,7 @@ done
 
 status=0
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
-         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern graph diagram expr callmask matrix shorthand steps screen ui; do
+         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern graph diagram expr callmask matrix shorthand plan grounding repair steps screen ui; do
     # Two named functions own their soft-float, and nothing else may: qstate_init
     # builds the rope and activation tables once at startup, and solve_exp's
     # fallback for an exponent that is not a rational power of the base renders

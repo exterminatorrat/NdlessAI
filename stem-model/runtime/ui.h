@@ -48,7 +48,7 @@
 #define UI_ROWS_MAX   64
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048
-#define UI_HELP_PAGES 4
+#define UI_HELP_PAGES 5
 #define UI_CALL_MAX   128
 /* The three steps of solve by formula: subject, relation, arguments. */
 #define UI_TMPL_STEP_SUBJECT  0

@@ -25,12 +25,12 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # model and the expression evaluator, and matrix.c answers linear algebra
 # before any of them runs.
 PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c \
-	   diagram.c expr.c callmask.c matrix.c shorthand.c steps.c
+	   diagram.c expr.c callmask.c matrix.c shorthand.c plan.c steps.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
      test_matrix test_steps test_symbolic test_series test_ode test_alt \
-     test_screen test_ui test_diagram test_shorthand bench_kernel
+     test_screen test_ui test_diagram test_shorthand test_plan bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -93,6 +93,9 @@ test_diagram: test_diagram.c diagram.c screen.c expr.c diagram.h $(HEADERS)
 test_shorthand: test_shorthand.c $(PIPELINE) shorthand.h $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_shorthand.c $(PIPELINE) $(LDLIBS)
 
+test_plan: test_plan.c $(PIPELINE) plan.h $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_plan.c $(PIPELINE) $(LDLIBS)
+
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
 
@@ -121,6 +124,7 @@ check: all
 	./test_graph
 	./test_diagram
 	./test_shorthand
+	./test_plan
 	./test_typed
 	./test_screen
 	./test_ui
@@ -132,6 +136,6 @@ clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
 	      test_equation test_alt test_screen test_ui test_diagram test_shorthand \
-      bench_kernel
+      test_plan bench_kernel
 
 .PHONY: all clean check

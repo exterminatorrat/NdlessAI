@@ -30,6 +30,7 @@ runtime/test_guard
 runtime/test_graph
 runtime/test_diagram
 runtime/test_shorthand
+runtime/test_plan
 runtime/test_typed
 runtime/test_parity
 runtime/test_expr

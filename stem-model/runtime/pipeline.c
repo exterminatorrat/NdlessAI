@@ -6,6 +6,7 @@
 #include "callmask.h"
 #include "matrix.h"
 #include "pipeline.h"
+#include "plan.h"
 #include "shorthand.h"
 #include "solvers.h"
 #include "steps.h"
@@ -150,11 +151,21 @@ static int parse_call(const char *call, char *work, size_t worklen, call_t *c)
 	return 0;
 }
 
+/* A chain of calls is executed as a plan; a single call goes straight to the
+ * solver. Both end here so the model path and the typed path cannot diverge. */
 static int run_call_text(const char *call, char *answer, int answer_max)
 {
+	plan_t plan;
 	char work[256];
 	call_t c;
 
+	if (plan_is(call)) {
+		if (plan_execute(call, &plan) < 0)
+			return -1;
+		snprintf(answer, (size_t)answer_max, "%s",
+		         plan.step[plan.n - 1].answer);
+		return 0;
+	}
 	if (parse_call(call, work, sizeof work, &c) < 0)
 		return -1;
 	return solvers_solve(c.name, c.args, c.nargs, answer, answer_max);
@@ -170,6 +181,13 @@ int pipeline_steps(const char *call, const char *answer, char *out, int outlen)
 	out[0] = 0;
 	if (call == NULL || call[0] == 0)
 		return 0;
+	if (plan_is(call)) {
+		plan_t plan;
+
+		if (plan_execute(call, &plan) < 0)
+			return 0;
+		return plan_render(&plan, out, outlen);
+	}
 	if (parse_call(call, work, sizeof work, &c) < 0)
 		return 0;
 	return steps_render(c.name, c.args, c.nargs, answer, out, outlen);
@@ -348,6 +366,23 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 	 * arguments do not fit is refused rather than handed to the decoder,
 	 * which would guess at a sentence that was never one.
 	 */
+	/* A plan the student typed: calls separated by ';', each able to use the
+	 * number the step before it produced. */
+	if (plan_is(question)) {
+		plan_t plan;
+
+		if (plan_execute(question, &plan) < 0) {
+			if (call && call_max > 0)
+				snprintf(call, (size_t)call_max, "%s", question);
+			return 2;
+		}
+		if (call && call_max > 0)
+			snprintf(call, (size_t)call_max, "%s", question);
+		snprintf(answer, (size_t)answer_max, "%s",
+		         plan.step[plan.n - 1].answer);
+		return 0;
+	}
+
 	rc = shorthand_build(question, guess, (int)sizeof guess);
 	if (rc < 0)
 		return 1;

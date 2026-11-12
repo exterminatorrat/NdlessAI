@@ -247,6 +247,39 @@ slice 2 makes it work on real sentences, slice 3 makes it trustworthy, and only
 then does breadth pay, because breadth on an unreliable base multiplies the
 number of ways to be confidently wrong.
 
+## Slice 1, as it stands
+
+The protocol and the executor are in, and they work without a retrain because a
+student can type a plan:
+
+```
+newton2 2 9.8 ; friction_force 0.2 <1>     ->  3.92 N
+kinematic_v 0 3 4 ; kinetic_energy 5 <1>   ->  360 J
+kinematic_v 0 2 5 ; kinetic_energy 2 <1> ; power <2> 4   ->  25 W
+```
+
+`<n>` is the magnitude of step n's answer, steps are separated by `;`, and the
+limit is five. The answer pane prints the whole chain with each step's formula
+and numbers, and TAB/VAR act on the **last** step, so a chain's diagram and
+plot are about the quantity that answered the question.
+
+Four rules, each there because the alternative is a half-run plan:
+
+- a step may only reference an **earlier** step, so a plan cannot loop;
+- a step that answers with more than one number (`x=0, x=3`) cannot feed the
+  next one, and the plan is refused at that step;
+- a plan over five steps is refused rather than truncated;
+- units ride along for display but only magnitudes are passed. That is honest
+  today and is exactly what slice 4's dimensional layer fixes: `5 N` flowing
+  into a slot meaning `5 kg` is currently undetectable, which is why the refusal
+  list is short rather than long.
+
+What slice 1 does **not** yet include: the model emitting plans (it needs the
+retrain this protocol was written for, and that is the next task), the 50-item
+hand-written chain suite (ten chains are asserted today, in `test_plan`), and
+plan verification before execution (S5) — steps are checked as they run, so a
+bad plan fails at the step, not before it.
+
 ## What this needs that the project does not have
 
 - **A multi-step corpus.** Every training row today is one question and one

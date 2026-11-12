@@ -103,7 +103,24 @@ static const char *const help_pages[UI_HELP_PAGES] = {
 	"\n"
 	"Leave out spaces: every call above\n"
 	"answers with no model and no words.\n"
-	"Next page: the same, longer."
+	"Next page: chains.",
+
+	"Chain calls with a semicolon\n"
+	"\n"
+	"<1> is the number the first step\n"
+	"answered with, <2> the second, and\n"
+	"so on, up to five steps.\n"
+	"\n"
+	"newton2 2 9.8 ; friction_force 0.2 <1>\n"
+	"  the weight, then the friction\n"
+	"  it causes: 3.92 N\n"
+	"\n"
+	"kinematic_v 0 3 4 ; kinetic_energy 5 <1>\n"
+	"  the speed, then the energy it\n"
+	"  carries: 360 J\n"
+	"\n"
+	"A step that needs two numbers of\n"
+	"its own cannot be chained into."
 };
 
 /*
@@ -438,6 +455,23 @@ static void ask(ui_t *u)
 	u->cursor = 0;
 }
 
+/* A plan's last step is the one that produced the answer, so it is the one a
+ * diagram or a plot is about. */
+static const char *last_step_of(const char *call)
+{
+	const char *at;
+
+	if (!call)
+		return "";
+	at = strrchr(call, ';');
+	if (!at)
+		return call;
+	at++;
+	while (*at == ' ')
+		at++;
+	return at;
+}
+
 /* Whether the relation a call named has a diagram. The call is "CALL name
  * args...", so the name is the second token; a call that is not that shape has
  * no diagram either. */
@@ -446,7 +480,8 @@ static int call_has_diagram(const char *call)
 	char name[48];
 	int i = 0;
 
-	if (!call || strncmp(call, "CALL ", 5) != 0)
+	call = last_step_of(call);
+	if (strncmp(call, "CALL ", 5) != 0)
 		return 0;
 	call += 5;
 	while (call[i] && call[i] != ' ' && i < (int)sizeof name - 1) {
@@ -908,8 +943,8 @@ static ui_key_t ask_key(ui_t *u, ui_key_t k)
 	case UI_KEY_GRAPH:
 		/* The plotter is the device's loop, so the model can only ask for
 		 * it. An answer that came from arithmetic has no curve to show. */
-		return graph_call_plottable(u->last_call) ? UI_KEY_GRAPH
-		                                        : UI_KEY_NONE;
+		return graph_call_plottable(last_step_of(u->last_call))
+		       ? UI_KEY_GRAPH : UI_KEY_NONE;
 	default:
 		edit_key(u, k);
 		break;

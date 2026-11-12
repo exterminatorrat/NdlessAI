@@ -75,14 +75,32 @@ It compiles the device path for `arm926ej-s`, links a test ELF, and fails if the
 
 `stem-model/device` builds the Ndless application itself, which is a separate step from `runtime/crosscheck.sh`: that one links the runtime, this one links the whole app including `main.c`.
 
-You need the Ndless SDK's ARM toolchain on `PATH` (`nspire-gcc`, `nspire-as`, `nspire-ld`, `genzehn`, `make-prg`), and the SDK's own archives, which a fresh checkout does not contain:
+You need an `arm-none-eabi` toolchain of 2024 or later and the SDK's own archives, which a fresh checkout does not contain. This sequence is the one that produced a `.tns` on a Mac on 2026-11-12, in full, including the parts that fail:
 
 ```sh
+export ARMBIN=/path/to/arm-gnu-toolchain-13.3.rel1/bin     # arm-none-eabi-gcc, -g++, -ar
+export PATH=$PWD/ndless-sdk/bin:$ARMBIN:$PATH
+export _NDLESS_TOOLCHAIN_PATH=$ARMBIN                       # what nspire-gcc links against
+
 cd ndless-sdk
-git -C .. submodule update --init --recursive
-make -C thirdparty nspireio   # nspireio's headers are what libsyscalls' stdlib needs
-make -C libsyscalls
-make -C libndls
+make -C libsyscalls || true     # archives libsyscalls.a, then fails on the nspireio variant
+make -C libndls                 # needs the archive above
+make -C system                  # crt0, crti, crtn and the ldscript
+make -C thirdparty && make -C thirdparty/nspire-io    # libnspireio.a; needs the submodule
+make -C tools/genzehn           # needs boost's program_options and zlib on the host
+```
+
+Four things about that list are worth knowing before it wastes an afternoon:
+
+- `make -C libsyscalls` stops while building `stdlib_nspireio.o`, because the `nspire-io` submodule is empty in a fresh clone. The archive `libsyscalls.a` is written first, which is the one the app needs; `|| true` is deliberate. If GitHub is unreachable, the submodule cannot be fetched at all, and an **empty** `lib/libnspireio.a` is enough for the link, because the Ndless linker shim always passes `-lnspireio` and this app never calls a console function: `arm-none-eabi-ar rcs lib/libnspireio.a`.
+- `genzehn` is built with the host compiler and needs `boost_program_options` and zlib. On a Mac that is `brew install boost` and `-I/opt/homebrew/include -L/opt/homebrew/lib`.
+- `crtn.S` in this repository defines `_fini` and `_init`, which a 2024 newlib's `libc_a-fini.o` calls and older crt files did not provide. Without that, the link ends in ``undefined reference to `_fini` ``.
+- `device/Makefile` links without `--nspireio`, since the app draws into its own framebuffer through `lcd_*` calls rather than a console.
+
+The tokenizer export in `make` needs `sympy`, so run it with an interpreter that has it:
+
+```sh
+cd stem-model/device && make PYTHON="uv run --with sympy python"
 ```
 
 Then the model artefacts the build packages. Neither is committed, so build them first:
@@ -102,7 +120,7 @@ That writes two files, and both must be copied into the same folder on the calcu
 
 Without `weights.bin.tns` the app still answers typed arithmetic and plots graphs, but not word problems. `make` also refreshes `runtime/bpe.h` from `data/tokenizer.json` first, so a stale tokenizer cannot ship by accident.
 
-Nothing here has been run on a calculator yet: the app has been cross-compiled and measured on the host path only.
+The build writes what this table claims — `stemhelp.elf` is 373 KB with 224 KB of text, and `stemhelp.tns` comes out at 254 KB — but **nothing here has been run on a calculator**. The app compiles, links, packs into a valid PRG, and has never drawn a pixel on real glass.
 
 ## Adding a relation
 

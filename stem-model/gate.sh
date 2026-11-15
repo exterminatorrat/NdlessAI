@@ -75,7 +75,15 @@ if [ -d runtime ]; then
     # gap this file's own comment complains about.
     run "screen primitives"      sh -c 'cd runtime && ./test_screen | grep -q "all checks passed"'
     run "interface model"        sh -c 'cd runtime && ./test_ui | grep -q "all checks passed"'
-    run "candidate margins"      sh -c 'cd runtime && ./test_alt | grep -q "all cases passed"'
+    # test_alt loads weights.bin to read the decoder's candidate margins, which
+    # is the file this repository does not commit. It is skipped for the same
+    # reason test_fixed is, rather than failing a fresh clone for a missing
+    # artefact - a gate the host cannot run is a SKIP, not a FAIL.
+    if [ -f weights.bin ]; then
+        run "candidate margins"  sh -c 'cd runtime && ./test_alt | grep -q "all cases passed"'
+    else
+        skip "candidate margins (no weights.bin)"
+    fi
     run "diagram answers"        sh -c 'cd runtime && ./test_diagram | grep -q "all checks passed"'
     run "typed calls"            sh -c 'cd runtime && ./test_shorthand | grep -q "all checks passed"'
     run "plans"                  sh -c 'cd runtime && ./test_plan | grep -q "all checks passed"'

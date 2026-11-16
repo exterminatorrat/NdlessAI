@@ -143,6 +143,20 @@ wider intermediate than Q16 or an asymptotic rule table per integrand family;
 both are engine work, and neither belongs in a slice whose contract is "no
 retrain, four small PRs".
 
+## The batch order changed after P2
+
+P2 measured something the plan had assumed otherwise: AB and BC are almost
+entirely *expression-shaped*. "Find the average rate of change of f over [2, 5]"
+is an expression plus bounds, which the typed engine now answers; it is not a
+fixed-arity call with numbers from a sentence. So batch A is much smaller than
+written, and the relations that genuinely need the model are the numeric,
+word-problem-shaped ones.
+
+The order is therefore **batch B (SAT/ACT numeracy) before batch A (precalculus
+and AB wording)**, and batch A shrinks to the precalculus models that really are
+number-shaped. P4's numbering stays as written so the earlier references still
+resolve; the execution order does not.
+
 ## P3 — Relation batch A: precalculus and AB wording
 
 **Goal.** Cover the course topics that are formulas with words, where the typed

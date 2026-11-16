@@ -251,6 +251,27 @@ per-course floor reports its number, and this file records before and after for
 all five courses. If generated accuracy rises while hand-written accuracy falls,
 that is a regression to report, not a trade to celebrate.
 
+**Status: two cycles run.** Both on the Mac mini, 12,000 steps, seq 192, batch
+32, 4.2-4.3 ks each. Cycle one is batch B's first five relations; cycle two adds
+the wording families in `surface/vary.py` and nothing else.
+
+| cycle | relations | wording families | held-out templates | wording never trained | precalc | SAT/ACT | intro |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline before batch B | 136 | no | - | - | 61.6% | 67.2% | 64.2% |
+| one: five numeric relations | 141 | no | 94.8% | - | 64.3% | 74.1% | 70.1% |
+| two: + wording families | 141 | yes | 93.0% | 98.9% | 64.5% | 72.4% | 68.5% |
+
+Reading it honestly: cycle one is the course win, roughly 70 more correct
+hand-written questions. Cycle two keeps every floor passing but gives back 1.7
+points on SAT/ACT and 1.6 on intro against a 460- and 752-row sample, which is
+inside the sampling noise rather than a demonstrated cost. What cycle two buys is
+measured directly instead: on 1,041 rows whose wording never appears in training
+("per cent", "Work out") it is 98.9% exact, against 98.5% on the same templates
+in ordinary wording. Wording novelty stops costing accuracy, which was the point
+of the cycle.
+
+Fixed-point parity is 6/6 in both cycles (worst maxdiff 0.0595 and 0.0533).
+
 ## P7 — Course surface
 
 **Goal.** A student who owns AP Physics C should not have to guess what the

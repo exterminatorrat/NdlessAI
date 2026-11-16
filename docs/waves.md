@@ -201,6 +201,7 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | Workstream | State on master | Where it lives |
 | --- | --- | --- |
 | Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | merged, #15 | `runtime/expr.c`; `typed_mode()` answers without `weights.bin` |
+| 4.5 follow-up: question editor input limit | not merged; verified on `fix/question-editor-input-limit`, 2026-11-16 | `UI_INPUT_MAX` permits 255 characters; `test_ui` checks long questions, full-input feedback, deletion, submission, history and the 15-character formula-field limit; ASan/UBSan and optimized `-Werror` checks pass; hardware not run |
 | 0.1 split the solver and formula tables by subject | merged, #19 | ten `relations/*.py` modules, seven `runtime/solvers_*.c` units |
 | 0.2 build the artifacts | on the build machine only, not committed | `weights.bin` and `data/` are gitignored, so `gate.sh` skips parity and accuracy on a fresh clone |
 | 0.3 record the baseline | done | the numbers under "Baseline measured on the build machine" |

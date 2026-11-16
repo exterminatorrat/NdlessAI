@@ -161,6 +161,12 @@ static int has_input(const ui_t *u)
 	return u->mode == UI_MODE_ASK || u->mode == UI_MODE_GRAPH;
 }
 
+/* Revised 2026-11-16: enforce and display the editor's actual buffer limit. */
+static int input_limit(const ui_t *u)
+{
+	return (u->mode == UI_MODE_TMPL ? UI_TMPL_ARG : UI_INPUT_MAX) - 1;
+}
+
 /* ---- text building ---- */
 
 static void put_ch(char **at, const char *end, char c)
@@ -1016,7 +1022,7 @@ int ui_type(ui_t *u, char c)
 	if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS &&
 	    !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e'))
 		return 0;
-	if (u->input_len >= UI_INPUT_MAX - 1)
+	if (u->input_len >= input_limit(u))
 		return 0;
 	if (u->cursor < 0)
 		u->cursor = 0;
@@ -1294,6 +1300,9 @@ static void draw_input(const ui_t *u, uint16_t *fb)
 static void draw_footer(const ui_t *u, uint16_t *fb)
 {
 	const char *first, *second;
+	int full = (has_input(u) || (u->mode == UI_MODE_TMPL &&
+	                            u->tmpl_step == UI_TMPL_STEP_ARGS)) &&
+	           u->input_len >= input_limit(u);
 
 	if (u->mode == UI_MODE_MENU) {
 		first = "ENTER choose   UP/DOWN move";
@@ -1317,7 +1326,9 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 		first = "ENTER ask   DEL erase   ESC clear";
 		second = "LEFT/RIGHT history   UP/DOWN scroll";
 	}
-	screen_text(fb, 4, UI_FOOTER_Y, first, UI_DIM);
+	if (full)
+		first = "Input full: DEL erase or ESC clear";
+	screen_text(fb, 4, UI_FOOTER_Y, first, full ? UI_ACCENT : UI_DIM);
 	screen_text(fb, 4, UI_FOOTER_Y + 11, second, UI_DIM);
 	/* The answer screen has two pictures on offer, and neither is guessable
 	 * from the keypad, so the line that advertises them is the last text row

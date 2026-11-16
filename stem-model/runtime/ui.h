@@ -44,7 +44,8 @@
 
 #define UI_FOOTER_Y   199
 
-#define UI_INPUT_MAX  64
+/* Revised 2026-11-16: retain longer questions and their full history entries. */
+#define UI_INPUT_MAX  256
 #define UI_ROWS_MAX   64
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048

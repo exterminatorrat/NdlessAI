@@ -19,6 +19,8 @@
 #include "diagram.h"
 #include "reltable.h"
 
+/* Revised 2026-11-16: cover long questions, visible limits and recovery. */
+
 #define PAD 8
 #define CANARY 0xA5A5u
 
@@ -267,6 +269,67 @@ static void test_help(void)
 }
 
 /* ---- the input line ---- */
+
+static void check_input_full_notice(void)
+{
+	unsigned long actual;
+
+	render();
+	actual = hash(0, UI_FOOTER_Y, SCREEN_W, 9);
+	screen_fill(fb, 0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_BLACK);
+	screen_text(fb, 4, UI_FOOTER_Y,
+	            "Input full: DEL erase or ESC clear", SCREEN_ACCENT);
+	check(actual == hash(0, UI_FOOTER_Y, SCREEN_W, 9),
+	      "a full editor visibly explains how to recover");
+}
+
+static void test_long_input(void)
+{
+	const char *question =
+	    "A sample contains 0.25 mol of NaCl dissolved in a total solution "
+	    "volume of 0.5 L. Find its molarity.";
+	char expression[UI_INPUT_MAX];
+
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	for (const char *p = question; *p; p++)
+		check(ui_type(&u, *p), "a chemistry question fits beyond 63 characters");
+	check(strcmp(u.input, question) == 0, "the final volume is retained");
+	render();
+	ui_key(&u, UI_KEY_BACK);
+
+	memset(expression, ' ', sizeof expression - 1);
+	expression[0] = '2';
+	expression[sizeof expression - 3] = '+';
+	expression[sizeof expression - 2] = '3';
+	expression[sizeof expression - 1] = '\0';
+	for (const char *p = expression; *p; p++)
+		check(ui_type(&u, *p), "the full question capacity can be typed");
+	check(u.input_len == UI_INPUT_MAX - 1 &&
+	      strcmp(u.input, expression) == 0, "the full input stays terminated");
+	check(ui_type(&u, '9') == 0 && strcmp(u.input, expression) == 0,
+	      "overflow leaves the input unchanged");
+	check_input_full_notice();
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(strcmp(ui_row(&u, 0), "5") == 0,
+	      "submitting a long expression includes its final operands");
+	ui_key(&u, UI_KEY_LEFT);
+	check(strcmp(u.input, expression) == 0,
+	      "history recalls the entire long question");
+	check_input_full_notice();
+	ui_key(&u, UI_KEY_DELETE);
+	render();
+	check(ink_of(0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_ACCENT) == 0,
+	      "deleting below the limit restores the normal footer");
+	check(ui_type(&u, '4'), "typing resumes after deletion");
+	check_input_full_notice();
+	ui_key(&u, UI_KEY_BACK);
+	check(u.input_len == 0 && ui_type(&u, '9'),
+	      "clearing a full input allows a new question");
+	render();
+	check(ink_of(0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_ACCENT) == 0,
+	      "clearing removes the full-input notice");
+}
 
 static void test_input(void)
 {
@@ -834,6 +897,12 @@ static void test_template(void)
 
 	/* The prompt takes numbers only. */
 	check(ui_type(&u, 'a') == 0, "a letter is not an argument");
+	for (int i = 0; i < UI_TMPL_ARG - 1; i++)
+		check(ui_type(&u, '9'), "an argument fits its own input buffer");
+	check(ui_type(&u, '8') == 0 && u.input_len == UI_TMPL_ARG - 1,
+	      "an argument cannot be silently truncated on submission");
+	check_input_full_notice();
+	ui_key(&u, UI_KEY_BACK);
 	ui_type(&u, '0');
 	ui_type(&u, '.');
 	ui_type(&u, '4');
@@ -872,6 +941,7 @@ int main(void)
 	test_menu();
 	test_help();
 	test_input();
+	test_long_input();
 	test_answer_and_history();
 	test_wrap_and_scroll();
 	test_errors();

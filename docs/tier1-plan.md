@@ -58,13 +58,15 @@ Mac mini and cannot be parallelised.
 **Goal.** Turn "what does this course need" into a table a script produces, so
 later phases and later courses cannot drift into opinion.
 
-**Deliverable.** `tools/course_audit.py` plus the data it reads: a course file
-naming each course, its units, and the exam topic behind each unit, mapped to a
-relation, a typed command, or a gap. It prints, per course, how many topics are
-served, how many are typed, and how many are missing, and exits non-zero when a
-served claim names a relation that does not exist.
+**Deliverable.** `stem-model/course_audit.py` plus `stem-model/courses.py`, the
+data it reads: each course, its units, and the exam topic behind each unit,
+mapped to a relation, a typed command, or a gap. It prints, per course, how
+many topics are served, how many are typed, and how many are missing, and exits
+non-zero when a served claim names a relation that does not exist. The script
+lives beside the other analysers rather than in the root `tools/` directory,
+which holds repository-level scripts.
 
-**Exit gate.** `python3 tools/course_audit.py` prints the matrix and the three
+**Exit gate.** `python3 stem-model/course_audit.py` prints the matrix and the
 counts per course, and the matrix matches `RELATIONS` exactly — a relation
 listed as serving a topic that is not in the registry fails the run.
 
@@ -78,16 +80,20 @@ has somewhere to show up.
 
 **Deliverables.**
 
-- A course tag per relation, derived from the P0 file rather than duplicated.
+- `courses.py` holds one `exact_floor` per course, with the row count and the
+  date it was measured. The map is already the single source: a relation's
+  courses come from `courses_for()`, so nothing is duplicated.
 - `report_relations.py --course NAME`, printing the same table scoped to one
-  course, plus the aggregate.
-- `gate.sh` gains a per-course floor: the same shape as the per-relation floor,
-  with its own recorded budget. The budget starts at today's actual number with
-  the measurement attached, never at a target.
+  course, and `--course-floor`, which scores the corpus once and prints every
+  course against its own floor.
+- `gate.sh` gains `per-course floor`, inside the accuracy branch with the
+  existing gates. The budget is the measured number minus `FLOOR_SLACK`, and a
+  course under `MIN_ROWS` scored rows is reported as too thin to judge rather
+  than judged anyway — eleven questions is a coin flip wearing a decimal point.
 
 **Exit gate.** `sh stem-model/gate.sh quick` still reports `ALL GATES PASS`, and
-the new gate prints the five baseline numbers. Those numbers are recorded in
-this file under "Baseline", dated and tied to a commit.
+`report_relations.py --course-floor` prints the five lines. Those numbers are
+recorded in this file under "Baseline", dated and tied to a commit.
 
 **Failure policy.** A floor that fails on its first run is a budget written too
 high, not a broken model: fix the budget to the measured number in the same
@@ -238,9 +244,35 @@ integration:
 
 ## Baseline
 
-Filled by P1, dated and tied to a commit. Until then the numbers live in
-`docs/waves.md`: 92.5% exact call on 1,000 generated held-out rows, 71.2% on
-1,942 hand-written rows, 93.7% through the full on-device path.
+Measured 2026-11-16 on the corpus's eval split (1,942 hand-written rows) with
+the weights trained from `edbe24a6`, through `runtime/main_device`:
+
+| Course | Rows | Exact call | Floor |
+| --- | --- | --- | --- |
+| AP Precalculus | 529 | 61.6% | 61.6 |
+| AP Calculus AB | 46 | 69.6% | not judged: below the 60-row minimum |
+| AP Calculus BC | 0 | — | not judged: no corpus rows, BC is typed-engine work |
+| SAT / ACT maths | 460 | 67.2% | 67.2 |
+| Intro high-school physics and chemistry | 752 | 64.2% | 64.2 |
+
+Two things the table says that a headline number could not. AP Calculus BC has
+no corpus rows at all, because the only calculus relations are `deriv_poly3` and
+`integr_poly3` and both are AB's: BC is served by the typed engine, and its
+accuracy is judged by `test_expr`, `test_symbolic` and `test_series` rather than
+by wording. AP Calculus AB has 46 rows, which is under the minimum, so it is
+reported and not judged until P3 gives it relations of its own.
+
+The aggregate the project has quoted until now — 71.2% on the same 1,942 rows —
+is higher than every course here because it also counts relations that serve no
+Tier 1 course. Both numbers are true; this table is the one a student in one of
+these courses experiences.
+
+## Status
+
+| Phase | State | Evidence |
+| --- | --- | --- |
+| P0 inventory | done | `python3 stem-model/course_audit.py`: 5 courses, 29 units, 128 topics, 33 gaps, every relation claim registered |
+| P1 per-course measurement | done | `report_relations.py --course-floor`: three PASS, two too thin to judge; `gate.sh` carries the line |
 
 ## What is not in Tier 1
 

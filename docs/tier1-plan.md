@@ -272,6 +272,35 @@ of the cycle.
 
 Fixed-point parity is 6/6 in both cycles (worst maxdiff 0.0595 and 0.0533).
 
+**The variance result, and why every number above needs a second seed.** A third
+cycle (batch B's remaining five relations) scored 89.4% on the same 500 held-out
+rows, 3.6 points below cycle two, with the course floors down with it. Before
+either believing or patching that, the same training data was retrained with
+`--seed 2`: **93.0%**, matching cycle two exactly and recovering the floors.
+
+| run | data | seed | held-out templates | reserved wording | precalc | SAT/ACT | intro |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| one | +5 numeric | 1 | 94.8% | - | 64.3% | 74.1% | 70.1% |
+| two | + wording families | 1 | 93.0% | 98.9% | 64.5% | 72.4% | 68.5% |
+| three | +5 geometry and rate | 1 | 89.4% | 98.2% | 60.5% | 69.6% | 65.3% |
+| three' | same as three | 2 | 93.0% | 98.1% | 63.3% | 71.1% | 69.4% |
+
+So the run-to-run spread on a 500-row probe is **±3.6 points**, wider than every
+difference between the cycles except cycle one's SAT/ACT gain. Two consequences,
+both binding on how this document reports from here:
+
+1. A single 500-row probe cannot separate two nearby configurations. Any claim
+   that a catalogue or wording change helped needs either the within-model
+   contrast (reserved wording against plain wording, same weights) or at least
+   two seeds per arm.
+2. Cycle one's +6.9 points on SAT/ACT is bigger than the spread and stands. The
+   1.7-point give-back attributed to the wording families in cycle two does not:
+   it is inside the noise floor, and this file should not have implied otherwise
+   before the control ran.
+
+Fixed-point parity is 6/6 in every cycle (worst maxdiff 0.0595, 0.0533 and
+0.0327).
+
 ## P7 — Course surface
 
 **Goal.** A student who owns AP Physics C should not have to guess what the

@@ -10,18 +10,21 @@ from distractors import add_distractor
 from gen_traces import render_call, run_call
 from relations import RELATIONS
 from surface import held_out_indices, render as render_phrasing, train_indices
+from surface.vary import grounded_params, held_out_variant, train_variant
 from tokenizer import Tokenizer, train as train_tokenizer
 
-def build(relations, n, seed, distractor_rate, max_phrasings=None):
+def build(relations, n, seed, distractor_rate, max_phrasings=None,
+          variant=None):
     return _build(relations, n, seed, distractor_rate, held_out=False,
-                  max_phrasings=max_phrasings)
+                  max_phrasings=max_phrasings, variant=variant)
 
 
 def build_held_out(relations, n, seed, distractor_rate):
     return _build(relations, n, seed, distractor_rate, held_out=True)
 
 
-def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None):
+def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None,
+           variant=None, pool_held_out=None):
     start = time.time()
     rng = random.Random(seed)
     rows = []
@@ -37,7 +40,15 @@ def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None):
         pool = held_out_indices(name) if held_out else train_indices(name)
         if not held_out and max_phrasings:
             pool = pool[:max_phrasings]
+        if pool_held_out is not None:
+            pool = held_out_indices(name) if pool_held_out else train_indices(name)
         question = render_phrasing(name, params, rng.choice(pool))
+        if variant is not None:
+            grounded = grounded_params(question, params)
+            varied = (train_variant(question, rng) if variant == "train"
+                      else held_out_variant(question, rng))
+            if not grounded or grounded_params(varied, params):
+                question = varied
         call = render_call(name, params)
         answer = run_call(call)
         got = call.split()[2:]
@@ -102,6 +113,9 @@ def main():
     ap.add_argument("--val", type=int, default=4000)
     ap.add_argument("--held-out", type=int, default=2000,
                     help="rows using phrasings reserved from training")
+    ap.add_argument("--wording-eval", type=int, default=2000,
+                    help="rows on trained phrasings but wording reserved from "
+                         "training ('per cent', 'Work out', US spelling)")
     ap.add_argument("--vocab", type=int, default=512)
     ap.add_argument("--tokenizer-rows", type=int, default=20000,
                     help="rows used to learn the BPE merges; more is slower "
@@ -137,9 +151,16 @@ def main():
         random.Random(args.seed).shuffle(train_rows)
 
     print(f"generating {args.val} val rows", flush=True)
-    val_rows = build(names, args.val, args.seed + 90001, args.distractors)
+    val_rows = build(names, args.val, args.seed + 90001, args.distractors,
+                     variant="train")
     print(f"generating {args.held_out} held-out phrasing rows", flush=True)
     held_rows = build_held_out(names, args.held_out, args.seed + 31337, args.distractors)
+    wording_rows = []
+    if args.wording_eval:
+        print(f"generating {args.wording_eval} wording-family rows", flush=True)
+        wording_rows = _build(names, args.wording_eval, args.seed + 777,
+                              args.distractors, held_out=True,
+                              variant="held_out", pool_held_out=False)
 
     sample = train_rows[:args.tokenizer_rows]
     print(f"training tokenizer on {len(sample)} rows", flush=True)
@@ -148,7 +169,8 @@ def main():
 
     print(f"writing {args.out}/train.jsonl and val.jsonl", flush=True)
     for fname, rows in (("train.jsonl", train_rows), ("val.jsonl", val_rows),
-                        ("held_out.jsonl", held_rows)):
+                        ("held_out.jsonl", held_rows),
+                        ("wording_eval.jsonl", wording_rows)):
         with open(os.path.join(args.out, fname), "w") as f:
             for r in rows:
                 f.write(json.dumps(r) + "\n")
@@ -173,6 +195,7 @@ def main():
         "distractor_rate": args.distractors,
         "tokenizer_rows": len(sample),
         "held_out": len(held_rows),
+        "wording_eval": len(wording_rows),
         "train_phrasings": {n: len(train_indices(n)) for n in names},
         "held_out_phrasings": {n: len(held_out_indices(n)) for n in names},
     }

@@ -193,6 +193,6 @@ TEMPLATES = {
         "How much simple interest is paid on {principal} at {rate}% annually for {years} years?",
         "Find the interest earned when {principal} is lent at {rate}% for {years} years, simple interest.",
         "Simple interest on {principal} at {rate}% for {years} years is what amount?",
-        "Work out the simple interest for {principal}, {rate}% per annum, {years} years.",
+        "Calculate the simple interest for {principal}, {rate}% per annum, {years} years.",
     ],
 }

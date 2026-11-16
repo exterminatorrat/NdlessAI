@@ -12,6 +12,8 @@
 #include "grounding.h"
 #include "repair.h"
 
+/* Revised 2026-11-16: use grounding's boundaries for repair candidates. */
+
 #define MAX_NUMBERS 24
 #define NUMBER_LEN 24
 
@@ -69,6 +71,8 @@ static int collect(const char *text, number_t *out, int max)
 		    !((p[0] == '-' || p[0] == '+') && p[1] >= '0' && p[1] <= '9'))
 			continue;
 		if (!number_span(p, &len))
+			continue;
+		if (!grounding_number_boundary(text, p, len))
 			continue;
 		if (!ends_token(p, len))
 			continue;

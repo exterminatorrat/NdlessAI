@@ -1,6 +1,8 @@
 #ifndef GROUNDING_H
 #define GROUNDING_H
 
+/* Revised 2026-11-16: share numeric boundaries between grounding and repair. */
+
 /*
  * Is a number the question actually said?
  *
@@ -23,6 +25,10 @@
 
 /* Whether `arg` appears in `question` as a number. */
 int grounding_arg_in_text(const char *arg, const char *question);
+
+/* A span in text must not be part of a decimal, identifier or subscript.
+ * Letters after a span remain legal for polynomial coefficients ("3x"). */
+int grounding_number_boundary(const char *text, const char *start, int len);
 
 /* Whether every argument of "CALL name a b ..." is in the question. */
 int grounding_call_grounded(const char *call, const char *question);

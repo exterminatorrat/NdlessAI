@@ -2,10 +2,36 @@
 
 #include "grounding.h"
 
+/* Revised 2026-11-16: reject decimal fragments and chemical subscripts. */
+
 /* The rule itself: see grounding.h for why these two allowances exist. */
 static int is_digit(char c)
 {
 	return c >= '0' && c <= '9';
+}
+
+int grounding_number_boundary(const char *text, const char *start, int len)
+{
+	if (len <= 0)
+		return 0;
+	if (start > text) {
+		char c = start[-1];
+
+		/* An underscore is notation, not a digit: "log_2(8)" and "a_12"
+		 * write the same quantity a space would separate. */
+		if (is_digit(c) || c == '.' || c == ')' || c == ']' ||
+		    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+			return 0;
+		/* A signed exponent is not a standalone quantity. */
+		if ((c == '-' || c == '+') && start - text >= 2 &&
+		    (start[-2] == 'e' || start[-2] == 'E'))
+			return 0;
+	}
+	return !is_digit(start[len]) &&
+	       !((start[len] == 'e' || start[len] == 'E') &&
+	         (is_digit(start[len + 1]) || start[len + 1] == '+' ||
+	          start[len + 1] == '-')) &&
+	       !(start[len] == '.' && is_digit(start[len + 1]));
 }
 
 int grounding_arg_in_text(const char *arg, const char *question)
@@ -23,7 +49,7 @@ int grounding_arg_in_text(const char *arg, const char *question)
 		const char *before = p;
 		int has_minus = 0;
 
-		if (is_digit(p[n]))
+		if (!grounding_number_boundary(question, p, (int)n))
 			continue;
 		while (before > question && before[-1] == ' ')
 			before--;

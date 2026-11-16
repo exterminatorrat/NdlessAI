@@ -867,6 +867,69 @@ static void test_template(void)
 	check(u.mode == UI_MODE_MENU, "and to the menu");
 }
 
+static void test_template_multi_argument(void)
+{
+	static const struct {
+		const char *name;
+		int arity;
+		const char *args[UI_TMPL_ARGS];
+		const char *call;
+		const char *answer;
+	} cases[] = {
+		{"dilution", 3, {"4", "50", "250"},
+		 "CALL dilution 4 50 250", "= 0.8 M"},
+		{"stoich_mass", 4, {"44", "44", "18", "2"},
+		 "CALL stoich_mass 44 44 18 2", "= 36 g"},
+		{"combined_gas", 5, {"1", "2", "300", "2", "300"},
+		 "CALL combined_gas 1 2 300 2 300", "= 1 L"},
+		{"linear2", 6, {"1", "0", "2", "0", "1", "3"},
+		 "CALL linear2 1 0 2 0 1 3", "x=2, y=3"}
+	};
+
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		check(rel_rows[i].arity <= UI_TMPL_ARGS,
+		      "every formula fits the picker's argument capacity");
+	for (unsigned c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+		int found = 0;
+
+		ui_init(&u, NULL, NULL);
+		ui_key(&u, UI_KEY_DOWN);
+		ui_key(&u, UI_KEY_ACCEPT);
+		/* Visit subjects through the same key events as a student. */
+		for (int subject = 0; subject < REL_NUM_RELATIONS && !found; subject++) {
+			ui_key(&u, UI_KEY_ACCEPT);
+			for (int i = 0; i < u.tmpl_count; i++) {
+				if (strcmp(rel_rows[u.tmpl_rels[i]].name, cases[c].name) == 0) {
+					for (int j = 0; j < i; j++)
+						ui_key(&u, UI_KEY_DOWN);
+					found = 1;
+					break;
+				}
+			}
+			if (!found) {
+				ui_key(&u, UI_KEY_BACK);
+				ui_key(&u, UI_KEY_DOWN);
+			}
+		}
+		check(found, cases[c].name);
+		if (!found)
+			continue;
+		ui_key(&u, UI_KEY_ACCEPT);
+		for (int i = 0; i < cases[c].arity; i++) {
+			check(u.mode == UI_MODE_TMPL && u.tmpl_arg == i,
+			      "the picker requests every argument in order");
+			for (const char *p = cases[c].args[i]; *p; p++)
+				check(ui_type(&u, *p), "the argument can be typed");
+			ui_key(&u, UI_KEY_ACCEPT);
+		}
+		check(u.mode == UI_MODE_ASK, "the completed formula opens its answer");
+		check(strcmp(ui_last_call(&u), cases[c].call) == 0, cases[c].call);
+		check(strcmp(ui_row(&u, u.nrows - 1), cases[c].answer) == 0,
+		      cases[c].answer);
+		render();
+	}
+}
+
 int main(void)
 {
 	test_menu();
@@ -880,6 +943,7 @@ int main(void)
 	test_diagram_screen();
 	test_plot_key();
 	test_template();
+	test_template_multi_argument();
 	test_graph_mode();
 	test_graph_returns_to_answer();
 

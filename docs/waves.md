@@ -220,6 +220,7 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | 3.5 electricity and magnetism | merged, #62 | `relations/em.py`, 6 relations |
 | 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate | `gate.sh` gates generated phrasing and wrong relation only |
 | Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
+| 4.5 follow-up: formula picker argument overflow | not merged; verified on `fix/formula-picker-argument-overflow`, 2026-11-16 | `tmpl_solve()` uses `UI_TMPL_ARGS`; `test_ui` drives three- through six-argument formulas, passing under ASan/UBSan and an optimized `-Werror` build; hardware not run |
 
 **Wave 4, as it stands.** The map is `wave4-plan.md`. The three engine
 workstreams are done or half done and everything they touch is gated:

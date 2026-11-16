@@ -2394,6 +2394,271 @@ int gexpr_derivative_answer(const char *text, char *out, int outlen)
 	return -1;
 }
 
+/* ---- typed calculus answers: limits, tangents and average rates ---- */
+
+/*
+ * The integral path splits its three arguments with its own routine; these
+ * forms take two or three, and the later geometry forms take five, so the
+ * splitter is parameterised here rather than copied again. A part comes back
+ * as a (start, length) pair into the caller's buffer, and every part has to be
+ * non-empty with the brackets balanced, so a stray comma cannot be read as
+ * part of an expression.
+ */
+static int split_args(const char *s, int n, int want, const char **part,
+                      int *plen)
+{
+	int depth = 0, k = 0;
+
+	if (want < 2 || want > 6)
+		return -1;
+	part[0] = s;
+	for (int i = 0; i < n; i++) {
+		if (s[i] == '(') {
+			depth++;
+		} else if (s[i] == ')') {
+			if (--depth < 0)
+				return -1;
+		} else if (s[i] == ',' && depth == 0) {
+			if (k == want - 1)
+				return -1;
+			plen[k] = (int)(s + i - part[k]);
+			part[++k] = s + i + 1;
+		}
+	}
+	if (depth != 0 || k != want - 1)
+		return -1;
+	plen[want - 1] = (int)(s + n - part[want - 1]);
+	for (int i = 0; i < want; i++)
+		if (plen[i] <= 0)
+			return -1;
+	return 0;
+}
+
+/* A trimmed copy of one argument, so it can be parsed on its own. */
+static int copy_part(const char *s, int n, char *out, int outlen)
+{
+	int i = 0;
+
+	while (i < n && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	while (n > i && (s[n - 1] == ' ' || s[n - 1] == '\t'))
+		n--;
+	if (n <= i || n - i >= outlen)
+		return -1;
+	memcpy(out, s + i, (size_t)(n - i));
+	out[n - i] = 0;
+	return 0;
+}
+
+static int parse_bound(const char *s, int n, q16_t *out);
+
+/*
+ * A limit is answered by sampling both sides at ever finer offsets, and it
+ * refuses unless the two sides agree and the estimates stop moving.
+ *
+ * Sampling is what makes this honest rather than clever. It answers a limit
+ * that exists and is resolved at Q16, and it refuses the two cases that
+ * matter: a jump, where the sides disagree, and a value that runs away as the
+ * offset shrinks, which is what 1/x at 0 does. It does not prove a limit
+ * exists; it refuses to guess one. The offset starts at 1/16 and halves down to
+ * 1/4096, so the answer is right to about the four digits gexpr_format prints.
+ */
+static int limit_at(const gexpr_t *f, q16_t a, q16_t *out)
+{
+	q16_t prev = 0, prev_gap = -1, gap = 0;
+	int64_t scale = 0;
+	int have = 0;
+
+	for (int k = 4; k <= 12; k++) {
+		q16_t h = (q16_t)(Q16_ONE >> k);
+		q16_t fl, fr;
+		int64_t cur, tol;
+
+		if (h == 0)
+			break;
+		fl = gexpr_eval(f, a - h);
+		fr = gexpr_eval(f, a + h);
+		if (fl == Q16_MAX || fl == Q16_MIN || fr == Q16_MAX ||
+		    fr == Q16_MIN)
+			return -1;
+		scale = fl < 0 ? -(int64_t)fl : fl;
+		if ((fr < 0 ? -(int64_t)fr : fr) > scale)
+			scale = fr < 0 ? -(int64_t)fr : fr;
+		gap = (q16_t)(fl < fr ? (int64_t)fr - fl : (int64_t)fl - fr);
+		/*
+		 * The two sides of a function with a limit close at the same rate
+		 * the offset shrinks: halving h halves the gap. A jump leaves the
+		 * gap where it was, and a pole widens it, so "the gap must fall by
+		 * at least a quarter each refinement" separates the three cases
+		 * without knowing anything about the function.
+		 */
+		if (prev_gap >= 0 && gap > prev_gap - prev_gap / 4)
+			return -1;
+		prev_gap = gap;
+		cur = ((int64_t)fl + fr) / 2;
+		tol = scale / 1024 + 8;
+		if (have && (cur - prev > tol || prev - cur > tol))
+			return -1;
+		prev = (q16_t)cur;
+		have = 1;
+	}
+	/*
+	 * The last gap is what was left to close: a smooth function has met to
+	 * well inside the first printed digit, a jump has not.
+	 */
+	if (!have || gap > scale / 32 + 4)
+		return -1;
+	*out = prev;
+	return 0;
+}
+
+/*
+ * The tangent line at a, printed the way a student writes it: y = mx + b.
+ * The slope is the engine's own derivative, evaluated at a, so the line and
+ * the derivative answer cannot disagree.
+ */
+static int append_text(char *out, int outlen, int *used, const char *s);
+
+static int tangent_line(const gexpr_t *f, q16_t a, char *out, int outlen)
+{
+	gexpr_t d;
+	char ms[16], bs[16];
+	const char *sign, *body;
+	q16_t m, y, b;
+	int used = 0;
+
+	if (gexpr_derive(f, &d) != GEXPR_DIFF_OK)
+		return -1;
+	m = gexpr_eval(&d, a);
+	y = gexpr_eval(f, a);
+	if (m == Q16_MAX || m == Q16_MIN || y == Q16_MAX || y == Q16_MIN)
+		return -1;
+	b = gq_sat((int64_t)y - (int64_t)gq_mul(m, a));
+	if (gexpr_format(m, ms, (int)sizeof ms) < 0 ||
+	    gexpr_format(b, bs, (int)sizeof bs) < 0)
+		return -1;
+	sign = bs[0] == '-' ? " - " : " + ";
+	body = bs[0] == '-' ? bs + 1 : bs;
+
+	/* Assembled by hand rather than with printf: this file is compiled for a
+	 * target with no libc worth linking, and the four pieces are all already
+	 * strings. */
+	out[0] = 0;
+	if (append_text(out, outlen, &used, "y = ") < 0)
+		return -1;
+	if (m == Q16_ONE && append_text(out, outlen, &used, "x") < 0)
+		return -1;
+	if (m == -Q16_ONE && append_text(out, outlen, &used, "-x") < 0)
+		return -1;
+	if (m != 0 && m != Q16_ONE && m != -Q16_ONE) {
+		if (append_text(out, outlen, &used, ms) < 0 ||
+		    append_text(out, outlen, &used, "x") < 0)
+			return -1;
+	}
+	if (m == 0) {
+		if (append_text(out, outlen, &used, bs) < 0)
+			return -1;
+	} else if (b != 0) {
+		if (append_text(out, outlen, &used, sign) < 0 ||
+		    append_text(out, outlen, &used, body) < 0)
+			return -1;
+	}
+	return 0;
+}
+
+/* Appends s, keeping out terminated; -1 when it will not fit. */
+static int append_text(char *out, int outlen, int *used, const char *s)
+{
+	while (*s) {
+		if (*used + 1 >= outlen)
+			return -1;
+		out[(*used)++] = *s++;
+	}
+	out[*used] = 0;
+	return 0;
+}
+
+int gexpr_calculus_answer(const char *text, char *out, int outlen)
+{
+	static const char *const forms[] = { "limit", "tangent", "avgrate" };
+	char inner[EXPR_TEXT_MAX];
+	char ftext[EXPR_TEXT_MAX];
+	char err[48];
+	const char *part[3];
+	int plen[3];
+	gexpr_t f;
+	const char *p;
+	size_t n, room;
+	int k, want;
+
+	if (!text || !out || outlen <= 0)
+		return -1;
+	p = text;
+	while (*p == ' ' || *p == '\t')
+		p++;
+	n = strlen(text);
+	while (n > 0 && (text[n - 1] == ' ' || text[n - 1] == '\t'))
+		n--;
+	if (n == 0 || (size_t)(p - text) >= n)
+		return -1;
+	room = (size_t)(text + n - p);
+	for (k = 0; k < 3; k++) {
+		size_t flen = strlen(forms[k]);
+		size_t inner_len;
+		const char *open;
+		q16_t a, b, v;
+
+		/* Keyword, then a bracket, then the parts, and the closing bracket
+		 * as the last character: "limit(x,0)+1" is not a limit. */
+		if (room < flen + 2 || text[n - 1] != ')')
+			continue;
+		if (strncmp(p, forms[k], flen) != 0)
+			continue;
+		open = p + flen;
+		while (*open == ' ' || *open == '\t')
+			open++;
+		if (*open != '(')
+			continue;
+		inner_len = (size_t)(text + n - 1 - (open + 1));
+		if (inner_len == 0 || inner_len >= sizeof inner)
+			continue;
+		memcpy(inner, open + 1, inner_len);
+		inner[inner_len] = 0;
+		want = k == 2 ? 3 : 2;
+		if (split_args(inner, (int)inner_len, want, part, plen) < 0)
+			continue;
+		if (copy_part(part[0], plen[0], ftext, (int)sizeof ftext) < 0)
+			continue;
+		if (gexpr_parse(ftext, &f, err, sizeof err) < 0)
+			continue;
+		if (parse_bound(part[1], plen[1], &a) < 0)
+			continue;
+		if (k == 2) {
+			q16_t fa, fb;
+
+			if (parse_bound(part[2], plen[2], &b) < 0 || b == a)
+				continue;
+			fa = gexpr_eval(&f, a);
+			fb = gexpr_eval(&f, b);
+			if (fa == Q16_MAX || fa == Q16_MIN ||
+			    fb == Q16_MAX || fb == Q16_MIN)
+				continue;
+			v = gq_sat((((int64_t)fb - fa) * Q16_ONE) /
+			           ((int64_t)b - a));
+			return gexpr_format(v, out, outlen);
+		}
+		if (k == 0) {
+			if (limit_at(&f, a, &v) < 0)
+				continue;
+			return gexpr_format(v, out, outlen);
+		}
+		if (tangent_line(&f, a, out, outlen) < 0)
+			continue;
+		return 0;
+	}
+	return -1;
+}
+
 /* ---- typed integral answers ---- */
 
 /*

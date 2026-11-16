@@ -50,6 +50,9 @@ int main(void)
 	expect("limit(sin(x)/x,0)", "1");
 	expect("tangent(x^2,3)", "y = 6x - 9");
 	expect("avgrate(x^2,1,3)", "4");
+	expect("riemann(x^2,0,1,1000)", "0.3333");
+	expect("avgvalue(x^2,0,3)", "3");
+	expect("arclen(x,0,1)", "1.414");
 	expect("sin(0)", "0");
 	expect("pi", "3.142");
 	expect("2pi", "6.283");

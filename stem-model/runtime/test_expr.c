@@ -864,6 +864,22 @@ static void test_calculus(void)
 	expect_calc_refused("avgrate(x^2,2,2)");
 	expect_calc_refused("limit(x^2)");
 	expect_calc_refused("tangent(x^2,3)+1");
+
+	/* Riemann sums, average value and arc length. */
+	expect_calc("riemann(x^2,0,1,1000)", "0.3333");
+	expect_calc("riemann(x^2,0,1,1000,mid)", "0.3333");
+	expect_calc("riemann(x^2,0,1,1000,left)", "0.3328");
+	expect_calc("riemann(x^2,0,1,1000,right)", "0.3338");
+	expect_calc("riemann(x^2,0,1,1000,trap)", "0.3333");
+	expect_calc("avgvalue(x^2,0,3)", "3");
+	expect_calc("arclen(x,0,1)", "1.414");
+	expect_calc("arclen(x^2,0,1)", "1.479");
+	expect_calc_refused("riemann(x^2,1,1,10)");
+	expect_calc_refused("riemann(x^2,0,1,0)");
+	expect_calc_refused("riemann(x^2,0,1,10,sideways)");
+	expect_calc_refused("avgvalue(x^2,0,0)");
+	expect_calc_refused("arclen(1/x,0,1)");
+
 }
 
 int main(void)

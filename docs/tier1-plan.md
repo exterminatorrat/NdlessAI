@@ -124,6 +124,25 @@ beyond the identities already present, no series convergence for anything that
 needs a real limit engine. Those are wave-6 K21 and K24, and lying about them
 here would cost the refusal behaviour that makes the rest trustworthy.
 
+### Improper integrals were attempted, and refused by the engine
+
+An infinite tail was tried twice and dropped, and the reason belongs in the plan
+because it is a property of the engine rather than of the effort.
+
+The textbook substitution `x = a + t/(1-t)` is correct and unusable here: near
+`t = 1` the Jacobian `1/(1-t)^2` passes 32767 and saturates in Q16, so every
+tail refused. Walking the bound outward instead, in eight-unit pieces, was
+accurate per piece — and wrong in aggregate, because the adaptive integrator
+returns its own absolute floor (about 16 Q16 units) for a piece whose true
+integral is below it. Summing four hundred such pieces produced 1.085 for
+`intinf(1/x^2,1)` and still climbing, which is a plausible wrong answer, the one
+thing this project refuses to print.
+
+So `intinf`/`intninf` are not shipped. Answering them honestly needs either a
+wider intermediate than Q16 or an asymptotic rule table per integrand family;
+both are engine work, and neither belongs in a slice whose contract is "no
+retrain, four small PRs".
+
 ## P3 — Relation batch A: precalculus and AB wording
 
 **Goal.** Cover the course topics that are formulas with words, where the typed
@@ -273,6 +292,10 @@ these courses experiences.
 | --- | --- | --- |
 | P0 inventory | done | `python3 stem-model/course_audit.py`: 5 courses, 29 units, 128 topics, 33 gaps, every relation claim registered |
 | P1 per-course measurement | done | `report_relations.py --course-floor`: three PASS, two too thin to judge; `gate.sh` carries the line |
+| P2a limits, tangents, average rates | done, #82 | `test_expr` covers the four answers and five refusals; `limit` accepts only when the two-sided gap closes at the rate the offset does |
+| P2b Riemann sums, average value, arc length | done | `riemann` with mid/left/right/trap, `avgvalue`, `arclen`; `gate.sh quick` green |
+| P2c by-parts, partial fractions, improper | **not shipped** | definite integrals of those integrands already answer numerically; the symbolic rules need a rewrite, and improper tails hit the integrator's own floor (above) |
+| P2d convergence and polar/parametric | pending | — |
 
 ## What is not in Tier 1
 

@@ -17,7 +17,9 @@ int grounding_number_boundary(const char *text, const char *start, int len)
 	if (start > text) {
 		char c = start[-1];
 
-		if (is_digit(c) || c == '.' || c == '_' || c == ')' || c == ']' ||
+		/* An underscore is notation, not a digit: "log_2(8)" and "a_12"
+		 * write the same quantity a space would separate. */
+		if (is_digit(c) || c == '.' || c == ')' || c == ']' ||
 		    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 			return 0;
 		/* A signed exponent is not a standalone quantity. */
@@ -25,7 +27,7 @@ int grounding_number_boundary(const char *text, const char *start, int len)
 		    (start[-2] == 'e' || start[-2] == 'E'))
 			return 0;
 	}
-	return !is_digit(start[len]) && start[len] != '_' &&
+	return !is_digit(start[len]) &&
 	       !((start[len] == 'e' || start[len] == 'E') &&
 	         (is_digit(start[len + 1]) || start[len + 1] == '+' ||
 	          start[len + 1] == '-')) &&

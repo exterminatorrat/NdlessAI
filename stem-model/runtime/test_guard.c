@@ -58,6 +58,11 @@ int main(void)
 	       "sentence punctuation may follow a quantity");
 	expect("CALL quad_solve 1 -3 2", "Solve x^2-3x+2=0.", 1,
 	       "adjacent polynomial signs and coefficients still match");
+	expect("CALL log_eval 2 8", "Evaluate log_2(8).", 1,
+	       "a subscripted logarithm base is still a quantity");
+	expect("CALL arith_seq 12 -3 9",
+	       "The sequence has a1 = 12 and d = -3. Find a_9 and S_9.", 1,
+	       "subscripted term indices are still quantities");
 
 	expect("CALL deriv_poly3 1 3 -2 -3 2", deriv, 1,
 	       "implicit leading coefficient 1");

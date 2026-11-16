@@ -752,6 +752,92 @@ static int solve_cubic_solve(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_average_rate_of_change(const char *const *args, char *out,
+                                        size_t outlen)
+{
+	rat fa, fb, a, b;
+	int rc;
+	char f1[48];
+	long long fa_d, fd;
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &fa, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &fb, NULL)) != 0)
+		return rc;
+	fa_d = a.n * b.d;
+	fd = b.n * a.d - fa_d;
+	if (fd == 0)
+		return -4;
+	if ((rc = dec4_render((fb.n * fa.d - fa.n * fb.d) * a.d * b.d,
+	                      fb.d * fa.d * fd, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_vector_add(const char *const *args, char *out, size_t outlen)
+{
+	rat ax, ay, bx, by;
+	int rc;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &ax, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ay, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &bx, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &by, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(ax.n * bx.d + bx.n * ax.d, ax.d * bx.d,
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	if ((rc = dec4_render(ay.n * by.d + by.n * ay.d, ay.d * by.d,
+	                      f2, sizeof(f2))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "x=%s, y=%s", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_vector_dot(const char *const *args, char *out, size_t outlen)
+{
+	rat ax, ay, bx, by;
+	int rc;
+	char f1[48];
+	long long l, r, den;
+
+	if ((rc = parse_rat(args[0], &ax, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ay, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &bx, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &by, NULL)) != 0)
+		return rc;
+	l = ax.n * bx.n * ay.d * by.d;
+	r = ay.n * by.n * ax.d * bx.d;
+	den = ax.d * bx.d * ay.d * by.d;
+	if ((rc = dec4_render(l + r, den, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_vector_scale(const char *const *args, char *out, size_t outlen)
+{
+	rat ax, ay, k;
+	int rc;
+	char f1[48], f2[48], buf[112];
+
+	if ((rc = parse_rat(args[0], &ax, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ay, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &k, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(k.n * ax.n, k.d * ax.d, f1, sizeof(f1))) != 0)
+		return rc;
+	if ((rc = dec4_render(k.n * ay.n, k.d * ay.d, f2, sizeof(f2))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "x=%s, y=%s", f1, f2);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_math_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -845,6 +931,26 @@ int solvers_math_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "factor_quadratic") == 0) {
 		if (nargs == 3)
 			rc = solve_factor_quadratic(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "average_rate_of_change") == 0) {
+		if (nargs == 4)
+			rc = solve_average_rate_of_change(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "vector_add") == 0) {
+		if (nargs == 4)
+			rc = solve_vector_add(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "vector_dot") == 0) {
+		if (nargs == 4)
+			rc = solve_vector_dot(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "vector_scale") == 0) {
+		if (nargs == 3)
+			rc = solve_vector_scale(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "cubic_solve") == 0) {

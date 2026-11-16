@@ -1,0 +1,8 @@
+{"relation": "limiting_moles", "args": [8, 2, 32, 16], "question": "8 g of a reagent of molar mass 2 g/mol reacts with 32 g of one of molar mass 16 g/mol. Find the smaller number of moles.", "split": "eval"}
+{"relation": "limiting_moles", "args": [36, 18, 8, 16], "question": "Two reagents are supplied as 36 g at 18 g/mol and 8 g at 16 g/mol. Give the smaller mole count.", "split": "eval"}
+{"relation": "limiting_moles", "args": [64, 32, 18, 18], "question": "Find the limiting moles for 64 g of molar mass 32 against 18 g of molar mass 18.", "split": "eval"}
+{"relation": "limiting_moles", "args": [4, 2, 44, 44], "question": "A reaction gets 4 g of a 2 g/mol reagent and 44 g of a 44 g/mol reagent. Which supplies fewer moles?", "split": "eval"}
+{"relation": "limiting_moles", "args": [40, 40, 16, 2], "question": "Calculate the smaller number of moles for 40 g at 40 g/mol and 16 g at 2 g/mol.", "split": "eval"}
+{"relation": "limiting_moles", "args": [88, 44, 32, 16], "question": "88 g of molar mass 44 meets 32 g of molar mass 16, find the limiting moles.", "split": "eval"}
+{"relation": "limiting_moles", "args": [6, 2, 58, 58], "question": "For 6 g of a 2 g/mol compound and 58 g of a 58 g/mol compound, give the smaller mole value.", "split": "eval"}
+{"relation": "limiting_moles", "args": [18, 18, 4, 4], "question": "Determine the limiting amount in moles for 18 g at 18 g/mol and 4 g at 4 g/mol.", "split": "eval"}

@@ -78,8 +78,8 @@ def course(code, name, units, exact_floor=None, note=""):
 course("ap-precalc", "AP Precalculus", [
     Unit("1", "Polynomial and rational functions",
          rel("quad_solve", "factor_quadratic", "complete_square", "cubic_solve")
-         + [gap("rational function end behaviour and asymptotes"),
-            gap("average rate of change over an interval")]),
+         + rel("average_rate_of_change")
+         + [gap("rational function end behaviour and asymptotes")]),
     Unit("2", "Exponential and logarithmic functions",
          rel("exp_solve", "log_eval", "ln_eval", "log10_eval",
              "compound_interest", "continuous_growth", "half_life",
@@ -89,16 +89,16 @@ course("ap-precalc", "AP Precalculus", [
              "law_sines", "law_cosines", "arc_length", "sinusoid")
          + [gap("polar coordinates and polar graphing")]),
     Unit("4", "Functions involving parameters, vectors, and matrices",
-         rel("linear2", "arith_seq", "geom_seq")
+         rel("linear2", "arith_seq", "geom_seq",
+             "vector_add", "vector_dot", "vector_scale")
          + [typed("2x2 determinant", "det(1,2;3,4)"),
-            typed("2x2 inverse", "inv(1,2;3,4)"),
-            gap("vector arithmetic and components")]),
+            typed("2x2 inverse", "inv(1,2;3,4)")]),
 ], exact_floor=61.6,
    note="529 corpus eval rows, 2026-11-16")
 
 course("ap-calc-ab", "AP Calculus AB", [
     Unit("1", "Limits and continuity",
-         [gap("limits, one-sided limits, continuity")]),
+         [typed("limits", "limit(sin(x)/x,0)")]),
     Unit("2", "Differentiation: definition and fundamentals",
          rel("deriv_poly3")
          + [typed("derivative of an expression", "d/dx(x^2-3x+1)"),
@@ -122,8 +122,8 @@ course("ap-calc-ab", "AP Calculus AB", [
          [typed("separable, closed form", "desolve(2y,0,1)"),
           typed("numeric solution", "ode(2y,0,1,1,64)")]),
     Unit("8", "Applications of integration",
-         [gap("area between curves"),
-          gap("volume of revolution"),
+         [typed("area between curves", "integrate(x-x^2,0,1)"),
+          typed("volume of revolution", "pi*integrate(x^2,0,1)"),
           typed("average value of a function", "integrate(x^2,0,3)/3")]),
 ], note="46 corpus eval rows, below the 60-row floor; P3 raises it")
 
@@ -133,8 +133,8 @@ course("ap-calc-bc", "AP Calculus BC", [
           typed("definite integral", "integrate(x^2,0,3)"),
           gap("limits and continuity")]),
     Unit("9", "Parametric, polar, and vector-valued functions",
-         [gap("polar area"),
-          gap("parametric arc length"),
+         [typed("polar area", "polarea(1+cos(x),0,pi)"),
+          typed("parametric arc length", "parclen(x,x^2,0,1)"),
           gap("derivative of a parametrised curve")]),
     Unit("10", "Infinite sequences and series",
          [typed("Taylor and Maclaurin polynomials", "series(exp(x),0,5)"),
@@ -150,17 +150,16 @@ course("sat-act", "SAT / ACT maths", [
     Unit("2", "Advanced maths",
          rel("quad_solve", "factor_quadratic", "exp_solve",
              "average", "percent_error", "sig_figs", "scientific_notation")
-         + [gap("percent change and percent of"),
-            gap("ratios and proportions")]),
+         + rel("percent_change", "percent_of", "ratio_share")),
     Unit("3", "Problem solving and data analysis",
          rel("continuous_growth", "half_life")
+         + rel("probability_single")
          + [gap("mean, median and standard deviation from a list"),
-            gap("probability and expected value"),
             gap("line of best fit and prediction")]),
     Unit("4", "Geometry and trigonometry",
          rel("pythagoras", "sin_eval", "cos_eval", "tan_eval")
-         + [gap("area, perimeter and volume of common shapes"),
-            gap("circles: arc, sector and radians")]),
+         + rel("rectangle_area", "triangle_area", "volume_prism")
+         + [gap("circles: arc, sector and radians")]),
     Unit("5", "Units and measurement",
          rel("km_to_m", "m_to_cm", "kg_to_lb", "liters_to_ml",
              "celsius_to_fahrenheit", "fahrenheit_to_celsius")),
@@ -177,10 +176,10 @@ course("intro-hs", "Intro high-school physics and chemistry", [
              "spring_energy")),
     Unit("4", "Momentum and collisions",
          rel("momentum", "impulse")
-         + [gap("elastic and inelastic collisions")]),
+         + rel("collision_velocity")),
     Unit("5", "Circuits",
          rel("ohm_v", "ohm_i", "ohm_power", "parallel_resistance")
-         + [gap("series resistance and network reduction")]),
+         + rel("series_resistance", "parallel_resistance")),
     Unit("6", "Waves and sound",
          rel("wave_speed")),
     Unit("7", "Gases and thermochemistry",
@@ -189,7 +188,7 @@ course("intro-hs", "Intro high-school physics and chemistry", [
     Unit("8", "Solutions and stoichiometry",
          rel("molarity", "dilution", "dilution_v1", "molality", "moles",
              "stoichiometry", "stoich_mass", "percent_yield")
-         + [gap("limiting reagent and empirical formula")]),
+         + rel("limiting_moles")),
     Unit("9", "Acids and bases",
          rel("ph", "poh", "ph_from_poh", "h_from_ph")),
 ], exact_floor=64.2,

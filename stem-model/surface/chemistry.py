@@ -349,3 +349,16 @@ TEMPLATES["heat_reaction"] = [
     "Find the total heat released from {moles} mol at {enthalpy} kJ per mole.",
     "Given {moles} mol and an enthalpy of {enthalpy} kJ/mol, what is the heat released?",
 ]
+
+TEMPLATES["limiting_moles"] = [
+    "{mass_a} g of a reagent with molar mass {mm_a} g/mol reacts with {mass_b} g of one with molar mass {mm_b} g/mol. Find the smaller number of moles.",
+    "Two reactants are supplied as {mass_a} g at {mm_a} g/mol and {mass_b} g at {mm_b} g/mol. Which amount of substance is smaller, in moles?",
+    "Find the limiting number of moles when {mass_a} g of molar mass {mm_a} meets {mass_b} g of molar mass {mm_b}.",
+    "A reaction is given {mass_a} g of a compound of molar mass {mm_a} and {mass_b} g of one of molar mass {mm_b}. What is the smaller mole count?",
+    "Calculate the moles of the limiting reagent for {mass_a} g at {mm_a} g/mol against {mass_b} g at {mm_b} g/mol.",
+    "Which reagent limits the reaction: {mass_a} g at {mm_a} g/mol or {mass_b} g at {mm_b} g/mol? Give the smaller number of moles.",
+    "For {mass_a} g of molar mass {mm_a} and {mass_b} g of molar mass {mm_b}, find the smaller quantity in moles.",
+    "Determine the limiting amount in moles for the pair {mass_a} g ({mm_a} g/mol) and {mass_b} g ({mm_b} g/mol).",
+    "Two reagents are weighed out at {mass_a} g and {mass_b} g, with molar masses {mm_a} and {mm_b}. Give the smaller mole value.",
+    "Find how many moles the limiting reagent supplies: {mass_a} g of {mm_a} g/mol against {mass_b} g of {mm_b} g/mol.",
+]

@@ -499,6 +499,52 @@ static int solve_torque(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+static int solve_collision_velocity(const char *const *args, char *out,
+                                    size_t outlen)
+{
+	rat m1, u1, m2, u2;
+	int rc;
+	char f1[48], buf[64];
+	long long mom, mass, d;
+
+	if ((rc = parse_rat(args[0], &m1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &u1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &m2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &u2, NULL)) != 0)
+		return rc;
+	d = m1.d * u1.d * m2.d * u2.d;
+	mom = m1.n * u1.n * m2.d * u2.d + m2.n * u2.n * m1.d * u1.d;
+	mass = m1.n * m2.d + m2.n * m1.d;
+	if (mass == 0)
+		return -4;
+	if ((rc = dec4_render(mom * m1.d * m2.d, d * mass, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s m/s", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_series_resistance(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat r1, r2, r3;
+	int rc;
+	char f1[48], buf[64];
+	long long den, num;
+
+	if ((rc = parse_rat(args[0], &r1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r2, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &r3, NULL)) != 0)
+		return rc;
+	den = r1.d * r2.d * r3.d;
+	num = r1.n * r2.d * r3.d + r2.n * r1.d * r3.d + r3.n * r1.d * r2.d;
+	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s ohms", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_physics_solve(const char *name, const char *const *args,
                           int nargs, char *out, size_t outlen)
 {
@@ -612,6 +658,16 @@ int solvers_physics_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "pendulum_period") == 0) {
 		if (nargs == 2)
 			rc = solve_pendulum_period(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "collision_velocity") == 0) {
+		if (nargs == 4)
+			rc = solve_collision_velocity(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "series_resistance") == 0) {
+		if (nargs == 3)
+			rc = solve_series_resistance(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "torque") == 0) {

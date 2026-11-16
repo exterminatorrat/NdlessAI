@@ -476,3 +476,26 @@ class HeatReaction:
     @staticmethod
     def solve(moles, enthalpy):
         return f"{dec_exact(_exact(moles) * _exact(enthalpy))} kJ"
+
+
+@relation("limiting_moles", "chemistry", ["mass_a", "mm_a", "mass_b", "mm_b"],
+          exact=False)
+class LimitingMoles:
+    @staticmethod
+    def gen(rng):
+        mm_a = rng.choice([2, 4, 16, 18, 32, 40, 44])
+        mm_b = rng.choice([2, 16, 18, 32, 40, 44, 58])
+        n_a = rng.choice([1, 2, 3, 4, 5, 6])
+        n_b = rng.choice([1, 2, 3, 4, 5, 6])
+        while n_b == n_a:
+            n_b = rng.choice([1, 2, 3, 4, 5, 6])
+        mass_a = mm_a * n_a
+        mass_b = mm_b * n_b
+        return [mass_a, mm_a, mass_b, mm_b], (
+            f"{mass_a} g of a reagent with molar mass {mm_a} g/mol reacts with "
+            f"{mass_b} g of one with molar mass {mm_b} g/mol. Find the smaller "
+            f"number of moles.")
+
+    @staticmethod
+    def solve(mass_a, mm_a, mass_b, mm_b):
+        return dec_exact(min(sp.Rational(mass_a, mm_a), sp.Rational(mass_b, mm_b)))

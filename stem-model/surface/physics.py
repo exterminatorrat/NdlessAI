@@ -293,4 +293,30 @@ TEMPLATES = {
         "A wrench {r} m long is pushed with {F} N at {theta} degrees. What torque results?",
         "Determine the torque about a pivot {r} m from a {F} N force applied at {theta} degrees.",
     ],
+
+    "collision_velocity": [
+        "A {m1} kg trolley moving at {u1} m/s hits a {m2} kg trolley moving at {u2} m/s and they stick together. Find their common velocity in m/s.",
+        "Two trucks of mass {m1} kg and {m2} kg meet and couple, travelling at {u1} m/s and {u2} m/s. What is the velocity after the collision?",
+        "A perfectly inelastic collision joins masses {m1} kg and {m2} kg moving at {u1} m/s and {u2} m/s. Find the common speed.",
+        "Find the final velocity when {m1} kg at {u1} m/s sticks to {m2} kg at {u2} m/s.",
+        "Two clay balls of {m1} kg and {m2} kg travel at {u1} m/s and {u2} m/s and merge. Calculate their shared velocity in m/s.",
+        "A {m1} kg cart at {u1} m/s collides with a {m2} kg cart at {u2} m/s and they move off as one. What speed do they share?",
+        "Calculate the common velocity after a {m1} kg body at {u1} m/s couples with a {m2} kg body at {u2} m/s.",
+        "During an inelastic collision, {m1} kg at {u1} m/s and {m2} kg at {u2} m/s combine. Give their velocity afterwards.",
+        "A train wagon of {m1} kg rolling at {u1} m/s couples to {m2} kg rolling at {u2} m/s. Find the new velocity in m/s.",
+        "Two bodies, {m1} kg at {u1} m/s and {m2} kg at {u2} m/s, stick together on impact. What is the common velocity?",
+    ],
+
+    "series_resistance": [
+        "Three resistors of {r1} ohms, {r2} ohms and {r3} ohms are connected in series. Find the total resistance.",
+        "A series circuit holds {r1} ohms, {r2} ohms and {r3} ohms. What is the equivalent resistance?",
+        "Find the combined resistance of {r1} ohms, {r2} ohms and {r3} ohms in series.",
+        "Resistors of {r1} ohms, {r2} ohms and {r3} ohms are wired end to end. Give the total.",
+        "Three lamps with resistances {r1}, {r2} and {r3} ohms are in series. Calculate the network resistance.",
+        "What total resistance do {r1} ohms, {r2} ohms and {r3} ohms give when in series?",
+        "A string of resistors {r1} ohms, {r2} ohms and {r3} ohms is connected in series. Find the sum.",
+        "Determine the equivalent resistance of a series chain of {r1} ohms, {r2} ohms and {r3} ohms.",
+        "Three loads of {r1} ohms, {r2} ohms and {r3} ohms are in series. Give the total resistance in ohms.",
+        "Add the series resistances {r1} ohms, {r2} ohms and {r3} ohms to find the total.",
+    ],
 }

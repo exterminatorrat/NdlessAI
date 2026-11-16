@@ -140,6 +140,12 @@ elif [ -f weights.bin ] && [ -f data/held_out.jsonl ]; then
     # four rows, so a wording change that robs Peter to pay Paul is caught even
     # when the total creeps up. Budget lowered as relations are fixed.
     run "per-relation floor" sh -c "$PY report_relations.py --max-thin 12 >/dev/null"
+    # The same corpus, grouped by Tier 1 course instead of by relation. A
+    # course floor is the number that course measured when its row was written
+    # in courses.py, so this fails a build when a course regresses even if the
+    # aggregate holds; the slack and the row minimum live in that file rather
+    # than here, because they are measurements and not tuning knobs.
+    run "per-course floor" sh -c "$PY report_relations.py --course-floor >/dev/null"
 else
     skip "accuracy gates (no weights.bin or held_out.jsonl)"
 fi

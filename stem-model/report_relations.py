@@ -9,6 +9,8 @@ when any relation with enough rows falls below a floor.
 
     python3 report_relations.py                  # the table
     python3 report_relations.py --floor 0.5      # exit 1 under the floor
+    python3 report_relations.py --course sat-act # one Tier 1 course
+    python3 report_relations.py --course-floor   # per-course floors, as a gate
 
 The questions go through `runtime/main_device`, which is one process for the
 whole batch and the same pipeline the calculator runs.
@@ -21,6 +23,7 @@ import os
 import subprocess
 import sys
 
+import courses
 from evaluate_paraphrase import load_corpora
 from gen_traces import render_call
 
@@ -158,6 +161,68 @@ def corpus_rows(args):
     return rows
 
 
+def course_rows(rows, code):
+    """The rows whose relation serves one course.
+
+    A relation may serve several courses, so a row can belong to more than one
+    course and is counted in each. That is deliberate: the question a course
+    floor answers is "how does the program do on the questions this course
+    asks", not "how many rows are exclusive to it".
+    """
+
+    return [row for row in rows if code in courses.courses_for(row[0])]
+
+
+def course_floors(rows, args):
+    """Per-course accuracy against the recorded floors in courses.py.
+
+    A floor is the number the corpus measured when the row was written, so it is
+    a regression test, not a target. A course with too few scored rows is
+    reported as such rather than judged: a percentage over eleven questions is a
+    coin flip wearing a decimal point.
+    """
+
+    calls = run_batch(args.binary, args.weights, args.seq,
+                      [q for _, q, _ in rows])
+    per = collections.defaultdict(lambda: [0, 0])
+    for (relation, _, expected), got in zip(rows, calls):
+        for code in courses.courses_for(relation):
+            per[code][0] += 1
+            per[code][1] += got == expected
+
+    total = sum(n for n, _ in per.values())
+    print(f"{total} scored rows across {len(per)} Tier 1 courses; a row counts "
+          f"in every course its relation serves")
+    print()
+    print(f"{'course':<14}{'name':<42}{'correct':>8}{'of':>6}"
+          f"{'exact':>8}{'floor':>8}  status")
+    failed = 0
+    for code, course in courses.COURSES.items():
+        n, hits = per.get(code, (0, 0))
+        pct = 100.0 * hits / n if n else 0.0
+        floor = course.exact_floor
+        if n < courses.MIN_ROWS:
+            status = "too few rows"
+            shown = "-"
+        elif floor is None:
+            status = "no floor recorded"
+            shown = "-"
+        else:
+            shown = f"{floor:.1f}%"
+            ok = pct >= floor - courses.FLOOR_SLACK
+            status = "PASS" if ok else "FAIL"
+            failed += 0 if ok else 1
+        print(f"{code:<14}{course.name[:40]:<42}{hits:>8}{n:>6}"
+              f"{pct:>7.1f}%{shown:>8}  {status}")
+
+    print()
+    if failed:
+        print(f"{failed} course(s) more than {courses.FLOOR_SLACK:.0f} points "
+              f"below the recorded floor")
+        return 1
+    return 0
+
+
 def held_out_rows(args):
     rows = []
     with open(args.data) as fh:
@@ -192,6 +257,12 @@ def main():
                          "argument went wrong and where the wrong value came "
                          "from (W20's measurement)")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--course", default="",
+                    help="score only the rows whose relation serves this Tier 1 "
+                         "course; codes are in courses.py")
+    ap.add_argument("--course-floor", action="store_true",
+                    help="per-course floors recorded in courses.py; exits 1 "
+                         "when a course is more than FLOOR_SLACK below its own")
     args = ap.parse_args()
 
     for path in (args.binary, args.weights):
@@ -203,6 +274,16 @@ def main():
         rows = rows[: args.limit]
     if not rows:
         raise SystemExit("no rows to score")
+
+    if args.course_floor:
+        return course_floors(rows, args)
+
+    if args.course:
+        rows = course_rows(rows, args.course)
+        if not rows:
+            raise SystemExit(f"no corpus rows for course {args.course!r}; "
+                             f"codes are {', '.join(courses.COURSES)}")
+        print(f"course {args.course}: {len(rows)} rows")
 
     if args.arg_audit:
         arg_audit(rows, args)

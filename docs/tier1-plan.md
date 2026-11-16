@@ -323,6 +323,19 @@ left to right. It failed all four held-out rows under both seeds. It is now
 `(a, f(a), b, f(b))`, giving the call `1 3 5 11`. Every relation in the
 catalogue should be checked against its sentences for this.
 
+**The 640-entry vocabulary, measured.** Retraining the same catalogue at 640
+entries turns the run that scored 75.8% at 512 into **90.2%** on the same 500
+held-out rows, with reserved-wording accuracy at **98.4%** instead of 82.3%. The
+bad basin the 512 vocabulary could fall into - a 15-point swing between seeds -
+is gone at 640, which is consistent with the merge starvation: 101 merges at 512
+against 226 at 640, and a mean of 62.0 row tokens against 51.9.
+
+The ceiling did not move. 90.2% at 640 is level with the best 512 run (90.8%),
+so the vocabulary fixed the instability and left the accuracy ceiling where it
+was. Whatever sets that ceiling is upstream of tokenisation - most likely the
+12,000-step, single-learning-rate recipe - and it is the next thing to measure
+rather than guess at.
+
 ## P7 — Course surface
 
 **Goal.** A student who owns AP Physics C should not have to guess what the

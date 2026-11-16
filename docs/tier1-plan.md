@@ -301,6 +301,28 @@ both binding on how this document reports from here:
 Fixed-point parity is 6/6 in every cycle (worst maxdiff 0.0595, 0.0533 and
 0.0327).
 
+**The vocabulary squeeze, measured.** The 512-entry vocabulary splits as 256 base
+tokens + one special per relation + whatever is left for BPE merges, so
+`merges = 251 - relations`. At 141 relations there were 110 merges, at 146
+there were 105, at 150 there were 101. Tokenising the same 249,742 rows at 640
+instead of 512 gives **mean 51.4 tokens instead of 62.0 and max 148 instead of
+182** - 17% shorter sequences and 34 tokens of headroom back - which is the
+compression the growing catalogue had been eating.
+
+**The recipe is unstable.** Batch A's two seeds, on identical data, scored
+75.8% and 90.8% on the same 500 held-out rows. Fifteen points, four times the
+spread measured a cycle earlier, and not attributable to the new relations:
+both seeds fail the same handful, but the bad seed additionally misses 112 rows
+the good one gets. Until that is fixed, every accuracy number in this file is a
+sample from a wide distribution rather than a property of the catalogue.
+
+**Argument order is a learnability decision.** `average_rate_of_change` was
+authored as `(f(a), f(b), a, b)` while its sentence reads `f(1) = 3 and
+f(5) = 11`, so the call required reordering numbers rather than copying them
+left to right. It failed all four held-out rows under both seeds. It is now
+`(a, f(a), b, f(b))`, giving the call `1 3 5 11`. Every relation in the
+catalogue should be checked against its sentences for this.
+
 ## P7 — Course surface
 
 **Goal.** A student who owns AP Physics C should not have to guess what the

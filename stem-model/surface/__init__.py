@@ -106,7 +106,7 @@ _ARG_NAMES = {
     "volume_prism": ("length", "width", "height"),
     "combined_rate": ("a", "b"),
     "probability_single": ("favourable", "total"),
-    "average_rate_of_change": ("fa", "fb", "a", "b"),
+    "average_rate_of_change": ("a", "fa", "b", "fb"),
     "vector_add": ("ax", "ay", "bx", "by"),
     "vector_dot": ("ax", "ay", "bx", "by"),
     "vector_scale": ("ax", "ay", "k"),

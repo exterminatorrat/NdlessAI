@@ -760,10 +760,10 @@ static int solve_average_rate_of_change(const char *const *args, char *out,
 	char f1[48];
 	long long fa_d, fd;
 
-	if ((rc = parse_rat(args[0], &fa, NULL)) != 0 ||
-	    (rc = parse_rat(args[1], &fb, NULL)) != 0 ||
-	    (rc = parse_rat(args[2], &a, NULL)) != 0 ||
-	    (rc = parse_rat(args[3], &b, NULL)) != 0)
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &fa, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &fb, NULL)) != 0)
 		return rc;
 	fa_d = a.n * b.d;
 	fd = b.n * a.d - fa_d;

@@ -51,9 +51,9 @@ class ExpSolve:
         return fmt(sp.log(k) / sp.log(base))
 
 
-@relation("average_rate_of_change", "precalc", ["fa", "fb", "a", "b"], exact=False,
+@relation("average_rate_of_change", "precalc", ["a", "fa", "b", "fb"], exact=False,
           step=dict(line="rate = (f(b) - f(a)) / (b - a)",
-                    expr="(@2 - @1) / (@4 - @3)"))
+                    expr="(@4 - @2) / (@3 - @1)"))
 class AverageRateOfChange:
     @staticmethod
     def gen(rng):
@@ -62,12 +62,12 @@ class AverageRateOfChange:
         slope = rng.choice([-3, -2, -1, 2, 3, 4, 5])
         fa = rng.choice([-4, -2, 0, 1, 3, 6, 9])
         fb = fa + slope * (b - a)
-        return [fa, fb, a, b], (f"A table for a function gives f({a}) = {fa} "
+        return [a, fa, b, fb], (f"A table for a function gives f({a}) = {fa} "
                                 f"and f({b}) = {fb}. Find the average rate of "
                                 f"change over that interval.")
 
     @staticmethod
-    def solve(fa, fb, a, b):
+    def solve(a, fa, b, fb):
         return dec_exact(sp.Rational(fb - fa, b - a))
 
 @relation("vector_add", "precalc", ["ax", "ay", "bx", "by"], exact=False)

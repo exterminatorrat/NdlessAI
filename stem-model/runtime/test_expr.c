@@ -880,6 +880,14 @@ static void test_calculus(void)
 	expect_calc_refused("avgvalue(x^2,0,0)");
 	expect_calc_refused("arclen(1/x,0,1)");
 
+	/* Polar area and parametric arc length: one integrand family each, both
+	 * bounded, both refused when a sample has no value. */
+	expect_calc("polarea(1,0,pi)", "1.571");
+	expect_calc("polarea(x,0,1)", "0.1667");
+	expect_calc("parclen(x,x^2,0,1)", "1.479");
+	expect_calc("parclen(cos(x),sin(x),0,pi)", "3.142");
+	expect_calc_refused("parclen(x,1/x,0,1)");
+	expect_calc_refused("polarea(x,1,1)");
 }
 
 int main(void)

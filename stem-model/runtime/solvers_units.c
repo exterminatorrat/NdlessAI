@@ -395,6 +395,92 @@ static int solve_simple_interest(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_rectangle_area(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat w, h;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &w, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &h, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(w.n * h.n, w.d * h.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_triangle_area(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat b, h;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &b, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &h, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(b.n * h.n, b.d * h.d * 2, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_volume_prism(const char *const *args, char *out, size_t outlen)
+{
+	rat l, w, h;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &l, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &w, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &h, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(l.n * w.n * h.n, l.d * w.d * h.d,
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_combined_rate(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b;
+	int rc;
+	char f1[48];
+	long long cross;
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0)
+		return rc;
+	cross = a.n * b.d + b.n * a.d;
+	if (cross == 0)
+		return -4;
+	if ((rc = dec4_render(a.n * b.n, cross, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_probability_single(const char *const *args, char *out,
+                                    size_t outlen)
+{
+	rat f, t;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &f, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &t, NULL)) != 0)
+		return rc;
+	if (t.n == 0)
+		return -4;
+	if ((rc = dec4_render(f.n * t.d, f.d * t.n, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_units_solve(const char *name, const char *const *args,
                         int nargs, char *out, size_t outlen)
 {
@@ -454,6 +540,31 @@ int solvers_units_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "simple_interest") == 0) {
 		if (nargs == 3)
 			rc = solve_simple_interest(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "rectangle_area") == 0) {
+		if (nargs == 2)
+			rc = solve_rectangle_area(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "triangle_area") == 0) {
+		if (nargs == 2)
+			rc = solve_triangle_area(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "volume_prism") == 0) {
+		if (nargs == 3)
+			rc = solve_volume_prism(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "combined_rate") == 0) {
+		if (nargs == 2)
+			rc = solve_combined_rate(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "probability_single") == 0) {
+		if (nargs == 2)
+			rc = solve_probability_single(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "percent_error") == 0) {

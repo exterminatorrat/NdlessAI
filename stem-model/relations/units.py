@@ -139,3 +139,79 @@ class SigFigs:
     @staticmethod
     def solve(value, n):
         return sig_render(value, n)
+
+
+@relation("percent_change", "units", ["original", "new"], exact=False,
+          step=dict(line="change% = (new - original) / original * 100",
+                    expr="(@2 - @1) / @1 * 100"))
+class PercentChange:
+    @staticmethod
+    def gen(rng):
+        original = rng.choice([40, 60, 80, 100, 120, 200, 240])
+        pct = rng.choice([-50, -25, -20, -10, 10, 20, 25, 50])
+        new = original + original * pct // 100
+        return [original, new], (f"A price changes from {original} to {new}. "
+                                 f"Find the percent change.")
+
+    @staticmethod
+    def solve(original, new):
+        return f"{dec_exact(sp.Rational(new - original, original) * 100)}%"
+
+@relation("percent_of", "units", ["percent", "whole"], exact=False,
+          step=dict(line="part = percent/100 * whole", expr="@1 / 100 * @2"))
+class PercentOf:
+    @staticmethod
+    def gen(rng):
+        percent = rng.choice([5, 10, 15, 20, 25, 40, 60, 75])
+        whole = rng.choice([40, 60, 80, 120, 200, 240, 400])
+        return [percent, whole], (f"What is {percent}% of {whole}?")
+
+    @staticmethod
+    def solve(percent, whole):
+        return dec_exact(sp.Rational(percent, 100) * whole)
+
+@relation("ratio_share", "units", ["total", "a", "b"], exact=False,
+          step=dict(line="first share = total * a / (a + b)",
+                    expr="@1 * @2 / (@2 + @3)"))
+class RatioShare:
+    @staticmethod
+    def gen(rng):
+        a = rng.randint(1, 5)
+        b = rng.randint(1, 5)
+        total = rng.choice([30, 45, 60, 90, 120, 150]) * (a + b)
+        return [total, a, b], (f"An amount of {total} is shared in the ratio "
+                               f"{a}:{b}. How much is the first share?")
+
+    @staticmethod
+    def solve(total, a, b):
+        return dec_exact(sp.Rational(total * a, a + b))
+
+@relation("average_speed", "units", ["distance", "time"], exact=False,
+          step=dict(line="v = d / t", expr="@1 / @2"))
+class AverageSpeed:
+    @staticmethod
+    def gen(rng):
+        distance = rng.choice([60, 90, 120, 150, 200, 240, 300])
+        time = rng.choice([2, 3, 4, 5, 6, 8])
+        return [distance, time], (f"A car covers {distance} km in {time} hours. "
+                                  f"Find its average speed in km/h.")
+
+    @staticmethod
+    def solve(distance, time):
+        return f"{dec_exact(sp.Rational(distance, time))} km/h"
+
+@relation("simple_interest", "units", ["principal", "rate", "years"], exact=False,
+          step=dict(line="I = P * r/100 * t", expr="@1 * @2 / 100 * @3"))
+class SimpleInterest:
+    @staticmethod
+    def gen(rng):
+        principal = rng.choice([500, 1000, 1500, 2000, 2500, 4000])
+        rate = rng.choice([2, 3, 4, 5, 6, 8])
+        years = rng.randint(1, 5)
+        return [principal, rate, years], (
+            f"Find the simple interest on {principal} at {rate}% per year for "
+            f"{years} years.")
+
+    @staticmethod
+    def solve(principal, rate, years):
+        return dec_exact(sp.Rational(principal * rate * years, 100))

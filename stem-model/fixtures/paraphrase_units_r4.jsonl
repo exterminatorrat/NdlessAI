@@ -1,0 +1,40 @@
+{"relation": "percent_change", "args": [80, 60], "question": "A jacket that was 80 dollars is marked down to 60. By what percent did the price drop?", "split": "eval"}
+{"relation": "percent_change", "args": [200, 150], "question": "A phone bill falls from 200 dollars a month to 150. Find the percent decrease.", "split": "eval"}
+{"relation": "percent_change", "args": [45, 54], "question": "A shirt is marked up from 45 dollars to 54. What percent increase is that?", "split": "eval"}
+{"relation": "percent_change", "args": [120, 150], "question": "Enrolment rises from 120 students to 150. Calculate the percent increase.", "split": "eval"}
+{"relation": "percent_change", "args": [250, 200], "question": "A flat rents for 250 dollars and is cut to 200. Give the percentage decrease.", "split": "eval"}
+{"relation": "percent_change", "args": [60, 45], "question": "A share price slips from 60 to 45. What is the percentage change?", "split": "eval"}
+{"relation": "percent_change", "args": [400, 500], "question": "Sales rise from 400 units to 500 units. Find the percent increase in sales.", "split": "eval"}
+{"relation": "percent_change", "args": [160, 120], "question": "A season ticket drops from 160 dollars to 120. What discount percent is that?", "split": "eval"}
+{"relation": "percent_of", "args": [15, 240], "question": "A gym sells 15 percent of its 240 memberships in January. How many is that?", "split": "eval"}
+{"relation": "percent_of", "args": [20, 150], "question": "A waiter tips out 20 percent of a 150 dollar night. How much is the tip-out?", "split": "eval"}
+{"relation": "percent_of", "args": [25, 80], "question": "A store keeps 25 percent of an 80 dollar sale as profit. What is the profit?", "split": "eval"}
+{"relation": "percent_of", "args": [40, 320], "question": "A school bus is 40 percent full with 320 seats. How many seats are taken?", "split": "eval"}
+{"relation": "percent_of", "args": [5, 600], "question": "A commission of 5 percent is paid on 600 dollars of sales. Find the commission.", "split": "eval"}
+{"relation": "percent_of", "args": [60, 45], "question": "A crew finishes 60 percent of a 45 hour job. How many hours is that?", "split": "eval"}
+{"relation": "percent_of", "args": [75, 120], "question": "A tank is 75 percent full when it holds 120 litres. How many litres is that?", "split": "eval"}
+{"relation": "percent_of", "args": [10, 90], "question": "A discount of 10 percent applies to a 90 dollar item. What is the saving?", "split": "eval"}
+{"relation": "ratio_share", "args": [60, 2, 3], "question": "Prize money of 60 dollars is split between two teams in the ratio 2:3. What does the first team get?", "split": "eval"}
+{"relation": "ratio_share", "args": [90, 1, 2], "question": "A 90 dollar bonus is shared in the ratio 1:2 between two workers. What is the first worker's share?", "split": "eval"}
+{"relation": "ratio_share", "args": [120, 3, 5], "question": "Two partners divide 120 dollars in the ratio 3:5. How much does the first partner receive?", "split": "eval"}
+{"relation": "ratio_share", "args": [150, 1, 4], "question": "A 150 gram mix is split between flour and sugar in the ratio 1:4, flour first. How much flour is used?", "split": "eval"}
+{"relation": "ratio_share", "args": [45, 2, 1], "question": "Two charities share a 45 dollar donation in the ratio 2:1. Find the first charity's amount.", "split": "eval"}
+{"relation": "ratio_share", "args": [240, 5, 3], "question": "A 240 dollar refund is split in the ratio 5:3 between two customers. What is the first customer's refund?", "split": "eval"}
+{"relation": "ratio_share", "args": [30, 4, 1], "question": "A 30 dollar voucher is shared in the ratio 4:1. How much is the first share?", "split": "eval"}
+{"relation": "ratio_share", "args": [180, 2, 7], "question": "Rent of 180 dollars is divided in the ratio 2:7 between two flatmates. Give the first flatmate's share.", "split": "eval"}
+{"relation": "average_speed", "args": [120, 4], "question": "A delivery van covers 120 km in 4 hours. What was its average speed in km/h?", "split": "eval"}
+{"relation": "average_speed", "args": [240, 3], "question": "A coach travels 240 km in 3 hours. Find the average speed.", "split": "eval"}
+{"relation": "average_speed", "args": [60, 2], "question": "A scooter rides 60 km in 2 hours. What is the average speed in km/h?", "split": "eval"}
+{"relation": "average_speed", "args": [150, 5], "question": "A lorry drives 150 km in 5 hours. Give the average speed.", "split": "eval"}
+{"relation": "average_speed", "args": [200, 8], "question": "A ferry covers 200 km in 8 hours. Calculate the average speed in km/h.", "split": "eval"}
+{"relation": "average_speed", "args": [90, 3], "question": "A cyclist rides 90 km in 3 hours. What is the average speed?", "split": "eval"}
+{"relation": "average_speed", "args": [300, 6], "question": "A coach covers 300 km in 6 hours. Find its average speed in km/h.", "split": "eval"}
+{"relation": "average_speed", "args": [240, 8], "question": "A van covers 240 km in 8 hours. What is the average speed?", "split": "eval"}
+{"relation": "simple_interest", "args": [2000, 5, 3], "question": "A 2000 dollar bond pays simple interest at 5 percent for 3 years. How much interest is earned?", "split": "eval"}
+{"relation": "simple_interest", "args": [1500, 4, 2], "question": "A saver puts 1500 dollars in an account paying 4 percent simple interest for 2 years. Find the interest.", "split": "eval"}
+{"relation": "simple_interest", "args": [500, 8, 4], "question": "A 500 dollar loan carries 8 percent simple interest for 4 years. What interest is due?", "split": "eval"}
+{"relation": "simple_interest", "args": [2500, 3, 5], "question": "A 2500 dollar deposit earns 3 percent simple interest over 5 years. How much interest?", "split": "eval"}
+{"relation": "simple_interest", "args": [4000, 6, 1], "question": "A 4000 dollar investment pays 6 percent simple interest for 1 year. Calculate the interest.", "split": "eval"}
+{"relation": "simple_interest", "args": [1000, 2, 5], "question": "Simple interest of 2 percent is paid on 1000 dollars for 5 years. What is the interest?", "split": "eval"}
+{"relation": "simple_interest", "args": [1500, 6, 3], "question": "A town lends 1500 dollars at 6 percent simple interest for 3 years. How much interest comes back?", "split": "eval"}
+{"relation": "simple_interest", "args": [500, 5, 2], "question": "A 500 dollar account earns 5 percent simple interest over 2 years. Find the interest earned.", "split": "eval"}

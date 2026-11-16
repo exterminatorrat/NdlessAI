@@ -295,7 +295,7 @@ these courses experiences.
 | P2a limits, tangents, average rates | done, #82 | `test_expr` covers the four answers and five refusals; `limit` accepts only when the two-sided gap closes at the rate the offset does |
 | P2b Riemann sums, average value, arc length | done | `riemann` with mid/left/right/trap, `avgvalue`, `arclen`; `gate.sh quick` green |
 | P2c by-parts, partial fractions, improper | **not shipped** | definite integrals of those integrands already answer numerically; the symbolic rules need a rewrite, and improper tails hit the integrator's own floor (above) |
-| P2d convergence and polar/parametric | pending | — |
+| P2d polar area, parametric arc length | done | `polarea`, `parclen`; convergence tests stay with wave-6 K24, which needs a limit engine |
 
 ## What is not in Tier 1
 

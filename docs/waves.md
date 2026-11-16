@@ -215,6 +215,7 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | 3.1 pulled forward: definite integrals | merged; #30 closed as folded | `gexpr_integrate()` and `integr_poly3` |
 | 3.2 exact linear algebra | merged, #59 and #60 | `runtime/matrix.c`; typed `det`/`inv`/`rank`/`solve` on exact rationals |
 | 3.3 the rest of AP Chemistry | merged, #61 | `relations/chemistry.py`, 29 relations |
+| 3.3 follow-up: scientific-notation input | not merged; verified on `fix/scientific-notation-input`, 2026-11-16 | `parse_rat()` accepts signed e/E notation; shorthand and formula-picker regressions pass under ASan/UBSan; 13,808 solver assertions and 54,400 parity cases have zero mismatches; hardware not run |
 | 3.4 the rest of thermodynamics | merged, #62 | `relations/thermo.py`, 6 relations |
 | 3.5 electricity and magnetism | merged, #62 | `relations/em.py`, 6 relations |
 | 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate | `gate.sh` gates generated phrasing and wrong relation only |

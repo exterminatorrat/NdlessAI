@@ -325,12 +325,13 @@ void fmt_rat(const rat *r, char *out, size_t outlen)
 
 int parse_rat(const char *s, rat *r, int *flt)
 {
+	/* Revised 2026-11-16: parse scientific notation without floating point. */
 	long long num = 0;
 	int neg = 0, exp = 0, digits = 0, dot = 0;
 	const char *p = s;
 
-	if (*p == '-') {
-		neg = 1;
+	if (*p == '-' || *p == '+') {
+		neg = *p == '-';
 		p++;
 	}
 	for (; *p >= '0' && *p <= '9'; p++) {
@@ -350,13 +351,44 @@ int parse_rat(const char *s, rat *r, int *flt)
 				return -3;
 		}
 	}
-	if (digits == 0 || *p != '\0')
+	if (digits == 0)
+		return -3;
+	if (*p == 'e' || *p == 'E') {
+		int power = 0, sign = 1;
+
+		p++;
+		if (*p == '-' || *p == '+') {
+			sign = *p == '-' ? -1 : 1;
+			p++;
+		}
+		if (*p < '0' || *p > '9')
+			return -3;
+		while (*p >= '0' && *p <= '9') {
+			/* Huge exponents cannot fit; bound accumulation before multiplying. */
+			if (power > 100)
+				return -4;
+			power = power * 10 + (*p++ - '0');
+		}
+		exp -= sign * power;
+		dot = 1;
+	}
+	if (*p != '\0')
 		return -3;
 	if (flt != NULL)
 		*flt = dot;
 	while (exp > 0 && num % 10 == 0) {
 		num /= 10;
 		exp--;
+	}
+	if (num == 0)
+		exp = 0;
+	if (exp > 9)
+		return -4;
+	while (exp < 0) {
+		if (num > WIDE_LIMIT / 100)
+			return -4;
+		num *= 10;
+		exp++;
 	}
 	r->n = neg ? -num : num;
 	r->d = P10[exp];

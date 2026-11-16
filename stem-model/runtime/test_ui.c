@@ -19,6 +19,8 @@
 #include "diagram.h"
 #include "reltable.h"
 
+/* Revised 2026-11-16: solve scientific inputs through the formula picker. */
+
 #define PAD 8
 #define CANARY 0xA5A5u
 
@@ -834,18 +836,16 @@ static void test_template(void)
 
 	/* The prompt takes numbers only. */
 	check(ui_type(&u, 'a') == 0, "a letter is not an argument");
-	ui_type(&u, '0');
-	ui_type(&u, '.');
-	ui_type(&u, '4');
+	for (const char *p = "4e-1"; *p; p++)
+		check(ui_type(&u, *p), "a scientific coefficient can be typed");
 	ui_key(&u, UI_KEY_ACCEPT);
 	check(u.tmpl_arg == 1, "ENTER moves to the second argument");
-	ui_type(&u, '5');
-	ui_type(&u, '0');
-	ui_type(&u, '0');
+	for (const char *p = "5E+2"; *p; p++)
+		check(ui_type(&u, *p), "an uppercase exponent and plus can be typed");
 	ui_key(&u, UI_KEY_ACCEPT);
 
 	check(u.mode == UI_MODE_ASK, "the last argument answers");
-	check(strcmp(ui_last_call(&u), "CALL friction_force 0.4 500") == 0,
+	check(strcmp(ui_last_call(&u), "CALL friction_force 4e-1 5E+2") == 0,
 	      "and the answer carries the call");
 	check(strcmp(ui_row(&u, u.nrows - 1), "= 200 N") == 0, "with the right number");
 	check(strstr(ui_row(&u, 0), "f = mu*N") != NULL, "and the working above it");

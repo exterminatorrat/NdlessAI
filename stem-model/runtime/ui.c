@@ -1013,8 +1013,10 @@ int ui_type(ui_t *u, char c)
 		return 0;
 	/* An argument is a number. A letter here would only reach the solver as a
 	 * parse error, so it never reaches the line. */
+	/* Revised 2026-11-16: accept scientific notation's exponent and signs. */
 	if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS &&
-	    !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e'))
+	    !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' ||
+	      c == 'e' || c == 'E'))
 		return 0;
 	if (u->input_len >= UI_INPUT_MAX - 1)
 		return 0;

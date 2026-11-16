@@ -70,8 +70,7 @@ class AverageRateOfChange:
     def solve(fa, fb, a, b):
         return dec_exact(sp.Rational(fb - fa, b - a))
 
-@relation("vector_add", "precalc", ["ax", "ay", "bx", "by"], exact=False,
-          step=dict(line="(ax + bx, ay + by)", expr="(@1 + @3, @2 + @4)"))
+@relation("vector_add", "precalc", ["ax", "ay", "bx", "by"], exact=False)
 class VectorAdd:
     @staticmethod
     def gen(rng):
@@ -98,8 +97,7 @@ class VectorDot:
     def solve(ax, ay, bx, by):
         return dec_exact(sp.Rational(ax * bx + ay * by))
 
-@relation("vector_scale", "precalc", ["ax", "ay", "k"], exact=False,
-          step=dict(line="(k*ax, k*ay)", expr="(@3 * @1, @3 * @2)"))
+@relation("vector_scale", "precalc", ["ax", "ay", "k"], exact=False)
 class VectorScale:
     @staticmethod
     def gen(rng):

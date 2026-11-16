@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA a17d8fe257170331
+ * STEP_SOURCE_SHA 3e88df6e7ae66f31
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 133
+#define STEP_NUM_ROWS 135
 
 typedef struct {
 	const char *name;
@@ -24,6 +24,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"adiabatic_work", "W = (P1*V1 - P2*V2)/(gamma - 1)", "(@1*@2 - @3*@4)/(@5 - 1)"},
 	{"arc_length", "s = r*theta*pi/180", "@1*@2*pi/180"},
 	{"average", "mean = (a + b + c + d)/4", "(@1 + @2 + @3 + @4) / 4"},
+	{"average_rate_of_change", "rate = (f(b) - f(a)) / (b - a)", "(@2 - @1) / (@4 - @3)"},
 	{"average_speed", "v = d / t", "@1 / @2"},
 	{"avg_rate", "rate = change/time", "@1 / @2"},
 	{"beat_freq", "f_b = |f1 - f2|", "abs(@1 - @2)"},
@@ -148,6 +149,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"threshold_wavelength", "lambda_max = 1240/phi", "1240/@1"},
 	{"torque", "tau = F*r*sin(theta)", "@1*@2*sin(@3)"},
 	{"triangle_area", "A = base * height / 2", "@1 * @2 / 2"},
+	{"vector_dot", "a . b = ax*bx + ay*by", "@1 * @3 + @2 * @4"},
 	{"volume_flow_rate", "Q = A*v", "@1*@2"},
 	{"volume_prism", "V = l * w * h", "@1 * @2 * @3"},
 	{"wave_speed", "v = f*lambda", "@1*@2"},

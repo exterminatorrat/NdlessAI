@@ -12784,6 +12784,58 @@ static const tcase PROBABILITY_SINGLE[] = {
 	{ { "4", "6", "", "", "", "" }, "0.6667" },
 };
 
+static const tcase AVERAGE_RATE_OF_CHANGE[] = {
+	{ { "3", "11", "1", "5", "", "" }, "2" },
+	{ { "-2", "10", "2", "6", "", "" }, "3" },
+	{ { "9", "-3", "0", "4", "", "" }, "-3" },
+	{ { "1", "7", "3", "6", "", "" }, "2" },
+	{ { "6", "6", "2", "9", "", "" }, "0" },
+	{ { "0", "20", "4", "8", "", "" }, "5" },
+	{ { "6", "-2", "1", "5", "", "" }, "-2" },
+	{ { "-4", "-10", "2", "5", "", "" }, "-2" },
+	{ { "0", "0", "0", "3", "", "" }, "0" },
+	{ { "1.5", "4.5", "2", "6", "", "" }, "0.75" },
+};
+
+static const tcase VECTOR_ADD[] = {
+	{ { "2", "3", "-5", "4", "", "" }, "x=-3, y=7" },
+	{ { "4", "-1", "1", "6", "", "" }, "x=5, y=5" },
+	{ { "-3", "-2", "7", "5", "", "" }, "x=4, y=3" },
+	{ { "8", "0", "0", "9", "", "" }, "x=8, y=9" },
+	{ { "5", "5", "-5", "-5", "", "" }, "x=0, y=0" },
+	{ { "0", "0", "3", "4", "", "" }, "x=3, y=4" },
+	{ { "6", "-4", "-2", "-3", "", "" }, "x=4, y=-7" },
+	{ { "-1", "2", "1", "-2", "", "" }, "x=0, y=0" },
+	{ { "0.5", "1.5", "2.5", "-0.5", "", "" }, "x=3, y=1" },
+	{ { "7", "7", "7", "7", "", "" }, "x=14, y=14" },
+};
+
+static const tcase VECTOR_DOT[] = {
+	{ { "2", "3", "-5", "4", "", "" }, "2" },
+	{ { "1", "0", "0", "1", "", "" }, "0" },
+	{ { "3", "-2", "4", "5", "", "" }, "2" },
+	{ { "5", "5", "-1", "-1", "", "" }, "-10" },
+	{ { "-2", "7", "3", "-1", "", "" }, "-13" },
+	{ { "6", "0", "-4", "9", "", "" }, "-24" },
+	{ { "0", "4", "7", "0", "", "" }, "0" },
+	{ { "-3", "-3", "-3", "-3", "", "" }, "18" },
+	{ { "1.5", "2", "4", "-1", "", "" }, "4" },
+	{ { "9", "9", "9", "9", "", "" }, "162" },
+};
+
+static const tcase VECTOR_SCALE[] = {
+	{ { "2", "3", "-4", "", "", "" }, "x=-8, y=-12" },
+	{ { "5", "-1", "3", "", "", "" }, "x=15, y=-3" },
+	{ { "-2", "6", "2", "", "", "" }, "x=-4, y=12" },
+	{ { "4", "4", "-1", "", "", "" }, "x=-4, y=-4" },
+	{ { "0", "7", "5", "", "", "" }, "x=0, y=35" },
+	{ { "3", "-8", "-2", "", "", "" }, "x=-6, y=16" },
+	{ { "7", "2", "1", "", "", "" }, "x=7, y=2" },
+	{ { "-5", "-5", "4", "", "", "" }, "x=-20, y=-20" },
+	{ { "1.5", "-2.5", "2", "", "", "" }, "x=3, y=-5" },
+	{ { "0", "0", "7", "", "", "" }, "x=0, y=0" },
+};
+
 static const tcase PERCENT_ERROR[] = {
 	{ { "45", "40", "", "", "", "" }, "12.5%" },
 	{ { "172", "100", "", "", "", "" }, "72%" },
@@ -14456,6 +14508,10 @@ int main(void)
 	bad += check_rel("scientific_notation", SCIENTIFIC_NOTATION, (int)(sizeof(SCIENTIFIC_NOTATION) / sizeof(SCIENTIFIC_NOTATION[0])), 2, &total);
 	bad += check_rel("average", AVERAGE, (int)(sizeof(AVERAGE) / sizeof(AVERAGE[0])), 4, &total);
 	bad += check_rel("sig_figs", SIG_FIGS, (int)(sizeof(SIG_FIGS) / sizeof(SIG_FIGS[0])), 2, &total);
+	bad += check_rel("average_rate_of_change", AVERAGE_RATE_OF_CHANGE, (int)(sizeof(AVERAGE_RATE_OF_CHANGE) / sizeof(AVERAGE_RATE_OF_CHANGE[0])), 4, &total);
+	bad += check_rel("vector_add", VECTOR_ADD, (int)(sizeof(VECTOR_ADD) / sizeof(VECTOR_ADD[0])), 4, &total);
+	bad += check_rel("vector_dot", VECTOR_DOT, (int)(sizeof(VECTOR_DOT) / sizeof(VECTOR_DOT[0])), 4, &total);
+	bad += check_rel("vector_scale", VECTOR_SCALE, (int)(sizeof(VECTOR_SCALE) / sizeof(VECTOR_SCALE[0])), 3, &total);
 	bad += check_rel("percent_change", PERCENT_CHANGE, (int)(sizeof(PERCENT_CHANGE) / sizeof(PERCENT_CHANGE[0])), 2, &total);
 	bad += check_rel("percent_of", PERCENT_OF, (int)(sizeof(PERCENT_OF) / sizeof(PERCENT_OF[0])), 2, &total);
 	bad += check_rel("ratio_share", RATIO_SHARE, (int)(sizeof(RATIO_SHARE) / sizeof(RATIO_SHARE[0])), 3, &total);

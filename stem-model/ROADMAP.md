@@ -11,19 +11,23 @@ answer comes from C code that computes exactly.
     question -> model picks a call -> C solver computes -> answer
 
 So "make it more powerful" means "add tools", not "make the model bigger". A
-5.2M-parameter model choosing among 100 tools is barely harder to train than
-one choosing among 11. The vocabulary has room: 100 relations still leaves 151
-BPE merges for text.
+5.2M-parameter model choosing among 150 tools is barely harder to train than
+one choosing among 11. What it does cost is vocabulary: each relation takes one
+slot, so at 512 entries 150 relations left 101 BPE merges for text and the rows
+grew to a mean of 62 tokens. At 640 entries the same catalogue keeps 226 merges
+and a mean of 51.9 tokens, which is why the vocabulary moved.
 
 ## Where it stands
 
-102 relations across ten subject modules, all verified byte-identical between
-the Python reference and the C solvers, with every C test and parity gate
-passing (`sh gate.sh`). On the 1,840 hand-written rows the model reads 72.3%
-exact and 9.8% wrong relation; the generated-phrasing gate is 90.5%, down from
-95.0% at 84 relations, because the catalogue outgrew the model rather than the
-training budget — `../docs/waves.md` records that measurement and what it
-implies. See `PROGRESS.md` for the per-relation state and `TIER1_PLAN.md` for
+153 relations across ten subject tags, all verified byte-identical between the
+Python reference and the C solvers, with every C test and parity gate passing
+(`sh gate.sh`). On 500 held-out rows the model reads 90.2% exact and 3.2% wrong
+relation, and on wording it has never seen it reads 98.4% exact against 98.5%
+on ordinary wording from the same weights. Accuracy fell as the catalogue grew
+through 136 relations (95.0%, 94.2%, 90.5%, 90.3% on successive gates) and the
+cause turned out to be the vocabulary rather than the relation count —
+`../docs/tier1-plan.md` records that measurement, and the training recipe's
+run-to-run spread, which is now the binding limit. See `PROGRESS.md` for the per-relation state and `TIER1_PLAN.md` for
 the design.
 
 The subject list below is the original 66-relation Tier 1 baseline, kept because
@@ -71,7 +75,7 @@ combined).
 **Units and constants** — dimensional conversion, significant figures,
 physical constants table.
 
-Target: 100 relations covering a high-school curriculum. This is the tier that
+Target: 100 relations covering a high-school curriculum; 153 have landed. This is the tier that
 makes the thing genuinely useful, and it is data entry plus formula writing.
 
 ## Tier 2: graphs (days, no model at all)

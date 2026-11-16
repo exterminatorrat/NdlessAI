@@ -396,12 +396,18 @@ these courses experiences.
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| P0 inventory | done | `python3 stem-model/course_audit.py`: 5 courses, 29 units, 128 topics, 33 gaps, every relation claim registered |
+| P0 inventory | done | `python3 stem-model/course_audit.py`: 5 courses, 29 units, 133 topics, 18 gaps, every relation claim registered |
 | P1 per-course measurement | done | `report_relations.py --course-floor`: three PASS, two too thin to judge; `gate.sh` carries the line |
 | P2a limits, tangents, average rates | done, #82 | `test_expr` covers the four answers and five refusals; `limit` accepts only when the two-sided gap closes at the rate the offset does |
 | P2b Riemann sums, average value, arc length | done | `riemann` with mid/left/right/trap, `avgvalue`, `arclen`; `gate.sh quick` green |
 | P2c by-parts, partial fractions, improper | **not shipped** | definite integrals of those integrands already answer numerically; the symbolic rules need a rewrite, and improper tails hit the integrator's own floor (above) |
 | P2d polar area, parametric arc length | done | `polarea`, `parclen`; convergence tests stay with wave-6 K24, which needs a limit engine |
+| P3 batch A relations | done, #97 | `average_rate_of_change` and three vector relations; parity 3,672 cases with 0 mismatches and 0 gaps |
+| P4 batch B relations | done, #89 and #94 | ten relations across the numeric and geometry slices; `circle_measure` cut because pi r^2 has no exact rational answer |
+| P5 batch C relations | done, #97 | `collision_velocity`, `series_resistance`, `limiting_moles`; intro physics and chemistry reaches zero gaps |
+| P6 retrain and per-course measurement | done, with a caveat | four cycles measured; the course floors recorded above come from the 146-relation cycle, and the 153-relation cycle is measured on held-out and wording rows only because the floors need a corpus-wide run |
+| P7 course surface | not started | shape pending: `runtime/ui.c` already carries a subject -> relation -> arguments flow, so a course picker is closer to scoping that flow than to a new screen |
+| P8 closing pass | in progress | relation counts corrected in `status.md` and `ROADMAP.md`; the outcome report waits for P7, because a tier closed without its main surface would be a row that overstates |
 
 ## What is not in Tier 1
 

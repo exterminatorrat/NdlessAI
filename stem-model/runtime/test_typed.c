@@ -47,6 +47,9 @@ int main(void)
 	expect("e^2", "7.389");
 	expect("1/3", "0.3333");
 	expect("abs(-7)", "7");
+	expect("limit(sin(x)/x,0)", "1");
+	expect("tangent(x^2,3)", "y = 6x - 9");
+	expect("avgrate(x^2,1,3)", "4");
 	expect("sin(0)", "0");
 	expect("pi", "3.142");
 	expect("2pi", "6.283");

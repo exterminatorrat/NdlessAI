@@ -818,6 +818,54 @@ static void test_typed(void)
 	expect_typed("d/dx(x)", "1");
 }
 
+/* ---- limits, tangents and average rates ---- */
+
+static void expect_calc(const char *text, const char *want)
+{
+	char got[64];
+
+	if (gexpr_calculus_answer(text, got, sizeof got) < 0) {
+		printf("FAIL calc %s -> no answer, wanted %s\n", text, want);
+		failures++;
+		return;
+	}
+	if (strcmp(got, want)) {
+		printf("FAIL calc %s -> %s, wanted %s\n", text, got, want);
+		failures++;
+	}
+}
+
+static void expect_calc_refused(const char *text)
+{
+	char got[64];
+
+	if (gexpr_calculus_answer(text, got, sizeof got) == 0) {
+		printf("FAIL calc %s -> %s, wanted no answer\n", text, got);
+		failures++;
+	}
+}
+
+static void test_calculus(void)
+{
+	expect_calc("limit(sin(x)/x,0)", "1");
+	expect_calc("limit((x^2-1)/(x-1),1)", "2");
+	expect_calc("limit(2x+1,3)", "7");
+	expect_calc("tangent(x^2,3)", "y = 6x - 9");
+	expect_calc("tangent(sin(x),0)", "y = x");
+	expect_calc("tangent(5,2)", "y = 5");
+	expect_calc("avgrate(x^2,1,3)", "4");
+	expect_calc("avgrate(x^2,0,2)", "2");
+	/*
+	 * A jump and a pole have no two-sided limit at Q16, and a malformed form
+	 * is not a limit at all. Refusing is the answer in every one of these.
+	 */
+	expect_calc_refused("limit(1/x,0)");
+	expect_calc_refused("limit(abs(x)/x,0)");
+	expect_calc_refused("avgrate(x^2,2,2)");
+	expect_calc_refused("limit(x^2)");
+	expect_calc_refused("tangent(x^2,3)+1");
+}
+
 int main(void)
 {
 	test_cases();
@@ -830,6 +878,7 @@ int main(void)
 	test_integral_typed_refusals();
 	test_failures();
 	test_typed();
+	test_calculus();
 
 	printf("worst finite-difference disagreement: %d permille (%s)\n", worst_fd,
 	       worst_fd ? worst_fd_where : "none");

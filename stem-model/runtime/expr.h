@@ -206,6 +206,18 @@ int gexpr_unparse(const gexpr_t *e, char *out, int outlen);
  */
 int gexpr_derivative_answer(const char *text, char *out, int outlen);
 
+/*
+ * Three answers about an expression rather than arithmetic on one, matched on
+ * the raw text like the derivative form: "limit(f, a)" where a is the value x
+ * approaches, "tangent(f, a)" for the tangent line printed as y = mx + b, and
+ * "avgrate(f, a, b)" for the average rate of change over [a, b].
+ *
+ * A limit is sampled on both sides and refused when the sides disagree or the
+ * estimate does not settle, so this answers the limits that exist and says so
+ * rather than guessing the ones that do not.
+ */
+int gexpr_calculus_answer(const char *text, char *out, int outlen);
+
 enum {
 	GEXPR_INT_OK = 0,
 	GEXPR_INT_UNBOUNDED = -1

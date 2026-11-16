@@ -28,3 +28,21 @@ work and update its status table when a workstream changes state.
 - **Report in outcomes.** Close each workstream with what a student can now do
   that they could not before, and which number moved. Module names are not a
   report.
+
+## Backlog
+
+The capability catalogue in `docs/capabilities.md` is the full list, including
+the entries recorded as not worth doing; `docs/status.md` records what is already
+built. Read both before claiming something is missing.
+
+Every entry that is startable is filed as an issue in the development tracker,
+labelled `capability`. `area:model`, `area:math`, `area:interface` and
+`area:subjects` say which surface a piece touches; `needs-retrain` marks the ones
+that cannot be a source-only pull request, because a relation or vocabulary
+change renumbers the tokenizer and forces a rebuild; `good first issue` marks the
+ones that fit one pull request. Take the issue before you start so two agents do
+not write the same capability. Outside that tracker, name the `docs/capabilities.md`
+entry you are taking in the pull request instead.
+
+Do not copy the catalogue into this file or into the tracker: the issues and the
+docs are the two copies, and a third one rots silently.

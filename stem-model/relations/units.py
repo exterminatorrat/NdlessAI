@@ -215,3 +215,80 @@ class SimpleInterest:
     @staticmethod
     def solve(principal, rate, years):
         return dec_exact(sp.Rational(principal * rate * years, 100))
+
+
+@relation("rectangle_area", "units", ["width", "height"], exact=False,
+          step=dict(line="A = w * h", expr="@1 * @2"))
+class RectangleArea:
+    @staticmethod
+    def gen(rng):
+        w = rng.choice([3, 4, 5, 6, 8, 12, 15])
+        h = rng.choice([2, 3, 5, 7, 9, 11, 14])
+        return [w, h], (f"A rectangle is {w} cm wide and {h} cm tall. "
+                        f"Find its area.")
+
+    @staticmethod
+    def solve(width, height):
+        return dec_exact(sp.Rational(width) * height)
+
+@relation("triangle_area", "units", ["base", "height"], exact=False,
+          step=dict(line="A = base * height / 2", expr="@1 * @2 / 2"))
+class TriangleArea:
+    @staticmethod
+    def gen(rng):
+        base = rng.choice([4, 6, 8, 10, 12, 14, 16])
+        height = rng.choice([3, 5, 7, 9, 11, 13, 15])
+        return [base, height], (f"A triangle has base {base} m and height "
+                                f"{height} m. Find its area.")
+
+    @staticmethod
+    def solve(base, height):
+        return dec_exact(sp.Rational(base * height, 2))
+
+@relation("volume_prism", "units", ["length", "width", "height"], exact=False,
+          step=dict(line="V = l * w * h", expr="@1 * @2 * @3"))
+class VolumePrism:
+    @staticmethod
+    def gen(rng):
+        l = rng.choice([2, 3, 4, 5, 6, 8])
+        w = rng.choice([2, 3, 4, 5, 7])
+        h = rng.choice([3, 4, 6, 9, 10])
+        return [l, w, h], (f"A box measures {l} cm by {w} cm by {h} cm. "
+                           f"Find its volume.")
+
+    @staticmethod
+    def solve(length, width, height):
+        return dec_exact(sp.Rational(length * width * height))
+
+@relation("combined_rate", "units", ["a", "b"], exact=False,
+          step=dict(line="t = a*b / (a + b)", expr="@1 * @2 / (@1 + @2)"))
+class CombinedRate:
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([2, 3, 4, 5, 6, 8, 12])
+        b = rng.choice([3, 4, 5, 6, 8, 10, 12])
+        while b == a:
+            b = rng.choice([3, 4, 5, 6, 8, 10, 12])
+        return [a, b], (f"One pipe fills a tank in {a} hours and a second "
+                        f"fills it in {b} hours. How many hours do they take "
+                        f"together?")
+
+    @staticmethod
+    def solve(a, b):
+        return dec_exact(sp.Rational(a * b, a + b))
+
+@relation("probability_single", "units", ["favourable", "total"], exact=False,
+          step=dict(line="P = favourable / total", expr="@1 / @2"))
+class ProbabilitySingle:
+    @staticmethod
+    def gen(rng):
+        total = rng.choice([5, 8, 10, 12, 15, 20, 25])
+        favourable = rng.randint(1, total - 1)
+        return [favourable, total], (f"A bag holds {total} counters, "
+                                     f"{favourable} of them red. One counter "
+                                     f"is drawn at random. Find the probability "
+                                     f"it is red, as a decimal.")
+
+    @staticmethod
+    def solve(favourable, total):
+        return dec_exact(sp.Rational(favourable, total))

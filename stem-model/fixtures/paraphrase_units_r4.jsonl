@@ -38,3 +38,43 @@
 {"relation": "simple_interest", "args": [1000, 2, 5], "question": "Simple interest of 2 percent is paid on 1000 dollars for 5 years. What is the interest?", "split": "eval"}
 {"relation": "simple_interest", "args": [1500, 6, 3], "question": "A town lends 1500 dollars at 6 percent simple interest for 3 years. How much interest comes back?", "split": "eval"}
 {"relation": "simple_interest", "args": [500, 5, 2], "question": "A 500 dollar account earns 5 percent simple interest over 2 years. Find the interest earned.", "split": "eval"}
+{"relation": "rectangle_area", "args": [4, 6], "question": "A patio slab is 4 m across and 6 m deep. How much area does it cover?", "split": "eval"}
+{"relation": "rectangle_area", "args": [9, 5], "question": "A photo is 9 cm wide and 5 cm tall. Find the area of the print.", "split": "eval"}
+{"relation": "rectangle_area", "args": [12, 10], "question": "A rug measures 12 m by 10 m. What is its area?", "split": "eval"}
+{"relation": "rectangle_area", "args": [7, 3], "question": "A sticky note is 7 cm long and 3 cm wide. Give its area.", "split": "eval"}
+{"relation": "rectangle_area", "args": [15, 4], "question": "A shelf board is 15 cm deep and 4 cm thick, taking the front face. Find that area.", "split": "eval"}
+{"relation": "rectangle_area", "args": [6, 8], "question": "A window pane is 6 m by 8 m. How much glass is needed for it?", "split": "eval"}
+{"relation": "rectangle_area", "args": [2.5, 4], "question": "A label is 2.5 cm wide and 4 cm tall. Compute its area.", "split": "eval"}
+{"relation": "rectangle_area", "args": [11, 9], "question": "A car park bay is 11 m long and 9 m wide. What area does it occupy?", "split": "eval"}
+{"relation": "triangle_area", "args": [8, 5], "question": "A triangular flag has a base of 8 m and a height of 5 m. Find its area.", "split": "eval"}
+{"relation": "triangle_area", "args": [12, 7], "question": "A gable end is a triangle 12 m wide at the base and 7 m tall. How much area is that?", "split": "eval"}
+{"relation": "triangle_area", "args": [6, 4], "question": "A pennant is 6 cm along the base and 4 cm high. What is its area?", "split": "eval"}
+{"relation": "triangle_area", "args": [10, 3], "question": "A triangular plot has a base of 10 m and a perpendicular height of 3 m. Find its area.", "split": "eval"}
+{"relation": "triangle_area", "args": [14, 9], "question": "A sail is triangular with base 14 m and height 9 m. Compute its area.", "split": "eval"}
+{"relation": "triangle_area", "args": [5, 6], "question": "A warning sign is a triangle 5 cm wide at the base and 6 cm tall. Give its area.", "split": "eval"}
+{"relation": "triangle_area", "args": [16, 5], "question": "A triangular field has base 16 m and height 5 m. What is its area?", "split": "eval"}
+{"relation": "triangle_area", "args": [3, 2], "question": "A paper triangle measures 3 cm along its base and 2 cm from base to tip. Find the area.", "split": "eval"}
+{"relation": "volume_prism", "args": [3, 4, 5], "question": "A carton measures 3 cm by 4 cm by 5 cm. What is its volume?", "split": "eval"}
+{"relation": "volume_prism", "args": [6, 2, 7], "question": "A lunchbox is 6 cm long, 2 cm wide and 7 cm high. Find its volume.", "split": "eval"}
+{"relation": "volume_prism", "args": [10, 4, 3], "question": "A planter is 10 m by 4 m by 3 m. How much does it hold?", "split": "eval"}
+{"relation": "volume_prism", "args": [2, 2, 9], "question": "A box section is 2 cm by 2 cm by 9 cm. Give its volume.", "split": "eval"}
+{"relation": "volume_prism", "args": [8, 5, 5], "question": "A water butt is 8 cm wide, 5 cm deep and 5 cm tall. Compute its volume.", "split": "eval"}
+{"relation": "volume_prism", "args": [12, 3, 4], "question": "A brick measures 12 cm by 3 cm by 4 cm. Find its volume.", "split": "eval"}
+{"relation": "volume_prism", "args": [5, 5, 5], "question": "A cube is 5 cm on every side. What is its volume?", "split": "eval"}
+{"relation": "volume_prism", "args": [7, 6, 2], "question": "A draw unit is 7 m long, 6 m wide and 2 m deep. What volume does it enclose?", "split": "eval"}
+{"relation": "combined_rate", "args": [6, 3], "question": "One hose fills a pool in 6 hours and another in 3 hours. How long with both running?", "split": "eval"}
+{"relation": "combined_rate", "args": [4, 12], "question": "A painter needs 4 days alone and a second needs 12 days. Working together, how many days?", "split": "eval"}
+{"relation": "combined_rate", "args": [8, 8], "question": "Two identical pumps each empty a tank in 8 hours. How long do they take together?", "split": "eval"}
+{"relation": "combined_rate", "args": [5, 20], "question": "One machine finishes a run in 5 hours and another in 20 hours. Find the combined time.", "split": "eval"}
+{"relation": "combined_rate", "args": [2, 3], "question": "A tap fills a tub in 2 hours and a second in 3 hours. Together, how many hours?", "split": "eval"}
+{"relation": "combined_rate", "args": [10, 15], "question": "Two cleaners take 10 hours and 15 hours on a house. How long do they need together?", "split": "eval"}
+{"relation": "combined_rate", "args": [12, 6], "question": "A printer finishes a job in 12 hours and a faster one in 6 hours. What is the combined time?", "split": "eval"}
+{"relation": "combined_rate", "args": [3, 9], "question": "One crew paves a road in 3 days, another in 9 days. Working as one, how many days?", "split": "eval"}
+{"relation": "probability_single", "args": [3, 8], "question": "A box holds 8 batteries, 3 of them dead. One is taken at random. Find the probability it is dead.", "split": "eval"}
+{"relation": "probability_single", "args": [7, 20], "question": "A raffle has 20 tickets and 7 are winners. One is drawn. What is the probability of winning?", "split": "eval"}
+{"relation": "probability_single", "args": [1, 3], "question": "A jar has 3 sweets and 1 is mint. One is picked. Find the probability it is mint.", "split": "eval"}
+{"relation": "probability_single", "args": [5, 12], "question": "A class of 12 pupils has 5 who cycle in. One is chosen. What is the probability they cycle?", "split": "eval"}
+{"relation": "probability_single", "args": [2, 5], "question": "A bag holds 5 marbles, 2 of them blue. One marble is drawn. Find the probability it is blue.", "split": "eval"}
+{"relation": "probability_single", "args": [9, 10], "question": "Of 10 bulbs, 9 are good. One bulb is taken. What is the probability it is good?", "split": "eval"}
+{"relation": "probability_single", "args": [4, 9], "question": "A drawer has 9 screws and 4 are brass. One is taken. Give the probability it is brass.", "split": "eval"}
+{"relation": "probability_single", "args": [6, 25], "question": "A survey of 25 people finds 6 left-handed. One is chosen. Find the probability they are left-handed.", "split": "eval"}

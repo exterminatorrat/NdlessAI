@@ -251,6 +251,56 @@ per-course floor reports its number, and this file records before and after for
 all five courses. If generated accuracy rises while hand-written accuracy falls,
 that is a regression to report, not a trade to celebrate.
 
+**Status: two cycles run.** Both on the Mac mini, 12,000 steps, seq 192, batch
+32, 4.2-4.3 ks each. Cycle one is batch B's first five relations; cycle two adds
+the wording families in `surface/vary.py` and nothing else.
+
+| cycle | relations | wording families | held-out templates | wording never trained | precalc | SAT/ACT | intro |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline before batch B | 136 | no | - | - | 61.6% | 67.2% | 64.2% |
+| one: five numeric relations | 141 | no | 94.8% | - | 64.3% | 74.1% | 70.1% |
+| two: + wording families | 141 | yes | 93.0% | 98.9% | 64.5% | 72.4% | 68.5% |
+
+Reading it honestly: cycle one is the course win, roughly 70 more correct
+hand-written questions. Cycle two keeps every floor passing but gives back 1.7
+points on SAT/ACT and 1.6 on intro against a 460- and 752-row sample, which is
+inside the sampling noise rather than a demonstrated cost. What cycle two buys is
+measured directly instead: on 1,041 rows whose wording never appears in training
+("per cent", "Work out") it is 98.9% exact, against 98.5% on the same templates
+in ordinary wording. Wording novelty stops costing accuracy, which was the point
+of the cycle.
+
+Fixed-point parity is 6/6 in both cycles (worst maxdiff 0.0595 and 0.0533).
+
+**The variance result, and why every number above needs a second seed.** A third
+cycle (batch B's remaining five relations) scored 89.4% on the same 500 held-out
+rows, 3.6 points below cycle two, with the course floors down with it. Before
+either believing or patching that, the same training data was retrained with
+`--seed 2`: **93.0%**, matching cycle two exactly and recovering the floors.
+
+| run | data | seed | held-out templates | reserved wording | precalc | SAT/ACT | intro |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| one | +5 numeric | 1 | 94.8% | - | 64.3% | 74.1% | 70.1% |
+| two | + wording families | 1 | 93.0% | 98.9% | 64.5% | 72.4% | 68.5% |
+| three | +5 geometry and rate | 1 | 89.4% | 98.2% | 60.5% | 69.6% | 65.3% |
+| three' | same as three | 2 | 93.0% | 98.1% | 63.3% | 71.1% | 69.4% |
+
+So the run-to-run spread on a 500-row probe is **±3.6 points**, wider than every
+difference between the cycles except cycle one's SAT/ACT gain. Two consequences,
+both binding on how this document reports from here:
+
+1. A single 500-row probe cannot separate two nearby configurations. Any claim
+   that a catalogue or wording change helped needs either the within-model
+   contrast (reserved wording against plain wording, same weights) or at least
+   two seeds per arm.
+2. Cycle one's +6.9 points on SAT/ACT is bigger than the spread and stands. The
+   1.7-point give-back attributed to the wording families in cycle two does not:
+   it is inside the noise floor, and this file should not have implied otherwise
+   before the control ran.
+
+Fixed-point parity is 6/6 in every cycle (worst maxdiff 0.0595, 0.0533 and
+0.0327).
+
 ## P7 — Course surface
 
 **Goal.** A student who owns AP Physics C should not have to guess what the

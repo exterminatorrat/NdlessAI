@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 71b684052f42a8cb
+ * STEP_SOURCE_SHA a17d8fe257170331
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 128
+#define STEP_NUM_ROWS 133
 
 typedef struct {
 	const char *name;
@@ -43,6 +43,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"charles", "V2 = V1*T2/T1", "@1*@3/@2"},
 	{"circular_accel", "a = v^2/r", "@1^2/@2"},
 	{"combined_gas", "P2 = P1*V1*T2/(T1*V2)", "@1*@2*@5/(@3*@4)"},
+	{"combined_rate", "t = a*b / (a + b)", "@1 * @2 / (@1 + @2)"},
 	{"compound_interest", "A = P*(1 + r/n)^(n*t)", "@1*(1 + @2/100/@3)^(@3*@4)"},
 	{"conduction_rate", "P = k*A*dT/d", "@1*@2*@3/@4"},
 	{"continuity_velocity", "v2 = A1*v1/A2", "@1*@2/@3"},
@@ -124,10 +125,12 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"potential_energy", "PE = m*g*h", "@1 * @2 * @3"},
 	{"power", "P = W/t", "@1 / @2"},
 	{"power_force", "P = F*v", "@1*@2"},
+	{"probability_single", "P = favourable / total", "@1 / @2"},
 	{"proj_range", "R = v0^2*sin(2*theta)/g", "@1^2*sin(2*@2)/@3"},
 	{"pythagoras", "c = sqrt(a^2 + b^2)", "sqrt(@1^2 + @2^2)"},
 	{"radiation_power", "P = sigma*A*T^4", "5.67e-8*@2*@1^4"},
 	{"ratio_share", "first share = total * a / (a + b)", "@1 * @2 / (@2 + @3)"},
+	{"rectangle_area", "A = w * h", "@1 * @2"},
 	{"rms_speed", "v = sqrt(3*R*T/M)", "sqrt(3*8.314*@1/@2)"},
 	{"simple_interest", "I = P * r/100 * t", "@1 * @2 / 100 * @3"},
 	{"sin_eval", "sin(a)", "sin(@1)"},
@@ -144,7 +147,9 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"tan_eval", "tan(a)", "tan(@1)"},
 	{"threshold_wavelength", "lambda_max = 1240/phi", "1240/@1"},
 	{"torque", "tau = F*r*sin(theta)", "@1*@2*sin(@3)"},
+	{"triangle_area", "A = base * height / 2", "@1 * @2 / 2"},
 	{"volume_flow_rate", "Q = A*v", "@1*@2"},
+	{"volume_prism", "V = l * w * h", "@1 * @2 * @3"},
 	{"wave_speed", "v = f*lambda", "@1*@2"},
 	{"work", "W = F*d*cos(theta)", "@1*@2*cos(@3)"},
 	{"work_energy", "W = m*(v^2 - v0^2)/2", "@1*(@3^2 - @2^2)/2"},

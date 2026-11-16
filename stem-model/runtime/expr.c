@@ -2578,18 +2578,152 @@ static int append_text(char *out, int outlen, int *used, const char *s)
 	return 0;
 }
 
+/*
+ * Riemann sums: `kind` 0 is the midpoint rule, 1 left, 2 right, 3 trapezoid.
+ * Samples are Q16 and the accumulation is int64, so a hundred thousand
+ * intervals cannot overflow; n is bounded because this runs on a 132 MHz ARM
+ * and a typed call that takes a minute is not an answer.
+ */
+#define RIEMANN_MAX 100000
+
+static int riemann_kind(const char *s, int n, int *kind)
+{
+	char word[12];
+	int i = 0;
+
+	while (i < n && (s[i] == ' ' || s[i] == '\t'))
+		i++;
+	while (n > i && (s[n - 1] == ' ' || s[n - 1] == '\t'))
+		n--;
+	if (n <= i || n - i >= (int)sizeof word)
+		return -1;
+	memcpy(word, s + i, (size_t)(n - i));
+	word[n - i] = 0;
+	if (!strcmp(word, "left")) {
+		*kind = 1;
+	} else if (!strcmp(word, "right")) {
+		*kind = 2;
+	} else if (!strcmp(word, "mid") || !strcmp(word, "midpoint")) {
+		*kind = 0;
+	} else if (!strcmp(word, "trap") || !strcmp(word, "trapezoid")) {
+		*kind = 3;
+	} else {
+		return -1;
+	}
+	return 0;
+}
+
+static int riemann_sum(const gexpr_t *f, q16_t a, q16_t b, int n, int kind,
+                       q16_t *out)
+{
+	int64_t span, acc, mean;
+	int i;
+
+	if (n < 1 || n > RIEMANN_MAX || b == a)
+		return -1;
+	/*
+	 * The interval width is kept as "span over n" rather than a Q16 step: at
+	 * n = 1000 the step is 65.5 Q16 units, so truncating it once truncates
+	 * every sample position and the sum as well, which is how the first
+	 * version of this read 0.3252 for the midpoint rule on x^2 over [0, 1]
+	 * instead of 0.3333. Sample i sits at a + span*i/n exactly.
+	 */
+	span = (int64_t)b - a;
+	if (kind == 3) {
+		q16_t fa = gexpr_eval(f, a), fb = gexpr_eval(f, b);
+
+		if (fa == Q16_MAX || fa == Q16_MIN || fb == Q16_MAX ||
+		    fb == Q16_MIN)
+			return -1;
+		acc = (int64_t)fa + fb;
+		for (i = 1; i < n; i++) {
+			q16_t v = gexpr_eval(f, (q16_t)(a + span * i / n));
+
+			if (v == Q16_MAX || v == Q16_MIN)
+				return -1;
+			acc += 2 * (int64_t)v;
+		}
+		mean = acc / n;		/* twice the mean term */
+		*out = gq_sat(mean * span / 2 / Q16_ONE);
+		return 0;
+	}
+	acc = 0;
+	for (i = 0; i < n; i++) {
+		int64_t off;
+
+		if (kind == 0)
+			off = span * (2 * (int64_t)i + 1) / (2 * (int64_t)n);
+		else if (kind == 2)
+			off = span * (i + 1LL) / n;
+		else
+			off = span * i / n;
+		if (off == span && kind != 2)
+			off = span - 1;
+		acc += gexpr_eval(f, (q16_t)(a + off));
+		if (acc == Q16_MAX || acc == Q16_MIN)
+			return -1;
+	}
+	mean = acc / n;
+	*out = gq_sat(mean * span / Q16_ONE);
+	return 0;
+}
+
+/*
+ * Arc length of y = f(x) on [a, b] is the integral of sqrt(1 + f'(x)^2), which
+ * the symbolic integrator cannot build without a tree constructor for the
+ * square root of a sum. Composite Simpson over the derivative's own values is
+ * the honest alternative: it uses the analytic derivative, not a difference
+ * quotient, so only the quadrature is numerical.
+ */
+static int arc_length_at(const gexpr_t *f, q16_t a, q16_t b, q16_t *out)
+{
+	gexpr_t d;
+	int64_t acc, h;
+	int i, n = 512;
+
+	if (b == a)
+		return -1;
+	if (gexpr_derive(f, &d) != GEXPR_DIFF_OK)
+		return -1;
+	h = ((int64_t)b - a);
+	acc = 0;
+	for (i = 0; i <= n; i++) {
+		q16_t x = (q16_t)(a + h * i / n);
+		q16_t s = gexpr_eval(&d, x);
+		q16_t g;
+
+		if (s == Q16_MAX || s == Q16_MIN)
+			return -1;
+		g = gq_sqrt(gq_sat((int64_t)Q16_ONE + gq_mul(s, s)));
+		if (i == 0 || i == n)
+			acc += g;
+		else
+			acc += (i & 1) ? 4 * (int64_t)g : 2 * (int64_t)g;
+	}
+	*out = gq_sat(acc * h / (3 * (int64_t)n * Q16_ONE));
+	return 0;
+}
+
 int gexpr_calculus_answer(const char *text, char *out, int outlen)
 {
-	static const char *const forms[] = { "limit", "tangent", "avgrate" };
+	enum { F_LIMIT, F_TANGENT, F_AVGRATE, F_RIEMANN, F_AVGVALUE, F_ARCLEN };
+	static const struct {
+		const char *form;
+		int want;
+		int alt;	/* a second accepted argument count, or 0 */
+	} forms[] = {
+		{ "limit", 2, 0 }, { "tangent", 2, 0 }, { "avgrate", 3, 0 },
+		{ "riemann", 4, 5 }, { "avgvalue", 3, 0 }, { "arclen", 3, 0 },
+	};
 	char inner[EXPR_TEXT_MAX];
 	char ftext[EXPR_TEXT_MAX];
 	char err[48];
-	const char *part[3];
-	int plen[3];
+	const char *part[5];
+	int plen[5];
 	gexpr_t f;
 	const char *p;
 	size_t n, room;
-	int k, want;
+	int k, want, nparts;
 
 	if (!text || !out || outlen <= 0)
 		return -1;
@@ -2602,17 +2736,17 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 	if (n == 0 || (size_t)(p - text) >= n)
 		return -1;
 	room = (size_t)(text + n - p);
-	for (k = 0; k < 3; k++) {
-		size_t flen = strlen(forms[k]);
+	for (k = 0; k < (int)(sizeof forms / sizeof forms[0]); k++) {
+		size_t flen = strlen(forms[k].form);
 		size_t inner_len;
 		const char *open;
-		q16_t a, b, v;
+		q16_t a, b, v = 0;
 
 		/* Keyword, then a bracket, then the parts, and the closing bracket
 		 * as the last character: "limit(x,0)+1" is not a limit. */
 		if (room < flen + 2 || text[n - 1] != ')')
 			continue;
-		if (strncmp(p, forms[k], flen) != 0)
+		if (strncmp(p, forms[k].form, flen) != 0)
 			continue;
 		open = p + flen;
 		while (*open == ' ' || *open == '\t')
@@ -2624,22 +2758,36 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 			continue;
 		memcpy(inner, open + 1, inner_len);
 		inner[inner_len] = 0;
-		want = k == 2 ? 3 : 2;
-		if (split_args(inner, (int)inner_len, want, part, plen) < 0)
-			continue;
+		want = forms[k].want;
+		if (split_args(inner, (int)inner_len, want, part, plen) < 0) {
+			if (!forms[k].alt ||
+			    split_args(inner, (int)inner_len, forms[k].alt,
+			               part, plen) < 0)
+				continue;
+			want = forms[k].alt;
+		}
+		nparts = want;
 		if (copy_part(part[0], plen[0], ftext, (int)sizeof ftext) < 0)
 			continue;
 		if (gexpr_parse(ftext, &f, err, sizeof err) < 0)
 			continue;
 		if (parse_bound(part[1], plen[1], &a) < 0)
 			continue;
-		if (k == 2) {
-			q16_t fa, fb;
-
-			if (parse_bound(part[2], plen[2], &b) < 0 || b == a)
+		if (k == F_TANGENT) {
+			if (tangent_line(&f, a, out, outlen) < 0)
 				continue;
-			fa = gexpr_eval(&f, a);
-			fb = gexpr_eval(&f, b);
+			return 0;
+		}
+		if (k == F_LIMIT) {
+			if (limit_at(&f, a, &v) < 0)
+				continue;
+			return gexpr_format(v, out, outlen);
+		}
+		if (parse_bound(part[2], plen[2], &b) < 0 || b == a)
+			continue;
+		if (k == F_AVGRATE) {
+			q16_t fa = gexpr_eval(&f, a), fb = gexpr_eval(&f, b);
+
 			if (fa == Q16_MAX || fa == Q16_MIN ||
 			    fb == Q16_MAX || fb == Q16_MIN)
 				continue;
@@ -2647,14 +2795,34 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 			           ((int64_t)b - a));
 			return gexpr_format(v, out, outlen);
 		}
-		if (k == 0) {
-			if (limit_at(&f, a, &v) < 0)
+		if (k == F_AVGVALUE) {
+			q16_t whole;
+
+			if (gexpr_integrate(&f, a, b, &whole) != GEXPR_INT_OK)
+				continue;
+			v = gq_sat(((int64_t)whole * Q16_ONE) /
+			           ((int64_t)b - a));
+			return gexpr_format(v, out, outlen);
+		}
+		if (k == F_ARCLEN) {
+			if (arc_length_at(&f, a, b, &v) < 0)
 				continue;
 			return gexpr_format(v, out, outlen);
 		}
-		if (tangent_line(&f, a, out, outlen) < 0)
-			continue;
-		return 0;
+		if (k == F_RIEMANN) {
+			int kind = 0, intervals;
+			q16_t count;
+
+			if (parse_bound(part[3], plen[3], &count) < 0)
+				continue;
+			if (nparts == 5 &&
+			    riemann_kind(part[4], plen[4], &kind) < 0)
+				continue;
+			intervals = (int)(count / Q16_ONE);
+			if (riemann_sum(&f, a, b, intervals, kind, &v) < 0)
+				continue;
+			return gexpr_format(v, out, outlen);
+		}
 	}
 	return -1;
 }

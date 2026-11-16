@@ -2704,9 +2704,68 @@ static int arc_length_at(const gexpr_t *f, q16_t a, q16_t b, q16_t *out)
 	return 0;
 }
 
+/*
+ * Composite Simpson over an arbitrary integrand, so the forms that need two
+ * expressions - a parametrised curve has x(t) and y(t) - do not each grow their
+ * own quadrature. A sample that has no value anywhere in the interval returns
+ * the saturation value, which the caller treats as a refusal: half an arc
+ * length is not an answer.
+ */
+typedef q16_t (*simpson_fn)(void *ctx, q16_t x);
+
+static int simpson_any(simpson_fn fn, void *ctx, q16_t a, q16_t b, int n,
+                       q16_t *out)
+{
+	int64_t acc = 0, span;
+
+	if (b == a || n < 2)
+		return -1;
+	span = (int64_t)b - a;
+	for (int i = 0; i <= n; i++) {
+		q16_t x = (q16_t)(a + span * i / n);
+		q16_t g = fn(ctx, x);
+
+		if (g == Q16_MAX || g == Q16_MIN)
+			return -1;
+		if (i == 0 || i == n)
+			acc += g;
+		else
+			acc += (i & 1) ? 4 * (int64_t)g : 2 * (int64_t)g;
+	}
+	*out = gq_sat(acc * span / (3 * (int64_t)n * Q16_ONE));
+	return 0;
+}
+
+/* The polar integrand is r(theta)^2; the area is half its integral. */
+static q16_t polar_g(void *ctx, q16_t t)
+{
+	const gexpr_t *r = ctx;
+	q16_t v = gexpr_eval(r, t);
+
+	if (v == Q16_MAX || v == Q16_MIN)
+		return Q16_MAX;
+	return gq_mul(v, v);
+}
+
+typedef struct {
+	gexpr_t dx, dy;
+} par_ctx_t;
+
+static q16_t param_g(void *ctx, q16_t t)
+{
+	par_ctx_t *c = ctx;
+	q16_t u = gexpr_eval(&c->dx, t);
+	q16_t w = gexpr_eval(&c->dy, t);
+
+	if (u == Q16_MAX || u == Q16_MIN || w == Q16_MAX || w == Q16_MIN)
+		return Q16_MAX;
+	return gq_sqrt(gq_sat((int64_t)gq_mul(u, u) + gq_mul(w, w)));
+}
+
 int gexpr_calculus_answer(const char *text, char *out, int outlen)
 {
-	enum { F_LIMIT, F_TANGENT, F_AVGRATE, F_RIEMANN, F_AVGVALUE, F_ARCLEN };
+	enum { F_LIMIT, F_TANGENT, F_AVGRATE, F_RIEMANN, F_AVGVALUE, F_ARCLEN,
+	       F_POLAREA, F_PARCLEN };
 	static const struct {
 		const char *form;
 		int want;
@@ -2714,6 +2773,7 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 	} forms[] = {
 		{ "limit", 2, 0 }, { "tangent", 2, 0 }, { "avgrate", 3, 0 },
 		{ "riemann", 4, 5 }, { "avgvalue", 3, 0 }, { "arclen", 3, 0 },
+		{ "polarea", 3, 0 }, { "parclen", 4, 0 },
 	};
 	char inner[EXPR_TEXT_MAX];
 	char ftext[EXPR_TEXT_MAX];
@@ -2771,6 +2831,28 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 			continue;
 		if (gexpr_parse(ftext, &f, err, sizeof err) < 0)
 			continue;
+		/* A parametrised curve has two expressions before its bounds, so the
+		 * second one is parsed where the first argument of every other form
+		 * would be a bound. */
+		if (k == F_PARCLEN) {
+			char ytext[EXPR_TEXT_MAX];
+			gexpr_t g;
+			par_ctx_t ctx;
+
+			if (copy_part(part[1], plen[1], ytext, (int)sizeof ytext) < 0)
+				continue;
+			if (gexpr_parse(ytext, &g, err, sizeof err) < 0)
+				continue;
+			if (parse_bound(part[2], plen[2], &a) < 0 ||
+			    parse_bound(part[3], plen[3], &b) < 0)
+				continue;
+			if (gexpr_derive(&f, &ctx.dx) != GEXPR_DIFF_OK ||
+			    gexpr_derive(&g, &ctx.dy) != GEXPR_DIFF_OK)
+				continue;
+			if (simpson_any(param_g, &ctx, a, b, 512, &v) < 0)
+				continue;
+			return gexpr_format(v, out, outlen);
+		}
 		if (parse_bound(part[1], plen[1], &a) < 0)
 			continue;
 		if (k == F_TANGENT) {
@@ -2802,6 +2884,14 @@ int gexpr_calculus_answer(const char *text, char *out, int outlen)
 				continue;
 			v = gq_sat(((int64_t)whole * Q16_ONE) /
 			           ((int64_t)b - a));
+			return gexpr_format(v, out, outlen);
+		}
+		if (k == F_POLAREA) {
+			q16_t whole;
+
+			if (simpson_any(polar_g, &f, a, b, 512, &whole) < 0)
+				continue;
+			v = gq_sat((int64_t)whole / 2);
 			return gexpr_format(v, out, outlen);
 		}
 		if (k == F_ARCLEN) {

@@ -330,7 +330,12 @@ bad basin the 512 vocabulary could fall into - a 15-point swing between seeds -
 is gone at 640, which is consistent with the merge starvation: 101 merges at 512
 against 226 at 640, and a mean of 62.0 row tokens against 51.9.
 
-The ceiling did not move. 90.2% at 640 is level with the best 512 run (90.8%),
+Both seeds at 640, finished and scored on the same 500 rows: **90.2% and
+93.6%** exact, with reserved-wording accuracy at **98.4% and 98.6%**. The spread
+is 3.4 points, back at the level measured before the merge starvation, against
+the 15 points the same pair produced at 512.
+
+The ceiling did not move. 90.2-93.6% at 640 straddles the best 512 run (90.8%),
 so the vocabulary fixed the instability and left the accuracy ceiling where it
 was. Whatever sets that ceiling is upstream of tokenisation - most likely the
 12,000-step, single-learning-rate recipe - and it is the next thing to measure

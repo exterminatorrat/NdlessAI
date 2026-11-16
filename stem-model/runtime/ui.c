@@ -15,6 +15,7 @@
 #include "expr.h"
 #include "graph.h"
 #include "reltable.h"
+#include "coursetable.h"
 #include "solvers.h"
 
 #define UI_BG      SCREEN_BLACK
@@ -23,7 +24,7 @@
 #define UI_ACCENT  SCREEN_ACCENT
 #define UI_SCROLL  0x2104
 
-#define UI_MENU_N   5
+#define UI_MENU_N   6
 #define UI_MENU_Y   24
 
 static const char *const menu_items[UI_MENU_N] = {
@@ -31,6 +32,7 @@ static const char *const menu_items[UI_MENU_N] = {
 	"Solve by formula",
 	"Keypad help",
 	"Graph",
+	"By course",
 	"Quit"
 };
 
@@ -535,6 +537,55 @@ static const char *subject_name(int index)
 	return "";
 }
 
+/* The relation index for a decoder id, or -1. The picker walks the course
+ * table, which stores ids, and the decoder is indexed by position. */
+static int rel_index_for_id(int id)
+{
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		if (rel_rows[i].id == id)
+			return i;
+	return -1;
+}
+
+/*
+ * Fill the relation list from a course. Only topics the map records as
+ * relations are offered: a topic recorded as a gap has no solver behind it, and
+ * a typed topic is answered by the expression engine rather than by a call, so
+ * neither belongs in a list of things to call.
+ */
+/* How many rows the current pick list has: courses, subjects, or relations. */
+static int list_count(const ui_t *u)
+{
+	if (u->tmpl_step != UI_TMPL_STEP_SUBJECT)
+		return u->tmpl_count;
+	return u->tmpl_by_course ? CRS_NUM_COURSES : subject_count();
+}
+
+static void tmpl_load_course(ui_t *u, int course)
+{
+	const crs_course_t *row = &crs_courses[course];
+
+	u->tmpl_subject = -1;
+	u->tmpl_count = 0;
+	u->tmpl_sel = 0;
+	u->tmpl_top = 0;
+	for (int i = 0; i < row->num_units; i++) {
+		const crs_unit_t *unit = &crs_units[row->first_unit + i];
+
+		for (int j = 0; j < unit->num_topics; j++) {
+			const crs_topic_t *topic = &crs_topics[unit->first_topic + j];
+			int index;
+
+			if (topic->kind != 1)
+				continue;
+			index = rel_index_for_id(topic->rel);
+			if (index < 0 || u->tmpl_count >= UI_TMPL_ROWS)
+				continue;
+			u->tmpl_rels[u->tmpl_count++] = (unsigned char)index;
+		}
+	}
+}
+
 static void tmpl_load(ui_t *u, int subject)
 {
 	const char *name = subject_name(subject);
@@ -609,12 +660,15 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 	case UI_TMPL_STEP_SUBJECT:
 		if (k == UI_KEY_UP && u->tmpl_sel > 0) {
 			u->tmpl_sel--;
-			pick_follow(u, subject_count());
-		} else if (k == UI_KEY_DOWN && u->tmpl_sel < subject_count() - 1) {
+			pick_follow(u, list_count(u));
+		} else if (k == UI_KEY_DOWN && u->tmpl_sel < list_count(u) - 1) {
 			u->tmpl_sel++;
-			pick_follow(u, subject_count());
+			pick_follow(u, list_count(u));
 		} else if (k == UI_KEY_ACCEPT) {
-			tmpl_load(u, u->tmpl_sel);
+			if (u->tmpl_by_course)
+				tmpl_load_course(u, u->tmpl_sel);
+			else
+				tmpl_load(u, u->tmpl_sel);
 			u->tmpl_step = UI_TMPL_STEP_RELATION;
 		} else if (k == UI_KEY_BACK)
 			u->mode = UI_MODE_MENU;
@@ -628,6 +682,8 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 			pick_follow(u, u->tmpl_count);
 		}
 		else if (k == UI_KEY_ACCEPT) {
+			if (u->tmpl_count == 0)
+				break;
 			u->tmpl_rel = u->tmpl_sel;
 			u->tmpl_arg = 0;
 			u->input[0] = '\0';
@@ -813,6 +869,7 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			/* Solve by formula opens on the subject list. Nothing is
 			 * typed but numbers, and the model is never involved. */
 			u->mode = UI_MODE_TMPL;
+			u->tmpl_by_course = 0;
 			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
 			u->tmpl_sel = 0;
 			u->tmpl_top = 0;
@@ -823,6 +880,16 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			break;
 		case 3:
 			graph_enter(u);
+			break;
+		case 4:
+			/* The same flow, opened on the course the student is taking.
+			 * The subject route stays for anyone who does not know their
+			 * course, so nothing becomes unreachable. */
+			u->mode = UI_MODE_TMPL;
+			u->tmpl_by_course = 1;
+			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
+			u->tmpl_sel = 0;
+			u->tmpl_top = 0;
 			break;
 		default:
 			return UI_KEY_BACK;
@@ -1081,8 +1148,7 @@ static void pick_scrollbar(int count, int top, uint16_t *fb)
  */
 static void draw_pick(const ui_t *u, uint16_t *fb)
 {
-	int subjects = subject_count();
-	int count = u->tmpl_step == UI_TMPL_STEP_SUBJECT ? subjects : u->tmpl_count;
+	int count = list_count(u);
 	int y = UI_PANE_Y;
 
 	for (int i = 0; i < UI_PANE_ROWS; i++) {
@@ -1092,8 +1158,11 @@ static void draw_pick(const ui_t *u, uint16_t *fb)
 
 		if (r >= count)
 			break;
-		text = u->tmpl_step == UI_TMPL_STEP_SUBJECT
-		       ? subject_name(r) : rel_rows[u->tmpl_rels[r]].name;
+		if (u->tmpl_step == UI_TMPL_STEP_SUBJECT)
+			text = u->tmpl_by_course ? crs_courses[r].name
+			                         : subject_name(r);
+		else
+			text = rel_rows[u->tmpl_rels[r]].name;
 		on = r == u->tmpl_sel;
 		if (on)
 			screen_fill(fb, 0, y - 3, SCREEN_W, SCREEN_LINE_H, UI_ACCENT);

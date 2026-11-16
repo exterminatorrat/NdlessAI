@@ -39,11 +39,10 @@ def relation_ids():
         line = line.strip()
         if not line.startswith('{"'):
             continue
-        parts = line.split('"')
-        name = parts[1]
-        rest = [p.strip() for p in line.split('",')]
+        # {"name", arity, id, "subject", "params"},
+        fields = [f.strip() for f in line.strip("{};,").split(",")]
         try:
-            ids[name] = int(rest[1].split(",")[0])
+            ids[fields[0].strip('"')] = int(fields[2])
         except (IndexError, ValueError):
             continue
     if not ids:
@@ -142,6 +141,10 @@ def render():
     for kind, rel, topic in topic_rows:
         add(f'\t{{{kind}, {rel}, "{topic}"}},')
     add("};")
+    add("#else")
+    add(f"extern const crs_course_t crs_courses[CRS_NUM_COURSES];")
+    add(f"extern const crs_unit_t crs_units[CRS_NUM_UNITS];")
+    add(f"extern const crs_topic_t crs_topics[CRS_NUM_TOPICS];")
     add("#endif")
     add("")
     add("#endif")

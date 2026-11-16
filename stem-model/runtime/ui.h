@@ -50,7 +50,9 @@
 #define UI_HIST_PANE  2048
 #define UI_HELP_PAGES 5
 #define UI_CALL_MAX   128
-/* The three steps of solve by formula: subject, relation, arguments. */
+/* The three steps of solve by formula: subject (or course), relation,
+ * arguments. The course list reuses the first step rather than adding a
+ * fourth: same depth, same screen, same tests. */
 #define UI_TMPL_STEP_SUBJECT  0
 #define UI_TMPL_STEP_RELATION 1
 #define UI_TMPL_STEP_ARGS     2
@@ -131,6 +133,7 @@ typedef struct {
 	int tmpl_sel;
 	int tmpl_top;
 	int tmpl_subject;
+	int tmpl_by_course;
 	int tmpl_count;
 	int tmpl_rel;
 	int tmpl_arg;

@@ -603,6 +603,30 @@ static int solve_heat_reaction(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_limiting_moles(const char *const *args, char *out,
+                                size_t outlen)
+{
+	rat ma, mma, mb, mmb;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &ma, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &mma, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &mb, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &mmb, NULL)) != 0)
+		return rc;
+	if (mma.n == 0 || mmb.n == 0)
+		return -4;
+	if (ma.n * mma.d * mmb.n * mb.d <= mb.n * mmb.d * mma.n * ma.d)
+		rc = dec4_render(ma.n * mma.d, ma.d * mma.n, f1, sizeof(f1));
+	else
+		rc = dec4_render(mb.n * mmb.d, mb.d * mmb.n, f1, sizeof(f1));
+	if (rc != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -746,6 +770,11 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "avg_rate") == 0) {
 		if (nargs == 2)
 			rc = solve_avg_rate(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "limiting_moles") == 0) {
+		if (nargs == 4)
+			rc = solve_limiting_moles(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "heat_reaction") == 0) {

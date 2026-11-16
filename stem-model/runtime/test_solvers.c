@@ -12836,6 +12836,45 @@ static const tcase VECTOR_SCALE[] = {
 	{ { "0", "0", "7", "", "", "" }, "x=0, y=0" },
 };
 
+static const tcase COLLISION_VELOCITY[] = {
+	{ { "2", "4", "3", "0", "", "" }, "1.6 m/s" },
+	{ { "5", "3", "2", "1", "", "" }, "2.429 m/s" },
+	{ { "1", "6", "5", "0", "", "" }, "1 m/s" },
+	{ { "4", "2", "4", "-2", "", "" }, "0 m/s" },
+	{ { "3", "5", "6", "2", "", "" }, "3 m/s" },
+	{ { "8", "1", "2", "3", "", "" }, "1.4 m/s" },
+	{ { "6", "4", "2", "-1", "", "" }, "2.75 m/s" },
+	{ { "5", "2", "5", "4", "", "" }, "3 m/s" },
+	{ { "1", "1", "1", "1", "", "" }, "1 m/s" },
+	{ { "0.5", "2", "1.5", "-1", "", "" }, "-0.25 m/s" },
+};
+
+static const tcase SERIES_RESISTANCE[] = {
+	{ { "5", "10", "2", "", "", "" }, "17 ohms" },
+	{ { "12", "8", "6", "", "", "" }, "26 ohms" },
+	{ { "2", "3", "4", "", "", "" }, "9 ohms" },
+	{ { "20", "30", "1", "", "", "" }, "51 ohms" },
+	{ { "4", "4", "4", "", "", "" }, "12 ohms" },
+	{ { "15", "5", "10", "", "", "" }, "30 ohms" },
+	{ { "6", "9", "18", "", "", "" }, "33 ohms" },
+	{ { "1", "2", "3", "", "", "" }, "6 ohms" },
+	{ { "0.5", "1.5", "2", "", "", "" }, "4 ohms" },
+	{ { "10", "10", "10", "", "", "" }, "30 ohms" },
+};
+
+static const tcase LIMITING_MOLES[] = {
+	{ { "8", "2", "32", "16", "", "" }, "2" },
+	{ { "36", "18", "8", "16", "", "" }, "0.5" },
+	{ { "64", "32", "18", "18", "", "" }, "1" },
+	{ { "4", "2", "44", "44", "", "" }, "1" },
+	{ { "40", "40", "16", "2", "", "" }, "1" },
+	{ { "88", "44", "32", "16", "", "" }, "2" },
+	{ { "6", "2", "58", "58", "", "" }, "1" },
+	{ { "18", "18", "4", "4", "", "" }, "1" },
+	{ { "10", "5", "12", "3", "", "" }, "2" },
+	{ { "2", "1", "3", "1", "", "" }, "2" },
+};
+
 static const tcase PERCENT_ERROR[] = {
 	{ { "45", "40", "", "", "", "" }, "12.5%" },
 	{ { "172", "100", "", "", "", "" }, "72%" },
@@ -14508,6 +14547,9 @@ int main(void)
 	bad += check_rel("scientific_notation", SCIENTIFIC_NOTATION, (int)(sizeof(SCIENTIFIC_NOTATION) / sizeof(SCIENTIFIC_NOTATION[0])), 2, &total);
 	bad += check_rel("average", AVERAGE, (int)(sizeof(AVERAGE) / sizeof(AVERAGE[0])), 4, &total);
 	bad += check_rel("sig_figs", SIG_FIGS, (int)(sizeof(SIG_FIGS) / sizeof(SIG_FIGS[0])), 2, &total);
+	bad += check_rel("collision_velocity", COLLISION_VELOCITY, (int)(sizeof(COLLISION_VELOCITY) / sizeof(COLLISION_VELOCITY[0])), 4, &total);
+	bad += check_rel("series_resistance", SERIES_RESISTANCE, (int)(sizeof(SERIES_RESISTANCE) / sizeof(SERIES_RESISTANCE[0])), 3, &total);
+	bad += check_rel("limiting_moles", LIMITING_MOLES, (int)(sizeof(LIMITING_MOLES) / sizeof(LIMITING_MOLES[0])), 4, &total);
 	bad += check_rel("average_rate_of_change", AVERAGE_RATE_OF_CHANGE, (int)(sizeof(AVERAGE_RATE_OF_CHANGE) / sizeof(AVERAGE_RATE_OF_CHANGE[0])), 4, &total);
 	bad += check_rel("vector_add", VECTOR_ADD, (int)(sizeof(VECTOR_ADD) / sizeof(VECTOR_ADD[0])), 4, &total);
 	bad += check_rel("vector_dot", VECTOR_DOT, (int)(sizeof(VECTOR_DOT) / sizeof(VECTOR_DOT[0])), 4, &total);

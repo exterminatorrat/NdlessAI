@@ -176,10 +176,10 @@ course("intro-hs", "Intro high-school physics and chemistry", [
              "spring_energy")),
     Unit("4", "Momentum and collisions",
          rel("momentum", "impulse")
-         + [gap("elastic and inelastic collisions")]),
+         + rel("collision_velocity")),
     Unit("5", "Circuits",
          rel("ohm_v", "ohm_i", "ohm_power", "parallel_resistance")
-         + [gap("series resistance and network reduction")]),
+         + rel("series_resistance", "parallel_resistance")),
     Unit("6", "Waves and sound",
          rel("wave_speed")),
     Unit("7", "Gases and thermochemistry",
@@ -188,7 +188,7 @@ course("intro-hs", "Intro high-school physics and chemistry", [
     Unit("8", "Solutions and stoichiometry",
          rel("molarity", "dilution", "dilution_v1", "molality", "moles",
              "stoichiometry", "stoich_mass", "percent_yield")
-         + [gap("limiting reagent and empirical formula")]),
+         + rel("limiting_moles")),
     Unit("9", "Acids and bases",
          rel("ph", "poh", "ph_from_poh", "h_from_ph")),
 ], exact_floor=64.2,

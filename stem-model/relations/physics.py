@@ -350,3 +350,39 @@ class Torque:
     @staticmethod
     def solve(F, r, theta):
         return f"{dec(sp.Float(F) * sp.Float(r) * sp.sin(sp.rad(theta)))} N m"
+
+
+@relation("collision_velocity", "physics", ["m1", "u1", "m2", "u2"], exact=False,
+          step=dict(line="v = (m1*u1 + m2*u2) / (m1 + m2)",
+                    expr="(@1 * @2 + @3 * @4) / (@1 + @3)"))
+class CollisionVelocity:
+    @staticmethod
+    def gen(rng):
+        m1 = rng.choice([1, 2, 3, 4, 5, 6, 8])
+        m2 = rng.choice([1, 2, 3, 4, 5, 6, 8])
+        u1 = rng.choice([2, 3, 4, 5, 6, 8, 10])
+        u2 = rng.choice([-4, -2, 0, 1, 2, 3])
+        return [m1, u1, m2, u2], (f"A {m1} kg trolley moving at {u1} m/s hits "
+                                  f"a stationary {m2} kg trolley at {u2} m/s "
+                                  f"and they stick together. Find their common "
+                                  f"velocity in m/s.")
+
+    @staticmethod
+    def solve(m1, u1, m2, u2):
+        return f"{dec_exact(sp.Rational(m1 * u1 + m2 * u2, m1 + m2))} m/s"
+
+@relation("series_resistance", "physics", ["r1", "r2", "r3"], exact=False,
+          step=dict(line="R = r1 + r2 + r3", expr="@1 + @2 + @3"))
+class SeriesResistance:
+    @staticmethod
+    def gen(rng):
+        r1 = rng.choice([2, 4, 5, 6, 10, 12, 20])
+        r2 = rng.choice([3, 5, 8, 10, 15, 30])
+        r3 = rng.choice([1, 2, 4, 5, 6, 9, 18])
+        return [r1, r2, r3], (f"Three resistors of {r1} ohms, {r2} ohms and "
+                              f"{r3} ohms are connected in series. Find the "
+                              f"total resistance.")
+
+    @staticmethod
+    def solve(r1, r2, r3):
+        return f"{dec_exact(sp.Rational(r1 + r2 + r3))} ohms"

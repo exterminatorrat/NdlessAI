@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 3e88df6e7ae66f31
+ * STEP_SOURCE_SHA 8e674fd888e3cd50
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 135
+#define STEP_NUM_ROWS 137
 
 typedef struct {
 	const char *name;
@@ -43,6 +43,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"celsius_to_fahrenheit", "F = C*9/5 + 32", "@1*9/5 + 32"},
 	{"charles", "V2 = V1*T2/T1", "@1*@3/@2"},
 	{"circular_accel", "a = v^2/r", "@1^2/@2"},
+	{"collision_velocity", "v = (m1*u1 + m2*u2) / (m1 + m2)", "(@1 * @2 + @3 * @4) / (@1 + @3)"},
 	{"combined_gas", "P2 = P1*V1*T2/(T1*V2)", "@1*@2*@5/(@3*@4)"},
 	{"combined_rate", "t = a*b / (a + b)", "@1 * @2 / (@1 + @2)"},
 	{"compound_interest", "A = P*(1 + r/n)^(n*t)", "@1*(1 + @2/100/@3)^(@3*@4)"},
@@ -133,6 +134,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"ratio_share", "first share = total * a / (a + b)", "@1 * @2 / (@2 + @3)"},
 	{"rectangle_area", "A = w * h", "@1 * @2"},
 	{"rms_speed", "v = sqrt(3*R*T/M)", "sqrt(3*8.314*@1/@2)"},
+	{"series_resistance", "R = r1 + r2 + r3", "@1 + @2 + @3"},
 	{"simple_interest", "I = P * r/100 * t", "@1 * @2 / 100 * @3"},
 	{"sin_eval", "sin(a)", "sin(@1)"},
 	{"snell_angle", "n2*sin(th2) = n1*sin(th1)", "asin(@1*sin(@2)/@3)"},

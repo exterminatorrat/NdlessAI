@@ -1,0 +1,16 @@
+{"relation": "collision_velocity", "args": [2, 4, 3, 0], "question": "A 2 kg trolley rolling at 4 m/s hits a 3 kg trolley standing at 0 m/s and they stick. Find their velocity.", "split": "eval"}
+{"relation": "collision_velocity", "args": [5, 3, 2, 1], "question": "A 5 kg wagon at 3 m/s couples with a 2 kg wagon at 1 m/s. What is the shared speed?", "split": "eval"}
+{"relation": "collision_velocity", "args": [1, 6, 5, 0], "question": "A 1 kg ball at 6 m/s hits a 5 kg block at rest and sticks. Give the common velocity.", "split": "eval"}
+{"relation": "collision_velocity", "args": [4, 2, 4, -2], "question": "Two 4 kg carts move at 2 m/s and -2 m/s and collide inelastically. Find their velocity afterwards.", "split": "eval"}
+{"relation": "collision_velocity", "args": [3, 5, 6, 2], "question": "A 3 kg mass at 5 m/s joins a 6 kg mass at 2 m/s. Calculate the velocity of the pair.", "split": "eval"}
+{"relation": "collision_velocity", "args": [8, 1, 2, 3], "question": "An 8 kg body at 1 m/s meets a 2 kg body at 3 m/s and they merge. What is their speed?", "split": "eval"}
+{"relation": "collision_velocity", "args": [6, 4, 2, -1], "question": "A 6 kg crate sliding at 4 m/s hits a 2 kg crate moving at -1 m/s and they move as one. Find the velocity.", "split": "eval"}
+{"relation": "collision_velocity", "args": [5, 2, 5, 4], "question": "Two 5 kg trolleys travel at 2 m/s and 4 m/s and couple. Give the resulting velocity.", "split": "eval"}
+{"relation": "series_resistance", "args": [5, 10, 2], "question": "Three resistors of 5 ohms, 10 ohms and 2 ohms are in series. Find the total resistance.", "split": "eval"}
+{"relation": "series_resistance", "args": [12, 8, 6], "question": "A series chain holds 12 ohms, 8 ohms and 6 ohms. What is the equivalent resistance?", "split": "eval"}
+{"relation": "series_resistance", "args": [2, 3, 4], "question": "Resistors of 2 ohms, 3 ohms and 4 ohms are wired in series. Give the total.", "split": "eval"}
+{"relation": "series_resistance", "args": [20, 30, 1], "question": "Find the series resistance of 20 ohms, 30 ohms and 1 ohm.", "split": "eval"}
+{"relation": "series_resistance", "args": [4, 4, 4], "question": "Three identical 4 ohm resistors sit in series. Calculate their combined resistance.", "split": "eval"}
+{"relation": "series_resistance", "args": [15, 5, 10], "question": "A circuit has 15 ohms, 5 ohms and 10 ohms in series. What is the total?", "split": "eval"}
+{"relation": "series_resistance", "args": [6, 9, 18], "question": "Add the series resistances 6 ohms, 9 ohms and 18 ohms.", "split": "eval"}
+{"relation": "series_resistance", "args": [1, 2, 3], "question": "Resistors of 1 ohm, 2 ohms and 3 ohms are in series. Give the network resistance.", "split": "eval"}

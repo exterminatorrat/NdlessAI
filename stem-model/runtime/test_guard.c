@@ -11,6 +11,8 @@
 
 #include "pipeline.h"
 
+/* Revised 2026-11-16: cover chemistry quantities and numeric boundaries. */
+
 static int failures;
 
 static void expect(const char *call, const char *question, int want, const char *why)
@@ -38,6 +40,24 @@ int main(void)
 	expect("CALL dilution 4 50 250", dilution, 1, "all arguments present");
 	expect("CALL dilution 4 50 77", dilution, 0, "hallucinated 77");
 	expect("CALL dilution 4 50 -9", dilution, 0, "hallucinated -9");
+	expect("CALL molarity 0.25 0.5", "0.25 mol in 0.5 L.", 1,
+	       "complete decimal quantities");
+	expect("CALL molarity 25 5", "0.25 mol in 0.5 L.", 0,
+	       "decimal suffixes are not quantities");
+	expect("CALL molarity 2 3", "2.5 mol in 3 L.", 0,
+	       "decimal prefixes are not quantities");
+	expect("CALL moles 2 44", "Find moles in CO2 with molar mass 44 g/mol.", 0,
+	       "chemical subscripts are not quantities");
+	expect("CALL moles 2 74", "Ca(OH)2 has molar mass 74 g/mol.", 0,
+	       "parenthesized subscripts are not quantities");
+	expect("CALL ph 3", "Find pH for 1e-3 mol/L.", 0,
+	       "an exponent is not a quantity");
+	expect("CALL ph 2", "Find pH for 2e-3 mol/L.", 0,
+	       "a scientific mantissa is not the complete quantity");
+	expect("CALL ph 0.005", "Find pH for 0.005.", 1,
+	       "sentence punctuation may follow a quantity");
+	expect("CALL quad_solve 1 -3 2", "Solve x^2-3x+2=0.", 1,
+	       "adjacent polynomial signs and coefficients still match");
 
 	expect("CALL deriv_poly3 1 3 -2 -3 2", deriv, 1,
 	       "implicit leading coefficient 1");

@@ -8,6 +8,9 @@
 #include <string.h>
 
 #include "repair.h"
+#include "grounding.h"
+
+/* Revised 2026-11-16: refuse repairs from subscripts and numeric fragments. */
 
 static int failures;
 
@@ -47,11 +50,30 @@ static void test_argument(void)
 	 * nothing of the right shape to repair 6 into. */
 	check(repair_argument("6", "solve 5x = 30", out, (int)sizeof out) == 0,
 	      "a coefficient is not a repair candidate");
+	check(repair_argument("3", "CO2 has molar mass 44 g/mol.", out,
+	                      (int)sizeof out) == 0,
+	      "a chemical subscript is not a repair candidate");
+	check(repair_argument("3", "Ca(OH)2 has molar mass 74 g/mol.", out,
+	                      (int)sizeof out) == 0,
+	      "a parenthesized subscript is not a repair candidate");
+	check(repair_argument("26", "The concentration is 0.25 M.", out,
+	                      (int)sizeof out) == 0,
+	      "a decimal suffix is not a repair candidate");
+	check(repair_argument("4", "The concentration is 1e-3 M.", out,
+	                      (int)sizeof out) == 0,
+	      "an exponent is not a repair candidate");
 }
 
 static void test_call(void)
 {
 	char out[96];
+	const char *missing_mass = "Find moles in CO2 with molar mass 44 g/mol.";
+
+	check(repair_call("CALL moles 3 44", missing_mass, out,
+	                  (int)sizeof out) == 0 &&
+	      strcmp(out, "CALL moles 3 44") == 0 &&
+	      !grounding_call_grounded(out, missing_mass),
+	      "a missing mass stays ungrounded instead of using CO2's subscript");
 
 	check(repair_call("CALL molarity 0.2 0.25",
 	                  "There is 0.1 mol of solute in 0.25 L.", out,

@@ -10,6 +10,9 @@
 
 #include "pipeline.h"
 #include "shorthand.h"
+#include "solvers_subject.h"
+
+/* Revised 2026-11-16: test scientific quantities through parsing and solving. */
 
 static int failures;
 
@@ -123,11 +126,58 @@ static void test_offline_path(void)
 	check(strcmp(call, "CALL friction_force 0.4") == 0, "with the call it understood");
 }
 
+static void test_scientific_numbers(void)
+{
+	static const struct {
+		const char *text;
+		long long n, d;
+	} valid[] = {
+		{"1e-3", 1, 1000}, {"+1E-3", 1, 1000},
+		{"-2.5e+2", -250, 1}, {".5e1", 5, 1},
+		{"1.25e1", 125, 10}, {"1e-9", 1, 1000000000},
+		{"10e-10", 1, 1000000000}, {"1e14", 100000000000000LL, 1},
+		{"0e-100", 0, 1}, {"1e0003", 1000, 1}
+	};
+	static const char *const invalid[] = {
+		"1e", "1E+", "1e-", "e3", ".e3", "1e2x", "1e2.5",
+		"1e--3", "1e 3", "1e9999999999999999999999999", "1e-10",
+		"1e15", "9e99", "1e-9999999999999999999999999"
+	};
+	static const struct {
+		const char *question, *answer;
+	} calls[] = {
+		{"ph 1e-3", "3"}, {"ph +1E-3", "3"},
+		{"molarity 2.5e-1 5E-1", "0.5 mol/L"},
+		{"moles 8.8e1 +4.4E+1", "2 mol"},
+		{"first_law -2.5e+2 +5e1", "-200 J"}
+	};
+	char answer[128], call[96];
+	rat value;
+	int flt;
+
+	for (unsigned i = 0; i < sizeof valid / sizeof valid[0]; i++) {
+		int rc = parse_rat(valid[i].text, &value, &flt);
+
+		check(rc == 0 && value.n * valid[i].d == valid[i].n * value.d && flt,
+		      valid[i].text);
+	}
+	for (unsigned i = 0; i < sizeof invalid / sizeof invalid[0]; i++)
+		check(parse_rat(invalid[i], &value, NULL) < 0, invalid[i]);
+	for (unsigned i = 0; i < sizeof calls / sizeof calls[0]; i++)
+		check(pipeline_answer_offline(calls[i].question, answer, sizeof answer,
+		                              call, sizeof call) == 0 &&
+		      strcmp(answer, calls[i].answer) == 0, calls[i].question);
+	check(pipeline_answer_offline("ph 1e-10", answer, sizeof answer,
+	                              call, sizeof call) == 2,
+	      "an unrepresentable concentration is refused, not rounded to zero");
+}
+
 int main(void)
 {
 	test_names();
 	test_restraint();
 	test_offline_path();
+	test_scientific_numbers();
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;

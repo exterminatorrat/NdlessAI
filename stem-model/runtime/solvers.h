@@ -1,6 +1,8 @@
 #ifndef SOLVERS_H
 #define SOLVERS_H
 
+/* Revised 2026-11-16: document scientific-notation solver arguments. */
+
 #include <stddef.h>
 
 /*
@@ -28,7 +30,8 @@
  *     surface the error.
  *
  * Supported numeric domain (values outside return an error; these match
- * what the Python generators can produce): decimal tokens with at most 9
+ * what the Python generators can produce): signed decimal tokens, optionally
+ * with e/E exponents. Mantissas and represented values must fit at most 9
  * fractional digits and magnitude < 1e6; exact-rational intermediates kept
  * under 2e9 by the rational ops.  Cases where the Python solver itself
  * raises (singular linear2 system, complex quad_solve roots) return an

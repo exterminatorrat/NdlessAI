@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA ba97236dade9ede3
+ * STEP_SOURCE_SHA 71b684052f42a8cb
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 123
+#define STEP_NUM_ROWS 128
 
 typedef struct {
 	const char *name;
@@ -24,6 +24,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"adiabatic_work", "W = (P1*V1 - P2*V2)/(gamma - 1)", "(@1*@2 - @3*@4)/(@5 - 1)"},
 	{"arc_length", "s = r*theta*pi/180", "@1*@2*pi/180"},
 	{"average", "mean = (a + b + c + d)/4", "(@1 + @2 + @3 + @4) / 4"},
+	{"average_speed", "v = d / t", "@1 / @2"},
 	{"avg_rate", "rate = change/time", "@1 / @2"},
 	{"beat_freq", "f_b = |f1 - f2|", "abs(@1 - @2)"},
 	{"bernoulli_pressure", "P2 = P1 + rho*(v1^2 - v2^2)/2 + rho*g*(h1 - h2)", "@1 + @6*(@2^2 - @3^2)/2 + @6*9.8*(@4 - @5)"},
@@ -111,7 +112,9 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"parallel_resistance", "R = 1/(1/R1 + 1/R2)", "1 / (1/@1 + 1/@2)"},
 	{"pascal_press", "F2 = F1*A2/A1", "@1*@3/@2"},
 	{"pendulum_period", "T = 2*pi*sqrt(L/g)", "2*pi*sqrt(@1/@2)"},
+	{"percent_change", "change% = (new - original) / original * 100", "(@2 - @1) / @1 * 100"},
 	{"percent_error", "error% = |m - a| / a * 100", "abs(@1 - @2) / @2 * 100"},
+	{"percent_of", "part = percent/100 * whole", "@1 / 100 * @2"},
 	{"percent_yield", "yield% = actual/theoretical*100", "@1/@2*100"},
 	{"ph", "pH = -log10[H+]", "-log10(@1)"},
 	{"ph_from_poh", "pH = 14 - pOH", "14 - @1"},
@@ -124,7 +127,9 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"proj_range", "R = v0^2*sin(2*theta)/g", "@1^2*sin(2*@2)/@3"},
 	{"pythagoras", "c = sqrt(a^2 + b^2)", "sqrt(@1^2 + @2^2)"},
 	{"radiation_power", "P = sigma*A*T^4", "5.67e-8*@2*@1^4"},
+	{"ratio_share", "first share = total * a / (a + b)", "@1 * @2 / (@2 + @3)"},
 	{"rms_speed", "v = sqrt(3*R*T/M)", "sqrt(3*8.314*@1/@2)"},
+	{"simple_interest", "I = P * r/100 * t", "@1 * @2 / 100 * @3"},
 	{"sin_eval", "sin(a)", "sin(@1)"},
 	{"snell_angle", "n2*sin(th2) = n1*sin(th1)", "asin(@1*sin(@2)/@3)"},
 	{"sound_intensity", "I = 1e-12*10^(L/10)", "1e-12*10^(@1/10)"},

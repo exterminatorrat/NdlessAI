@@ -193,6 +193,26 @@ exam register, not textbook register — "A shirt is marked down 30% from $45"
 rather than "A quantity decreases by 30 percent". That register is the thing
 being tested, and P6 measures whether it worked.
 
+**Status, first slice.** Five of the eleven candidates are in:
+`percent_change`, `percent_of`, `ratio_share`, `average_speed`,
+`simple_interest`. Each has the Python contract, an eleven-phrasing exam-register
+bank in `surface/units.py`, a C solver, parity vectors, a step template and a
+distractor line. The exam-register corpus is
+`fixtures/paraphrase_units_r4.jsonl` (40 eval rows, every row solvable and every
+argument grounded in its question).
+
+Verified on the slice: `./runtime/test_parity` reports 3384 cases and 0
+mismatches with 0 gaps, so the C and Python solvers agree on every generated
+row; `check_steps.py` reports 128/128 templates agreeing with their solvers;
+`evaluate_paraphrase.py --check-corpus` accepts the new corpus.
+
+The other six candidates do not land in this slice, and the reason is
+mechanical rather than editorial: adding a relation renumbers the tokenizer, so
+every relation add has to be atomic with regenerating `bpe.h`, `reltable.h` and
+`fixtures/bpe_cases.txt` and with a retrain. One slice is one training cycle.
+Coordinate workers for the rest are blocked on organization credits, and the
+authoring is serial until that clears.
+
 ## P5 — Relation batch C: intro physics and chemistry
 
 **Goal.** The formulas an intro course asks for that are missing: collisions,

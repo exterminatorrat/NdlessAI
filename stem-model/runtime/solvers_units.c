@@ -301,6 +301,100 @@ static int solve_sig_figs(const char *const *args, char *out, size_t outlen)
 	return sig_render(v.n, v.d, (int)n.n, out, outlen);
 }
 
+static int solve_percent_change(const char *const *args, char *out,
+                                size_t outlen)
+{
+	rat o, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &o, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n, NULL)) != 0)
+		return rc;
+	if (o.n == 0)
+		return -4;
+	if ((rc = dec4_render(100 * (n.n * o.d - o.n * n.d),
+	                      n.d * o.n, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s%%", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_percent_of(const char *const *args, char *out, size_t outlen)
+{
+	rat p, w;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &p, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &w, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n * w.n, p.d * w.d * 100, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_ratio_share(const char *const *args, char *out, size_t outlen)
+{
+	rat t, a, b;
+	int rc;
+	char f1[48];
+	long long bc, ad;
+
+	if ((rc = parse_rat(args[0], &t, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &b, NULL)) != 0)
+		return rc;
+	bc = b.n * a.d;
+	ad = a.n * b.d;
+	if (bc + ad == 0)
+		return -4;
+	if ((rc = dec4_render(t.n * a.n * b.d, t.d * (bc + ad),
+	                      f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_average_speed(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat d, t;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &d, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &t, NULL)) != 0)
+		return rc;
+	if (t.n == 0)
+		return -4;
+	if ((rc = dec4_render(d.n * t.d, d.d * t.n, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s km/h", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_simple_interest(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat p, r, y;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &p, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &r, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &y, NULL)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n * r.n * y.n,
+	                      p.d * r.d * y.d * 100, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
 int solvers_units_solve(const char *name, const char *const *args,
                         int nargs, char *out, size_t outlen)
 {
@@ -334,6 +428,32 @@ int solvers_units_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "liters_to_ml") == 0) {
 		if (nargs == 1)
 			rc = solve_liters_to_ml(args, out, outlen);
+		else
+			rc = -2;
+
+	} else if (strcmp(name, "percent_change") == 0) {
+		if (nargs == 2)
+			rc = solve_percent_change(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "percent_of") == 0) {
+		if (nargs == 2)
+			rc = solve_percent_of(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ratio_share") == 0) {
+		if (nargs == 3)
+			rc = solve_ratio_share(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "average_speed") == 0) {
+		if (nargs == 2)
+			rc = solve_average_speed(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "simple_interest") == 0) {
+		if (nargs == 3)
+			rc = solve_simple_interest(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "percent_error") == 0) {

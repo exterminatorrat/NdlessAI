@@ -582,7 +582,8 @@ static void arg_label(const rel_row_t *row, int i, char *out, int outlen)
 static void tmpl_solve(ui_t *u)
 {
 	const rel_row_t *row = &rel_rows[u->tmpl_rels[u->tmpl_rel]];
-	const char *args[UI_TMPL_STEP_ARGS];
+	/* Revised 2026-11-16: size argument pointers for the full formula capacity. */
+	const char *args[UI_TMPL_ARGS];
 	char call[UI_CALL_MAX];
 	char answer[128];
 	int used, rc, i;

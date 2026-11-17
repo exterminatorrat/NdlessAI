@@ -40,18 +40,28 @@ The grounding check is deliberately conservative. If the model copies a number t
 
 ## Supported relations
 
-Every relation has a fixed arity, a generator, an exact solver, and at least eight phrasings. Every fifth phrasing is reserved for held-out wording tests.
+Every relation has a fixed arity, an exact solver, and wording to read: 163 of
+the 171 have hand-written paraphrase rows (4,768 rows across fifteen fixtures)
+and 146 have generated surface templates, 138 with both, which leaves no
+relation without either. A held-out row is chosen by a hash of its relation and
+question, so no revision of the corpus can move a row between the halves.
+
+The tags below are the ten in `runtime/reltable.h`, so the counts sum to the
+catalogue total; `docs/status.md` splits physics into its electricity, magnetism
+and thermodynamics groups for display, which is why its table has more rows.
 
 | Subject | Count | Relations |
 | --- | --- | --- |
-| Precalculus | 3 | `quad_solve`, `linear2`, `exp_solve` |
+| Physics | 56 | `adiabatic_work`, `beat_freq`, `bernoulli_pressure`, `buoyant_force`, `capacitor_charge`, `capacitor_energy`, `carnot_efficiency`, `circular_accel`, `collision_velocity`, `conduction_rate`, `continuity_velocity`, `coulomb_force`, `doppler_freq`, `double_slit_fringe`, `electric_field_point`, `energy_friction`, `entropy_change`, `free_fall`, `friction_force`, `gas_density`, `gas_heat_cp`, `gas_work_isobaric`, `gauge_pressure`, `heat_pump_cop`, `impulse`, `internal_energy_gas`, `kinematic_v`, `kinetic_energy`, `momentum`, `motional_emf`, `newton2`, `ohm_i`, `ohm_power`, `ohm_v`, `parallel_resistance`, `pascal_press`, `pendulum_period`, `potential_energy`, `power`, `power_force`, `proj_range`, `radiation_power`, `rms_speed`, `series_resistance`, `sound_intensity`, `sound_level`, `specific_heat`, `spring_energy`, `standing_wave_freq`, `string_freq`, `submerged_fraction`, `torque`, `volume_flow_rate`, `wave_speed`, `work`, `work_energy` |
+| Chemistry | 48 | `atoms_from_mass`, `avg_rate`, `beer_lambert`, `boyles`, `buffer_ph`, `calorimetry_c`, `calorimetry_mass`, `carnot`, `cell_potential`, `charles`, `combined_gas`, `density`, `dilution`, `dilution_v1`, `faraday_deposit`, `first_law`, `gas_mixture_pressure`, `gas_p`, `gibbs`, `h_from_ph`, `heat_reaction`, `hydrate_water`, `kc_from_conc`, `ksp_from_solubility`, `latent_heat`, `limiting_moles`, `mass_from_molarity`, `mass_from_percent_composition`, `mass_percent`, `mixing_concentration`, `mixture_final_temperature`, `molality`, `molarity`, `mole_fraction`, `moles`, `partial_pressure`, `percent_dissociation`, `percent_yield`, `ph`, `ph_from_poh`, `ph_of_water`, `poh`, `rate_factor`, `stoich_mass`, `stoich_volume_gas`, `stoichiometry`, `vsepr_bond_angle`, `wavelength_from_frequency` |
+| Units | 20 | `average`, `average_speed`, `celsius_to_fahrenheit`, `combined_rate`, `fahrenheit_to_celsius`, `kg_to_lb`, `km_to_m`, `liters_to_ml`, `m_to_cm`, `percent_change`, `percent_error`, `percent_of`, `probability_single`, `ratio_share`, `rectangle_area`, `scientific_notation`, `sig_figs`, `simple_interest`, `triangle_area`, `volume_prism` |
+| Modern physics | 9 | `activity_bq`, `bohr_energy_ev`, `bohr_transition_nm`, `de_broglie_electron`, `half_life_fraction`, `mass_energy_mev`, `photoelectric_kev`, `photon_energy_ev`, `threshold_wavelength` |
+| Trig | 9 | `arc_length`, `cos_eval`, `law_cosines`, `law_sines`, `pythagoras`, `right_triangle`, `sin_eval`, `sinusoid`, `tan_eval` |
+| Algebra | 7 | `abs_value_eq`, `arith_seq`, `complete_square`, `cubic_solve`, `factor_quadratic`, `geom_seq`, `linear_ineq` |
+| Logs | 7 | `compound_interest`, `continuous_growth`, `doubling_time`, `half_life`, `ln_eval`, `log10_eval`, `log_eval` |
+| Precalculus | 7 | `average_rate_of_change`, `exp_solve`, `linear2`, `quad_solve`, `vector_add`, `vector_dot`, `vector_scale` |
+| Optics | 6 | `critical_angle`, `index_from_speed`, `lens_image_distance`, `lens_magnification`, `mirror_image_distance`, `snell_angle` |
 | Calculus | 2 | `deriv_poly3`, `integr_poly3` |
-| Trig | 9 | `sin_eval`, `cos_eval`, `tan_eval`, `pythagoras`, `law_sines`, `law_cosines`, `arc_length`, `right_triangle`, `sinusoid` |
-| Logs | 7 | `log_eval`, `ln_eval`, `log10_eval`, `compound_interest`, `continuous_growth`, `half_life`, `doubling_time` |
-| Algebra | 7 | `arith_seq`, `geom_seq`, `abs_value_eq`, `linear_ineq`, `complete_square`, `factor_quadratic`, `cubic_solve` |
-| Physics | 15 | `kinetic_energy`, `potential_energy`, `work`, `power`, `momentum`, `newton2`, `circular_accel`, `wave_speed`, `specific_heat`, `ohm_v`, `ohm_i`, `ohm_power`, `free_fall`, `kinematic_v`, `proj_range` |
-| Chemistry | 13 | `molarity`, `ph`, `poh`, `ph_from_poh`, `percent_yield`, `boyles`, `charles`, `combined_gas`, `density`, `stoichiometry`, `moles`, `dilution`, `gas_p` |
-| Units | 10 | `km_to_m`, `m_to_cm`, `celsius_to_fahrenheit`, `fahrenheit_to_celsius`, `kg_to_lb`, `liters_to_ml`, `percent_error`, `scientific_notation`, `average`, `sig_figs` |
 
 ## Quickstart
 

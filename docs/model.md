@@ -117,7 +117,7 @@ cases. See `status.md` for the current gap list.
 ## Limitations
 
 - **Synthetic wording.** The phrasing banks are broader than one template per relation, but they are still a closed set. Performance on wording outside the bank is the main unknown.
-- **66 relations.** Anything outside the set is unsupported, even when it is mathematically simple.
+- **171 relations.** Anything outside the set is unsupported, even when it is mathematically simple.
 - **Digit copying.** The dominant observed failure is copying a plausible number from a distractor rather than choosing the wrong relation. The grounding check refuses such calls, which trades coverage for correctness.
 - **No derivation.** The model emits one call. It cannot explain intermediate steps or handle a problem that needs several calls.
 - **Exactness depends on the solver.** Precalculus and calculus answers use exact rational arithmetic. Physics and chemistry answers are formatted to four significant digits, as their relation definitions specify.

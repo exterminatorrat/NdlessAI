@@ -18,7 +18,7 @@ bought in data and retrains. Almost nothing here needs a bigger model.
 | Number | Value | Why it decides the order |
 | --- | --- | --- |
 | Prompt prefill | 43.9 tokens x 182 ms = **8.0 s** at 144 MHz, plus 1.4 s of decode | The documented "1.4 s per answer" counts generated tokens only. Prefill dominates, so prompt length and tokens/second are worth more than any solver feature |
-| Vocabulary | 512 = 261 reserved + relations + merges; 66 relations leaves **185 merges**, **251 relations** is the hard ceiling | Breadth spends tokens. Every relation that can be removed by a general mechanism is a token refunded |
+| Vocabulary | 512 = 261 reserved + relations + merges; 66 relations leaves **185 merges**, **251 relations** is the hard ceiling at that size. The shipped vocabulary is 640, where 171 relations leave **208 merges** | Breadth spends tokens. Every relation that can be removed by a general mechanism is a token refunded |
 | Heap | 27.12 MiB total, 21.56 MiB largest allocation | Room for property tables in the hundreds of KB, never for a second model |
 | Retrain cost | dataset, tokenizer, checkpoint — about 25 min plus an hour of wall time | C changes are free, vocabulary changes are not, so batches are spent deliberately |
 

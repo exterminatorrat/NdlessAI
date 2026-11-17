@@ -318,6 +318,77 @@ static void test_help(void)
 
 /* ---- the input line ---- */
 
+/* A full line is diagnosed from the pixels, not the model: the footer has to
+ * name the way out, and the second row has to stay where it was, because a
+ * notice that moves the other hints is a new screen rather than a message. */
+static void check_input_full_notice(unsigned long second_row)
+{
+	unsigned long actual;
+
+	render();
+	actual = hash(0, UI_FOOTER_Y, SCREEN_W, 9);
+	screen_fill(fb, 0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_BLACK);
+	screen_text(fb, 4, UI_FOOTER_Y,
+	            "Input full: DEL erase or ESC clear", SCREEN_ACCENT);
+	check(actual == hash(0, UI_FOOTER_Y, SCREEN_W, 9),
+	      "a full line visibly explains how to recover");
+	check(second_row == hash(0, UI_FOOTER_Y + 11, SCREEN_W, 9),
+	      "the notice replaces only the first footer row");
+}
+
+static void test_long_input(void)
+{
+	const char *question =
+	    "A sample contains 0.25 mol of NaCl dissolved in a total solution "
+	    "volume of 0.5 L. Find its molarity.";
+	char expression[UI_INPUT_MAX];
+	unsigned long second_row;
+
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	for (const char *p = question; *p; p++)
+		check(ui_type(&u, *p), "a hand-written question fits past 63 characters");
+	check(strcmp(u.input, question) == 0, "the whole question is retained");
+	render();
+	second_row = hash(0, UI_FOOTER_Y + 11, SCREEN_W, 9);
+	ui_key(&u, UI_KEY_BACK);
+	check(u.input_len == 0 && u.mode == UI_MODE_ASK,
+	      "back clears the question before the capacity case starts");
+
+	memset(expression, ' ', sizeof expression - 1);
+	expression[0] = '2';
+	expression[sizeof expression - 3] = '+';
+	expression[sizeof expression - 2] = '3';
+	expression[sizeof expression - 1] = '\0';
+	for (const char *p = expression; *p; p++)
+		check(ui_type(&u, *p), "the full line capacity can be typed");
+	check(u.input_len == UI_INPUT_MAX - 1 &&
+	      strcmp(u.input, expression) == 0, "the full line stays terminated");
+	check(ui_type(&u, '9') == 0 && strcmp(u.input, expression) == 0,
+	      "overflow leaves the line unchanged");
+	check_input_full_notice(second_row);
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(strcmp(ui_row(&u, 0), "5") == 0,
+	      "submitting a long expression includes its final operands");
+
+	ui_key(&u, UI_KEY_LEFT);
+	check(strcmp(u.input, expression) == 0,
+	      "history recalls the entire long question");
+	check_input_full_notice(second_row);
+	ui_key(&u, UI_KEY_DELETE);
+	render();
+	check(ink_of(0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_ACCENT) == 0,
+	      "deleting below the ceiling restores the normal footer");
+	check(ui_type(&u, '4'), "typing resumes after deletion");
+	check_input_full_notice(second_row);
+	ui_key(&u, UI_KEY_BACK);
+	check(u.input_len == 0 && ui_type(&u, '9'),
+	      "clearing a full line allows a new question");
+	render();
+	check(ink_of(0, UI_FOOTER_Y, SCREEN_W, 9, SCREEN_ACCENT) == 0,
+	      "clearing the line removes the notice");
+}
+
 static void test_input(void)
 {
 	unsigned long pane;
@@ -1223,6 +1294,21 @@ static void test_template(void)
 	render();
 	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the prompts are drawn");
 
+	/* Each argument has a 16-byte field, so the field's own ceiling has to
+	 * refuse rather than drop the last digit when ENTER is pressed. */
+	{
+		unsigned long second_row;
+
+		render();
+		second_row = hash(0, UI_FOOTER_Y + 11, SCREEN_W, 9);
+		for (int i = 0; i < UI_TMPL_ARG - 1; i++)
+			check(ui_type(&u, '9'), "an argument fills its own field");
+		check(ui_type(&u, '8') == 0 && u.input_len == UI_TMPL_ARG - 1,
+		      "an argument cannot be truncated on submission");
+		check_input_full_notice(second_row);
+		ui_key(&u, UI_KEY_BACK);
+		check(u.input_len == 0, "ESC clears a full argument");
+	}
 	/* The prompt takes numbers only. */
 	check(ui_type(&u, 'a') == 0, "a letter is not an argument");
 	for (const char *p = "4e-1"; *p; p++)
@@ -1415,6 +1501,7 @@ int main(void)
 	test_menu();
 	test_help();
 	test_input();
+	test_long_input();
 	test_answer_and_history();
 	test_wrap_and_scroll();
 	test_errors();

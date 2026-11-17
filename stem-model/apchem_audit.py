@@ -4,6 +4,11 @@
         python apchem_ingest.py --corpus "..." --out corpora/apchem
     python apchem_audit.py --corpus corpora/apchem
     python apchem_audit.py --corpus corpora/apchem --sample 30 --seed 7
+    python apchem_audit.py --corpus corpora/apchem --fixture
+
+--out writes a verdict per row with a 160-character \`stem_preview\` for reading
+and never for answering. --fixture writes the full text an evaluator needs, split
+by the same buckets, as \`eval.jsonl\` and \`train.jsonl\` inside the corpus.
 
 The question this answers is not "how many questions are there" but "how many can
 this program answer as it is built". NdlessAI emits one fixed-arity call and
@@ -393,7 +398,7 @@ def audit_mcq(records):
         rows.append({
             "id": item["id"], "kind": "mcq", "unit": item.get("unit"),
             "category": category, "target": target, "why": why,
-            "stem": item.get("stem", "")[:160],
+            "stem_preview": item.get("stem", "")[:160],
         })
     return rows
 
@@ -407,7 +412,8 @@ def audit_frq(records):
             verdicts.append({
                 "id": part["id"], "kind": "frq-part", "set": item.get("set"),
                 "category": category, "target": target, "why": why,
-                "stem": part.get("text", "")[:160], "guide": bool(part.get("guide")),
+                "stem_preview": part.get("text", "")[:160],
+                "guide": bool(part.get("guide")),
             })
         rows.extend(verdicts)
         rows.append({
@@ -415,7 +421,7 @@ def audit_frq(records):
             "category": worst([v["category"] for v in verdicts]),
             "target": None,
             "why": f"{len(verdicts)} parts",
-            "stem": item.get("stem", "")[:160],
+            "stem_preview": item.get("stem", "")[:160],
         })
     return rows
 
@@ -424,6 +430,43 @@ def split_of(identifier):
     """A stable bucket from the id alone, so the split survives any re-ingest."""
 
     return int(hashlib.sha256(identifier.encode()).hexdigest()[:8], 16)
+
+
+def write_fixture(directory, mcq, frq, held_ids):
+    """Full-text eval and train rows. A 160-character preview is not answerable text."""
+
+    prompt_of = {part["id"]: item["id"] for item in frq for part in item.get("parts", [])}
+
+    def side(identifier):
+        # Half a prompt in each half would put the same rubric on both sides.
+        return "eval" if prompt_of.get(identifier, identifier) in held_ids else "train"
+
+    verdicts = {row["id"]: row for row in audit_mcq(mcq) + audit_frq(frq)}
+    rows = {"eval": [], "train": []}
+    for item in mcq:
+        verdict, stream = verdicts[item["id"]], side(item["id"])
+        rows[stream].append({
+            "id": item["id"], "kind": "mcq", "unit": item.get("unit"), "split": stream,
+            "category": verdict["category"], "target": verdict["target"],
+            "why": verdict["why"], "stem": item.get("stem", ""),
+            "stimulus": item.get("stimulus", ""), "options": item.get("options") or {},
+            "answer": item.get("answer"),
+        })
+    for item in frq:
+        for part in item.get("parts", []):
+            verdict, stream = verdicts[part["id"]], side(part["id"])
+            rows[stream].append({
+                "id": part["id"], "kind": "frq-part", "set": item.get("set"),
+                "split": stream, "category": verdict["category"],
+                "target": verdict["target"], "why": verdict["why"],
+                "stem": item.get("stem", ""), "text": part.get("text", ""),
+                "guide": bool(part.get("guide")),
+            })
+    for stream, stream_rows in rows.items():
+        with open(os.path.join(directory, f"{stream}.jsonl"), "w") as handle:
+            for row in stream_rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return rows
 
 
 def main():
@@ -435,6 +478,10 @@ def main():
                           help="print N classified items for a hand check")
     argument.add_argument("--seed", type=int, default=1)
     argument.add_argument("--rules", action="store_true", help="print the rule table")
+    argument.add_argument("--fixture", action="store_true",
+                          help="write full-text eval.jsonl and train.jsonl into the corpus")
+    argument.add_argument("--eval-ids", default=None,
+                          help="pin the eval side to a frozen id list instead of a fresh split")
     argument.add_argument("--eval-share", type=float, default=0.25,
                           help="share of each stratum held back as eval")
     args = argument.parse_args()
@@ -537,8 +584,23 @@ def main():
         cut = max(1, round(len(rows) * args.eval_share)) if len(rows) > 1 else 0
         evaluation.extend(rows[:cut])
         training.extend(rows[cut:])
-    print(f"  strata {len(by_stratum)}, eval {len(evaluation)}, train {len(training)}, "
-          f"share {args.eval_share:.0%}")
+    if args.eval_ids:
+        # A frozen list outranks a fresh split: two runs over one bank have to
+        # score the same rows, or their numbers are not comparable.
+        with open(args.eval_ids) as handle:
+            pinned = {line.strip() for line in handle if line.strip()}
+        prompt_of = {part["id"]: item["id"] for item in frq for part in item.get("parts", [])}
+        owners = {prompt_of.get(identifier, identifier) for identifier in pinned}
+        evaluation = [row for row in split_rows if row["id"] in owners]
+        training = [row for row in split_rows if row["id"] not in owners]
+        absent = sorted(owners - {row["id"] for row in split_rows})
+        print(f"  pinned to {len(pinned)} ids in {os.path.basename(args.eval_ids)}: "
+              f"{len(evaluation)} eval, {len(training)} train")
+        if absent:
+            print(f"  absent from the corpus: {len(absent)} ({', '.join(absent[:6])})")
+    else:
+        print(f"  strata {len(by_stratum)}, eval {len(evaluation)}, train {len(training)}, "
+              f"share {args.eval_share:.0%}")
     for kind in ("mcq", "frq"):
         held = [row for row in evaluation if row["kind"] == kind]
         total = [row for row in split_rows if row["kind"] == kind]
@@ -547,6 +609,13 @@ def main():
     print(f"  eval items answerable today: {held_answerable}")
 
     held_ids = {row["id"] for row in evaluation}
+    if args.fixture:
+        fixture = write_fixture(args.corpus, mcq, frq, held_ids)
+        longest = max((len(row["stem"]) + len(row.get("text", ""))
+                       for row in fixture["eval"]), default=0)
+        print(f"  fixture eval {len(fixture['eval'])} rows, "
+              f"train {len(fixture['train'])} rows")
+        print(f"  longest eval stem {longest} characters")
     if args.out:
         with open(args.out, "w") as handle:
             for row in mcq_rows + frq_rows:
@@ -562,7 +631,7 @@ def main():
         print(f"\n== {args.sample} sampled verdicts ==")
         for row in rng.sample(everything, min(args.sample, len(everything))):
             print(f"  {row['id']:16s} {row['category']:22s} {str(row['target'] or ''):>24} "
-                  f"| {row['why'][:38]} | {re.sub(chr(10), ' ', row['stem'])[:70]}")
+                  f"| {row['why'][:38]} | {re.sub(chr(10), ' ', row['stem_preview'])[:70]}")
     return 0
 
 

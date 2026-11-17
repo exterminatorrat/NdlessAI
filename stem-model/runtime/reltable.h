@@ -3,7 +3,7 @@
  * The decoder masks relation ids from this table, so a stale row masks the
  * wrong token instead of failing loudly.
  *
- * REL_SOURCE_SHA 415c6be61083be4d
+ * REL_SOURCE_SHA 5a5f14e139bcae06
  */
 #ifndef RELTABLE_H
 #define RELTABLE_H
@@ -31,7 +31,7 @@ const rel_row_t rel_rows[REL_NUM_RELATIONS] = {
 	{"arc_length", 2, 264, "trig", "r theta"},
 	{"arith_seq", 3, 265, "algebra", "a1 d n"},
 	{"average", 4, 266, "units", "a b c d"},
-	{"average_rate_of_change", 4, 267, "precalc", "fa fb a b"},
+	{"average_rate_of_change", 4, 267, "precalc", "a fa b fb"},
 	{"average_speed", 2, 268, "units", "distance time"},
 	{"avg_rate", 2, 269, "chemistry", "change time"},
 	{"beat_freq", 2, 270, "physics", "f1 f2"},

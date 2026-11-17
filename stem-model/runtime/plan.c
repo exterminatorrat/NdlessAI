@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "plan.h"
+#include "reltable.h"
 #include "solvers.h"
 #include "steps.h"
 
@@ -95,9 +96,65 @@ static int magnitude_of(const char *answer, char *out, int outlen)
 	return n > 0 && is_number(out) ? 0 : -1;
 }
 
-int plan_is(const char *text)
+/* Splits `work` on spaces into words, in place. Returns the count, or -1 when
+ * there are more words than a call can carry. */
+static int words_of(char *work, char **parts, int max)
 {
-	return text && strchr(text, ';') != NULL;
+	int n = 0;
+
+	for (char *at = work; *at;) {
+		while (*at == ' ')
+			*at++ = '\0';
+		if (!*at)
+			break;
+		if (n == max)
+			return -1;
+		parts[n++] = at;
+		while (*at && *at != ' ')
+			at++;
+	}
+	return n;
+}
+
+/* The registry row a step names exactly, or NULL. Exactly, not as a shorthand:
+ * solvers_solve() dispatches on the name the answer pane prints, so a prefix
+ * shorthand_build() would accept here could never run as a step. */
+static const rel_row_t *relation_named(const char *name)
+{
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		if (strcmp(name, rel_rows[i].name) == 0)
+			return &rel_rows[i];
+	return NULL;
+}
+
+/*
+ * Whether one ';'-separated segment is a step the solvers could run: an
+ * optional CALL, the relation's own name, then arguments that are numbers or
+ * <n> references.
+ *
+ * The argument count is deliberately not checked. A step with the wrong count
+ * is a plan that failed, and plan_execute names the step that failed — which is
+ * worth more to a student than being sent back to the decoder.
+ */
+static int segment_is_step(const char *segment)
+{
+	char work[PLAN_TEXT_MAX];
+	char *parts[10];
+	int n, first;
+
+	if (strlen(segment) >= sizeof work)
+		return 0;
+	strcpy(work, segment);
+	n = words_of(work, parts, 10);
+	if (n < 1)
+		return 0;
+	first = strcmp(parts[0], "CALL") == 0 ? 1 : 0;
+	if (n - first < 1 || relation_named(parts[first]) == NULL)
+		return 0;
+	for (int i = first + 1; i < n; i++)
+		if (!is_number(parts[i]) && ref_index(parts[i]) < 0)
+			return 0;
+	return 1;
 }
 
 /*
@@ -125,6 +182,33 @@ static const char *next_segment(const char *start, char *out, int outlen)
 	return *end ? end + 1 : NULL;
 }
 
+/*
+ * Whether `text` is a plan rather than a question that happens to contain a
+ * separator.
+ *
+ * Prose is separated by ';' as often as a chain is — "the bottle is 0.5 M; 25 mL
+ * is measured out" — and the two mistakes are not the same size. A question
+ * read as a plan loses the answer completely, because plan_execute fails and the
+ * caller never decodes it, while a chain read as a question only reaches the
+ * decoder, which refuses what it cannot parse. So the benefit of the doubt goes
+ * to the question: every segment has to be a call the solvers could run.
+ */
+int plan_is(const char *text)
+{
+	char segment[PLAN_TEXT_MAX];
+	const char *rest;
+
+	if (!text || strchr(text, ';') == NULL)
+		return 0;
+	rest = text;
+	while (rest) {
+		rest = next_segment(rest, segment, (int)sizeof segment);
+		if (segment[0] && !segment_is_step(segment))
+			return 0;
+	}
+	return 1;
+}
+
 /* The solvers take an array of pointers; a step stores its arguments inline. */
 static void argv_of(const plan_step_t *step, const char *argv[8])
 {
@@ -136,23 +220,17 @@ static void argv_of(const plan_step_t *step, const char *argv[8])
 static int split_call(char *work, plan_step_t *step)
 {
 	char *parts[10];
-	int n = 0;
+	int n = words_of(work, parts, 10);
 
-	for (char *at = work; *at && n < 10;) {
-		while (*at == ' ')
-			*at++ = '\0';
-		if (!*at)
-			break;
-		parts[n++] = at;
-		while (*at && *at != ' ')
-			at++;
-	}
+	if (n < 1)
+		return -1;
 	/*
 	 * Both spellings are a step: "CALL name a b" is what the decoder emits and
 	 * what the answer pane prints, and "name a b" is what a student types,
 	 * matching the shorthand the screen already accepts. A step with no name
-	 * is the only thing refused here; whether the name resolves is the
-	 * solver's answer to give.
+	 * is the only thing refused here: plan_is has already refused a segment
+	 * that names no relation, so what is left for the solver to answer is
+	 * whether the numbers work.
 	 */
 	{
 		int first = strcmp(parts[0], "CALL") == 0 ? 1 : 0;

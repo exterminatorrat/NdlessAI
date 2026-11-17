@@ -14,7 +14,7 @@ BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
 HEADERS = coursetable.h bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 	  graph.h expr.h equation.h callmask.h reltable.h matrix.h steps.h \
-	  steptable.h screen.h ui.h
+	  steptable.h unitstable.h screen.h ui.h
 
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c \

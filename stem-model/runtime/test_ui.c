@@ -19,6 +19,7 @@
 #include "coursetable.h"
 #include "diagram.h"
 #include "reltable.h"
+#include "unitstable.h"
 
 /* Revised 2026-11-16: solve scientific inputs through the formula picker. */
 
@@ -1294,6 +1295,7 @@ static void test_slots(void)
 	check(ui_type(&u, 'a') == 0, "a letter is still not an argument");
 	check(ui_type(&u, '7') == 1, "a digit still is");
 
+
 	/* The footer advertises DEL on this screen, so a mistyped number has to be
 	 * fixable without clearing the slot. */
 	type_text("25");
@@ -1307,6 +1309,125 @@ static void test_slots(void)
 	ui_type(&u, '4');
 	check(strcmp(u.input, "42") == 0, "typing inserts where the cursor is");
 	check(u.recall < 0, "the slot line never pulls the answer history in");
+
+	/* The unit, where the phrasing bank states one. Each assertion is on a row
+	 * the form has not selected: the selected row is drawn inverted with its
+	 * fill three rows above it, and its value is on the input line instead. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("kinematic_v");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	check(band_is_text(FORM_SLOT(1), "2. a (m/s^2) = -", SCREEN_WHITE),
+	      "a slot names the unit its phrasing states");
+	check(band_is_text(FORM_SLOT(2), "3. t (s) = -", SCREEN_WHITE),
+	      "and the last slot carries its own");
+
+	/* A unit the symbol already is stays off the line: "N (N)" is a stutter,
+	 * and the argument is already called N. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction_force");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	check(band_is_text(FORM_SLOT(1), "2. N = -", SCREEN_WHITE),
+	      "a unit the symbol already is is not repeated");
+
+	/* And an argument the bank states no unit for says nothing rather than
+	 * guessing one: these four are dimensionless in every phrasing. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("average_rate_of_change");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	check(band_is_text(FORM_SLOT(1), "2. fa = -", SCREEN_WHITE),
+	      "an argument with no stated unit shows none");
+
+	/* The table says what the bank states, and says nothing where the bank
+	 * disagrees: percent_change's inputs are percentages, not the dollars one
+	 * money-worded phrasing mentions. */
+	{
+		const char *kine = NULL, *pct = NULL;
+
+		for (int i = 0; i < UNIT_NUM_ROWS; i++) {
+			if (strcmp(unit_rows[i].name, "kinematic_v") == 0)
+				kine = unit_rows[i].units;
+			if (strcmp(unit_rows[i].name, "percent_change") == 0)
+				pct = unit_rows[i].units;
+		}
+		check(kine && strcmp(kine, "m/s m/s^2 s") == 0,
+		      "the unit table carries kinematic_v's three units in order");
+		check(pct == NULL,
+		      "a relation whose phrasings disagree about units gets no row");
+	}
+}
+
+/*
+ * Declining. Backing out of the picker has to leave the screen as it was: the
+ * answer that was on it, its history entry, and no half-filled form waiting to
+ * be resumed under a different relation.
+ */
+static void test_decline(void)
+{
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ask("1+1");
+	check(strcmp(ui_row(&u, 0), "2") == 0, "an answer is on the pane to start with");
+	check(u.hist_n == 1, "and it is one history entry");
+
+	/* In, one slot filled, then all the way back out. */
+	ui_key(&u, UI_KEY_MODE);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction_force");
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("4");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_arg == 1, "the first slot took a number");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "back leaves the form");
+	for (int i = 0; i < 14; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	ui_key(&u, UI_KEY_BACK);
+	check(u.mode == UI_MODE_MENU, "and the menu is where it left from");
+	check(u.tmpl_find == 0, "with the finder no longer armed");
+	check(strcmp(ui_row(&u, 0), "2") == 0, "the answer is still on the pane");
+	check(u.hist_n == 1, "and still the only history entry");
+	ui_key(&u, UI_KEY_MODE);
+	check(strcmp(ui_row(&u, 0), "2") == 0, "asking again shows the old answer");
+	check(u.hist_n == 1, "with no extra entry behind it");
+	render();
+	check(ink_of(UI_PANE_X, UI_PANE_Y, 40, SCREEN_GLYPH_H, SCREEN_WHITE) > 0,
+	      "and the answer is drawn where it was");
+
+	/* What a declined attempt took does not turn up in another relation's
+	 * slots: kinetic_energy takes two numbers and the student gave none. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction_force");
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("4");
+	ui_key(&u, UI_KEY_ACCEPT);
+	ui_key(&u, UI_KEY_BACK);
+	for (int i = 0; i < 14; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("kinetic_energy");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_arg == 0, "the new relation starts at its first slot");
+	check(u.tmpl_args[0][0] == '\0' && u.tmpl_args[1][0] == '\0',
+	      "with nothing carried over from the declined attempt");
+	render();
+	check(band_is_text(FORM_SLOT(1), "2. v (m/s) = -", SCREEN_WHITE),
+	      "and the slot shows no value the student did not give");
 }
 
 /*
@@ -1661,6 +1782,7 @@ int main(void)
 	test_template();
 	test_find();
 	test_slots();
+	test_decline();
 	test_reuse();
 	test_course_picker();
 	test_template_multi_argument();

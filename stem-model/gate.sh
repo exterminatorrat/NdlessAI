@@ -91,6 +91,10 @@ if [ -d runtime ]; then
     run "digit repair"           sh -c 'cd runtime && ./test_repair | grep -q "all checks passed"'
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
+    # The units the slot prompts show come from the phrasing bank, so the header
+    # can go stale exactly the way the relation table can: a phrasing that starts
+    # stating a unit leaves the prompt saying nothing, and no test notices.
+    run "unit table in sync"     sh -c "$PY export_units.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"
     if [ -f weights.bin ]; then
         run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'

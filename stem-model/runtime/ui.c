@@ -19,6 +19,10 @@
 #include "steptable.h"
 #include "solvers.h"
 
+/* The unit table has one reader, so it has one copy, here. */
+#define UNITSTABLE_IMPL
+#include "unitstable.h"
+
 #define UI_BG      SCREEN_BLACK
 #define UI_FG      SCREEN_WHITE
 #define UI_DIM     SCREEN_DIM
@@ -892,6 +896,45 @@ static void arg_label(const rel_row_t *row, int i, char *out, int outlen)
 }
 
 /*
+ * The unit the phrasing bank states for the i-th argument, out of the table's
+ * space-separated list, or an empty string when it states none. The bank is the
+ * only place a unit exists: the relation table carries symbols and the step
+ * table carries formulas, and neither knows whether a number is newtons.
+ */
+static void unit_label(const char *name, int i, char *out, int outlen)
+{
+	out[0] = '\0';
+	for (int r = 0; r < UNIT_NUM_ROWS; r++) {
+		const char *p;
+		int n = 0;
+
+		if (strcmp(unit_rows[r].name, name) != 0)
+			continue;
+		p = unit_rows[r].units;
+		while (*p) {
+			int len = 0;
+
+			while (p[len] && p[len] != ' ')
+				len++;
+			if (n == i) {
+				if (!(len == 1 && p[0] == '-')) {
+					if (len > outlen - 1)
+						len = outlen - 1;
+					memcpy(out, p, (size_t)len);
+					out[len] = '\0';
+				}
+				return;
+			}
+			n++;
+			p += len;
+			while (*p == ' ')
+				p++;
+		}
+		return;
+	}
+}
+
+/*
  * The last prompt answered: build the call, let the solver answer it, and show
  * the result on the answer screen with its working. ui_result reads the call
  * from the pane's own state, so TAB and VAR work on it like any other answer.
@@ -954,6 +997,10 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 				break;
 			u->tmpl_rel = u->tmpl_sel;
 			u->tmpl_arg = 0;
+			/* A declined attempt must not leave its numbers behind: the
+			 * relation chosen now has different arguments, and showing the
+			 * old values in its slots would answer a question nobody asked. */
+			memset(u->tmpl_args, 0, sizeof u->tmpl_args);
 			/* The line becomes the number field, so the filter it held has
 			 * to be put somewhere the way back can find it. */
 			if (u->tmpl_find)
@@ -1545,16 +1592,28 @@ static void draw_tmpl_form(const ui_t *u, uint16_t *fb)
 	y += SCREEN_LINE_H * 2;
 	for (int i = 0; i < row->arity && i < UI_TMPL_ARGS; i++) {
 		char label[UI_TMPL_ARG];
+		char unit[UI_TMPL_ARG];
 		char line[UI_TEXT_COLS + 1];
 		int on = i == u->tmpl_arg;
 		int at = 0;
 
 		arg_label(row, i, label, (int)sizeof label);
+		unit_label(row->name, i, unit, (int)sizeof unit);
 		line[at++] = (char)('0' + (i + 1) % 10);
 		line[at++] = '.';
 		line[at++] = ' ';
 		for (int j = 0; label[j] && at < UI_TEXT_COLS - 2; j++)
 			line[at++] = label[j];
+		/* What the argument is measured in, where the phrasing bank states
+		 * one. A unit the symbol already is stays off the line: "N (N)" reads
+		 * as a stutter rather than as help. */
+		if (unit[0] && strcmp(unit, label) != 0 && at < UI_TEXT_COLS - 6) {
+			line[at++] = ' ';
+			line[at++] = '(';
+			for (int j = 0; unit[j] && at < UI_TEXT_COLS - 3; j++)
+				line[at++] = unit[j];
+			line[at++] = ')';
+		}
 		line[at++] = ' ';
 		line[at++] = '=';
 		line[at++] = ' ';

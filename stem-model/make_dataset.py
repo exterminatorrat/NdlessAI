@@ -106,6 +106,25 @@ def paraphrase_rows(paths):
     return rows
 
 
+def injected_rows(rows, target):
+    """Repeat the hand-written corpus until it fills its share of train.
+
+    The hand-written half is a share of the training set, so a corpus that grows
+    must not inject fewer rows: fill the cap by repeating the corpus and spread
+    the remainder evenly across it, rather than dividing the cap by the corpus
+    size and dropping the part that does not fit.
+    """
+
+    if not rows or target <= 0:
+        return []
+    whole, rest = divmod(target, len(rows))
+    picked = list(rows) * whole
+    if rest:
+        step = len(rows) / rest
+        picked.extend(rows[int(i * step)] for i in range(rest))
+    return picked
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="data")
@@ -141,13 +160,15 @@ def main():
     if args.paraphrases:
         extra = paraphrase_rows(sorted(glob.glob(args.paraphrases)))
         target = int(args.train * args.paraphrase_share)
-        reps = max(1, target // max(1, len(extra)))
-        extra = extra * reps
-        print(f"adding {len(extra)} hand-written rows "
-              f"({reps}x of {len(extra) // reps} phrasings, "
-              f"{100.0 * len(extra) / (len(train_rows) + len(extra)):.0f}% of train)",
-              flush=True)
-        train_rows = train_rows + extra
+        injected = injected_rows(extra, target)
+        if injected:
+            print(f"adding {len(injected)} hand-written rows "
+                  f"({len(injected) / len(extra):.2f} passes over "
+                  f"{len(extra)} phrasings, "
+                  f"{100.0 * len(injected) / (len(train_rows) + len(injected)):.0f}%"
+                  f" of train)",
+                  flush=True)
+            train_rows = train_rows + injected
         random.Random(args.seed).shuffle(train_rows)
 
     print(f"generating {args.val} val rows", flush=True)

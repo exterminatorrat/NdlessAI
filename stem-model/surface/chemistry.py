@@ -530,3 +530,87 @@ TEMPLATES["mass_from_molarity"] = [
     "An aliquot of {V} L is taken from a {c} mol/L solution of a solute of molar mass {molar_mass} g/mol. What mass does it carry?",
     "What mass of solute does {V} L of a {c} mol/L solution hold when the solute's molar mass is {molar_mass} g/mol?",
 ]
+
+TEMPLATES["gas_mixture_pressure"] = [
+    "One component of a gas mixture exerts {P_i} atm while it occupies {V_i} L. The mixture is transferred to a {V_f} L vessel at constant temperature. Find that component's new partial pressure.",
+    "Find the new partial pressure of a component that exerts {P_i} atm in {V_i} L when the gas is moved to {V_f} L at constant temperature.",
+    "What partial pressure does a component of {P_i} atm in {V_i} L exert once the mixture occupies {V_f} L?",
+    "Compute the new partial pressure for a component at {P_i} atm occupying {V_i} L that is expanded to {V_f} L.",
+    "A gas component at {P_i} atm in a {V_i} L vessel is transferred to {V_f} L at the same temperature. Determine its partial pressure.",
+    "Calculate the partial pressure after a component exerting {P_i} atm in {V_i} L is moved into {V_f} L.",
+    "Find the partial pressure of a component whose {P_i} atm fills {V_i} L when the volume becomes {V_f} L.",
+    "Given {P_i} atm in {V_i} L and a new volume of {V_f} L at constant temperature, what is the partial pressure?",
+    "Determine the new partial pressure of a mixture component reading {P_i} atm in {V_i} L that is compressed or expanded to {V_f} L.",
+    "A sample of gas exerts {P_i} atm in {V_i} L and is then held in {V_f} L at the same temperature. What partial pressure does it show?",
+    "What pressure does a component at {P_i} atm in {V_i} L come to when its volume is {V_f} L?",
+]
+
+TEMPLATES["mixture_final_temperature"] = [
+    "A mass of {m1} g of water at {T1} K is mixed with {m2} g of water at {T2} K in an insulated container. Find the final temperature.",
+    "Find the final temperature when {m1} g of water at {T1} K meets {m2} g at {T2} K.",
+    "What final temperature results from mixing {m1} g of water at {T1} K with {m2} g at {T2} K?",
+    "Compute the final temperature for {m1} g at {T1} K combined with {m2} g at {T2} K.",
+    "{m1} g of water at {T1} K is poured into {m2} g at {T2} K in a calorimeter. Determine the equilibrium temperature.",
+    "Calculate the temperature reached when {m1} g of water at {T1} K and {m2} g at {T2} K are mixed.",
+    "Find the equilibrium temperature of {m1} g of water at {T1} K added to {m2} g at {T2} K.",
+    "Given {m1} g at {T1} K and {m2} g at {T2} K of the same liquid, what final temperature is reached?",
+    "Determine the final temperature after {m1} g of water at {T1} K is mixed with {m2} g at {T2} K, with no heat lost.",
+    "Two water samples, {m1} g at {T1} K and {m2} g at {T2} K, are combined in an insulated cup. What temperature do they settle at?",
+    "What temperature does a mixture of {m1} g of water at {T1} K and {m2} g at {T2} K reach?",
+]
+
+TEMPLATES["stoich_volume_gas"] = [
+    "{V_given} L of a gaseous reactant is consumed at constant temperature and pressure. Each mole of it produces {ratio} mol of gaseous product. Find the volume of product formed.",
+    "Find the product volume when {V_given} L of gas reacts, giving {ratio} mol of gas per mole consumed, at constant temperature and pressure.",
+    "What volume of gaseous product forms from {V_given} L of reactant gas in a {ratio} to one mole ratio?",
+    "Compute the product volume for {V_given} L of reactant gas with a molar ratio of {ratio}.",
+    "{V_given} L of gas reacts at constant temperature and pressure, producing {ratio} mol of gas per mole. Determine the product volume.",
+    "Calculate the volume of gas produced when {V_given} L of reactant reacts in a {ratio}:1 ratio at constant pressure.",
+    "Find the volume of gaseous product from {V_given} L of a reactant whose mole ratio to product is {ratio}.",
+    "Given {V_given} L of gaseous reactant and a mole ratio of {ratio} to the product, what volume of gas forms?",
+    "Determine the product volume when {V_given} L of gas is consumed and each mole yields {ratio} mol of product gas.",
+    "A reaction consumes {V_given} L of gas and makes {ratio} mol of product gas per mole, at the same temperature and pressure. What product volume results?",
+    "What volume of product gas is formed from {V_given} L of reactant gas at a ratio of {ratio} to one?",
+]
+
+TEMPLATES["mass_from_percent_composition"] = [
+    "A sample is {percent} percent of one element by mass and has a total mass of {total_mass} g. Find the mass of that element in the sample.",
+    "Find the mass of an element that is {percent} percent by mass of a {total_mass} g sample.",
+    "What mass of element is present when it makes up {percent} percent of a {total_mass} g sample?",
+    "Compute the element's mass for a {percent} percent composition in a {total_mass} g sample.",
+    "A sample weighing {total_mass} g is {percent} percent that element by mass. Determine the element's mass.",
+    "Calculate the mass of element in {total_mass} g of material whose composition is {percent} percent.",
+    "Find how many grams of the element a {total_mass} g sample holds at {percent} percent by mass.",
+    "Given a sample of {total_mass} g and a composition of {percent} percent, what mass is that element?",
+    "Determine the mass of element in a {total_mass} g sample that analyses as {percent} percent of it.",
+    "An analysis gives {percent} percent of one element in a {total_mass} g sample. What mass does that element contribute?",
+    "What mass of element corresponds to {percent} percent of a sample weighing {total_mass} g?",
+]
+
+TEMPLATES["ph_of_water"] = [
+    "At a particular temperature the ionic product of water makes pKw = {pkw}. Find the pH of pure water at that temperature.",
+    "Find the pH of pure water where pKw = {pkw}.",
+    "What is the pH of neutral water when pKw is {pkw}?",
+    "Compute the pH of pure water for a pKw of {pkw}.",
+    "Pure water has pKw = {pkw} at some temperature. Determine its pH.",
+    "Calculate the pH of water at a temperature where pKw = {pkw}.",
+    "Find the pH of pure water given an ionic product exponent of pKw = {pkw}.",
+    "Given pKw = {pkw}, what is the pH of pure water?",
+    "Determine the pH of neutral water whose pKw is {pkw}.",
+    "At the temperature in question pKw = {pkw}. What pH does pure water show there?",
+    "What pH does pure water have at a temperature where pKw = {pkw}?",
+]
+
+TEMPLATES["vsepr_bond_angle"] = [
+    "A molecule has {electron_domains} electron domains around its central atom and {lone_pairs} of them are lone pairs. Find its bond angle in degrees, from the VSEPR table.",
+    "Find the bond angle of a molecule with {electron_domains} electron domains and {lone_pairs} lone pairs.",
+    "What bond angle does VSEPR give for {electron_domains} electron domains with {lone_pairs} lone pairs?",
+    "Read the bond angle from the VSEPR table for {electron_domains} electron domains and {lone_pairs} lone pairs.",
+    "A molecule's central atom carries {electron_domains} electron domains, of which {lone_pairs} are lone pairs. Give its bond angle in degrees.",
+    "Look up the bond angle for {electron_domains} electron domains and {lone_pairs} lone pairs on the central atom.",
+    "What angle separates the bonds when {electron_domains} domains surround the central atom and {lone_pairs} are lone pairs?",
+    "With {electron_domains} electron domains and {lone_pairs} lone pairs, what bond angle does the VSEPR table list?",
+    "Determine the bond angle for a central atom with {electron_domains} electron domains, {lone_pairs} of them lone pairs.",
+    "A VSEPR table lists the angle for {electron_domains} electron domains and {lone_pairs} lone pairs. What angle does this molecule have?",
+    "What bond angle, in degrees, corresponds to {electron_domains} electron domains and {lone_pairs} lone pairs?",
+]

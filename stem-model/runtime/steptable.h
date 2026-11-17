@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 75bcce0284a3f437
+ * STEP_SOURCE_SHA 9c713d132f55cd35
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 149
+#define STEP_NUM_ROWS 154
 
 typedef struct {
 	const char *name;
@@ -75,6 +75,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"friction_force", "f = mu*N", "@1*@2"},
 	{"gas_density", "rho = P*M/(R*T)", "@1*@2/(8.314*@3)"},
 	{"gas_heat_cp", "Q = n*cp*dT", "@1*@2*@3"},
+	{"gas_mixture_pressure", "P_f = P_i * V_i / V_f", "@1 * @2 / @3"},
 	{"gas_p", "P = n*R*T/V, R = 0.08206", "@1*0.08206*@2/@3"},
 	{"gas_work_isobaric", "W = P*dV", "@1 * @2"},
 	{"gauge_pressure", "P = rho*g*h", "@1*@2*@3"},
@@ -107,9 +108,11 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"m_to_cm", "cm = m*100", "@1*100"},
 	{"mass_energy_mev", "E = 931.5*m", "931.5*@1"},
 	{"mass_from_molarity", "m = c * V * M", "@1 * @2 * @3"},
+	{"mass_from_percent_composition", "m = percent / 100 * total_mass", "@1 / 100 * @2"},
 	{"mass_percent", "mass% = solute/solution * 100", "@1 / @2 * 100"},
 	{"mirror_image_distance", "1/f = 1/do + 1/di", "1/(1/@1 - 1/@2)"},
 	{"mixing_concentration", "c = (c1*v1 + c2*v2) / (v1 + v2)", "(@2 * @1 + @4 * @3) / (@1 + @3)"},
+	{"mixture_final_temperature", "T = (m1*T1 + m2*T2) / (m1 + m2)", "(@1 * @2 + @3 * @4) / (@1 + @3)"},
 	{"molality", "m = n / kg", "@1 / @2"},
 	{"molarity", "M = n/V", "@1 / @2"},
 	{"mole_fraction", "xA = nA/(nA + nB)", "@1 / (@1 + @2)"},
@@ -131,6 +134,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"percent_yield", "yield% = actual/theoretical*100", "@1/@2*100"},
 	{"ph", "pH = -log10[H+]", "-log10(@1)"},
 	{"ph_from_poh", "pH = 14 - pOH", "14 - @1"},
+	{"ph_of_water", "pH = pKw / 2", "@1 / 2"},
 	{"photoelectric_kev", "K = 1240/lambda - phi", "1240/@1 - @2"},
 	{"photon_energy_ev", "E = 1240/lambda", "1240/@1"},
 	{"poh", "pOH = -log10[OH-]", "-log10(@1)"},
@@ -155,6 +159,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"spring_energy", "E = k*x^2 / 2", "@1 * @2^2 / 2"},
 	{"standing_wave_freq", "f_n = n*v/(2*L)", "@1*@2/(2*@3)"},
 	{"stoich_mass", "mass = mass_given*ratio*mm_product/mm_given", "@1*@4*@3/@2"},
+	{"stoich_volume_gas", "V = V_given * ratio", "@1 * @2"},
 	{"stoichiometry", "product = moles*ratio", "@1*@2"},
 	{"string_freq", "f = sqrt(T/mu)/(2*L)", "sqrt(@1/@2)/(2*@3)"},
 	{"submerged_fraction", "x = rho_obj/rho_fluid", "@1/@2"},

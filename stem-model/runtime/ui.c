@@ -486,6 +486,26 @@ void ui_result(ui_t *u, const char *question, int rc,
 		              "step, or part of it is not written the way\n"
 		              "a formula goes. Split it into two steps,\n"
 		              "or check the brackets and the operators.\n");
+	} else if (rc == PIPELINE_NO_VALUE) {
+		/*
+		 * Arithmetic with no value to give. One code covers nine measured
+		 * paths and two stories: the value does not exist (1/0, sqrt(-4),
+		 * ln(0)) or it exists and is past the Q16.16 range this build computes
+		 * in (9^999, 2^15, and 100000/3, whose literal was clamped to 32767.99
+		 * and printed 10923). Both used to saturate to 32768 and print it, so a
+		 * student saw a confident number for a question with no answer.
+		 *
+		 * The sentence names both, because the code cannot tell them apart, and
+		 * it says arithmetic is what happened: no model was consulted and the
+		 * weights have nothing to do with it.
+		 */
+		put(&at, end, "There is no answer this build can give.\n"
+		              "Either the arithmetic has none at all, as\n"
+		              "with a division by zero or the root or\n"
+		              "logarithm of a number without one, or the\n"
+		              "answer is past the largest number this\n"
+		              "build holds. Check the numbers, or work\n"
+		              "it out by hand.\n");
 	} else if (weights_mismatch(u)) {
 		/*
 		 * The one refusal this screen can name. The weights carry a vocabulary
@@ -591,19 +611,22 @@ static void ask(ui_t *u)
 		                     call, (int)sizeof call);
 	} else {
 		/*
-		 * No weights file. The offline path's three codes are kept apart here
-		 * rather than collapsed into one: an arithmetic question too big for
-		 * the exact engine is not a missing-model failure, and saying so is
-		 * the whole reason the code exists.
+		 * No weights file. The offline path's codes are kept apart here rather
+		 * than collapsed into one: arithmetic too big for the exact engine, and
+		 * arithmetic with no value, are properties of the question and not a
+		 * missing model, and naming them is the whole reason the codes exist.
+		 * They were literals until pipeline.h gave them names.
 		 */
 		int off = pipeline_answer_offline(u->input, answer,
 		                                  (int)sizeof answer,
 		                                  call, (int)sizeof call);
 
-		if (off == 0)
+		if (off == PIPELINE_OFFLINE_ANSWERED)
 			rc = PIPELINE_OK;
-		else if (off == 3)
+		else if (off == PIPELINE_OFFLINE_TOO_LONG)
 			rc = PIPELINE_TOO_LONG;
+		else if (off == PIPELINE_OFFLINE_NO_VALUE)
+			rc = PIPELINE_NO_VALUE;
 		else
 			rc = PIPELINE_ERR;
 	}

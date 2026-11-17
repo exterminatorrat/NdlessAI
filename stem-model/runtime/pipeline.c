@@ -321,6 +321,61 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 	return PIPELINE_OK;
 }
 
+/*
+ * Is this text arithmetic and nothing else?
+ *
+ * The exact engine has a fixed node pool (EXPR_MAX_NODES), so a long enough
+ * typed expression fails to parse — measured: a flat sum answers at 64 terms
+ * (127 characters) and stops at 65 (129). When that happens the text used to
+ * fall through to the decoder, which reads it as a word problem and answers
+ * with a relation's worth of invented numbers: the one outcome this program
+ * exists to avoid. Arithmetic that is too big for the pool is still arithmetic,
+ * so the caller refuses it instead of guessing at it.
+ *
+ * The test is deliberately narrow: digits, the operators, brackets, and the
+ * parser's own function names. A question mark, an equals sign, a variable or
+ * any other word means the text is prose and the decoder may read it — "2+2=?"
+ * and "what is 2+2?" both still reach the model. Euler's "e" is left out for
+ * the same reason: "1e5" is scientific notation, not a product, and the parser
+ * reads neither.
+ */
+static int looks_like_arithmetic(const char *text)
+{
+	static const char *const funcs[] = {
+		"sqrt", "abs", "ln", "exp", "sin", "cos", "tan"
+	};
+	int digits = 0;
+
+	if (!text)
+		return 0;
+	for (const char *p = text; *p;) {
+		int matched = 0;
+
+		if (*p >= '0' && *p <= '9') {
+			digits++;
+			p++;
+			continue;
+		}
+		if (*p == '.' || *p == '+' || *p == '-' || *p == '*' || *p == '/' ||
+		    *p == '^' || *p == '(' || *p == ')' || *p == ',' || *p == ' ') {
+			p++;
+			continue;
+		}
+		for (int i = 0; i < (int)(sizeof funcs / sizeof funcs[0]); i++) {
+			size_t n = strlen(funcs[i]);
+
+			if (strncmp(p, funcs[i], n) == 0) {
+				p += n;
+				matched = 1;
+				break;
+			}
+		}
+		if (!matched)
+			return 0;
+	}
+	return digits > 0;
+}
+
 int pipeline_answer_offline(const char *question, char *answer, int answer_max,
                             char *call, int call_max)
 {
@@ -331,6 +386,11 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 		call[0] = 0;
 	if (pipeline_typed_answer(question, answer, answer_max) == PIPELINE_OK)
 		return 0;
+	/* Arithmetic the exact engine could not hold is not a word problem, and
+	 * the decoder would read it as one. Refuse it here, with a code of its own
+	 * so the screen can say which of the two happened. */
+	if (looks_like_arithmetic(question))
+		return 3;
 
 	/*
 	 * A typed call: exact and instant, and the names it accepts are the ones
@@ -397,6 +457,8 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	                                     call, call_max);
 	if (rc_offline == 0)
 		return PIPELINE_OK;
+	if (rc_offline == 3)
+		return PIPELINE_TOO_LONG;
 	if (rc_offline == 2)
 		return PIPELINE_ERR;
 

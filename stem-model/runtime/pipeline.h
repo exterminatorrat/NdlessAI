@@ -58,6 +58,14 @@ enum {
 	 * for the decode to have meant it.
 	 */
 	PIPELINE_UNCERTAIN = 1,
+	/*
+	 * The text was arithmetic and nothing else, and the exact engine's node
+	 * pool could not hold it — a flat sum of more than 64 terms, for example.
+	 * It is refused rather than handed to the decoder, which would read it as
+	 * a word problem and answer with invented numbers; the screen can say so in
+	 * words because it is a different thing from a model failure.
+	 */
+	PIPELINE_TOO_LONG = 2,
 	PIPELINE_ERR = -1
 };
 
@@ -105,10 +113,11 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max);
 /*
  * Anything answerable with no model: typed arithmetic first, then a typed
  * call ("ff 0.4 500", or the relation's own name). Returns 0 when it answered,
- * 2 when it understood the question but had to refuse it, and 1 when the
- * question is neither, which is the caller's cue to use the model — or, on a
- * calculator with no weights file, to give up. `call` holds the call it made
- * in the first two cases.
+ * 2 when it understood the question but had to refuse it, 3 when the text was
+ * arithmetic the exact engine could not hold (PIPELINE_TOO_LONG, which must not
+ * become a model question), and 1 when the question is neither, which is the
+ * caller's cue to use the model — or, on a calculator with no weights file, to
+ * give up. `call` holds the call it made in the first two cases.
  */
 int pipeline_answer_offline(const char *question, char *answer, int answer_max,
                             char *call, int call_max);

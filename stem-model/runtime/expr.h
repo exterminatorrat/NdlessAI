@@ -18,8 +18,22 @@
  * for this. 48 was enough to differentiate a typed expression; an
  * antiderivative is larger than its integrand and differentiating it back
  * larger again, so the pool is sized for "integrate, then differentiate the
- * result" rather than for one tree. A gexpr_t is 8 bytes a node, so this is
- * 1 KB per tree against 384 bytes before.
+ * result" rather than for one tree.
+ *
+ * What it costs, measured 2026-11-17: a gexpr_t is 1,544 bytes (12 bytes a
+ * node plus the header), and the typed path holds up to three live at once —
+ * the calculus forms nest two (`gexpr_t f;` beside `gexpr_t g;` in the same
+ * frame, and `gexpr_t e;` beside `gexpr_t anti;`) while the caller holds one.
+ * That is about 4.6 KB of the device's stack today. Every one of them is a
+ * function local, so raising this number buys no accuracy that was measured —
+ * no row of the 2,150-row hand-written split is typed arithmetic, and the
+ * runtime's own typed cases top out at five nodes — and pays for it in stack
+ * depth on a machine whose stack this tree does not measure.
+ *
+ * Where the limit actually bites: a flat sum answers at 64 terms (127
+ * characters) and fails at 65 (129). Arithmetic past that point is refused by
+ * pipeline.c rather than handed to the decoder, which would read it as a word
+ * problem and answer with invented numbers.
  */
 #define EXPR_MAX_NODES 128
 

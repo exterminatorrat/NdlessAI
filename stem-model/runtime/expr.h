@@ -83,6 +83,18 @@ int gexpr_parse(const char *text, gexpr_t *e, char *err, int errlen);
 q16_t gexpr_eval(const gexpr_t *e, q16_t x);
 
 /*
+ * The same evaluation, but it says whether the answer is a value at all.
+ *
+ * Q16.16 holds |x| < 32768, and the saturating primitives below turn everything
+ * outside that — an overflow, a division by zero, the root of a negative, the
+ * logarithm of zero — into Q16_MAX, which formats as "32768". A student typing
+ * 9^999, 1/0 or sqrt(-4) got 32768: a confident number for a question with no
+ * answer, which is the failure this program exists to prevent. Returns 0 and
+ * writes `out` when the answer is real, -1 when it is not.
+ */
+int gexpr_eval_checked(const gexpr_t *e, q16_t x, q16_t *out);
+
+/*
  * y' = f(x,y) needs both inputs. gexpr_eval is this with y = 0, so a formula
  * that only mentions x evaluates identically either way.
  */

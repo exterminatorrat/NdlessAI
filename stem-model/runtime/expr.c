@@ -19,12 +19,31 @@
 #define Q24_LN2    11629073	/* ln 2 in Q24.24, for the logarithm series */
 #define LN_Q       24		/* guard bits the logarithm series runs in */
 
+/*
+ * Set whenever an operation had no value in Q16.16: a result outside the range,
+ * a zero divisor, the root of a negative, the logarithm of a non-positive
+ * number. `gexpr_eval_checked` clears it, evaluates, and reads it back, so the
+ * one implementation of each operation serves both the caller that wants a
+ * clamped number (a plotted curve) and the caller that needs to know the number
+ * is not real (a typed answer).
+ */
+static int gq_valueless;
+
+int gexpr_valueless(void)
+{
+	return gq_valueless;
+}
+
 q16_t gq_sat(int64_t v)
 {
-	if (v > Q16_MAX)
+	if (v > Q16_MAX) {
+		gq_valueless = 1;
 		return Q16_MAX;
-	if (v < Q16_MIN)
+	}
+	if (v < Q16_MIN) {
+		gq_valueless = 1;
 		return Q16_MIN;
+	}
 	return (q16_t)v;
 }
 
@@ -35,8 +54,10 @@ q16_t gq_mul(q16_t a, q16_t b)
 
 q16_t gq_div(q16_t a, q16_t b)
 {
-	if (b == 0)
+	if (b == 0) {
+		gq_valueless = 1;
 		return a < 0 ? Q16_MIN : Q16_MAX;
+	}
 	return gq_sat(((int64_t)a << 16) / b);
 }
 
@@ -77,8 +98,10 @@ q16_t gq_tan(q16_t x)
 	q16_t s = gq_sin(x);
 	q16_t c = gq_cos(x);
 
-	if (c == 0)
+	if (c == 0) {
+		gq_valueless = 1;
 		return s < 0 ? Q16_MIN : Q16_MAX;
+	}
 	return gq_div(s, c);
 }
 
@@ -108,8 +131,10 @@ static uint32_t isqrt64(uint64_t v)
 /* Square root of a non-negative Q16.16 value; a negative input has no value. */
 static q16_t gq_sqrt(q16_t x)
 {
-	if (x < 0)
+	if (x < 0) {
+		gq_valueless = 1;
 		return Q16_MAX;
+	}
 	return (q16_t)isqrt64((uint64_t)(uint32_t)x << 16);
 }
 
@@ -127,8 +152,10 @@ static q16_t gq_ln(q16_t x)
 	int64_t m, t, t2, term, sum;
 	int i;
 
-	if (x <= 0)
+	if (x <= 0) {
+		gq_valueless = 1;
 		return Q16_MAX;
+	}
 	while (x < Q16_ONE && k > -40) {
 		x = (q16_t)((uint32_t)x << 1);
 		k--;
@@ -166,8 +193,10 @@ static q16_t gq_exp(q16_t x)
 		term = gq_mul(term, r) / i;
 		sum = gq_sat((int64_t)sum + term);
 	}
-	if (k > 15)
+	if (k > 15) {
+		gq_valueless = 1; /* e^x past the range: no value, not 32768 */
 		return Q16_MAX;
+	}
 	if (k < -16)
 		return 0;
 	if (k >= 0)
@@ -517,8 +546,11 @@ static q16_t qpow(q16_t b, q16_t ex)
 
 	if ((ex & 0xFFFF) == 0) {
 		k = ex >> 16;
-		if (b == 0)
+		if (b == 0) {
+			if (k <= 0)
+				gq_valueless = 1; /* 0^0 and 0^-n have no value */
 			return k > 0 ? 0 : Q16_MAX;
+		}
 		if (k >= -8 && k <= 8) {
 			n = k < 0 ? -k : k;
 			r = Q16_ONE;
@@ -534,10 +566,15 @@ static q16_t qpow(q16_t b, q16_t ex)
 		}
 		return gq_exp(gq_mul(ex, gq_ln(b)));
 	}
-	if (b == 0)
+	if (b == 0) {
+		if (!(ex > 0))
+			gq_valueless = 1;
 		return ex > 0 ? 0 : Q16_MAX;
-	if (b < 0)
+	}
+	if (b < 0) {
+		gq_valueless = 1; /* a negative base has no real power */
 		return Q16_MAX;
+	}
 	return gq_exp(gq_mul(ex, gq_ln(b)));
 }
 
@@ -589,6 +626,14 @@ static q16_t eval_node(const gexpr_t *e, int i, gvars_t v)
 	default:
 		return 0;
 	}
+}
+
+int gexpr_eval_checked(const gexpr_t *e, q16_t x, q16_t *out)
+{
+	gq_valueless = 0;
+	if (out)
+		*out = gexpr_eval(e, x);
+	return gq_valueless ? -1 : 0;
 }
 
 q16_t gexpr_eval(const gexpr_t *e, q16_t x)

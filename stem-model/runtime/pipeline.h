@@ -66,8 +66,24 @@ enum {
 	 * words because it is a different thing from a model failure.
 	 */
 	PIPELINE_TOO_LONG = 2,
+	/*
+	 * The text was arithmetic and the exact engine has no value for it: a
+	 * division by zero, the root of a negative, the logarithm of zero, or a
+	 * result outside the Q16.16 range it computes in. Bounded as it is, the
+	 * engine used to saturate those to 32768 and print it, which is the one
+	 * thing a calculator must never do with a question that has no answer.
+	 */
+	PIPELINE_NO_VALUE = 3,
 	PIPELINE_ERR = -1
 };
+
+/* pipeline_answer_offline's own vocabulary, distinct from the result codes
+ * above because "not mine" is not a verdict about the question. */
+#define PIPELINE_OFFLINE_ANSWERED 0
+#define PIPELINE_OFFLINE_NOT_MINE 1
+#define PIPELINE_OFFLINE_REFUSED 2
+#define PIPELINE_OFFLINE_TOO_LONG 3
+#define PIPELINE_OFFLINE_NO_VALUE 4
 
 int pipeline_init(pipeline_t *p, const char *weights_path, int seq);
 
@@ -112,10 +128,12 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max);
 
 /*
  * Anything answerable with no model: typed arithmetic first, then a typed
- * call ("ff 0.4 500", or the relation's own name). Returns 0 when it answered,
- * 2 when it understood the question but had to refuse it, 3 when the text was
- * arithmetic the exact engine could not hold (PIPELINE_TOO_LONG, which must not
- * become a model question), and 1 when the question is neither, which is the
+ * call ("ff 0.4 500", or the relation's own name). Returns
+ * PIPELINE_OFFLINE_ANSWERED when it answered, PIPELINE_OFFLINE_REFUSED when it
+ * understood the question but had to refuse it, PIPELINE_OFFLINE_TOO_LONG and
+ * PIPELINE_OFFLINE_NO_VALUE for the two kinds of arithmetic the exact engine
+ * cannot answer (neither may become a model question), and
+ * PIPELINE_OFFLINE_NOT_MINE when the question is neither, which is the
  * caller's cue to use the model — or, on a calculator with no weights file, to
  * give up. `call` holds the call it made in the first two cases.
  */

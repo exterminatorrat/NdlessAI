@@ -94,19 +94,32 @@ static int solve_critical_angle(const char *const *args, char *out,
                                 size_t outlen)
 {
 	rat n1, n2;
-	long long n19, n29, a9;
+	long long num, den, s9, g, a9;
 	int rc;
 	char f1[48];
 
 	if ((rc = parse_rat(args[0], &n1, NULL)) != 0 ||
 	    (rc = parse_rat(args[1], &n2, NULL)) != 0)
 		return rc;
-	n19 = to9(&n1);
-	n29 = to9(&n2);
-	if (n19 <= 0 || n29 <= 0 || n29 >= n19)
+	if (!rat_sane(&n1) || !rat_sane(&n2))
+		return -4;
+	/* sin(thc) = n2/n1 at 1e9 scale, taken from the arguments themselves and
+	 * reduced before it is scaled. Scaling the indices to 1e9 first and then
+	 * multiplying by 1e9 overflows a long long once an index passes 9.2, which
+	 * answered 2.968 for critical_angle 150 100 instead of refusing. */
+	num = n2.n * n1.d;
+	den = n1.n * n2.d;
+	g = gcd_ll(num, den);
+	if (g > 1) {
+		num /= g;
+		den /= g;
+	}
+	if (num <= 0 || den <= 0 || num >= den)
 		return -4;	/* no critical angle unless the ray can be trapped */
-	/* sin(thc) = n2/n1, at 1e9 scale. */
-	a9 = asin_deg9(n29 * 1000000000LL / n19, &rc);
+	if (num > 9223372036LL)
+		return -4;	/* the scaled numerator cannot be held at 1e9 */
+	s9 = num * 1000000000LL / den;
+	a9 = asin_deg9(s9, &rc);
 	if (rc != 0)
 		return rc;
 	if ((rc = dec4_render(a9, 1000000000LL, f1, sizeof(f1))) != 0)

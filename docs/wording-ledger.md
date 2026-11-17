@@ -5,7 +5,7 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-59 relations, 13530 structures, 2624 rows (2555 eval), 636 structures refused as unresolvable.
+59 relations, 13476 structures, 2621 rows (2548 eval), 630 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ rows drawn from them.
 | `buffer_ph` | 3 | acid/base | 108 | 12 | 24 | 13 |
 | `calorimetry_c` | 3 | - | 324 | 0 | 58 | 58 |
 | `calorimetry_mass` | 3 | - | 324 | 0 | 67 | 67 |
-| `carnot` | 2 | t_cold/t_hot | 162 | 18 | 23 | 23 |
+| `carnot` | 2 | t_cold/t_hot | 108 | 12 | 20 | 16 |
 | `carnot_efficiency` | 2 | Tc/Th | 108 | 12 | 21 | 16 |
 | `cell_potential` | 2 | e_anode/e_cathode | 144 | 18 | 26 | 26 |
 | `charles` | 3 | T1/T2 | 180 | 18 | 26 | 26 |
@@ -177,7 +177,7 @@ wording, so the fraction is reported here and not in a pull request body.
 - `beat_freq` — 18 of 162 structures (11%): two slots share a dimension and the same unit: f1, f2
 - `boyles` — 36 of 360 structures (10%): two slots share a dimension and the same unit: V1, V2
 - `buffer_ph` — 12 of 108 structures (11%): two slots share a dimension and the same unit: acid, base
-- `carnot` — 18 of 162 structures (11%): two slots share a dimension and the same unit: t_cold, t_hot
+- `carnot` — 12 of 108 structures (11%): two slots share a dimension and the same unit: t_cold, t_hot
 - `carnot_efficiency` — 12 of 108 structures (11%): two slots share a dimension and the same unit: Tc, Th
 - `cell_potential` — 18 of 144 structures (12%): two slots share a dimension and the same unit: e_anode, e_cathode
 - `charles` — 18 of 180 structures (10%): two slots share a dimension and the same unit: T1, T2

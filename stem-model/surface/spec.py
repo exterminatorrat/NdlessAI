@@ -116,8 +116,8 @@ SPECS = {
         "carnot",
         [("t_hot", _slot("hot reservoir temperature", "temperature", "K")),
          ("t_cold", _slot("cold reservoir temperature", "temperature", "K"))],
-        _slot("efficiency", "efficiency", "%"),
-        ("efficiency", "efficiency as a percent"),
+        _slot("efficiency", "efficiency", ""),
+        ("efficiency", "efficiency as a decimal"),
         confusable=("carnot_efficiency",),
     ),
     "carnot_efficiency": _spec(
@@ -665,4 +665,10 @@ BLOCKED_SPECIES = {
     "hydrate_water": "naming the salt would imply its molar masses",
     "heat_reaction": "naming the reaction would imply its enthalpy",
     "gibbs": "naming the reaction would imply its enthalpy and entropy",
+}
+
+# Two names, one quantity, one format. Recorded so the next author sees a synset
+# rather than a duplicate nobody noticed, and so the format test can assert it.
+SYNONYMS = {
+    "carnot": "carnot_efficiency",
 }

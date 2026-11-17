@@ -19,21 +19,38 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 
 from relations import RELATIONS  # noqa: E402
+from relations.param_units import UNITS  # noqa: E402
 from tokenizer import REL_BASE  # noqa: E402
 
 DEFAULT_HEADER = os.path.join(ROOT, "runtime", "reltable.h")
 
 
+def units_of(name):
+    """The space-separated slot units for one relation, "-" where none."""
+    arity = len(RELATIONS[name].params)
+    units = UNITS.get(name, ("-",) * arity)
+    if len(units) != arity:
+        raise SystemExit("param_units.py: %s declares %d units for %d arguments"
+                         % (name, len(units), arity))
+    return " ".join(units)
+
+
 def rows():
-    """(name, arity, id, subject, params) per relation, in tokenizer id order.
+    """(name, arity, id, subject, params, units) per relation, in id order.
 
     `subject` and `params` are for the screen, not the decoder: they are what
     the solve-by-formula picker lists and the labels it prompts with. They ride
     in this table rather than a second one so a new relation cannot be added to
-    the decoder and left out of the picker.
+    the decoder and left out of the picker. `units` is what quantity.c checks
+    each argument against, for the same reason.
     """
+    unknown = sorted(set(UNITS) - set(RELATIONS))
+    if unknown:
+        raise SystemExit("param_units.py names unknown relations: %s"
+                         % ", ".join(unknown))
     return [(name, len(RELATIONS[name].params), REL_BASE + i,
-             RELATIONS[name].subject, " ".join(RELATIONS[name].params))
+             RELATIONS[name].subject, " ".join(RELATIONS[name].params),
+             units_of(name))
             for i, name in enumerate(sorted(RELATIONS))]
 
 
@@ -66,14 +83,17 @@ def render(rows):
         "\t * argument names in order, space-separated. */",
         "\tconst char *subject;",
         "\tconst char *params;",
+        "\t/* The unit each argument must be in, space-separated, \"-\" for",
+        "\t * none: what quantity.c checks the question's units against. */",
+        "\tconst char *units;",
         "} rel_row_t;",
         "",
         "#ifdef RELTABLE_IMPL",
         "const rel_row_t rel_rows[REL_NUM_RELATIONS] = {",
     ]
-    for name, arity, idx, subject, params in rows:
-        lines.append('\t{"%s", %d, %d, "%s", "%s"},' % (name, arity, idx, subject,
-                                                        params))
+    for name, arity, idx, subject, params, units in rows:
+        lines.append('\t{"%s", %d, %d, "%s", "%s", "%s"},'
+                     % (name, arity, idx, subject, params, units))
     lines += [
         "};",
         "#else",

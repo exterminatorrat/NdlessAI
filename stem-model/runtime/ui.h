@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "pipeline.h"
+#include "reltable.h"
 #include "screen.h"
 
 /*
@@ -52,14 +53,25 @@
 #define UI_CALL_MAX   128
 /* The three steps of solve by formula: subject (or course), relation,
  * arguments. The course list reuses the first step rather than adding a
- * fourth: same depth, same screen, same tests. */
+ * fourth: same depth, same screen, same tests. Finding a relation by name is
+ * not a step either: it is the second step with the whole catalogue loaded and
+ * the input line live, so the two routes share the list, the keys and the
+ * scroll. */
 #define UI_TMPL_STEP_SUBJECT  0
 #define UI_TMPL_STEP_RELATION 1
 #define UI_TMPL_STEP_ARGS     2
 
 #define UI_TMPL_ARGS  6
 #define UI_TMPL_ARG   16
-#define UI_TMPL_ROWS  64
+/* As long as the catalogue, so a name find can never hide a match behind the
+ * end of the list. 64 is the floor for a build whose table is smaller. */
+#define UI_TMPL_ROWS  (REL_NUM_RELATIONS > 64 ? REL_NUM_RELATIONS : 64)
+/* The finder's query, kept while the arguments are being typed: the input
+ * line is the number field there, so the filter has to live somewhere else. As
+ * long as the line, so nothing the line accepted is lost on the way back. */
+#define UI_FIND_Q     UI_INPUT_MAX
+/* One line of feedback, drawn in the pane and never in the key hints. */
+#define UI_TMPL_NOTE  40
 
 typedef enum {
 	UI_KEY_NONE, UI_KEY_ACCEPT, UI_KEY_BACK, UI_KEY_UP, UI_KEY_DOWN,
@@ -134,6 +146,14 @@ typedef struct {
 	int tmpl_top;
 	int tmpl_subject;
 	int tmpl_by_course;
+	/* The relation list is the name finder: the input line filters it, and
+	 * the query is kept across the argument prompts so backing out of them
+	 * returns to the list the student narrowed rather than to the catalogue. */
+	int tmpl_find;
+	char tmpl_find_q[UI_FIND_Q];
+	/* Why the last key did nothing, or empty. Drawn in the pane; the footer
+	 * keeps saying which keys do what while it shows. */
+	char tmpl_note[UI_TMPL_NOTE];
 	int tmpl_count;
 	int tmpl_rel;
 	int tmpl_arg;

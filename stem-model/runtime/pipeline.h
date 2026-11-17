@@ -39,11 +39,25 @@ typedef struct {
 	int ready;
 	int n_alts;
 	pipeline_alt_t alts[PIPELINE_ALTS];
+	/*
+	 * How close the runner-up relation may come before the call is refused
+	 * rather than printed, in the same units as pipeline_alt_t.margin. Zero
+	 * disables the check, which is what every path that answers without the
+	 * model does anyway: nothing was weighed, so there is nothing to doubt.
+	 * The value is a calibrated constant in pipeline.c, and it is a field so a
+	 * test can sweep it.
+	 */
+	int32_t margin_min;
 } pipeline_t;
 
 enum {
 	PIPELINE_OK = 0,
-	PIPELINE_UNCERTAIN = 1,  /* call produced, but arguments not in the text */
+	/*
+	 * A call was produced and refused: its arguments are not all numbers the
+	 * question wrote, or the relation it named was too close to its runner-up
+	 * for the decode to have meant it.
+	 */
+	PIPELINE_UNCERTAIN = 1,
 	PIPELINE_ERR = -1
 };
 

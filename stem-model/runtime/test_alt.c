@@ -152,6 +152,68 @@ static void expect_model_answer(const char *question)
 	}
 }
 
+/*
+ * A call the decode barely chose is refused instead of printed, and the list it
+ * was weighed in is still there behind the refusal so the screen can show the
+ * two relations that were in play.
+ *
+ * The threshold lives in the pipeline object, which is how the value in
+ * pipeline.c was calibrated: sweep the field, read the split.
+ */
+static void expect_margin_gate(void)
+{
+	const char *question = "What is the kinetic energy of a 5 kg object at 3 m/s?";
+	char answer[256], call[256];
+	int32_t wanted = p.margin_min;
+
+	p.margin_min = 1;
+	if (pipeline_answer(&p, question, answer, (int)sizeof answer,
+	                    call, (int)sizeof call) != PIPELINE_OK) {
+		printf("FAIL a margin nothing can reach must not refuse\n");
+		failures++;
+	}
+
+	/* Above every gap this model produces: everything weighed is a guess. */
+	p.margin_min = 0x7FFFFFFF;
+	call[0] = '\0';
+	if (pipeline_answer(&p, question, answer, (int)sizeof answer,
+	                    call, (int)sizeof call) != PIPELINE_UNCERTAIN) {
+		printf("FAIL a margin nothing can clear must refuse\n");
+		failures++;
+	}
+	if (answer[0] != '\0' || strncmp(call, "CALL ", 5) != 0) {
+		printf("FAIL a refusal keeps no answer but keeps its call: \"%s\" / \"%s\"\n",
+		       answer, call);
+		failures++;
+	}
+	{
+		pipeline_alt_t alts[ROOM];
+		int n = pipeline_alternatives(&p, alts, ROOM);
+
+		if (n != PIPELINE_ALTS || alts[0].margin != 0) {
+			printf("FAIL a refused call still ranks its alternatives\n");
+			failures++;
+		}
+	}
+
+	/* Nothing was weighed for these, so the threshold cannot reach them. */
+	if (pipeline_answer(&p, "2+2", answer, (int)sizeof answer,
+	                    call, (int)sizeof call) != PIPELINE_OK) {
+		printf("FAIL closed forms answer whatever the margin threshold is\n");
+		failures++;
+	}
+
+	/* Zero turns the check off, which is what a build without the field set
+	 * behaves as. */
+	p.margin_min = 0;
+	if (pipeline_answer(&p, question, answer, (int)sizeof answer,
+	                    call, (int)sizeof call) != PIPELINE_OK) {
+		printf("FAIL zero disables the margin check\n");
+		failures++;
+	}
+	p.margin_min = wanted;
+}
+
 static void expect_none(const char *text)
 {
 	char answer[256], call[256];
@@ -195,6 +257,8 @@ int main(int argc, char **argv)
 
 	/* Every closed form answers before the model runs, so the list has to be
 	 * empty even though the two questions above filled it. */
+	expect_margin_gate();
+
 	expect_none("2+2");
 	expect_none("det([1,2;3,4])");
 	expect_none("d/dx(x^3)");

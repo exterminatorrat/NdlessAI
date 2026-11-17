@@ -12,7 +12,7 @@ VEC_OFF := $(shell $(CC) -fno-vectorize -fno-slp-vectorize -x c -c /dev/null \
 	echo -fno-tree-vectorize -fno-tree-slp-vectorize)
 BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
-HEADERS = bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
+HEADERS = coursetable.h bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 	  graph.h expr.h equation.h callmask.h reltable.h matrix.h steps.h \
 	  steptable.h screen.h ui.h
 
@@ -26,7 +26,7 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # before any of them runs.
 PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c \
 	   diagram.c expr.c callmask.c matrix.c grounding.c shorthand.c plan.c \
-	   repair.c steps.c
+	   repair.c steps.c coursemap.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \

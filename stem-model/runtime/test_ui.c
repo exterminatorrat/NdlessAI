@@ -16,6 +16,7 @@
 #include "pipeline.h"
 #include "screen.h"
 #include "ui.h"
+#include "coursetable.h"
 #include "diagram.h"
 #include "reltable.h"
 
@@ -36,6 +37,7 @@ static int failures;
 static void test_diagram_screen(void);
 static void test_plot_key(void);
 static void test_template(void);
+static void test_course_picker(void);
 static void check(int cond, const char *what)
 {
 	if (!cond) {
@@ -147,7 +149,7 @@ static void test_menu(void)
 	check(u.menu_sel == 1, "down moves the selection");
 	for (int i = 0; i < 10; i++)
 		ui_key(&u, UI_KEY_DOWN);
-	check(u.menu_sel == 4, "down at the bottom stops at the bottom");
+	check(u.menu_sel == 5, "down at the bottom stops at the bottom");
 
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_MODE);
@@ -164,7 +166,7 @@ static void test_menu(void)
 	check(u.mode == UI_MODE_GRAPH, "the graph screen is its own mode");
 
 	ui_init(&u, NULL, NULL);
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 		ui_key(&u, UI_KEY_DOWN);
 	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_BACK, "the menu can leave the app");
 	check(ui_key(&u, UI_KEY_BACK) == UI_KEY_BACK, "back from the menu leaves the app");
@@ -930,6 +932,97 @@ static void test_template_multi_argument(void)
 	}
 }
 
+
+/* True when a course's map lists that relation id. */
+static int course_has_rel(int course, int rel_id)
+{
+	const crs_course_t *row = &crs_courses[course];
+
+	for (int i = 0; i < row->num_units; i++) {
+		const crs_unit_t *unit = &crs_units[row->first_unit + i];
+
+		for (int j = 0; j < unit->num_topics; j++)
+			if (crs_topics[unit->first_topic + j].rel == rel_id)
+				return 1;
+	}
+	return 0;
+}
+
+/*
+ * The course route: the same three-step flow entered on a course rather than a
+ * subject. What the map records as a gap, or as work the typed engine answers,
+ * must not be offered here as something to call, and the flat catalogue has to
+ * stay reachable from the menu for a student who does not know their course.
+ */
+static void test_course_picker(void)
+{
+	int bc = -1, precalc = -1;
+
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 4; i++)
+		ui_key(&u, UI_KEY_DOWN);         /* By course */
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.mode == UI_MODE_TMPL, "the course route opens the picker");
+	check(u.tmpl_step == UI_TMPL_STEP_SUBJECT, "on the first list");
+	check(u.tmpl_by_course == 1, "and it is the course list, not the subjects");
+	render();
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the courses are drawn");
+
+	for (int i = 0; i < CRS_NUM_COURSES; i++) {
+		if (strcmp(crs_courses[i].code, "ap-calc-bc") == 0)
+			bc = i;
+		if (strcmp(crs_courses[i].code, "ap-precalc") == 0)
+			precalc = i;
+	}
+	check(bc >= 0, "AP Calculus BC is in the table");
+	check(precalc >= 0, "AP Precalculus is in the table");
+
+	/* AP Calculus BC's topics are all typed-engine work, so the course
+	 * offers no call at all, and accepting the empty list must not crash. */
+	ui_key(&u, UI_KEY_BACK);
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 4; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	for (int i = 0; i < bc; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	check(u.tmpl_sel == bc, "the selection walks to that course");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "choosing a course stays put");
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "and shows its relations");
+	check(u.tmpl_count == 0, "of which AP Calculus BC has none to call");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE,
+	      "accepting an empty list is not a crash");
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "an empty list stays on the list");
+
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_SUBJECT, "back returns to the courses");
+	check(u.tmpl_by_course == 1, "still on the course list");
+
+	/* Now a course that does offer calls. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 4; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	for (int i = 0; i < precalc; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_count > 0, "AP Precalculus offers relations to call");
+	render();
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "its relations are drawn");
+	for (int i = 0; i < u.tmpl_count; i++)
+		check(course_has_rel(precalc, rel_rows[u.tmpl_rels[i]].id),
+		      "every row offered belongs to that course's map");
+	check(course_has_rel(precalc, rel_rows[u.tmpl_rels[0]].id),
+	      "and the first row is one of them");
+
+	/* The flat catalogue is still one menu press away. */
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_DOWN);            /* Solve by formula */
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_by_course == 0, "Solve by formula still opens the subject list");
+	check(u.mode == UI_MODE_TMPL, "and still reaches the picker");
+}
+
 int main(void)
 {
 	test_menu();
@@ -943,6 +1036,7 @@ int main(void)
 	test_diagram_screen();
 	test_plot_key();
 	test_template();
+	test_course_picker();
 	test_template_multi_argument();
 	test_graph_mode();
 	test_graph_returns_to_answer();

@@ -158,6 +158,26 @@ static int has_model(const ui_t *u)
 	return u->p && u->p->ready;
 }
 
+/*
+ * Whether the weights were exported with the tokenizer this build carries.
+ *
+ * The weights header records the shape of the model and the size of the
+ * vocabulary it was trained with, and nothing else about the text side: there
+ * is no tokenizer hash in the file to compare against BPE_SOURCE_SHA. The
+ * vocabulary size is a consequence of the tokenizer, though, and this build's
+ * is fixed at compile time, so two sizes that differ prove the pair does not
+ * belong together -- the ids the tokenizer emits and the rows the model holds
+ * were numbered by two different vocabularies.
+ *
+ * The reverse does not hold: two tokenizers of the same size produce the same
+ * number here and different text, so an agreeing size is not evidence of a
+ * match and no screen claims one.
+ */
+static int weights_mismatch(const ui_t *u)
+{
+	return has_model(u) && u->p->model.vocab != BPE_VOCAB_SIZE;
+}
+
 /* The screens with an input line: the graph screen is the same one in another
  * mode, so it draws and edits through the same rows, and the name finder is the
  * relation list with the line live above it. */
@@ -448,6 +468,35 @@ void ui_result(ui_t *u, const char *question, int rc,
 		} else {
 			copy_trunc(src, sizeof src, answer ? answer : "");
 		}
+	} else if (weights_mismatch(u)) {
+		/*
+		 * The one refusal this screen can name. The weights carry a vocabulary
+		 * this build's tokenizer did not produce, so every call that comes back
+		 * is read from rows belonging to different tokens, and none of the
+		 * messages below would be true of the student's question.
+		 *
+		 * This is asked before the pipeline's own verdict for that reason: a
+		 * mismatched pair arrives here as an unreadable call, as a call that
+		 * looks uncertain, or as nothing at all, and all three mean the same
+		 * thing. The fix is a file, not a rewording.
+		 */
+		char vocab[192];
+
+		snprintf(vocab, sizeof vocab,
+		         "The file holds a vocabulary of %d;\n"
+		         "the tokenizer compiled into this\n"
+		         "build produces %d. Put the matching\n"
+		         "weights.bin.tns beside the program.\n",
+		         u->p->model.vocab, BPE_VOCAB_SIZE);
+		put(&at, end, "These weights do not match this build.\n");
+		put(&at, end, "It produced:\n");
+		if (call && call[0]) {
+			put(&at, end, call);
+			put(&at, end, "\n");
+		} else {
+			put(&at, end, "(nothing)\n");
+		}
+		put(&at, end, vocab);
 	} else if (rc == PIPELINE_UNCERTAIN) {
 		/*
 		 * The model found a relation but used numbers the question does not
@@ -479,9 +528,11 @@ void ui_result(ui_t *u, const char *question, int rc,
 		}
 	} else {
 		/*
-		 * The generated call is the only visible symptom of the failure a
-		 * tokenizer mismatch produces: a call the solver cannot read. Show it
-		 * rather than a bare apology.
+		 * The ordinary refusal: the decode named nothing this build can run,
+		 * because the question maps to no relation in the catalogue or because
+		 * it arrived short of the numbers that relation takes. The call above is
+		 * still the best diagnostic on the screen, so it stays; the sentence
+		 * under it says what happened and where to look next.
 		 */
 		put(&at, end, "I could not read that as a problem.\n");
 		put(&at, end, "It produced:\n");
@@ -491,9 +542,10 @@ void ui_result(ui_t *u, const char *question, int rc,
 		} else {
 			put(&at, end, "(nothing)\n");
 		}
-		put(&at, end, "If that text looks garbled or empty,\n"
-		              "this build's tokenizer does not match\n"
-		              "the model the weights came from.\n");
+		put(&at, end, "Not a call this build can run. Name the\n"
+		              "relation yourself, like fri 0.4 500,\n"
+		              "or open Find a relation to see the\n"
+		              "ones it has.\n");
 	}
 	if (rc != PIPELINE_OK) {
 		char *nl = strchr(src, '\n');

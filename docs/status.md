@@ -4,23 +4,27 @@ Where the project stands, what was planned, and what is left. Read this first
 when resuming work; it is the map, and `stem-model/PROGRESS.md` is the
 per-relation ledger.
 
-Last updated: 2026-11-17, at commit `fcb5e1c`.
+Last updated: 2026-11-18, at commit `cc4b8505`. Every figure below names the set
+it was measured on, because two figures with the same name and different sets
+cannot be compared — and this page has already carried one that no tree on the
+machine could reproduce.
 
 ## One paragraph
 
 The system reads an English word problem, a 5.2M-parameter model picks one of
 171 exact solvers, and C code computes the answer. Waves 1 through 3 are on
-master: 171 relations across ten subject tags, the typed expression path for
-calculus and linear algebra, and the wording work that took hand-written
-accuracy from 43.4% to 72.3%. On 500 held-out rows the model reads 90.2% exact
-with 3.2% wrong relation, and on 1,052 rows whose wording never appears in
-training it reads 98.4% exact against 98.5% on ordinary wording from the same
-weights. The catalogue no longer starves its own vocabulary: at 640 entries it
-keeps 208 BPE merges at 171 relations, where 512 entries had 101 at 150 —
-`docs/tier1-plan.md` carries that measurement and `docs/waves.md` the earlier
-one. The device app
-builds to `stemhelp.tns`. The one thing never done is running it on a physical
-calculator, and it takes Ndless on a supported OS to get that far.
+master. Two seeds per arm, measured on 2026-11-18: **89.8% exact on the 2,000-row
+generated held-out gate** (90.0 and 89.6), and **70.9% exact on the 2,150-row
+calibrated hand-written split** (72.2 and 69.6), both through `runtime/main_device`.
+Every course floor passes on the rows it was calibrated on. Four wording and
+argument-selection ideas were measured and closed the same day — corpus
+composition, minimal-pair contrast rows, register breadth and slot-cue
+selection — so the remaining levers are capacity and the domain gap, not
+phrasing (`docs/closed-lines.md`). On the real College Board AP Chemistry bank
+the app names a correct call for **1 of 19 readable rows**, and the bank's own
+shape caps trustworthy single-call rows at **28 of 1,136**; that limit is
+multi-step questions, not wording. The device app builds to `stemhelp.tns`, and
+the one thing never done is running it on a physical calculator.
 
 ## What works today
 
@@ -28,13 +32,59 @@ calculator, and it takes Ndless on a supported OS to get that far.
 |---|---|---|
 | 171 relations, Python reference | done | `sh stem-model/gate.sh` |
 | 171 relations, C solvers | done | eleven per-subject units; `test_solvers` reports 14,180 assertions on every run |
-| Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
-| Model picks the right tool | done, and the current limit | 76.8% exact call on the hand-written split, now 2,150 questions over 171 relations (the figure was measured when it was 2,078 over 135); 93.7% exact and 2.4% wrong relation on the 2,000-row generated gate, both `weights_640_s2fin.bin`, both through `runtime/main_device`; 60/60 through the full on-device path |
+| Model picks the right tool | done, and the current limit | 70.9% exact on the 2,150-row calibrated hand-written split, r7 two-seed mean (72.2 / 69.6); 89.8% exact on the 2,000-row generated gate (90.0 / 89.6); both through `runtime/main_device`. Seed 1 of the r5 pair splits the same 2,150 rows as 74.0% exact, 15.3% right relation with wrong arguments, 10.7% wrong relation and 1 refusal |
+| Course floors | done | each scores its own calibrated set: AP Precalculus 71.4% of 561 rows against a 61.6 floor, SAT/ACT maths 73.25% of 516 against 67.2, intro physics and chemistry 71.15% of 776 against 64.2, r7 two-seed means. A set the floor was not calibrated on is refused unless `--allow-drift` is passed |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
-| Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9 and `d/dx`, `det`, `inv`, `rank`, `solve` answer on exact rationals; `integrate(x^2)` answers `x^3/3 + C`, `series(exp(x),0,5)` a Taylor polynomial, `ode(2y,0,1,1,64)` a numerical solution and `desolve(2y,0,1)` its closed form `exp(2x)` |
+| Abstention on a close call | done | a relation margin under 500 fixed-point units answers "uncertain": 22 rows caught and 7 lost over the 4,300 hand-written rows (2,150 × 2 seeds), 3.1:1 at 76% precision; the 4,000-row generated control catches 1 and loses 1 |
+| Honest refusals | done | four outcomes the screen tells apart, each asserted on the framebuffer: uncertain, arithmetic past the exact engine's node pool, arithmetic with no value, and weights whose vocabulary disagrees with the build's. The old screen blamed the tokenizer on every refusal |
+| Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9 and `d/dx`, `det`, `inv`, `rank`, `solve` answer on exact rationals; `integrate(x^2)` answers `x^3/3 + C`, `series(exp(x),0,5)` a Taylor polynomial, `ode(2y,0,1,1,64)` a numerical solution and `desolve(2y,0,1)` its closed form `exp(2x)`. Arithmetic the exact engine cannot hold, or has no value for, refuses by name instead of saturating to 32768 |
+| Find a relation, fill its slots, reuse the answer | done | typing narrows the 171-name catalogue live; the relation's own formula sits above one prompt per argument; each prompt names the unit the phrasing bank states (`v0 (m/s)`, 124-row table in `runtime/unitstable.h`); `TAB` fills a slot with the previous answer. No model on this path, so it cannot be wrong |
 | Function graphing | done | `test_graph`, merged in PR #8 |
 | Device build | done | `stemhelp.tns` and `weights.bin.tns`, cross-compiled for `arm926ej-s` |
 | On-calculator run | **not done** | no hardware in the build environment, and it needs Ndless on a supported OS |
+
+## The honest limit on real exam questions
+
+This is the one measurement the project has that the phrasing bank did not write,
+and it is small on purpose.
+
+- **The bank.** 1,136 multiple-choice items and 202 free-response prompts in
+  1,159 lettered parts. **85 of 2,295 items are answerable today (3.7%)**, or 86
+  of 2,079 (4.1%) against the judged denominator left after OCR resolved 89 of
+  the 301 items whose options extraction had lost.
+- **The frozen slice.** 630 held-out ids, pinned to a file. 28 of them carry a
+  relation the catalogue can name, and **19 fit inside the 192-token window**;
+  the other 9 run 197 to 354 tokens and are unmeasurable, not wrong.
+- **The number.** **5.3% of those 19 rows** — one correct call in 19, averaged
+  over the two seeds; the r5 pair read 2/19 on seed 1 and 0/19 on seed 2 — against
+  70.9% on our own 2,150-row hand-written split. It is unchanged across the r5,
+  r6 and r7 arms.
+- **The cap.** A hand read of the 70 bank rows that survive a mechanical gate
+  finds **28 trustworthy single-call rows of 1,136**, 25 of which fit the
+  192-token window. No amount of wording work grows this measurement past 28
+  rows, so the slice is a directional test rather than a resolved one.
+- **Why, and it is not wording.** 23 of those 70 rows need a second computation,
+  9 name the wrong quantity, 6 need a tabulated constant the row does not carry
+  and 3 have no relation at all; bank-wide, 835 of 1,136 items name no catalogue
+  relation and 51 name two or more. The window costs 11% of the 28 single-call
+  rows. **AP Chemistry items are two- and three-step problems, and this app
+  answers one call.**
+- **The lexicon gap is real but smaller than the table looks.** 7 of the 19 rows
+  express every slot their call needs; 12 miss something. Five need chemistry the
+  contract expects as an argument — a molar mass from a named compound, ions per
+  formula unit, a mole ratio from a balanced equation. Two need a table that is
+  not in the row. The rest is notation — state symbols, the degree sign, `1.0 M`
+  — that the shipped 640-id vocabulary already spends 2 to 6 tokens on, so **no
+  tokenizer change is needed for any of it**.
+
+What would move the number, in the order the evidence supports: composition
+reasoning (a compound table and formula parser, which unblocks 5 of the 19
+blocking rows), multi-step composition (catalogue entry A3, where 23 of the 70
+gated rows sit), and capacity. More words do not: every wording lever was closed
+by measurement in [`closed-lines.md`](closed-lines.md). More rows from a
+different source is a sourcing decision rather than an engineering one, and the
+sourcing study has the number behind it — College Physics is 28% single-step
+against this bank's 2.6%.
 
 ## The relation set
 
@@ -63,12 +113,15 @@ Adding relations is not free: each one renumbers the vocabulary and forces a
 retrain, which is why a catalogue change is never a source-only pull. What the
 retrain costs in accuracy is now measured rather than assumed: 84, 90 and 102
 relations read 95.0%, 94.2% and 90.5% on the generated gate, 136 relations
-read 90.3%, and 153 relations read 90.2% on 500 held-out rows. Each of those
-figures is a measurement at the catalogue size it names, not a statement about
-the 171 relations the catalogue holds today. Two seeds of identical data
-differ by up to 15 points on that probe, so a single run is a sample rather
-than a property; `docs/tier1-plan.md` records the spread and what fixed it.
-`docs/waves.md` holds the table and the protocol behind it.
+read 90.3%, 153 relations read 90.2% on 500 held-out rows, and 171 relations
+read 91.2% and 90.2% on the 2,000-row gate. Each of those figures is a
+measurement at the catalogue size and on the set it names, not a statement about
+the 171 relations the catalogue holds today. Two seeds of identical data differ
+by up to 15 points on that 500-row probe at the 512-entry vocabulary and by 3.4
+points at 640, so a single run is a sample rather than a property. Two seeds per
+arm is the rule; `docs/tier1-plan.md` records the spread and what changed it, and
+`docs/waves.md` holds the protocol.
+
 ## The tiers, and where each stands
 
 `ROADMAP.md` holds the full reasoning. This is the scoreboard.
@@ -94,39 +147,64 @@ equation — and stopped at the boundary where honest refusal beats a guess.
 Ordered by how much they matter, not by how easy they are.
 
 1. **Never run on hardware.** The app cross-compiles, links for `arm926ej-s`,
-   and packages into a `.tns` — the recipe is in `development.md` — but no one has run it on a CX II. Timing,
-   memory pressure, and the actual UI are unmeasured — the 4.5 screen and the
-   4.6 plots are asserted by host tests over a 320x240 framebuffer, which proves
-   the values and the layout arithmetic, not that they read well on glass. This
-   is the largest unknown in the project. It also needs Ndless installed and
-   matching the OS — see "Why the calculator refuses the file" below.
-2. **The model is out of capacity, not out of data or steps.** Hand-written
-   accuracy sits at 72.3% and moved inside the noise across 84, 90 and 102
-   relations (72.6%, 73.8%, 72.3%) while the generated gate fell from 95.0% to
-   90.5%. Four rounds of wording data flattened at round three; round four is
-   parked on a branch. The next lever is a wider model, which costs answer time
-   on a 132 MHz ARM9, or argument verification in the runtime, which is code
-   rather than data. Neither is decided.
-3. **Hand-written accuracy is not a gate.** `gate.sh` gates generated phrasing
-   at 80% and wrong relation at 5%, both on the generated set; its own line runs
-   `evaluate.py --limit 1000` over the first 1,000 rows and reads 92.9% exact and
-   2.6% wrong relation on the current checkpoint, which is the same gate as
-   93.0%/2.4% over 2,000 rows on a different sample with a different tool, not a
-   regression. Nothing fails a build when the number a student experiences gets
-   worse, which is why every wording comparison in this project is quoted with
-   the set it came from.
-4. **`sig_figs` is the weakest relation** by exact calls. Every failure is a
+   and packages into a `.tns` — the recipe is in `development.md` — but no one
+   has run it on a CX II. Timing, memory pressure, and the actual UI are
+   unmeasured. The screens are asserted by host tests over a 320x240 framebuffer
+   — the 4.5 screen, the 4.6 plots, and the 2026-11-18 interface additions (the
+   finder, the formula above the slots, the unit hints, the four refusal
+   branches) — which proves the values and the layout arithmetic, not that they
+   read well on glass. This is the largest unknown in the project. It also needs
+   Ndless installed and matching the OS — see "Why the calculator refuses the
+   file" below.
+2. **The ceiling on real exam questions is the bank's shape, not our wording.**
+   One correct call in 19 readable rows, a hard cap of 28 trustworthy single-call
+   rows, and 23 of the 70 answerable-looking rows needing a second computation —
+   see "The honest limit on real exam questions" above. The capability that
+   moves it is a multi-step tape (A3 in `docs/capabilities.md`), not another
+   wording round.
+3. **The model is short of capacity, and every cheap lever is spent.** Corpus
+   composition bought +0.45 points against a 2.6-point seed spread; contrast
+   rows were flat on 333 held-out rows of the same eight pairs; register breadth
+   moved the drift cohort from 41.6% to 47.6% on held-out structures while
+   accuracy stayed flat; slot-cue selection lost 77 rows (74.0% → 70.5%). On
+   long questions the failure is a choice among the numbers that are present,
+   not an invented one: wrong argument values that appear somewhere in the
+   question rise from 55% at 1–16 tokens to 79% at 25–32. The two levers left
+   are capacity, which costs answer time on a 132 MHz ARM9, and argument
+   verification in the runtime, which is code rather than data. Neither is
+   decided, and neither should be chosen before the device's answer time is
+   measured rather than estimated.
+4. **Hand-written accuracy is gated per course, not in aggregate.** `gate.sh`
+   gates generated phrasing at 80% and wrong relation at 5% over `evaluate.py
+   --limit 1000` on the held-out generated set, and then runs three corpus
+   gates: `generated structures still hard` over the drift cohort, a
+   per-relation floor (`--max-thin 12`), and a per-course floor that scores each
+   course's own calibrated rows and fails a build when one regresses. What is
+   still not gated is the aggregate hand-written number — a loss spread thinly
+   enough to stay inside every course floor's slack would pass — and the AP
+   Chemistry slice, which no gate reads. That is why every comparison in this
+   project is quoted with the set it came from.
+5. **The window costs 11% of the real bank's single-call rows.** 3 of the 28
+   exceed 192 tokens, and 9 of the 19 readable rows in the frozen slice run 197
+   to 354 tokens. Raising the window is a retrain at `--seq 384` with attention
+   cost ×4 per layer; it buys coverage of those rows and nothing on accuracy.
+6. **`sig_figs` is the weakest relation** by exact calls. Every failure is a
    digit-copying error on a 4-digit number (`4188` becomes `418`). The guard
    rejects all of them, so the user sees "uncertain" rather than a wrong
    answer, but coverage is lost.
-5. **`proj_range` is the largest single error class** among wrong-relation
-   cases (25 of 66 in a 2,000-problem diagnostic on the 66-relation set). It
-   passes the gate but is the most confusable relation.
-6. **Digit copying generally.** The dominant failure mode is copying a
-   plausible number from a distractor rather than choosing the wrong relation.
-   The guard trades coverage for correctness by design.
-7. **Closed phrasing set.** The phrasing banks are broad but finite.
-   Performance on wording outside them is the main accuracy unknown.
+7. **`proj_range` is the largest single confusion** among wrong-relation cases
+   (25 of 66 in a 2,000-problem diagnostic on the 66-relation set), but
+   confusions are diffuse rather than concentrated: on the 287 hand-written rows
+   at 25+ tokens there are 57 wrong-relation errors and the largest single pair
+   occurs twice. No targeted fixture will fix them.
+8. **Refusal is rare, so the model does not bail out on a hard question.** One
+   row in 2,150 refuses across both seeds; long rows fail by answering wrongly.
+   Any future argument-level rule has to beat that ratio, not merely improve
+   its own predictor.
+9. **The bank is the only independent test, and it is mostly unanswerable.**
+   Every other number in this project is measured on phrasings written by the
+   same process that wrote the solvers. That is worth stating plainly whenever a
+   number is quoted as evidence about real students.
 
 ## How to verify the recorded state
 
@@ -137,6 +215,18 @@ sh stem-model/gate.sh
 It prints PASS or FAIL per gate and exits non-zero unless all pass. If a
 section is marked done in `PROGRESS.md` but its gate fails, the record is
 wrong: set it back to `pending` and fix it before continuing.
+
+The course floors score the 2,150 rows they were calibrated on, by default:
+
+```sh
+cd stem-model && python3 report_relations.py --course-floor
+```
+
+Scoring any other set against them is refused without `--allow-drift`, because a
+floor whose denominator moves is not a floor. The same rule applies to the
+training mix: `make_dataset.py`'s `injected_rows()` fills the hand-written share
+exactly rather than rounding it down, so a corpus that grows cannot quietly
+inject fewer real questions.
 
 ## How to build and deliver the calculator app
 
@@ -166,7 +256,10 @@ uv run --with torch --with numpy --with sympy python export_model.py \
 **The pairing is the trap.** A stale `weights.bin` with a fresh `bpe.h`
 compiles cleanly and produces garbage calls, which looks exactly like a broken
 model. The `tokenizer` target in `device/Makefile` regenerates `bpe.h` on every
-build for this reason. Check `check_tokenizer_sync.py` if calls look wrong.
+build for this reason. Check `check_tokenizer_sync.py` if calls look wrong. A
+regenerated header discarded during a revert leaves the built binary on the old
+vocabulary, which is how one floor run read 2.1%: restore the header and rebuild
+before measuring anything.
 
 ## Why the calculator refuses the file
 
@@ -193,7 +286,9 @@ Two things must be true before the app will open:
 `weights.bin.tns` will always produce that message if opened, because it is the
 model's raw bytes renamed to a `.tns` extension so TI's transfer software will
 accept it. Place it in the same folder as `stemhelp.tns` and leave it alone; the
-app loads it from disk on startup.
+app loads it from disk on startup. If the weights were built from a different
+tokenizer, the app now says so and names both vocabulary sizes rather than
+blaming the question.
 
 ## Conventions that are easy to get wrong
 
@@ -204,9 +299,13 @@ app loads it from disk on startup.
 - **Never hand-write expected solver values.** Generate the C test cases from
   the Python reference. `dec()` rounding and rational formatting are the usual
   source of mismatch.
-- **Every fifth phrasing is held out**, spread through the list rather than
-  taken from the end, so the held-out set is not systematically the strangest
-  wording.
+- **The split is a hash, not a position.** `evaluate_paraphrase.py` holds out the
+  rows whose `sha256("relation|question")` sorts highest, so no regeneration can
+  shuffle a row between halves. The older "every fifth phrasing" rule described
+  `surface.py`'s index list and no longer describes the paraphrase corpus.
 - **The accuracy gate reads the percentage column**, not the count column. It
   evaluates 1,000 held-out problems; smaller samples are noisy enough to flip
   the verdict.
+- **A measurement is not a number until it names its environment.** The weights
+  file, the tokenizer and the corpus it was scored on are part of every figure;
+  a figure without them cannot be reproduced, and one on this page could not be.

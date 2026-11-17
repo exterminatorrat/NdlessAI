@@ -8,36 +8,66 @@ forgotten.
 Nothing here is scheduled. An entry is a candidate, and several entries are
 recorded deliberately as "not worth doing" so the reason survives.
 
+Four wording and selection lines were built far enough to measure and closed by
+their own numbers on 2026-11-18 — corpus composition, minimal-pair contrast rows,
+register breadth and slot-cue selection. [`closed-lines.md`](closed-lines.md)
+holds the measurements, the sets they were taken on, and the ratio a replacement
+has to beat. An entry here is a candidate only if it clears that ratio.
+
 ## What already exists
 
 Additions only make sense against a true baseline. Today the project has:
 
 | Surface | Already built |
 | --- | --- |
-| Model | 5.25M-parameter int8 decoder, 6 layers, d=256, 512-token BPE, greedy decode, 20-token call budget |
-| Contract | 102 fixed-arity relations, `CALL <name> <args>`, every argument must appear in the question |
-| Solvers | Integer and exact-rational C for all 136 relations across eleven per-subject units, four-significant-digit rendering |
+| Model | 5.25M-parameter int8 decoder, 6 layers, d=256, 640-entry BPE (208 merges), greedy decode, 20-token call budget |
+| Contract | 171 fixed-arity relations, `CALL <name> <args>`, every argument must appear in the question |
+| Solvers | Integer and exact-rational C for all 171 relations across eleven per-subject units, four-significant-digit rendering |
 | Parser | Q16 expression parser for graphs: `+ - * / ^`, `sin cos tan sqrt abs ln exp`, `pi` and `e`, unary minus, decimals, `x`, 48 nodes; symbolic differentiation and numeric integration on the same tree, and exact rational `det`/`inv`/`rank`/`solve` |
 | Graphing | Autoscale, pan, zoom, trace, root and extremum detection on a 320x240 framebuffer |
-| Evaluation | Hand-written wording 72.3% exact and 9.8% wrong relation on 1,840 rows; generated gate 90.5% exact; C/PyTorch logit parity, ARM cross-compile check |
-| Platform | `.tns` build, weight file loading, msgbox UI, BPE and pipeline shared with host tests |
+| Evaluation | Hand-written wording 74.0% exact, 15.3% right relation with wrong arguments, 10.7% wrong relation and 1 refusal on the 2,150-row calibrated eval split, seed 1 of the r5 pair; 70.9% exact as the r7 two-seed mean on the same 2,150 rows. Generated gate 89.8% exact on 2,000 held-out generated rows, r7 two-seed mean. C/PyTorch logit parity, ARM cross-compile check |
+| Refusals | Three result codes the screen tells apart — arithmetic past the exact engine's node pool, arithmetic with no value, weights whose vocabulary disagrees with the build's — plus the decode's own uncertainty at a 500-unit relation margin. Each has a host test that asserts on the framebuffer |
+| Platform | `.tns` build, weight file loading, a screen model in `runtime/ui.c` that replaces the old message boxes, and BPE and pipeline shared with host tests. None of it has run on a physical calculator |
 
 The catalogue below assumes all of that stays.
+
+### What the 2026-11-18 work added to that baseline
+
+Nine things this page would have listed as candidates are built. Each line
+names the check that carries it and the set its number came from.
+
+| Change | What a student can now do | Evidence |
+| --- | --- | --- |
+| Arithmetic past the exact engine's node pool refuses as such | A column of arithmetic is told it is too long instead of being read as a word problem — a 65-term sum used to come back as `CALL h_from_ph 115 110`. A flat sum answers at 64 terms and 127 characters and refuses at 65 and 129 | `PIPELINE_TOO_LONG`; 0 of the 2,150 hand-written rows is typed arithmetic, so the limit costs that split nothing |
+| Arithmetic with no value refuses as such | `1/0`, `0/0`, `sqrt(-4)`, `ln(0)`, `2^15`, `9^999`, `exp(100)` and `100000/3` — which answered `10923` — get one honest sentence instead of `32768` | `PIPELINE_NO_VALUE`: 14 cases refuse, 11 still answer exactly, 0 of the 4,300 hand-written rows (2,150 × 2 seeds) changed |
+| Weights that disagree with the build's vocabulary refuse | The screen names both sizes instead of blaming the question | `vocab` is a consequence of the tokenizer, so a disagreement proves a mismatch; an agreement proves nothing, so no branch claims a match |
+| Three relation names are typable at last | `mass_from_percent_composition`, `mixture_final_temperature` and `wavelength_from_frequency` resolve when typed. The 24-character buffer used to miss them and the decoder answered something else: `wavelength_from_frequency 200` came back `1 J/K` from `entropy_change` | `TOKLEN` 24 → 32, and `test_shorthand` now types every name in `reltable.h` |
+| Slot prompts say what unit the slot wants | `v0 (m/s)` instead of `v0`, so a half-remembered formula can be filled correctly without the model | `runtime/unitstable.h`, 124 rows, ~3.7 KB of flash by arithmetic and not measured; each argument's unit is the majority answer across the phrasing bank |
+| Find a relation, see its formula, reuse the last answer | Type three letters, pick the name, read the formula above the slots, and fill a slot with the previous answer on `TAB` — no model, so it cannot be wrong | `test_ui` asserts a framebuffer band against the frame drawn from the expected text |
+| A growth rate is taken as written | 2.5%, 3.5% and 7.5% answer where only whole percent rates did | 26 corpus calls that refused now answer, 0 previously-answered corpus calls changed, and the 2,150-row hand-written split reads 1,577 → 1,588 (seed 1) and 1,560 → 1,568 (seed 2). One row moved from refusal to a wrong number and stays on the record |
+| Three solvers stop printing a wrong number past the fixed point | `critical_angle 150 100` answered 2.968° where the angle is 41.81°, `law_cosines` with sides of 2000 answered 3587 where it is 5596, and `continuous_growth 1000 10 40` answered 4455 where it is 5.46e4 — all reachable from typed input, none from the corpus | 0 of the 4,571 distinct corpus calls changed answer; the sweep that found them compared answered values, not just counted answers |
+| A call the decode barely chose is refused | Answering "uncertain" instead of a confident number built on the runner-up relation | 22 rows caught and 7 lost over the 4,300 hand-written rows, 3.1:1 at 76% precision; the 2,000-row generated control is 1 and 1 and never exceeds 2:1 at any threshold. Exactness does not rise: 73.1% → 72.9% |
+
+What did **not** become true is worth the same sentence: on the real AP Chemistry
+bank the app names a correct call for 1 of 19 readable rows, the bank's own shape
+caps trustworthy single-call rows at 28, and neither is a wording problem. See
+[`status.md`](status.md) for the limit and [`closed-lines.md`](closed-lines.md)
+for the four lines that were measured and closed on the way to it.
 
 ## A. Model and inference
 
 | # | Capability | What changes | Model | Work |
 | --- | --- | --- | --- | --- |
-| A1 | Abstention | An `unsupported` outcome from the call-token margin, plus out-of-scope training rows | retrain | days |
-| A2 | Constrained decoding | Trie over relation, arity and numeric grammar so an invalid call cannot be emitted | retrain | days |
-| A3 | Multi-step tape | `@r1` argument references, a call tape, and composition training rows | retrain | weeks |
-| A4 | Longer calls | Raise the 20-token cap and the 128-token training window | retrain | days |
+| A1 | Abstention | An `unsupported` outcome from the call-token margin, plus out-of-scope training rows. The margin half is built (#122) at 500 fixed-point units: 22 caught and 7 lost over 4,300 hand-written rows, and a generated-gate control of 1 and 1. The out-of-scope rows are not built | none for the margin; retrain for the rows | days |
+| A2 | Constrained decoding | Trie over relation, arity and numeric grammar so an invalid call cannot be emitted. The numeric-argument half was built and reverted: exact calls identical, none of 253 re-decoded refusals became exact — see [`closed-lines.md`](closed-lines.md) | retrain | days |
+| A3 | Multi-step tape | `@r1` argument references, a call tape, and composition training rows. This is the entry the AP Chemistry bank argues for and the only one that moves its ceiling | retrain | weeks |
+| A4 | Longer calls | Raise the 20-token generation cap and the 192-token training window. The typed input line is 255 characters (#118) and arithmetic past the exact engine's 127 characters now refuses by name rather than reaching the decoder; 9 of the 28 AP Chemistry rows still exceed the window | retrain | days |
 | A5 | Wider model | d=352 (9.6M) or d=512; measured at 3.0 tok/s vs 5.5 on the same hardware | retrain | weeks |
 | A6 | Domain tokenizer | More merges, subject tokens, reserved tokens for units and `@` | retrain | days |
 | A7 | Ranked alternatives | Top-3 candidate calls with margins, so a near miss is visible to the user | retrain | days |
 | A8 | Better quantization | Group 16 or mixed precision on attention only; measure logit drift | retrain | days |
-| A9 | Real typed wording | Hand-written and paraphrased questions in training, not just the phrasing bank | retrain | weeks |
-| A10 | Adversarial distractors | Two or more same-unit quantities, values that belong to a different relation | retrain | days |
+| A9 | Real typed wording | Hand-written and paraphrased questions in training, not just the phrasing bank. Built: three rounds are in the corpus and a fourth is parked on a branch, and rounds three and four flattened — the last 2,655 rows restored by fixing the quantiser bought +0.45 points against a 2.6-point seed spread. More rows of the same kind are not the lever | done for the corpus; retrain for anything more | weeks |
+| A10 | Adversarial distractors | Two or more same-unit quantities, values that belong to a different relation. Attempted in round four: burying the real rows among distractors moved exact calls 66.7% → 68.0% on the same 2,512 rows, a 1.3-point gain at a 0.9-point standard error. Not the lever either | retrain | days |
 | A11 | Curriculum | Order training by relation difficulty; trim the 200k set to the rows that teach something | retrain | days |
 | A12 | Edit-distance recovery | A character-level repair pass when grounding fails, for a mistyped digit | none | days |
 
@@ -45,6 +75,15 @@ A5 is listed for completeness and is the one entry the evidence argues
 against: the repository's own width ladder shows shrinking costs 2.5 points on
 grounded computation and 69 points on explanation, which means routing survives
 small models.
+
+**A3 is now the ceiling, and the AP Chemistry bank is what proves it.** The bank
+was audited item by item: of the 70 multiple-choice rows that survive a
+mechanical gate, a hand read finds 28 answerable in one call, 23 that need a
+second computation, 6 whose missing argument is a tabulated constant, 9 where a
+cue word matched but the ask is a different quantity, and 3 with no relation at
+all. Bank-wide, 835 of 1,136 items name no catalogue relation and 51 name two or
+more. The limit on "accurate on AP Chemistry" is two- and three-step questions,
+not wording, and A3 is the entry that would move it.
 
 ## B. Mathematics core
 
@@ -90,6 +129,19 @@ that is what would move the 48 no-unit rows into reach. The artifact at
 the reason for each of the rest, and `python3 nouncues.py --rows
 permuted_rows.jsonl` prints the noun-cue comparison.
 
+**B1's unit half is built and measured, and it is not merged.** A contributor's
+five-pull stack gives every one of the 171 relations a slot unit and converts a
+number stated in another unit of the right kind before the solver runs, and
+refuses a number of the wrong kind. Measured on the stack rebased onto master
+`259021ee`: **0 of 48,672 correct corpus calls changed**, 147,842 single-unit and
+22,285 same-unit-group conversions answered exactly what the original answered
+with 0 refused, and **36,509 of 107,923 swapped-argument calls (33.8%) were
+refused**. Their own figures at their base were 45,808 calls and 139,885 + 20,925
+conversions, 0 changed, so the result survives master's growth. Three measured
+blockers keep it off master — a pipeline code that collides with
+`PIPELINE_TOO_LONG`, one stale `carnot` expectation, and a stack layer based on a
+branch with no pull request.
+
 ## C. Subject breadth
 
 Relations are cheap once B1 and B2 exist, because a relation becomes a formula
@@ -111,7 +163,13 @@ and a dimension signature rather than a hand-written C function.
 | C12 | Units and constants | full SI conversion graph, dimensional analysis, physical constant table |
 
 C8 needs a formula parser before it is worth starting; balancing equations is
-linear algebra over integer stoichiometry, not a numeric call.
+linear algebra over integer stoichiometry, not a numeric call. That judgement was
+tested: `balance_coefficients` (an equation in, a coefficient vector out),
+`electrons_transferred` (needs the balanced equation and oxidation states) and
+`oxidation_number` (a species in, a state out) were all attempted against the AP
+Chemistry bank and cut as unbuildable in a catalogue where every call has a
+number for an answer, which is why the eighteen-relation chemistry batch landed
+without them.
 
 ## D. Interaction and interface
 
@@ -123,12 +181,12 @@ linear algebra over integer stoichiometry, not a numeric call.
 | D4 | Inequality shading | Parse `< <= > >=` and fill the region |
 | D5 | Step-by-step display | Show the call, the formula, the substitution, the result — no model involvement |
 | D6 | History | Scrollable log of questions and answers, persisted to a file |
-| D7 | Answer reuse | Send the last answer into the next question as a slot value |
-| D8 | Template keypad | Freeform text input is the worst part of the current UI; a keypad grid of relation templates removes it |
+| D7 | Answer reuse | Send the last answer into the next question as a slot value — **built** (#104): `TAB` in a slot fills it with the previous answer, so `kinematic_v 0 3 4` → 12 m/s is available to `kinetic_energy` as 12 |
+| D8 | Template keypad | Freeform text input is the worst part of the current UI; a keypad grid of relation templates removes it — **built in two forms** (#103, #104): find a relation by three letters of its name from the menu, and its formula printed above one prompt per argument |
 | D9 | Practice mode | Generated problems by subject and difficulty, with marking |
 | D10 | Spaced repetition | Track per-relation accuracy per user and re-ask the weak ones |
-| D11 | Unit prompt | When units are ambiguous, ask which unit the answer should use |
-| D12 | Error explanations | "I matched this to Ohm's law, but 12 does not appear in the question" |
+| D11 | Unit prompt | When units are ambiguous, ask which unit the answer should use — **built in the half that matters** (#153): each slot prompt states the unit the phrasing bank uses, `v0 (m/s)`, so the unit is named before a number is typed rather than queried after |
+| D12 | Error explanations | "I matched this to Ohm's law, but 12 does not appear in the question" — **built for the three pipeline failures** (#138, #144, #146) and for a weights vocabulary that disagrees with the build; the old screen blamed the tokenizer on every refusal, which was wrong advice |
 | D13 | Settings | Screen contrast, significant figures, exact vs decimal, default units |
 | D14 | Localisation | Language packs for phrasing banks and UI strings |
 | D15 | Large-text mode | Readable on the calculator's low-resolution screen |
@@ -223,3 +281,8 @@ the whole model resident twice, is out of budget rather than merely expensive.
 | Floating point in the hot path | No FPU, and soft-float helpers fail the cross-compile check |
 | On-device training | Out of budget and out of scope |
 | Dimension-based argument assignment | Measured at 1.3 points of hand-written exactness on the current corpus: 56 of 139 permuted rows, all decided correctly, and noun cues buy three more. Reach, not precision, is the wall — see B1 |
+| Constraining decoded arguments to the question's numbers | Exact calls unchanged on both seeds (1,577 and 1,560 of 2,150), and none of 253 re-decoded refusals became exact. A mask reaches which numbers are available; the error is a choice among the ones already there — see [`closed-lines.md`](closed-lines.md) |
+| Corpus composition as an accuracy lever | Fixing the hand-written share restored 2,655 training rows and bought **+0.45 points** on the 2,150-row hand-written split against a **2.6-point** seed spread — [`closed-lines.md`](closed-lines.md) |
+| Minimal-pair contrast rows | Flat on the 333 held-out rows covering the same eight pairs: 81.1% (r6 mean) → 80.95% (r7) — [`closed-lines.md`](closed-lines.md) |
+| Register breadth as an accuracy lever | The drift cohort moved 41.6% → 47.6% on held-out structures while every accuracy measurement stayed flat — [`closed-lines.md`](closed-lines.md) |
+| Slot-cue selection of argument values | A good predictor (81.9% of argument vectors against 66.1% for reading order) and a bad change: **74.0% → 70.5%, −77 rows**, because it fixes 55% of errors and breaks 16% of correct calls and correct calls outnumber errors five to one — [`closed-lines.md`](closed-lines.md) |

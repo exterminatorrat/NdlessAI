@@ -14,7 +14,7 @@ Solve x^2 - 5x + 6 = 0  ->  CALL quad_solve 1 -5 6  ->  x=2, x=3
 
 ```mermaid
 flowchart LR
-  Q["Word problem<br/>plain English"] --> T["bpe.c<br/>512-token byte-level BPE"]
+  Q["Word problem<br/>plain English"] --> T["bpe.c<br/>640-entry byte-level BPE"]
   T --> M["int8 transformer<br/>6 layers, 5.25M parameters"]
   M --> C["CALL relation args<br/>about 7 tokens"]
   C --> G{"Every argument appears<br/>in the question?"}
@@ -23,14 +23,14 @@ flowchart LR
   S --> A["Answer text<br/>formatted on device"]
 ```
 
-The grounding check is deliberately conservative. If the model copies a number that is not present in the question, the runtime refuses the answer instead of showing a plausible wrong one. The relation name and `CALL` are single tokens, and the exported tokenizer uses a 512-token vocabulary.
+The grounding check is deliberately conservative. If the model copies a number that is not present in the question, the runtime refuses the answer instead of showing a plausible wrong one. The relation name and `CALL` are single tokens, and the exported tokenizer uses a 640-entry vocabulary.
 
 ## At a glance
 
 | | |
 | --- | --- |
 | Task | English word problem to one `CALL <relation> <args>` line |
-| Model | 5,246,208 parameters; 6 layers, d=256, 8 heads, hidden 768, vocabulary 512 |
+| Model | 5,246,208 parameters; 6 layers, d=256, 8 heads, hidden 768, vocabulary 640 (208 merges) |
 | Training | Llama-2-style decoder with RoPE and a loss masked to call tokens |
 | Runtime | C11; int8 weights, Q12 fixed-point activations, no FPU in the hot path |
 | Target | TI-Nspire CX II, ARM926EJ-S; hardware cost measured with `int8bench` |
@@ -135,6 +135,7 @@ flowchart TB
 - [Status](docs/status.md): where the project stands, what is planned, and what is left.
 - [Expansion](docs/expansion.md): every candidate addition, ranked by value per unit of work.
 - [Waves](docs/waves.md): the execution plan of record — wave order, workstreams, file ownership, and what done means.
+- [Closed lines](docs/closed-lines.md): the four wording and selection ideas that were measured and closed, with the sets and the ratio a replacement has to beat.
 - [Wave 2 design](docs/wave2-design.md): the shapes behind the equation engine and symbolic differentiation, written before implementation.
 - [Architecture](docs/architecture.md): boundaries, call contract, fixed-point formats, and failure behavior.
 - [Model](docs/model.md): data generation, training, quantization, measured results, and limitations.

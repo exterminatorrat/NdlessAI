@@ -149,6 +149,28 @@ calculator that already takes seconds — or argument-level verification in the
 runtime, which is a code change and not a data one. Both need choosing
 deliberately rather than by another authoring round.
 
+### What happened to that decision, 2026-11-18
+
+Every cheap lever the paragraph above names was measured, and each is now
+closed rather than merely doubted. Corpus composition — restoring 2,655
+hand-written training rows by fixing the quantiser — bought **+0.45 points on
+the 2,150-row hand-written split against a 2.6-point seed spread**. Minimal-pair
+contrast rows were **flat on the 333 held-out rows** covering the same eight
+pairs. Register breadth moved the drift cohort from **41.6% to 47.6%** on
+held-out structures while every accuracy measurement stayed flat. Slot-cue
+selection of argument values was a genuinely good predictor — 81.9% of argument
+vectors against 66.1% for reading order — and a bad change: **74.0% → 70.5%,
+−77 rows**.
+
+[`closed-lines.md`](closed-lines.md) carries each number with its set and the
+ratio a replacement has to beat: on a set where the model is right five times as
+often as it is wrong, a rule that rewrites arguments has to fix more than five
+times as many rows as it breaks. So the two levers left are the two this section
+already named — capacity, and argument verification in the runtime — and the
+domain gap's size is now measured rather than suspected: **1 correct call in 19
+readable AP Chemistry rows**, against a hard cap of 28 single-call rows in that
+bank. The limit is multi-step questions, not wording.
+
 ## Wave 4 — the deep end
 
 | # | Workstream | What it does | Owns |
@@ -189,7 +211,7 @@ why one formula was chosen over the others.
 
 ## Status
 
-Every row was checked against master at `2beba30`, not against the state of a
+Every row was checked against master at `cc4b8505`, not against the state of a
 pull request. A closed pull request is not a missing workstream: most of the
 wave-1 and wave-2 pulls were closed once their content reached an integration
 branch, and that branch is what merged. The `Where it lives` column names the
@@ -198,6 +220,10 @@ this table.
 
 Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue was
 102 relations in ten subject modules when that wave closed, and is 171 today.
+The rows below #118 are the 2026-11-17 and 2026-11-18 work. Two of them are
+negative results on purpose — the closed wording lines, and a contributor stack
+that is measured and not merged — because a measured "no" is a result this table
+is supposed to carry.
 
 | Workstream | State on master | Where it lives |
 | --- | --- | --- |
@@ -219,13 +245,23 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue wa
 | 3.3 follow-up: scientific-notation input | not merged; verified on `fix/scientific-notation-input`, 2026-11-16; counts corrected 2026-11-17 | `parse_rat()` accepts signed e/E notation; shorthand and formula-picker regressions pass under ASan/UBSan; 13,978 solver assertions and 3,672 parity cases have zero mismatches, measured on master `5b0016e` and at #102's head; hardware not run. The 54,400 this row quoted was the older table's 136 relations × 400 rows (`--n 400`); `af76bb9` regenerated at the generator's default 24 rows per relation, so the fall is 16.7× fewer instances per relation over the 153 relations it listed then, not lost relations. Regenerate with `--n 400` before quoting a soak depth |
 | 3.4 the rest of thermodynamics | merged, #62 | `relations/thermo.py`, 6 relations |
 | 3.5 electricity and magnetism | merged, #62 | `relations/em.py`, 6 relations |
-| 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate. The hand-written split those numbers come from is 2,150 rows across 171 relations; the 1,942 quoted further down is a wave-4 measurement, not today's split | `gate.sh` gates generated phrasing and wrong relation only |
+| 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch. Hand-written accuracy is gated per course by `report_relations.py --course-floor`, and not as an aggregate. The hand-written split those numbers come from is 2,150 rows across 171 relations; the 1,942 quoted further down is a wave-4 measurement, not today's split. The corpus has since been measured to its ceiling: composition, contrast rows and register breadth are all closed with their sets named, so a fifth round is not the lever | `gate.sh` gates generated phrasing, wrong relation, the drift cohort, a per-relation floor and a per-course floor; no gate reads the aggregate hand-written split or the AP Chemistry slice |
 | Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
 | 4.5 follow-up: formula picker argument overflow | not merged; verified on `fix/formula-picker-argument-overflow`, 2026-11-16 | `tmpl_solve()` uses `UI_TMPL_ARGS`; `test_ui` drives three- through six-argument formulas, passing under ASan/UBSan and an optimized `-Werror` build; hardware not run |
 | Follow-up: collision solver decimal overflow (#102) | merged, #102 | `solve_collision_velocity()` in `runtime/solvers_physics.c`, cases in `runtime/test_shorthand.c`. A pound/mph collision reaches the solver as `1.3608 5.81152 3.1752 -2.68224`, and its four-denominator products overflow signed 64-bit at `solvers_physics.c:520`, which UBSan reproduces on the pre-#102 tree. The fix reduces masses to an integer ratio and combines velocities at one shared decimal scale, refusing unrepresentable intermediates and zero total mass. Over 400,000 generated collisions, 44 answers change and all 44 were pre-#102 master being wrong — 35 silent wrong answers now correct, 9 now refused — with no correct answer lost. A refusal still cannot say so: it shows the generic failure screen, which blames the tokenizer. The ARM lane cross-compiles it for arm926ej-s; not run locally or on hardware |
 | Follow-up: a semicolon does not make a plan (ELV-70, #106) | merged, #106 | `plan_is()` treated any question containing `;` as a typed plan, so 203 hand-written eval rows — 9.8% of the split, and 79% of the `!error` bucket — failed before the model ran. The guard now requires every segment to name a call from `reltable.h` with numeric arguments. Measured on `weights_640_s2fin.bin`, 2,078 hand-written rows: exact 1,450 (69.8%) → 1,585 (76.3%) by the split's own scorer, and 70.2% → 76.8% through `evaluate_device.py`; all 190 changed rows were `!error` rows that now answer (135 exact, 27 right relation with bad arguments, 16 wrong relation, 12 refused) and none went the other way; `!error` 258 → 68. The 2,000-row generated gate is the control and does not move, because no row there contains a semicolon. Contract change: `plan_execute("CALL newton2 1 1 ; nonsense 1")` now asserts `-1` instead of `-2`, because a segment naming no relation is treated as a question, not as a failed plan |
 | Follow-up: the AP Chemistry relation batch (#117) | merged, #117 | 153 → 171 relations: six each from #113, #114 and #115, plus #116's regenerated tokenizer, carried onto master as one branch. `FIRST_MERGE` 414 → 432, merges 226 → 208, mean row 51.9 → 54.4 tokens and worst 146 → 160 against the 192-token window — 32 tokens of headroom where there were 46, nothing dropped by the packer. The new dataset lives in `data_apchem_r5/` and is gitignored. The gain is a catalogue gain for intro chemistry, not an AP Chemistry specialisation: the authoring thread measured +0.2 points of the College Board bank, because only three or four of the 33 naming items have every argument their solver needs, and `vsepr_bond_angle`'s ten unit-2 items are the batch's real return |
 | Follow-up: the question line (#118) | merged, #118 | `UI_INPUT_MAX` 64 → 256, so 255 characters can be typed where 63 was a silent wall: 72% of the 4,768 committed hand-written rows are longer than 63, and the median is 78. The footer's first row names the way out when the line is full, the second row is asserted untouched, and a `_Static_assert` pins the ceiling inside the decoder's 272-byte prompt budget (`pipeline.c:16-18`). `static ui_t` grows 23,040 → 24,952 bytes. One limit recorded rather than fixed: `pipeline_typed_answer` stops at 127 characters because `EXPR_MAX_NODES` is 128 |
+| Follow-up: an abstain gate on the relation margin (#122) | merged, #122 | `runtime/pipeline.c` refuses a call whose top two relation logits are within 500 fixed-point units, as the `!uncertain` a row already gets when the guard cannot place a number. Caught 22 rows and lost 7 over the 4,300 hand-written rows (2,150 × 2 seeds), 3.1:1 at 76% precision; the 4,000-row generated control catches 1 and loses 1 and never exceeds 2:1 at any threshold. Exactness does not rise: 73.1% → 72.9%. A retrain-free abstention, not an accuracy gain |
+| Follow-up: arithmetic the exact engine cannot hold or has no value (#143, #145) | merged, #143 and #145 | two result codes, `PIPELINE_TOO_LONG` and `PIPELINE_NO_VALUE`, so a column of arithmetic is no longer handed to the decoder (a 65-term sum came back as `CALL h_from_ph 115 110`) and nine saturating paths no longer print 32768 (`100000/3` answered 10923). 0 of the 4,300 hand-written rows changed; 14 cases refuse, 11 still answer exactly. The limit costs that split zero rows because zero of 2,150 is typed arithmetic |
+| Follow-up: the refusal screen tells the truth (#138, #144, #146) | merged | the tokenizer sentence is gone from the ordinary refusal, which is the most common one in real use and was wrong advice; the weights-mismatch branch fires only when the two vocabulary sizes disagree, because that is the one direction the file can prove. Mutation-tested: restoring the old sentence fails 2 checks, disabling the mismatch check fails 5 |
+| Follow-up: relation names longer than 24 characters (#147) | merged, #147 | `TOKLEN` 24 → 32. `mass_from_percent_composition`, `mixture_final_temperature` and `wavelength_from_frequency` used to miss the shorthand buffer and fall through to the decoder — a typed `wavelength_from_frequency 200` answered `1 J/K` from `entropy_change`. They now answer 312.5 g, 293.2 K and 2.998e-07 m, and `test_shorthand` types every name in `reltable.h` so a future name fails the build instead of the answer |
+| Follow-up: three solvers stop printing a wrong number past the fixed point (#148, #150, #151) | merged | found by comparing answered values, not by counting answers: `critical_angle 150 100` answered 2.968° where the angle is 41.81°, `law_cosines` with sides of 2000 answered 3587 where it is 5596 (undefined behaviour in `(num % den) * 1e9`), `continuous_growth 1000 10 40` answered 4455 where it is 5.46e4. All three are reachable from typed input and none from the corpus at its real magnitudes: 0 of 4,571 distinct corpus calls changed answer |
+| Follow-up: a rate as it was written (#149) | merged, #149 | `doubling_time` and `continuous_growth` take a rational rate, so 2.5%, 3.5% and 7.5% answer where only whole percent did: 26 corpus calls that refused now answer, 0 previously-answered calls changed, and the 2,150-row hand-written split reads 1,577 → 1,588 (seed 1) and 1,560 → 1,568 (seed 2). One row moved from refusal to a wrong number and the body says so |
+| Follow-up: the denominators (#152) | merged, #152 | `--course-floor` scored the whole corpus, which grows, instead of the 2,150 rows the floors were recorded on — a floor whose denominator moves is not a floor. `courses.FLOOR_CORPUS`/`FLOOR_EVAL_ROWS` now name the calibrated set and any other set is refused without `--allow-drift`. `injected_rows()` fills the hand-written share instead of rounding it down. Both have tests; the r6 "floor failure" was the instrument, not the model |
+| Follow-up: the palette, the formula, the unit hint, answer reuse (#103, #104, #153) | merged | finding a relation by three letters from the menu, the relation's formula above one prompt per argument, `TAB` to reuse the last answer, and each prompt naming the unit the phrasing bank states (`v0 (m/s)`) from a generated 124-row `runtime/unitstable.h`. No model on the path, so accuracy did not move; reachability did. `static ui_t` 22,816 → 24,968 bytes and unchanged by #153 |
+| Measured and closed: four wording and selection lines | closed by measurement, 2026-11-18 | corpus composition +0.45 against a 2.6-point seed spread; contrast rows flat on 333 held-out rows; drift cohort 41.6% → 47.6% while accuracy stayed flat; slot-cue selection 74.0% → 70.5%, −77 rows. Numbers, sets and the ratio a replacement must beat are in [`closed-lines.md`](closed-lines.md); do not re-propose them without a new fact |
+| Contributor stack: slot units, conversions and refusals (#135–#141) | measured on a rebase onto master, **not merged** | 171 relations carry slot units; 0 of 48,672 correct corpus calls changed; 147,842 single-unit and 22,285 same-unit-group conversions answered exactly what the original did, 0 refused; 36,509 of 107,923 swapped-argument calls (33.8%) refused. Three measured blockers: `PIPELINE_UNITS = 2` collides with `PIPELINE_TOO_LONG`, one stale `carnot` expectation, and a layer based on a branch with no pull request |
 
 **Wave 4, as it stands.** The map is `wave4-plan.md`. The three engine
 workstreams are done or half done and everything they touch is gated:
@@ -410,6 +446,17 @@ catalogue already had, not that the model improved. Vocabulary: 167 merges from
   argued for up to 2x; the measurement says the loop was already near its
   instruction count per MAC, so the real gain is about 3% per MAC and 1.12x on
   host timing. Quote the measurement, never the model.
+- **A lever is judged by net rows, not by its predictor's accuracy.** Whole-
+  assignment slot scoring beat reading order by 15.8 points as a predictor and
+  lost 77 rows as a change, because the model is right five times as often as it
+  is wrong and the rule broke 16% of the calls it touched. Compute
+  `(errors fixed) / (correct calls broken)` against `(correct rows) / (wrong
+  rows)` before building the second one.
+- **An instrument whose denominator moves is not an instrument.** `--course-floor`
+  scored the whole corpus, so a generated file arriving with the mix read as a
+  floor failure at 58.5% where the calibrated 776 rows read 71.4% on the same
+  weights. Record the set in the instrument, not in the habit of the person
+  reading it.
 
 ## Agent configuration
 

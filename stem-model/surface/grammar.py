@@ -19,6 +19,7 @@ gate can refuse at inference time.
 from collections import namedtuple
 
 from . import lexicon, numbers
+from .spec import SPECIES
 
 Structure = namedtuple("Structure", "given ask framing names_roles id ask_first")
 Row = namedtuple("Row", "text structure")
@@ -127,7 +128,7 @@ def _given_condition_first(spec, parts, register, variant):
     if not lead:
         return None
     first_param, first_slot = lead[0]
-    clauses = [f"At a {_role(first_slot, register, variant)} of {parts[first_param]}"]
+    clauses = [f"With the {_role(first_slot, register, variant)} at {parts[first_param]}"]
     for index, (param, slot) in enumerate(rest):
         role = _role(slot, register, variant + index)
         clauses.append(f"the {role} {_is(role)} {parts[param]}")
@@ -168,6 +169,21 @@ def _given_state(spec, parts, register, variant):
             + ", ".join(clauses[:-1]) + " and " + clauses[-1] + ".")
 
 
+def _given_species(spec, parts, register, variant):
+    """Formula-led shape: the substance names the row, then the declared values.
+
+    The species is a constant from the spec, used nowhere but here -- it is the
+    subject of the sentence, not a quantity, and the relations it is offered to
+    are exactly the ones whose arithmetic it cannot change.
+    """
+    species = SPECIES.get(spec.name)
+    if species is None:
+        return None
+    pairs = [f"{_role(slot, register, variant + index)} = {parts[param]}"
+             for index, (param, slot) in enumerate(spec.slots.items())]
+    return f"A sample of {species}: " + "; ".join(pairs) + "."
+
+
 def _given_list(spec, parts, register, variant):
     values = ", ".join(parts[param] for param in spec.slots)
     verb = "are" if len(parts) > 1 else "is"
@@ -201,7 +217,25 @@ GIVEN = (
     ("condition", _given_condition_first, True, _has_condition),
     ("declared", _given_declared, True, _always),
     ("state", _given_state, True, lambda spec: spec.name in EQUILIBRIUM),
+    ("species", _given_species, True, lambda spec: spec.name in SPECIES),
 )
+
+# A constant phrase that decorates a row's context without doing arithmetic. It
+# is refused where the phrase would restate the answer: a percent-yield row told
+# "for this yield" is the double-decoration bug, so each modifier declares the
+# words that disqualify it and the answer words are checked against them.
+MODIFIERS = {
+    "partial_pressure": (" The gases do not react with each other.", ()),
+    "molarity": (" The solute is transferred completely.", ()),
+    "dilution": (" The flask is made up to the mark afterwards.", ()),
+    "dilution_v1": (" The stock is measured out with a pipette.", ()),
+    "avg_rate": (" The concentration is tracked as the run proceeds.", ()),
+    "rate_factor": (" The two runs differ in one condition at a time.", ()),
+    "ph": (" The solution is held at 25 C.", ()),
+    "poh": (" The solution is held at 25 C.", ()),
+    "entropy_change": (" No heat is lost to the surroundings.", ()),
+    "wavelength_from_frequency": (" The wave travels in a vacuum.", ()),
+}
 
 # Relations whose rows can honestly be described as arriving at an equilibrium
 # state. Everything else keeps the frames that describe a measurement.
@@ -313,11 +347,25 @@ RELATION_FRAMINGS = {
 }
 
 
+def modifier_for(spec):
+    """The constant phrase this relation can carry, or None when it would restate it."""
+    entry = MODIFIERS.get(spec.name)
+    if entry is None:
+        return None
+    text, forbidden = entry
+    answer = " ".join(spec.answer_words) + " " + spec.answer.role
+    if any(word in answer for word in forbidden):
+        return None
+    return text
+
+
 def framings_for(spec):
     declared = RELATION_FRAMINGS.get(spec.name, ())
     dims = [slot.dim for slot in spec.slots.values()]
     allowed = {name for name, _, applies in FRAMING if applies(dims)}
     chosen = tuple(name for name in declared if name in allowed)
+    if modifier_for(spec):
+        chosen += ("modifier",)
     if spec.name in IDEALISED:
         chosen += tuple(f"idealisation:{kind}" for kind in IDEALISED[spec.name])
     return ("",) + chosen
@@ -378,7 +426,9 @@ def render(spec, args, structure, register, variant):
     ask_text = {name: text for name, text, _, _ in ASK}[structure.ask]
     ask = ask_text.format(answer=answer, unit=spec.answer.unit or "the given unit")
     if structure.ask_first:
-        text = f"{ask} {body}{FRAMING_TEXT[structure.framing]}"
+        text = f"{ask} {body}{FRAMING_TEXT.get(structure.framing, '')}"
     else:
-        text = f"{body} {ask}{FRAMING_TEXT[structure.framing]}"
+        text = f"{body} {ask}{FRAMING_TEXT.get(structure.framing, '')}"
+    if structure.framing == "modifier":
+        text += modifier_for(spec) or ""
     return Row(text=" ".join(text.split()), structure=structure)

@@ -600,3 +600,69 @@ PROVENANCE["wavelength_from_frequency"] = (
     "applied context (instrument dial and spectrum reading), worked-example prose",
     "physics-pool",
 )
+
+# Species for the formula-led frame: a constant noun phrase used only to open a
+# sentence, never an argument and never a quantity. It is set only where the
+# named substance cannot change the answer -- the arithmetic of a partial
+# pressure or a Beer's-law question does not depend on which gas or which dye.
+# Where a compound would imply a number the call already takes (a molar mass, a
+# Ka, a coefficient, a molar heat capacity, a cell potential), naming it would
+# contradict the row's own arguments, so those relations are absent here and
+# BLOCKED_SPECIES records why.
+SPECIES = {
+    "partial_pressure": "argon",
+    "beer_lambert": "a coloured dye",
+    "molarity": "potassium nitrate",
+    "dilution": "copper(II) sulfate",
+    "dilution_v1": "sodium chloride",
+    "mixing_concentration": "two sugar solutions",
+    "mass_from_molarity": "sodium hydroxide",
+    "ph": "a weak acid solution",
+    "poh": "a weak base solution",
+    "h_from_ph": "a buffer solution",
+    "ph_from_poh": "a basic solution",
+    "gas_p": "nitrogen",
+    "boyles": "helium",
+    "charles": "air",
+    "combined_gas": "oxygen",
+    "gas_mixture_pressure": "neon",
+    "radiation_power": "a metal surface",
+    "wave_speed": "a wave on a string",
+    "beat_freq": "two tuning forks",
+    "entropy_change": "a reversible process",
+    "mole_fraction": "two gases",
+    "molality": "glucose",
+    "first_law": "a sealed cylinder",
+    "mixture_final_temperature": "two water samples",
+    "rate_factor": "a reaction",
+    "avg_rate": "a reaction",
+    "wavelength_from_frequency": "a microwave",
+    "density": "a metal sample",
+}
+
+BLOCKED_SPECIES = {
+    "percent_dissociation": "naming the acid would imply the Ka the call takes",
+    "kc_from_conc": "naming the salt would imply its coefficients",
+    "ksp_from_solubility": "naming the salt would imply its ion counts",
+    "limiting_moles": "naming the reactants would imply their molar masses",
+    "stoichiometry": "naming the reaction would imply its mole ratio",
+    "stoich_mass": "naming the species would imply the molar masses",
+    "stoich_volume_gas": "naming the gas would imply the mole ratio",
+    "moles": "naming the substance would imply its molar mass",
+    "atoms_from_mass": "naming the substance would imply its molar mass",
+    "mass_percent": "the solute is part of the answer's definition",
+    "percent_yield": "the yield is the answer, so the frame cannot decorate it",
+    "faraday_deposit": "naming the metal would imply its molar mass and electrons",
+    "calorimetry_mass": "naming the substance would imply the specific heat",
+    "calorimetry_c": "naming the substance would imply its specific heat",
+    "specific_heat": "naming the substance would imply its specific heat",
+    "latent_heat": "naming the substance would imply its latent heat",
+    "gas_heat_cp": "naming the gas would imply its molar heat capacity",
+    "conduction_rate": "naming the material would imply its conductivity",
+    "buffer_ph": "naming the buffer pair would imply its pKa",
+    "cell_potential": "naming the cell would imply the electrode potentials",
+    "vsepr_bond_angle": "naming the molecule would imply its domains and lone pairs",
+    "hydrate_water": "naming the salt would imply its molar masses",
+    "heat_reaction": "naming the reaction would imply its enthalpy",
+    "gibbs": "naming the reaction would imply its enthalpy and entropy",
+}

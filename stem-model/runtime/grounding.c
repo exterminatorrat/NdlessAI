@@ -91,3 +91,70 @@ int grounding_call_grounded(const char *call, const char *question)
 	}
 	return 1;
 }
+
+/* [+-]? (digits [.digits] | .digits): the same shape the call parser accepts. */
+static int number_span(const char *s, int *len)
+{
+	int i = 0, digits = 0;
+
+	if (s[0] == '-' || s[0] == '+')
+		i++;
+	while (s[i] >= '0' && s[i] <= '9') {
+		i++;
+		digits++;
+	}
+	/* A decimal point only belongs to the number when a digit follows it:
+	 * "20." at the end of a sentence is twenty, and keeping the full stop
+	 * made it a number of the wrong width, which no argument could match. */
+	if (s[i] == '.' && s[i + 1] >= '0' && s[i + 1] <= '9') {
+		i++;
+		while (s[i] >= '0' && s[i] <= '9') {
+			i++;
+			digits++;
+		}
+	}
+	if (digits == 0)
+		return 0;
+	*len = i;
+	return 1;
+}
+
+/* A digit run must end the token: "5x" is a coefficient, not the number 5, and
+ * offering it as an argument value would corrupt the question's meaning. */
+static int ends_token(const char *s, int len)
+{
+	char c = s[len];
+
+	return c == '\0' || c == ' ' || c == ',' || c == '.' || c == ')' ||
+	       c == ';' || c == '?' || c == ':' || c == '\n';
+}
+
+int grounding_spans(const char *text, grounding_span_t *out, int max)
+{
+	int n = 0;
+
+	if (!text || !out || max <= 0)
+		return 0;
+	for (const char *p = text; *p && n < max; p++) {
+		int len = 0;
+
+		if (!(p[0] >= '0' && p[0] <= '9') &&
+		    !((p[0] == '-' || p[0] == '+') && p[1] >= '0' && p[1] <= '9'))
+			continue;
+		if (!number_span(p, &len))
+			continue;
+		if (!grounding_number_boundary(text, p, len))
+			continue;
+		if (!ends_token(p, len))
+			continue;
+		if (len >= GROUNDING_SPAN_LEN)
+			continue;
+		memcpy(out[n].text, p, (size_t)len);
+		out[n].text[len] = '\0';
+		out[n].start = (int)(p - text);
+		out[n].end = out[n].start + len;
+		n++;
+		p += len - 1;
+	}
+	return n;
+}

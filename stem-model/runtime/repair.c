@@ -14,80 +14,9 @@
 
 /* Revised 2026-11-16: use grounding's boundaries for repair candidates. */
 
-#define MAX_NUMBERS 24
-#define NUMBER_LEN 24
-
-typedef struct {
-	char text[NUMBER_LEN];
-	int start;
-	int end;
-} number_t;
-
-/* [+-]? (digits [.digits] | .digits): the same shape the call parser accepts. */
-static int number_span(const char *s, int *len)
-{
-	int i = 0, digits = 0;
-
-	if (s[0] == '-' || s[0] == '+')
-		i++;
-	while (s[i] >= '0' && s[i] <= '9') {
-		i++;
-		digits++;
-	}
-	/* A decimal point only belongs to the number when a digit follows it:
-	 * "20." at the end of a sentence is twenty, and keeping the full stop
-	 * made it a number of the wrong width, which no argument could match. */
-	if (s[i] == '.' && s[i + 1] >= '0' && s[i + 1] <= '9') {
-		i++;
-		while (s[i] >= '0' && s[i] <= '9') {
-			i++;
-			digits++;
-		}
-	}
-	if (digits == 0)
-		return 0;
-	*len = i;
-	return 1;
-}
-
-/* A digit run must end the token: "5x" is a coefficient, not the number 5, and
- * repairing into it would corrupt the question's meaning. */
-static int ends_token(const char *s, int len)
-{
-	char c = s[len];
-
-	return c == '\0' || c == ' ' || c == ',' || c == '.' || c == ')' ||
-	       c == ';' || c == '?' || c == ':' || c == '\n';
-}
-
-static int collect(const char *text, number_t *out, int max)
-{
-	int n = 0;
-
-	for (const char *p = text; *p && n < max; p++) {
-		int len = 0;
-
-		if (!(p[0] >= '0' && p[0] <= '9') &&
-		    !((p[0] == '-' || p[0] == '+') && p[1] >= '0' && p[1] <= '9'))
-			continue;
-		if (!number_span(p, &len))
-			continue;
-		if (!grounding_number_boundary(text, p, len))
-			continue;
-		if (!ends_token(p, len))
-			continue;
-		if (len >= NUMBER_LEN)
-			continue;
-		memcpy(out[n].text, p, (size_t)len);
-		out[n].text[len] = '\0';
-		out[n].start = (int)(p - text);
-		out[n].end = out[n].start + len;
-		n++;
-		p += len - 1;
-	}
-	return n;
-}
-
+/* The spans come from grounding.c: the repair and the argument mask must
+ * agree about what counts as a number, or a value could be a candidate for one
+ * and not the other. */
 /* Numbers are compared on their digits alone: "-0.1" and "0.1" differ by a
  * sign, which is the polarity question, not the digit question. */
 static const char *digits_of(const char *s)
@@ -123,13 +52,13 @@ static int one_off(const char *a, const char *b)
 
 int repair_argument(const char *arg, const char *question, char *out, int outlen)
 {
-	number_t numbers[MAX_NUMBERS];
+	grounding_span_t numbers[GROUNDING_MAX_SPANS];
 	int n, best = -1, ties = 0;
 
 	if (!arg || !question || !out || outlen < 2)
 		return -1;
 	out[0] = '\0';
-	n = collect(question, numbers, MAX_NUMBERS);
+	n = grounding_spans(question, numbers, GROUNDING_MAX_SPANS);
 	for (int i = 0; i < n; i++) {
 		if (!one_off(arg, numbers[i].text))
 			continue;
@@ -178,7 +107,7 @@ int repair_call(const char *call, const char *question, char *out, int outlen)
 {
 	char work[256];
 	char *tokens[16];
-	char candidate[NUMBER_LEN];
+	char candidate[GROUNDING_SPAN_LEN];
 	int n = 0, hit = -1, used = 0;
 
 	if (!call || !question || !out || outlen < 2)
@@ -200,7 +129,7 @@ int repair_call(const char *call, const char *question, char *out, int outlen)
 	}
 
 	for (int i = 0; i < n; i++) {
-		char fixed[NUMBER_LEN];
+		char fixed[GROUNDING_SPAN_LEN];
 
 		if (!numeric(tokens[i]) ||
 		    grounding_arg_in_text(tokens[i], question))

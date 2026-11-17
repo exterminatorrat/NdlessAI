@@ -201,6 +201,7 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | Workstream | State on master | Where it lives |
 | --- | --- | --- |
 | Typed expressions with no model (ahead of wave 1, closed 1.4's gap) | merged, #15 | `runtime/expr.c`; `typed_mode()` answers without `weights.bin` |
+| Collision solver decimal overflow | not merged; verified on `fix/collision-velocity-overflow`, 2026-11-17 | Reduced mass ratios and checked integer arithmetic let converted pound/mph collisions answer without overflowing. `make -s test_shorthand test_solvers test_parity`: shorthand passed; 13,978 solver assertions and 3,672 parity cases, zero mismatches. ASan/UBSan shorthand checks pass; original calculator reboot not reproduced on hardware |
 | 0.1 split the solver and formula tables by subject | merged, #19 | ten `relations/*.py` modules, seven `runtime/solvers_*.c` units |
 | 0.2 build the artifacts | on the build machine only, not committed | `weights.bin` and `data/` are gitignored, so `gate.sh` skips parity and accuracy on a fresh clone |
 | 0.3 record the baseline | done | the numbers under "Baseline measured on the build machine" |

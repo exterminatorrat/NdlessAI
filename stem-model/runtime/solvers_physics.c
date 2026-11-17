@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -499,25 +500,48 @@ static int solve_torque(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+/* Revised 2026-11-17: reduce mass ratios and check collision arithmetic. */
 static int solve_collision_velocity(const char *const *args, char *out,
                                     size_t outlen)
 {
 	rat m1, u1, m2, u2;
 	int rc;
 	char f1[48], buf[64];
-	long long mom, mass, d;
+	long long md, vd, a, b, mass, g, x, y, num, den;
 
 	if ((rc = parse_rat(args[0], &m1, NULL)) != 0 ||
 	    (rc = parse_rat(args[1], &u1, NULL)) != 0 ||
 	    (rc = parse_rat(args[2], &m2, NULL)) != 0 ||
 	    (rc = parse_rat(args[3], &u2, NULL)) != 0)
 		return rc;
-	d = m1.d * u1.d * m2.d * u2.d;
-	mom = m1.n * u1.n * m2.d * u2.d + m2.n * u2.n * m1.d * u1.d;
-	mass = m1.n * m2.d + m2.n * m1.d;
-	if (mass == 0)
+	/* parse_rat returns powers of ten, so the larger denominator is a
+	 * common scale. Only the mass ratio matters; cancel it before taking
+	 * products with velocities instead of multiplying four denominators. */
+	md = m1.d > m2.d ? m1.d : m2.d;
+	vd = u1.d > u2.d ? u1.d : u2.d;
+	if (__builtin_mul_overflow(m1.n, md / m1.d, &a) ||
+	    __builtin_mul_overflow(m2.n, md / m2.d, &b) ||
+	    a == LLONG_MIN || b == LLONG_MIN ||
+	    __builtin_add_overflow(a, b, &mass) ||
+	    mass == 0 || mass == LLONG_MIN)
 		return -4;
-	if ((rc = dec4_render(mom * m1.d * m2.d, d * mass, f1, sizeof(f1))) != 0)
+	g = gcd_ll(a, b);
+	a /= g;
+	b /= g;
+	mass /= g;
+	if (__builtin_mul_overflow(u1.n, vd / u1.d, &x) ||
+	    __builtin_mul_overflow(u2.n, vd / u2.d, &y) ||
+	    __builtin_mul_overflow(a, x, &x) ||
+	    __builtin_mul_overflow(b, y, &y) ||
+	    __builtin_add_overflow(x, y, &num) || num == LLONG_MIN ||
+	    __builtin_mul_overflow(mass, vd, &den) || den == LLONG_MIN)
+		return -4;
+	if (den < 0) {
+		den = -den;
+		num = -num;
+	}
+	g = gcd_ll(num, den);
+	if ((rc = dec4_render(num / g, den / g, f1, sizeof(f1))) != 0)
 		return rc;
 	snprintf(buf, sizeof(buf), "%s m/s", f1);
 	out_set(out, outlen, buf);

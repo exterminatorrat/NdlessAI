@@ -10,9 +10,10 @@
 
 #include "pipeline.h"
 #include "shorthand.h"
+#include "solvers.h"
 #include "solvers_subject.h"
 
-/* Revised 2026-11-16: test scientific quantities through parsing and solving. */
+/* Revised 2026-11-17: cover converted collision values and safe refusal. */
 
 static int failures;
 
@@ -172,12 +173,44 @@ static void test_scientific_numbers(void)
 	      "an unrepresentable concentration is refused, not rounded to zero");
 }
 
+static void test_collision_decimals(void)
+{
+	static const struct {
+		const char *args[4], *answer;
+	} cases[] = {
+		{{"1.3608", "5.81152", "3.1752", "-2.68224"}, "-0.1341 m/s"},
+		{{"1.3608", "-5.81152", "3.1752", "2.68224"}, "0.1341 m/s"},
+		{{"1.3608", "14", "3.1752", "-6"}, "0 m/s"},
+		{{"0.25", "1.25", "0.5", "-0.5"}, "0.08333 m/s"},
+		{{"0", "12.3456", "2", "-3"}, "-3 m/s"},
+		{{"-1", "2", "-2", "5"}, "4 m/s"}
+	};
+	static const char *const overflow[] = {
+		"899999999999999", "100000", "899999999999997", "-100000"
+	};
+	static const char *const zero_mass[] = {"1", "2", "-1", "3"};
+	char answer[128];
+
+	for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++)
+		check(solvers_solve("collision_velocity", cases[i].args, 4,
+		                     answer, sizeof answer) == 0 &&
+		      strcmp(answer, cases[i].answer) == 0,
+		      "decimal collision conserves momentum without overflowing");
+	check(solvers_solve("collision_velocity", overflow, 4, answer,
+	                    sizeof answer) == -4,
+	      "collision products outside the integer range are refused");
+	check(solvers_solve("collision_velocity", zero_mass, 4, answer,
+	                    sizeof answer) == -4,
+	      "a zero total mass is refused before division");
+}
+
 int main(void)
 {
 	test_names();
 	test_restraint();
 	test_offline_path();
 	test_scientific_numbers();
+	test_collision_decimals();
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;

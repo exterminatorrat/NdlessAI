@@ -21,6 +21,7 @@ says which artifact is missing. Pass --check-corpus to stop there.
 
 import argparse
 import glob
+import collections
 import json
 import os
 import subprocess
@@ -160,6 +161,25 @@ def summarise(label, cases, max_show, run):
     misses = [result for result in results if result[0] != "exact"]
     for _, expected, got, question in misses[:max_show]:
         print(f"\n  Q: {question}\n     want {expected}\n     got  {got}")
+    return [(case[0], kind, got) for case, (kind, _, got, _) in zip(cases, results)]
+
+
+def confusion_table(scored, shown):
+    """Which relation was named in place of which, worst first.
+
+    The aggregate moves inside the seed noise and says nothing about what the data
+    was built to do; this table does. A pair that stops appearing here has stopped
+    confusing, whatever the total did.
+    """
+    counts = collections.Counter(
+        (wanted, named) for wanted, kind, named in scored if kind == "relation")
+    if not counts:
+        print("\nno wrong-relation calls to report")
+        return
+    total = sum(counts.values())
+    print(f"\n{total} wrong-relation calls over {len(counts)} pairs")
+    for (wanted, named), count in counts.most_common(shown):
+        print(f"  {wanted:<26}{named:<26}{count:5d}")
 
 
 def main():
@@ -175,6 +195,8 @@ def main():
                     help="validate the corpus and stop, no model needed")
     ap.add_argument("--no-stress", action="store_true",
                     help="skip the 24 hand-written stress cases")
+    ap.add_argument("--confusions", type=int, default=0, metavar="N",
+                    help="print the N worst wrong-relation pairs on the eval split")
     args = ap.parse_args()
 
     corpus = load_corpora(args.corpus)
@@ -205,10 +227,13 @@ def main():
         summarise("24 hand-written stress cases", CASES, args.max_show, run)
 
     for split in splits:
-        summarise(f"{split} split",
-                  [(r["relation"], r["args"], r["question"])
-                   for r in corpus if r["split"] == split],
-                  args.max_show, run)
+        cases = [(r["relation"], r["args"], r["question"])
+                 for r in corpus if r["split"] == split]
+        results = summarise(f"{split} split", cases, args.max_show, run)
+        if split == "eval" and args.confusions:
+            confusion_table(
+                [(name, kind, " ".join(got.split()[:2]).replace("CALL ", ""))
+                 for name, kind, got in results], args.confusions)
     return 0
 
 

@@ -1,0 +1,369 @@
+"""Generate a chemistry wording corpus and the ledger that says how wide it is.
+
+Rows come from `surface/spec.py` (what each slot is), `surface/grammar.py` (how a
+sentence is composed) and `surface/lexicon.py` (what a student calls it). The
+corpus goes in its own fixture file so before-and-after is measurable on the same
+eval rows, and the ledger counts *structures* rather than rows, because a
+relation with four hundred rows from three structures is three.
+
+    python gen_wording.py --write          # the corpus and the ledger
+    python gen_wording.py --check          # fail when either is stale
+
+Every row is checked before it is written: it solves, every argument is grounded
+in its own text by the runtime's rule, its structure id is stable, and a reader
+could resolve it. Rows refused for resolvability are counted in the ledger
+against the relation, with the reason, rather than dropped silently.
+"""
+
+import argparse
+import glob
+import json
+import os
+import random
+import re
+import sys
+
+from relations import RELATIONS
+from surface import grammar, lexicon, numbers, spec
+
+CORPUS = "fixtures/paraphrase_chem-generated_r6.jsonl"
+LEDGER = "../docs/wording-ledger.md"
+EXISTING = "fixtures/paraphrase_*.jsonl"
+
+# The eight measured confusion pairs. Both sides are rendered with the *same*
+# numbers and the same structure, so the only difference between the two rows is
+# the word that decides the relation. A pair that cannot be decided by wording is
+# recorded as such instead of being faked: `carnot` and `carnot_efficiency` return
+# one quantity in two formats, which is ELV-77's contract defect.
+CONTRAST = (
+    ("sin_eval", "cos_eval"),
+    ("fahrenheit_to_celsius", "celsius_to_fahrenheit"),
+    ("geom_seq", "arith_seq"),
+    ("percent_change", "percent_error"),
+    ("calorimetry_c", "calorimetry_mass"),
+    ("h_from_ph", "ph"),
+    ("dilution", "dilution_v1"),
+    ("carnot_efficiency", "carnot"),
+)
+
+UNRESOLVABLE_PAIRS = {
+    ("carnot_efficiency", "carnot"):
+        "same quantity in two formats, no wording decides it (ELV-77)",
+}
+
+EVAL_IN = 5          # one structure in five is held out whole
+PER_RELATION = 24    # structures sampled per relation, eval structures first
+ARG_SETS = 1
+JACCARD_LIMIT = 0.9
+
+NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def tokens(text):
+    return {match.group(0) for match in NUMBER.finditer(text)}
+
+
+def grounded(value, text):
+    """The runtime's rule: the value's digits appear on a full number token.
+
+    Ported from `pipeline_args_grounded` in `runtime/pipeline.c`: 0 and 1 are
+    exempt, everything else has to appear as written, sign included.
+    """
+    if value in (0, 1):
+        return True
+    text_of = numbers.canon(value)
+    return text_of is not None and text_of in tokens(text)
+
+
+def normalised(text):
+    """The words of a sentence, numbers dropped: what two rows share in wording."""
+    return {word for word in re.findall(r"[a-z]+", text.lower()) if len(word) > 2}
+
+
+def jaccard(left, right):
+    if not left or not right:
+        return 0.0
+    return len(left & right) / len(left | right)
+
+
+def existing_words():
+    """Normalised word sets per relation, so a new row is not a near-duplicate."""
+    seen = {}
+    for path in sorted(glob.glob(EXISTING)):
+        if os.path.abspath(path) == os.path.abspath(CORPUS):
+            continue
+        with open(path) as handle:
+            for line in handle:
+                row = json.loads(line)
+                seen.setdefault(row["relation"], []).append(
+                    normalised(row["question"]))
+    return seen
+
+
+def held_out(relation, structure_id):
+    """One structure in five, by hash of the relation and the structure id."""
+    digest = sum(ord(char) * (index + 1)
+                 for index, char in enumerate(f"{relation}|{structure_id}"))
+    return digest % EVAL_IN == 0
+
+
+def tidy(values):
+    """Integral floats as integers: the corpus checker grounds `str(arg)`, so 87.0
+    has to be written 87.0 and 87 has to be written 87."""
+    return [int(value) if isinstance(value, float) and value.is_integer() else value
+            for value in values]
+
+
+def arg_sets(name, count, seed):
+    """Argument tuples the relation's own generator produces, so every row solves."""
+    relation = RELATIONS[name]
+    rng = random.Random(f"{name}|{seed}")
+    sets = []
+    tries = 0
+    while len(sets) < count and tries < count * 20:
+        tries += 1
+        values, _ = relation.gen(rng)
+        values = tidy(values)
+        if all(numbers.canon(value) is not None for value in values):
+            sets.append(values)
+    return sets
+
+
+def build(seed=1, per_relation=PER_RELATION):
+    """Yield (rows, ledger) for every chemistry spec, in a stable order."""
+    known = existing_words()
+    rows, ledger = [], []
+    for name in sorted(spec.SPECS):
+        if name not in RELATIONS:
+            continue
+        relation_spec = spec.SPECS[name]
+        all_structures = list(grammar.structures(relation_spec))
+        refused = [s for s in all_structures if grammar.refusal(relation_spec, s)]
+        usable = [s for s in all_structures if not grammar.refusal(relation_spec, s)]
+        eval_structures = [s for s in usable if held_out(name, s.id)]
+        train_structures = [s for s in usable if not held_out(name, s.id)]
+        budget = max(per_relation, len(eval_structures))
+        sampled = eval_structures + train_structures[:max(0, budget - len(eval_structures))]
+        sets = arg_sets(name, ARG_SETS, seed)
+        made = 0
+        for index, structure in enumerate(sampled):
+            for args in sets:
+                register = lexicon.REGISTERS[index % len(lexicon.REGISTERS)]
+                rendered = grammar.render(relation_spec, args, structure, register, index)
+                if rendered is None:
+                    continue
+                text = rendered.text
+                if not all(grounded(value, text) for value in args):
+                    continue
+                words = normalised(text)
+                if any(jaccard(words, other) > JACCARD_LIMIT
+                       for other in known.get(name, ())):
+                    continue
+                RELATIONS[name].solve(*args)
+                rows.append({
+                    "relation": name,
+                    "args": args,
+                    "question": text,
+                    "split": "eval" if held_out(name, structure.id) else "train",
+                    "structure": structure.id,
+                })
+                made += 1
+        ledger.append({
+            "relation": name,
+            "slots": len(relation_spec.slots),
+            "same_dim": relation_spec.same_dim,
+            "structures": len(all_structures),
+            "refused": len(refused),
+            "reason": grammar.refusal(relation_spec, refused[0]) if refused else None,
+            "rows": made,
+            "eval_rows": sum(1 for row in rows if row["relation"] == name
+                             and row["split"] == "eval"),
+        })
+    return rows, ledger
+
+
+def contrast_rows(seed, per_pair=3):
+    """Rows for the measured confusion pairs, both sides on the same numbers."""
+    made, notes = [], []
+    rng = random.Random(f"contrast|{seed}")
+    for left, right in CONTRAST:
+        if (left, right) in UNRESOLVABLE_PAIRS:
+            notes.append({"pair": f"{left}/{right}", "rows": 0,
+                          "note": UNRESOLVABLE_PAIRS[(left, right)]})
+            continue
+        if left not in spec.SPECS or right not in spec.SPECS:
+            notes.append({"pair": f"{left}/{right}", "rows": 0,
+                          "note": "no spec for one side"})
+            continue
+        left_spec, right_spec = spec.SPECS[left], spec.SPECS[right]
+        if len(left_spec.slots) != len(right_spec.slots):
+            notes.append({"pair": f"{left}/{right}", "rows": 0,
+                          "note": f"arity differs ({len(left_spec.slots)} against "
+                                  f"{len(right_spec.slots)})"})
+            continue
+        shared = [structure for structure in grammar.structures(left_spec)
+                  if structure.names_roles
+                  and not grammar.refusal(left_spec, structure)
+                  and any(other.id == structure.id for other in grammar.structures(right_spec))]
+        if not shared:
+            notes.append({"pair": f"{left}/{right}", "rows": 0,
+                          "note": "no structure is valid for both sides"})
+            continue
+        chosen = shared[:per_pair]
+        args = None
+        for _ in range(60):
+            values = tidy(RELATIONS[left].gen(rng)[0])
+            if not all(numbers.canon(value) is not None for value in values):
+                continue
+            try:
+                RELATIONS[right].solve(*values)
+            except Exception:  # noqa: BLE001 - a domain mismatch is a skipped draw
+                continue
+            args = values
+            break
+        if args is None:
+            notes.append({"pair": f"{left}/{right}", "rows": 0,
+                          "note": "no argument tuple is valid for both relations"})
+            continue
+        count = 0
+        for index, structure in enumerate(chosen):
+            for name, entry in ((left, left_spec), (right, right_spec)):
+                other = next(s for s in grammar.structures(entry) if s.id == structure.id)
+                register = lexicon.REGISTERS[index % len(lexicon.REGISTERS)]
+                rendered = grammar.render(entry, args, other, register, index)
+                if rendered is None:
+                    continue
+                text = rendered.text
+                if not all(grounded(value, text) for value in args):
+                    continue
+                RELATIONS[name].solve(*args)
+                made.append({
+                    "relation": name,
+                    "args": list(args),
+                    "question": text,
+                    "split": "train",
+                    "structure": structure.id,
+                    "pair": f"{left}/{right}",
+                })
+                count += 1
+        notes.append({"pair": f"{left}/{right}", "rows": count, "note": ""})
+    return made, notes
+
+
+def ledger_text(ledger, contrast=()):
+    total_structures = sum(entry["structures"] for entry in ledger)
+    total_rows = sum(entry["rows"] for entry in ledger)
+    total_refused = sum(entry["refused"] for entry in ledger)
+    total_eval = sum(entry["eval_rows"] for entry in ledger)
+    lines = [
+        "# Wording ledger — chemistry",
+        "",
+        "Generated by `stem-model/gen_wording.py`; `--check` fails when it is stale.",
+        "A structure is a (given clause, ask clause, framing) triple, so the count is",
+        "the number of distinct sentence shapes a relation admits, not the number of",
+        "rows drawn from them.",
+        "",
+        f"{len(ledger)} relations, {total_structures} structures, {total_rows} rows "
+        f"({total_eval} eval), {total_refused} structures refused as unresolvable.",
+        "",
+        "| relation | slots | same-dimension pairs | structures | refused | rows | eval rows |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for entry in ledger:
+        pairs = "; ".join("/".join(pair) for pair in entry["same_dim"]) or "-"
+        lines.append(f"| `{entry['relation']}` | {entry['slots']} | {pairs} | "
+                     f"{entry['structures']} | {entry['refused']} | {entry['rows']} | "
+                     f"{entry['eval_rows']} |")
+    if contrast:
+        lines += [
+            "",
+            "## Contrast pairs",
+            "",
+            "Both sides are rendered on the same numbers and the same structure, so the",
+            "only difference is the word that decides the relation.",
+            "",
+            "| pair | rows | note |",
+            "| --- | --- | --- |",
+        ]
+        for entry in contrast:
+            lines.append(f"| `{entry['pair']}` | {entry['rows']} | {entry['note']} |")
+    lines += [
+        "",
+        "## Refusals, with the reason",
+        "",
+        "A structure is refused only when nothing in the text settles which slot is",
+        "which: two slots of the relation share a dimension and the given block does",
+        "not name roles. That is a property of the relation's slots rather than of the",
+        "wording, so the fraction is reported here and not in a pull request body.",
+        "",
+    ]
+    refused = [entry for entry in ledger if entry["refused"]]
+    if refused:
+        for entry in refused:
+            share = entry["refused"] / entry["structures"]
+            lines.append(f"- `{entry['relation']}` — {entry['refused']} of "
+                         f"{entry['structures']} structures ({share:.0%}): {entry['reason']}")
+    else:
+        lines.append("- none")
+    return "\n".join(lines) + "\n"
+
+
+def all_rows(seed, per_relation=PER_RELATION):
+    """The whole corpus: one row set per relation, then the paired contrast rows."""
+    rows, ledger = build(seed, per_relation)
+    extra, notes = contrast_rows(seed)
+    return rows + extra, ledger, notes
+
+
+def write(seed):
+    rows, ledger, notes = all_rows(seed)
+    with open(CORPUS, "w") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    with open(LEDGER, "w") as handle:
+        handle.write(ledger_text(ledger, notes))
+    return rows, ledger
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--write", action="store_true", help="rewrite the corpus and the ledger")
+    ap.add_argument("--check", action="store_true", help="fail when either file is stale")
+    ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--per-relation", type=int, default=PER_RELATION)
+    args = ap.parse_args()
+
+    rows, ledger, notes = all_rows(args.seed, args.per_relation)
+    text = ledger_text(ledger, notes)
+    if args.check:
+        stale = []
+        if not os.path.exists(CORPUS):
+            stale.append(CORPUS)
+        else:
+            with open(CORPUS) as handle:
+                written = [json.loads(line) for line in handle if line.strip()]
+            if written != rows:
+                stale.append(CORPUS)
+        if not os.path.exists(LEDGER):
+            stale.append(LEDGER)
+        else:
+            with open(LEDGER) as handle:
+                if handle.read() != text:
+                    stale.append(LEDGER)
+        if stale:
+            print("stale: " + ", ".join(stale))
+            print("run: python gen_wording.py --write")
+            return 1
+        print(f"ledger and corpus are current: {len(rows)} rows, "
+              f"{sum(entry['structures'] for entry in ledger)} structures")
+        return 0
+    if args.write:
+        write(args.seed)
+        print(f"wrote {CORPUS} ({len(rows)} rows) and {LEDGER}")
+        return 0
+    print(text)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,114 @@
+import json
+import os
+import subprocess
+import sys
+
+import pytest
+
+from evaluate_paraphrase import arg_in_text
+from relations import RELATIONS
+from surface import grammar, lexicon, spec
+
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def test_a_bare_list_is_refused_only_where_a_reader_could_not_resolve_it():
+    boyles = spec.SPECS["boyles"]
+    listed = [structure for structure in grammar.structures(boyles)
+              if structure.given == "list"]
+    assert listed
+    assert all(grammar.refusal(boyles, structure) for structure in listed)
+
+    molarity = spec.SPECS["molarity"]
+    listed = [structure for structure in grammar.structures(molarity)
+              if structure.given == "list"]
+    assert listed
+    assert all(grammar.refusal(molarity, structure) is None for structure in listed)
+
+
+def test_a_named_block_is_never_refused():
+    for name, entry in spec.SPECS.items():
+        for structure in grammar.structures(entry):
+            if structure.names_roles:
+                assert grammar.refusal(entry, structure) is None, (name, structure.id)
+
+
+def test_structure_ids_are_unique_within_a_relation():
+    for name, entry in spec.SPECS.items():
+        ids = [structure.id for structure in grammar.structures(entry)]
+        assert len(ids) == len(set(ids)), name
+
+
+def test_framings_are_declared_per_relation_and_always_offer_the_bare_one():
+    assert grammar.framings_for(spec.SPECS["mixing_concentration"]) == ("", "volumes")
+    assert grammar.framings_for(spec.SPECS["molarity"]) == ("",)
+    assert grammar.framings_for(spec.SPECS["avg_rate"]) == ("",)
+
+
+def test_a_lexicon_word_never_replaces_a_precise_role():
+    slot = spec.SPECS["first_law"].slots["w"]
+    assert lexicon.role_words(slot, "classroom") == (slot.role,)
+
+
+@pytest.mark.parametrize("name", ["molarity", "boyles", "h_from_ph", "percent_yield"])
+def test_rendered_rows_ground_every_argument(name):
+    entry = spec.SPECS[name]
+    args, _ = RELATIONS[name].gen(__import__("random").Random(7))
+    args = [int(value) if float(value).is_integer() else value for value in args]
+    checked = 0
+    for structure in grammar.structures(entry):
+        if grammar.refusal(entry, structure):
+            continue
+        row = grammar.render(entry, args, structure, "exam", 0)
+        assert row is not None
+        for value in args:
+            assert arg_in_text(value, row.text), (name, structure.id, value, row.text)
+        checked += 1
+    assert checked
+
+
+def test_rendered_rows_have_no_doubled_space_or_placeholder():
+    for name, entry in spec.SPECS.items():
+        args, _ = RELATIONS[name].gen(__import__("random").Random(3))
+        args = [int(value) if float(value).is_integer() else value for value in args]
+        for structure in grammar.structures(entry):
+            if grammar.refusal(entry, structure):
+                continue
+            row = grammar.render(entry, args, structure, "exam", 0)
+            assert row is not None
+            assert "  " not in row.text
+            assert "{" not in row.text and "}" not in row.text
+            assert row.text.endswith((".", "?", "!"))
+
+
+def test_corpus_rows_name_a_relation_that_exists():
+    path = os.path.join(HERE, "fixtures", "paraphrase_chem-generated_r6.jsonl")
+    with open(path) as handle:
+        rows = [json.loads(line) for line in handle if line.strip()]
+    assert rows
+    for row in rows:
+        assert row["relation"] in RELATIONS
+        assert row["relation"] in spec.SPECS
+        assert row["split"] in ("train", "eval")
+        assert "structure" in row
+
+
+def test_contrast_rows_put_both_sides_on_the_same_numbers():
+    path = os.path.join(HERE, "fixtures", "paraphrase_chem-generated_r6.jsonl")
+    with open(path) as handle:
+        rows = [json.loads(line) for line in handle if line.strip()]
+    paired = [row for row in rows if "pair" in row]
+    assert paired, "no contrast rows were generated"
+    by_pair = {}
+    for row in paired:
+        by_pair.setdefault(row["pair"], []).append(row)
+    for pair, side_rows in by_pair.items():
+        args = {tuple(row["args"]) for row in side_rows}
+        assert len(args) == 1, pair
+        assert len(side_rows) % 2 == 0, pair
+
+
+def test_generated_artifacts_are_current():
+    result = subprocess.run([sys.executable, "gen_wording.py", "--check"],
+                            cwd=HERE, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr

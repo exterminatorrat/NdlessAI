@@ -468,6 +468,24 @@ void ui_result(ui_t *u, const char *question, int rc,
 		} else {
 			copy_trunc(src, sizeof src, answer ? answer : "");
 		}
+	} else if (rc == PIPELINE_TOO_LONG) {
+		/*
+		 * The one refusal that is not about words at all. The text was
+		 * arithmetic, so no model was consulted and nothing was guessed: the
+		 * exact engine could not hold it, and it is refused here rather than
+		 * handed to the decoder, which would have read a sum as a sentence.
+		 *
+		 * Measured, this branch receives two kinds of text: one longer than the
+		 * engine's node pool (a flat sum answers at 64 terms and stops at 65),
+		 * and arithmetic that does not parse at all ("(2+3"). The offline test
+		 * accepts both as arithmetic, so the sentence names both rather than
+		 * asserting a length it cannot prove.
+		 */
+		put(&at, end, "That is arithmetic this build cannot work out.\n"
+		              "Either it is longer than a single exact\n"
+		              "step, or part of it is not written the way\n"
+		              "a formula goes. Split it into two steps,\n"
+		              "or check the brackets and the operators.\n");
 	} else if (weights_mismatch(u)) {
 		/*
 		 * The one refusal this screen can name. The weights carry a vocabulary
@@ -571,11 +589,23 @@ static void ask(ui_t *u)
 	if (u->p) {
 		rc = pipeline_answer(u->p, u->input, answer, (int)sizeof answer,
 		                     call, (int)sizeof call);
-	} else if (pipeline_answer_offline(u->input, answer, (int)sizeof answer,
-	                                   call, (int)sizeof call) == 0) {
-		rc = PIPELINE_OK;
 	} else {
-		rc = PIPELINE_ERR;
+		/*
+		 * No weights file. The offline path's three codes are kept apart here
+		 * rather than collapsed into one: an arithmetic question too big for
+		 * the exact engine is not a missing-model failure, and saying so is
+		 * the whole reason the code exists.
+		 */
+		int off = pipeline_answer_offline(u->input, answer,
+		                                  (int)sizeof answer,
+		                                  call, (int)sizeof call);
+
+		if (off == 0)
+			rc = PIPELINE_OK;
+		else if (off == 3)
+			rc = PIPELINE_TOO_LONG;
+		else
+			rc = PIPELINE_ERR;
 	}
 	ui_result(u, u->input, rc, answer, call);
 	u->input[0] = '\0';

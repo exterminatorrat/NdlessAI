@@ -360,6 +360,50 @@ Report per course in outcomes, not modules: what a student can now ask, which
 number moved, from what to what, and what was measured on which split. The
 template at the bottom of `docs/waves.md` is the shape.
 
+### The tier, closed
+
+**What a student can now ask, by course.** Every number below is exact-call
+accuracy on hand-written rows, measured through the int8 C engine.
+
+| Course | Before P3 | After P3-P5 | Floor | What changed for this course |
+| --- | --- | --- | --- | --- |
+| AP Precalculus | 61.6% (326/529) | 64.5% (341/529) | 61.6 | average rate of change, vector addition, dot product and scaling |
+| SAT / ACT maths | 67.2% (309/460) | 72.4% (333/460) | 67.2 | percentages, percent change, ratios, rates, interest, areas, volumes, probability |
+| Intro physics and chemistry | 64.2% (483/752) | 68.5% (515/752) | 64.2 | collisions, series resistance, limiting reagent |
+| AP Calculus AB | 69.6% (32/46) | 71.7% (33/46) | not judged, 46 rows | the typed engine, not relations: limits, area between curves, volume of revolution |
+| AP Calculus BC | no rows | no rows | not judged | polar area and parametric arc length are typed-engine work |
+
+**What the catalogue covers now.** 153 relations; intro physics and chemistry
+answers all 42 of its topics, AP Precalculus 29 of 31, SAT/ACT 28 of 32, AP
+Calculus AB 11 of 20. Nineteen topics across the five courses remain open, and
+every one of them is analytical rather than numeric: asymptotes, polar
+graphing, tangent lines, chain rule inside a word problem, implicit
+differentiation, related rates, optimisation, straight-line motion, critical
+points, Mean Value Theorem, Riemann sums, series convergence and error bounds.
+
+**What was measured on which split.** The course numbers above are the
+hand-written corpus, which is what a student types. The generated split reads
+higher and is not the headline: 90.2% and 93.6% exact on 500 held-out phrasing
+rows at the 640-entry vocabulary, with 2.2-3.2% wrong relation. Wording the
+model has never seen reads 98.4% and 98.6% exact against 98.5% on ordinary
+wording from the same weights, which is the one claim immune to seed variance.
+
+**What a student can reach.** The picker opens on their course, lists that
+course's callable topics, and never offers a gap or a typed-engine topic as a
+call. The subject route stays for anyone who does not know their course.
+
+**What is not in the tier, deliberately.** The nineteen analytical topics above;
+`circle_measure`, cut because pi r^2 has no exact rational answer; the
+by-parts and improper-integral rules (P2c), which the typed engine already
+answers numerically; and AP Statistics, AP Physics C, multivariable calculus and
+every course whose answer is a derivation rather than a number.
+
+**The one number that is not closed.** The accuracy ceiling is 90-94% on unseen
+phrasings at 153 relations, and it did not move when the vocabulary stopped
+starving itself. That ceiling is a training-recipe problem, not a catalogue
+problem: more relations will not raise it, and the recipe is where the next
+tier should start.
+
 ## Ownership matrix
 
 Two workers never edit one file in the same phase. Shared files, resolved at

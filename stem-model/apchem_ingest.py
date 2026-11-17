@@ -83,7 +83,7 @@ BOILERPLATE = (
 # The free-response instructions block, repeated before most numbered prompts.
 FRQ_PREAMBLE = re.compile(
     r"^(Directions:\s*)?For parts of the free[- ]response question"
-    r"|^(steps )?involved in arriving at your answers"
+    r"|^(and )?(the )?(steps )?involved in arriving at your answers"
     r"|^(Examples and )?equations may be included in your answers")
 
 # A prompt number: `13.` at the start of a line, not the `13.` of `13.5 atm`.

@@ -316,8 +316,27 @@ int pipeline_typed_answer(const char *text, char *answer, int answer_max)
 		return PIPELINE_ERR;
 	if (gexpr_has_x(&e) || gexpr_has_y(&e))
 		return PIPELINE_ERR;
-	if (gexpr_format(gexpr_eval(&e, 0), answer, answer_max) < 0)
-		return PIPELINE_ERR;
+	/*
+	 * A number the parser had to clamp is not the number that was typed:
+	 * "100000/3" became 32767.99998/3 and printed 10923. The parser stores a
+	 * clamped literal as exactly Q16_MAX, which nothing else in a parsed
+	 * expression produces, so the tree says whether the question was even
+	 * representable before it is evaluated.
+	 */
+	for (int i = 0; i < e.n; i++)
+		if (e.node[i].op == G_NUM && e.node[i].num == Q16_MAX)
+			return PIPELINE_NO_VALUE;
+	{
+		q16_t value;
+
+		/* And the arithmetic itself may have no value: 1/0, sqrt(-4),
+		 * 9^999. Saturating those printed 32768 for a question with no
+		 * answer. */
+		if (gexpr_eval_checked(&e, 0, &value) < 0)
+			return PIPELINE_NO_VALUE;
+		if (gexpr_format(value, answer, answer_max) < 0)
+			return PIPELINE_ERR;
+	}
 	return PIPELINE_OK;
 }
 
@@ -384,13 +403,16 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 
 	if (call && call_max > 0)
 		call[0] = 0;
-	if (pipeline_typed_answer(question, answer, answer_max) == PIPELINE_OK)
-		return 0;
+	rc = pipeline_typed_answer(question, answer, answer_max);
+	if (rc == PIPELINE_OK)
+		return PIPELINE_OFFLINE_ANSWERED;
+	if (rc == PIPELINE_NO_VALUE)
+		return PIPELINE_OFFLINE_NO_VALUE;
 	/* Arithmetic the exact engine could not hold is not a word problem, and
 	 * the decoder would read it as one. Refuse it here, with a code of its own
-	 * so the screen can say which of the two happened. */
+	 * so the screen can say which of the three happened. */
 	if (looks_like_arithmetic(question))
-		return 3;
+		return PIPELINE_OFFLINE_TOO_LONG;
 
 	/*
 	 * A typed call: exact and instant, and the names it accepts are the ones
@@ -406,7 +428,7 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 		if (plan_execute(question, &plan) < 0) {
 			if (call && call_max > 0)
 				snprintf(call, (size_t)call_max, "%s", question);
-			return 2;
+			return PIPELINE_OFFLINE_REFUSED;
 		}
 		if (call && call_max > 0)
 			snprintf(call, (size_t)call_max, "%s", question);
@@ -417,14 +439,14 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 
 	rc = shorthand_build(question, guess, (int)sizeof guess);
 	if (rc < 0)
-		return 1;
+		return PIPELINE_OFFLINE_NOT_MINE;
 	if (call && call_max > 0)
 		snprintf(call, (size_t)call_max, "%s", guess);
 	if (rc == 1)
-		return 2;
+		return PIPELINE_OFFLINE_REFUSED;
 	if (run_call_text(guess, answer, answer_max) < 0)
-		return 2;
-	return 0;
+		return PIPELINE_OFFLINE_REFUSED;
+	return PIPELINE_OFFLINE_ANSWERED;
 }
 
 int pipeline_answer(pipeline_t *p, const char *question,
@@ -455,12 +477,16 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	 */
 	rc_offline = pipeline_answer_offline(question, answer, answer_max,
 	                                     call, call_max);
-	if (rc_offline == 0)
+	if (rc_offline == PIPELINE_OFFLINE_ANSWERED)
 		return PIPELINE_OK;
-	if (rc_offline == 3)
-		return PIPELINE_TOO_LONG;
-	if (rc_offline == 2)
+	if (rc_offline != PIPELINE_OFFLINE_NOT_MINE) {
+		/* A refusal the offline path understood: carry its reason through. */
+		if (rc_offline == PIPELINE_OFFLINE_TOO_LONG)
+			return PIPELINE_TOO_LONG;
+		if (rc_offline == PIPELINE_OFFLINE_NO_VALUE)
+			return PIPELINE_NO_VALUE;
 		return PIPELINE_ERR;
+	}
 
 	if (!p->ready)
 		return PIPELINE_ERR;

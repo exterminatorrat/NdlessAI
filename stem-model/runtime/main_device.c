@@ -44,6 +44,8 @@ int main(int argc, char **argv)
 			printf("!uncertain\t%s\n", call);
 		else if (rc == PIPELINE_TOO_LONG)
 			printf("!too_long\t%s\n", call);
+		else if (rc == PIPELINE_NO_VALUE)
+			printf("!no_value\t%s\n", call);
 		else
 			printf("!error\t%s\n", call);
 	}

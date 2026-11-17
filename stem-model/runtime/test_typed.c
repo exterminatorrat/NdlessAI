@@ -90,6 +90,54 @@ static void check_too_long_is_not_a_word_problem(void)
 	}
 }
 
+/*
+ * A question with no answer must not get a number.
+ *
+ * The engine computes in Q16.16, so |x| < 32768, and every operation outside
+ * that used to saturate to Q16_MAX — which prints as 32768. The four cases here
+ * all answered 32768 before this test existed, and a student had no way to tell
+ * that from a real value.
+ */
+static void check_no_value_is_not_a_number(void)
+{
+	static const char *const useless[] = {
+		"9^999", "10^400", "1/0", "0/0", "-1/0", "1/(2-2)",
+		"sqrt(-4)", "ln(0)", "ln(-1)", "1000*40", "2^15", "exp(100)",
+		"32768", "100000/3"
+	};
+	static const char *const real[] = {
+		"2+2", "2^10", "32000*1", "1000*4", "2^14", "32767",
+		"sqrt(50)", "ln(2)", "1/3", "abs(-7)", "3.14159*2"
+	};
+	char got[64];
+
+	for (int i = 0; i < (int)(sizeof useless / sizeof useless[0]); i++) {
+		int rc = pipeline_typed_answer(useless[i], got, (int)sizeof got);
+
+		if (rc != PIPELINE_NO_VALUE) {
+			printf("FAIL %s -> %s (rc %d), wanted no value\n",
+			       useless[i], rc == PIPELINE_OK ? got : "-", rc);
+			failures++;
+		}
+	}
+	for (int i = 0; i < (int)(sizeof real / sizeof real[0]); i++)
+		if (pipeline_typed_answer(real[i], got, (int)sizeof got) != PIPELINE_OK) {
+			printf("FAIL %s stopped answering\n", real[i]);
+			failures++;
+		}
+	/* And the offline path carries the verdict instead of asking the model. */
+	if (pipeline_answer_offline("1/0", got, (int)sizeof got, NULL, 0) !=
+	    PIPELINE_OFFLINE_NO_VALUE) {
+		printf("FAIL 1/0 reached the decoder\n");
+		failures++;
+	}
+	if (pipeline_answer_offline("2+2", got, (int)sizeof got, NULL, 0) !=
+	    PIPELINE_OFFLINE_ANSWERED || strcmp(got, "4")) {
+		printf("FAIL 2+2 stopped being exact: %s\n", got);
+		failures++;
+	}
+}
+
 int main(void)
 {
 	expect("2+2", "4");
@@ -155,6 +203,7 @@ int main(void)
 	expect_refused("");
 
 	check_too_long_is_not_a_word_problem();
+	check_no_value_is_not_a_number();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

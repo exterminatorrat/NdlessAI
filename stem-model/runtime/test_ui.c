@@ -149,7 +149,7 @@ static void test_menu(void)
 	check(u.menu_sel == 1, "down moves the selection");
 	for (int i = 0; i < 10; i++)
 		ui_key(&u, UI_KEY_DOWN);
-	check(u.menu_sel == 5, "down at the bottom stops at the bottom");
+	check(u.menu_sel == 6, "down at the bottom stops at the bottom");
 
 	ui_init(&u, NULL, NULL);
 	ui_key(&u, UI_KEY_MODE);
@@ -166,7 +166,7 @@ static void test_menu(void)
 	check(u.mode == UI_MODE_GRAPH, "the graph screen is its own mode");
 
 	ui_init(&u, NULL, NULL);
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 		ui_key(&u, UI_KEY_DOWN);
 	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_BACK, "the menu can leave the app");
 	check(ui_key(&u, UI_KEY_BACK) == UI_KEY_BACK, "back from the menu leaves the app");
@@ -772,6 +772,145 @@ static void test_plot_key(void)
 
 
 /*
+ * Finding a relation by name: the catalogue with a filter line above it,
+ * reached from the menu without knowing the subject or the course. What this
+ * proves is that a partial name narrows the list as it is typed, that the
+ * query survives a trip into the argument prompts, and that a query with no
+ * match says so in the pane while the key hints stay exactly where they were.
+ */
+static void test_find(void)
+{
+	unsigned long footer;
+	int found;
+
+	ui_init(&u, NULL, NULL);
+	render();
+	/* Seven rows of menu: the last one's text ends at y = 174 + 7, so the band
+	 * above the key hints has to stay empty. */
+	check(ink(0, UI_FOOTER_Y - 14, SCREEN_W, 14) == 0,
+	      "the seventh menu row clears the key hints");
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);        /* Find a relation */
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE, "the finder opens in place");
+	check(u.mode == UI_MODE_TMPL, "the finder is the picker, not a new mode");
+	check(u.tmpl_find == 1, "on the relation list with a filter line");
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "with no subject step above it");
+	check(u.tmpl_count == REL_NUM_RELATIONS,
+	      "an empty line is the whole catalogue");
+	render();
+	check(ink(0, UI_PANE_Y, PANE_W, PANE_H) > 0, "the catalogue is drawn");
+	check(ink_of(UI_INPUT_X, UI_INPUT_Y, 200, 9, SCREEN_WHITE) == 0,
+	      "the empty filter line has no text in it");
+	check(ink(4, UI_FOOTER_Y, 300, 20) > 0, "the finder has key hints");
+
+	type_text("perc");
+	check(u.tmpl_count == 5, "a partial name narrows the list to its matches");
+	check(strcmp(rel_rows[u.tmpl_rels[0]].name, "percent_change") == 0,
+	      "a name the query starts is offered before one that contains it");
+	check(strcmp(rel_rows[u.tmpl_rels[1]].name, "percent_error") == 0,
+	      "percent_error is the second of them");
+	check(strcmp(rel_rows[u.tmpl_rels[4]].name, "mass_percent") == 0,
+	      "mass_percent still matches, after the four it starts");
+	render();
+	check(ink_of(UI_INPUT_X, UI_INPUT_Y, 120, 9, SCREEN_WHITE) > 0,
+	      "the query is drawn in the input line");
+	check(ink(14, UI_PANE_Y, 200, 9) > 0, "the match is drawn where the list is");
+	check(ink(4 + UI_TEXT_COLS * SCREEN_ADVANCE, UI_PANE_Y + SCREEN_LINE_H,
+	          5, SCREEN_LINE_H - 2) == 0,
+	      "a list row stops short of the scroll bar");
+
+	/* No match: the pane says so, and the hints do not move to make room. */
+	render();
+	footer = hash(0, UI_FOOTER_Y, SCREEN_W, SCREEN_HEIGHT - UI_FOOTER_Y);
+	for (int i = 0; i < 4; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("zz");
+	check(u.tmpl_count == 0, "a query with no match empties the list");
+	check(u.tmpl_note[0] != '\0', "and records why");
+	render();
+	check(ink_of(UI_PANE_X, UI_PANE_Y, 200, 9, SCREEN_DIM) > 0,
+	      "the notice is drawn in the pane, dimmed");
+	check(hash(0, UI_FOOTER_Y, SCREEN_W, SCREEN_HEIGHT - UI_FOOTER_Y) == footer,
+	      "a notice leaves the key hints exactly as they were");
+	check(ui_key(&u, UI_KEY_ACCEPT) == UI_KEY_NONE,
+	      "accepting an empty match list stays put");
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "and does not open the prompts");
+
+	/* Back widens the list before it leaves the screen. */
+	ui_key(&u, UI_KEY_BACK);
+	check(u.input_len == 0, "back clears the filter");
+	check(u.tmpl_count == REL_NUM_RELATIONS, "and the whole catalogue is back");
+	check(u.mode == UI_MODE_TMPL && u.tmpl_find == 1, "still in the finder");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.mode == UI_MODE_MENU, "a second back leaves for the menu");
+	check(u.tmpl_find == 0, "and the finder is no longer armed");
+
+	/* The separators a name is written with are not something to remember. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction force");
+	check(u.tmpl_count == 1 &&
+	      strcmp(rel_rows[u.tmpl_rels[0]].name, "friction_force") == 0,
+	      "a space stands in for the underscore");
+	for (int i = 0; i < 14; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("FRICTION");
+	check(u.tmpl_count == 2, "the filter ignores case");
+	check(strcmp(rel_rows[u.tmpl_rels[0]].name, "friction_force") == 0,
+	      "and the name it starts still comes first");
+	for (int i = 0; i < 8; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("force");
+	found = 0;
+	for (int i = 0; i < u.tmpl_count; i++)
+		if (strcmp(rel_rows[u.tmpl_rels[i]].name, "friction_force") == 0)
+			found = 1;
+	check(found, "a match need not start at the first character");
+
+	/* Choosing one opens its prompts, and back returns to the narrowed list
+	 * rather than to the catalogue: the query is still what was typed. */
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("friction");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_step == UI_TMPL_STEP_ARGS, "choosing a match opens its prompts");
+	check(strcmp(rel_rows[u.tmpl_rels[u.tmpl_rel]].name, "friction_force") == 0,
+	      "and it is the relation the row named");
+	check(u.input_len == 0, "the filter line becomes the number field");
+	ui_key(&u, UI_KEY_BACK);
+	check(u.tmpl_step == UI_TMPL_STEP_RELATION, "back returns to the list");
+	check(strcmp(u.input, "friction") == 0, "with the query it was narrowed by");
+	check(u.tmpl_count == 2, "and the same matches");
+	check(u.tmpl_sel == u.tmpl_rel, "with the chosen row still selected");
+
+	/* The flat catalogue scrolls like every other list. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	for (int i = 0; i < 200; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	check(u.tmpl_sel == REL_NUM_RELATIONS - 1, "down stops at the last relation");
+	check(u.tmpl_top == REL_NUM_RELATIONS - UI_PANE_ROWS,
+	      "and the window follows it to the end");
+	render();
+	check(ink_of(SCREEN_W - 5, UI_PANE_Y, 2, PANE_H, SCREEN_ACCENT) > 0,
+	      "the finder shows where the window sits");
+	for (int i = 0; i < 200; i++)
+		ui_key(&u, UI_KEY_UP);
+	check(u.tmpl_sel == 0 && u.tmpl_top == 0, "up stops at the first relation");
+
+	/* Every name has to fit the column the list draws it in, or a row would
+	 * run under the scroll bar on the one screen that shows all of them. */
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		check(screen_text_w(rel_rows[i].name) <=
+		      (UI_TEXT_COLS - 2) * SCREEN_ADVANCE,
+		      "every relation name fits the list column");
+}
+
+/*
  * Solve by formula: pick a subject, pick a relation, answer one prompt per
  * argument. The point of the test is that it works with no pipeline at all —
  * the picker never decodes anything — and that the answer arrives on the
@@ -1036,6 +1175,7 @@ int main(void)
 	test_diagram_screen();
 	test_plot_key();
 	test_template();
+	test_find();
 	test_course_picker();
 	test_template_multi_argument();
 	test_graph_mode();

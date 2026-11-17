@@ -30,7 +30,7 @@
  * stamp whenever a screen's behaviour changes.
  */
 #define SCREEN_TITLE "STEM HELPER"
-#define SCREEN_STAMP "V11"
+#define SCREEN_STAMP "V12"
 
 /* Colour in 565, the format lcd_init(SCR_320x240_565) gives the program. */
 #define SCREEN_WHITE 0xFFFFu

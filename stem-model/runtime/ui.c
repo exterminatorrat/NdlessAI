@@ -24,7 +24,7 @@
 #define UI_ACCENT  SCREEN_ACCENT
 #define UI_SCROLL  0x2104
 
-#define UI_MENU_N   6
+#define UI_MENU_N   7
 #define UI_MENU_Y   24
 
 static const char *const menu_items[UI_MENU_N] = {
@@ -33,6 +33,7 @@ static const char *const menu_items[UI_MENU_N] = {
 	"Keypad help",
 	"Graph",
 	"By course",
+	"Find a relation",
 	"Quit"
 };
 
@@ -157,10 +158,18 @@ static int has_model(const ui_t *u)
 }
 
 /* The screens with an input line: the graph screen is the same one in another
- * mode, so it draws and edits through the same rows. */
+ * mode, so it draws and edits through the same rows, and the name finder is the
+ * relation list with the line live above it. */
+static int find_active(const ui_t *u)
+{
+	return u->mode == UI_MODE_TMPL && u->tmpl_find &&
+	       u->tmpl_step == UI_TMPL_STEP_RELATION;
+}
+
 static int has_input(const ui_t *u)
 {
-	return u->mode == UI_MODE_ASK || u->mode == UI_MODE_GRAPH;
+	return u->mode == UI_MODE_ASK || u->mode == UI_MODE_GRAPH ||
+	       find_active(u);
 }
 
 /* ---- text building ---- */
@@ -504,6 +513,8 @@ static int call_has_diagram(const char *call)
  */
 /* Defined with the drawing, used by the key handler. */
 static void pick_follow(ui_t *u, int count);
+/* Defined with the text screens, used by the finder's filter line. */
+static void edit_key(ui_t *u, ui_key_t k, int history);
 
 static int subject_count(void)
 {
@@ -545,6 +556,91 @@ static int rel_index_for_id(int id)
 		if (rel_rows[i].id == id)
 			return i;
 	return -1;
+}
+
+static char lower_ch(char c)
+{
+	return (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : c;
+}
+
+/*
+ * Whether the query matches the name starting exactly at its first character.
+ * Case is ignored, and so are the separators a name is written with: a student
+ * types "friction force" and means friction_force, and asking them to remember
+ * where the underscores are is the reason the picker was slow to use. Both
+ * strings are walked in place, so a match costs no copy and no allocation.
+ */
+static int find_at(const char *name, const char *q)
+{
+	while (*q) {
+		/* The separator is optional on both sides, so a student who types
+		 * the name exactly as it is printed matches it too. */
+		if (*q == ' ' || *q == '_') {
+			q++;
+			continue;
+		}
+		while (*name == '_' || *name == ' ')
+			name++;
+		if (!*name || lower_ch(*name) != lower_ch(*q))
+			return 0;
+		name++;
+		q++;
+	}
+	return 1;
+}
+
+/* Whether the query appears anywhere in the name, not only at its start. */
+static int find_inside(const char *name, const char *q)
+{
+	for (const char *start = name + 1; *start; start++)
+		if (find_at(start, q))
+			return 1;
+	return 0;
+}
+
+/*
+ * The list the finder shows: every relation whose name matches the input line,
+ * the ones it starts with first. An empty line is the whole catalogue, so
+ * opening the finder and arrowing through it is a flat list of everything the
+ * program can call, which is what the subject route gives for one subject.
+ *
+ * The order matters because the first row is the one ENTER takes: "perc"
+ * should open on percent_change, not on mass_percent, which only contains it.
+ */
+static void find_reload(ui_t *u)
+{
+	int n = 0;
+
+	/* The array is as long as the catalogue and no relation is collected
+	 * twice, so the write cannot run past its end. */
+	for (int pass = 0; pass < 2; pass++)
+		for (int i = 0; i < REL_NUM_RELATIONS; i++) {
+			int head = find_at(rel_rows[i].name, u->input);
+
+			if ((head || find_inside(rel_rows[i].name, u->input)) &&
+			    head == (pass == 0))
+				u->tmpl_rels[n++] = (unsigned char)i;
+		}
+	u->tmpl_count = n;
+	u->tmpl_sel = 0;
+	u->tmpl_top = 0;
+	copy_trunc(u->tmpl_note, sizeof u->tmpl_note,
+	           n == 0 ? "no relation matches" : "");
+}
+
+/* The finder's own way in: the catalogue, filtered by a line that starts
+ * empty. Shared by the menu entry and by backing out of the argument prompts. */
+static void find_open(ui_t *u, const char *query)
+{
+	u->mode = UI_MODE_TMPL;
+	u->tmpl_by_course = 0;
+	u->tmpl_find = 1;
+	u->tmpl_step = UI_TMPL_STEP_RELATION;
+	copy_trunc(u->input, sizeof u->input, query ? query : "");
+	u->input_len = (int)strlen(u->input);
+	u->cursor = u->input_len;
+	u->recall = -1;
+	find_reload(u);
 }
 
 /*
@@ -686,13 +782,39 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 				break;
 			u->tmpl_rel = u->tmpl_sel;
 			u->tmpl_arg = 0;
+			/* The line becomes the number field, so the filter it held has
+			 * to be put somewhere the way back can find it. */
+			if (u->tmpl_find)
+				copy_trunc(u->tmpl_find_q, sizeof u->tmpl_find_q,
+				           u->input);
 			u->input[0] = '\0';
 			u->input_len = 0;
 			u->cursor = 0;
+			u->tmpl_note[0] = '\0';
 			u->tmpl_step = UI_TMPL_STEP_ARGS;
 		} else if (k == UI_KEY_BACK) {
-			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
-			u->tmpl_sel = u->tmpl_subject;
+			/* In the finder, back clears the filter before it leaves: a
+			 * narrowed list is still a list the student can widen. */
+			if (u->tmpl_find && u->input_len > 0) {
+				u->input[0] = '\0';
+				u->input_len = 0;
+				u->cursor = 0;
+				find_reload(u);
+			} else if (u->tmpl_find) {
+				u->tmpl_find = 0;
+				u->mode = UI_MODE_MENU;
+			} else {
+				u->tmpl_step = UI_TMPL_STEP_SUBJECT;
+				u->tmpl_sel = u->tmpl_subject;
+			}
+		} else if (u->tmpl_find) {
+			int had = u->input_len;
+
+			/* The cursor keys edit the filter here; there is no history to
+			 * page through on a screen whose line is a search box. */
+			edit_key(u, k, 0);
+			if (u->input_len != had)
+				find_reload(u);
 		}
 		break;
 	case UI_TMPL_STEP_ARGS:
@@ -711,6 +833,12 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 				u->input[0] = '\0';
 				u->input_len = 0;
 				u->cursor = 0;
+			} else if (u->tmpl_find) {
+				/* Back to the list the student narrowed, not to the
+				 * catalogue: the query is still what they typed. */
+				find_open(u, u->tmpl_find_q);
+				u->tmpl_sel = u->tmpl_rel;
+				pick_follow(u, u->tmpl_count);
 			} else {
 				u->tmpl_step = UI_TMPL_STEP_RELATION;
 				u->tmpl_sel = u->tmpl_rel;
@@ -870,6 +998,7 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			 * typed but numbers, and the model is never involved. */
 			u->mode = UI_MODE_TMPL;
 			u->tmpl_by_course = 0;
+			u->tmpl_find = 0;
 			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
 			u->tmpl_sel = 0;
 			u->tmpl_top = 0;
@@ -887,9 +1016,15 @@ static ui_key_t menu_key(ui_t *u, ui_key_t k)
 			 * course, so nothing becomes unreachable. */
 			u->mode = UI_MODE_TMPL;
 			u->tmpl_by_course = 1;
+			u->tmpl_find = 0;
 			u->tmpl_step = UI_TMPL_STEP_SUBJECT;
 			u->tmpl_sel = 0;
 			u->tmpl_top = 0;
+			break;
+		case 5:
+			/* The third way in: the whole catalogue with a filter line, for
+			 * a student who knows the name and not the subject or course. */
+			find_open(u, "");
 			break;
 		default:
 			return UI_KEY_BACK;
@@ -939,8 +1074,11 @@ static ui_key_t help_key(ui_t *u, ui_key_t k)
  * ring; once the student has typed or deleted, they move the cursor instead.
  * Typing and deleting clear `recall`, so an edited entry is never silently
  * replaced by the next arrow press.
+ *
+ * `history` is off on the finder, where the line is a search box: paging the
+ * answer history into it would replace the filter with an old question.
  */
-static void edit_key(ui_t *u, ui_key_t k)
+static void edit_key(ui_t *u, ui_key_t k, int history)
 {
 	switch (k) {
 	case UI_KEY_UP:
@@ -950,13 +1088,13 @@ static void edit_key(ui_t *u, ui_key_t k)
 		scroll_pane(u, 1);
 		break;
 	case UI_KEY_LEFT:
-		if (u->recall >= 0 || u->input_len == 0)
+		if (history && (u->recall >= 0 || u->input_len == 0))
 			recall_step(u, -1);
 		else if (u->cursor > 0)
 			u->cursor--;
 		break;
 	case UI_KEY_RIGHT:
-		if (u->recall >= 0 || u->input_len == 0)
+		if (history && (u->recall >= 0 || u->input_len == 0))
 			recall_step(u, 1);
 		else if (u->cursor < u->input_len)
 			u->cursor++;
@@ -1014,7 +1152,7 @@ static ui_key_t ask_key(ui_t *u, ui_key_t k)
 		return graph_call_plottable(last_step_of(u->last_call))
 		       ? UI_KEY_GRAPH : UI_KEY_NONE;
 	default:
-		edit_key(u, k);
+		edit_key(u, k, 1);
 		break;
 	}
 	return UI_KEY_NONE;
@@ -1038,7 +1176,7 @@ static ui_key_t graph_screen_key(ui_t *u, ui_key_t k)
 		pane_restore(u);
 		break;
 	default:
-		edit_key(u, k);
+		edit_key(u, k, 1);
 		break;
 	}
 	return UI_KEY_NONE;
@@ -1074,17 +1212,18 @@ const char *ui_last_call(const ui_t *u)
 
 int ui_type(ui_t *u, char c)
 {
-	if (u->mode != UI_MODE_ASK && u->mode != UI_MODE_GRAPH &&
-	    !(u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS))
+	int args = u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS;
+
+	if (u->mode != UI_MODE_ASK && u->mode != UI_MODE_GRAPH && !args &&
+	    !find_active(u))
 		return 0;
 	if (c < 32 || c > 126)
 		return 0;
 	/* An argument is a number. A letter here would only reach the solver as a
 	 * parse error, so it never reaches the line. */
 	/* Revised 2026-11-16: accept scientific notation's exponent and signs. */
-	if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS &&
-	    !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' ||
-	      c == 'e' || c == 'E'))
+	if (args && !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' ||
+	              c == 'e' || c == 'E'))
 		return 0;
 	if (u->input_len >= UI_INPUT_MAX - 1)
 		return 0;
@@ -1098,6 +1237,10 @@ int ui_type(ui_t *u, char c)
 	u->cursor++;
 	u->input_len++;
 	u->recall = -1;
+	/* The finder narrows as the student types; every other line is a value
+	 * that only means something when ENTER is pressed. */
+	if (find_active(u))
+		find_reload(u);
 	return 1;
 }
 
@@ -1145,6 +1288,10 @@ static void pick_scrollbar(int count, int top, uint16_t *fb)
  * The subject list, then the relations of the chosen subject. The selected
  * row is inverted the way the menu's is, so the two screens read as one
  * program.
+ *
+ * In the finder the same list holds the matches, and a query that matches
+ * nothing says so where the rows would have been. That line is drawn here, in
+ * the pane, so the key hints at the bottom keep saying which keys do what.
  */
 static void draw_pick(const ui_t *u, uint16_t *fb)
 {
@@ -1171,6 +1318,8 @@ static void draw_pick(const ui_t *u, uint16_t *fb)
 		screen_text(fb, 14, y, text, on ? UI_BG : UI_FG);
 		y += SCREEN_LINE_H;
 	}
+	if (count == 0 && find_active(u) && u->tmpl_note[0])
+		screen_text(fb, UI_PANE_X, UI_PANE_Y, u->tmpl_note, UI_DIM);
 	pick_scrollbar(count, u->tmpl_top, fb);
 }
 
@@ -1263,6 +1412,11 @@ static void draw_header(const ui_t *u, uint16_t *fb)
 		put_ch(&at, end, (char)('0' + UI_HELP_PAGES));
 	} else if (u->mode == UI_MODE_MENU) {
 		put(&at, end, "MENU");
+	} else if (find_active(u)) {
+		/* Not "SOLVE 2/3": the finder is the relation list without the
+		 * subject step above it, and numbering a step the student did not
+		 * take would read as a list they are stuck in. */
+		put(&at, end, "FIND");
 	} else if (u->mode == UI_MODE_TMPL) {
 		put(&at, end, "SOLVE ");
 		put_ch(&at, end, (char)('1' + u->tmpl_step));
@@ -1351,6 +1505,7 @@ static void draw_input(const ui_t *u, uint16_t *fb)
 	if (u->input_len == 0) {
 		screen_text(fb, UI_INPUT_X, UI_INPUT_Y,
 		            u->mode == UI_MODE_GRAPH ? "a function of x"
+		            : find_active(u)        ? "type part of a name"
 		                                     : "type a problem", UI_DIM);
 	} else {
 		memcpy(line, u->input + off, (size_t)n);
@@ -1376,6 +1531,11 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 	} else if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_SUBJECT) {
 		first = "ENTER choose   UP/DOWN move";
 		second = "ESC menu";
+	} else if (find_active(u)) {
+		/* The one hint that has to be here: nothing else on this screen says
+		 * the list is searchable. */
+		first = "type to narrow   ENTER choose";
+		second = "UP/DOWN move   ESC menu";
 	} else if (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_RELATION) {
 		first = "ENTER choose   UP/DOWN move";
 		second = "ESC back";
@@ -1427,6 +1587,12 @@ int ui_render(ui_t *u, uint16_t *fb)
 			screen_hline(fb, 0, UI_INPUT_Y + 12, SCREEN_W, UI_DIM);
 		} else {
 			draw_pick(u, fb);
+			/* The finder is the one pick screen with a line of its own. */
+			if (has_input(u)) {
+				screen_hline(fb, 0, UI_INPUT_Y - 4, SCREEN_W, UI_DIM);
+				draw_input(u, fb);
+				screen_hline(fb, 0, UI_INPUT_Y + 12, SCREEN_W, UI_DIM);
+			}
 		}
 		draw_footer(u, fb);
 		return 0;

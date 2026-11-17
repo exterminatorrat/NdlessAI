@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "screen.h"
+#include "ui.h"
 
 #define PAD 16
 #define CANARY 0xA5A5u
@@ -322,6 +323,55 @@ static void test_clip(void)
 	check(guards_ok(), "empty primitives stay inside");
 }
 
+/*
+ * The widest row the interface builds, drawn where the interface draws it.
+ *
+ * The relation list and the relation's formula line both start at the pane's
+ * left margin and are cut to 51 columns, and the scroll bar occupies the five
+ * columns past that. So the geometry the new screens rely on is: a 51-column
+ * row ends before the scroll bar, and anything longer is clipped by the
+ * framebuffer edge instead of wrapping into the row below.
+ */
+static void test_pane_row(void)
+{
+	char row[UI_TEXT_COLS + 16];
+	int i, x, y, ink;
+
+	for (i = 0; i < (int)sizeof row - 1; i++)
+		row[i] = 'I';
+	row[i] = '\0';
+
+	/* Exactly the pane's 51 columns: the row ends before the scroll bar. */
+	row[UI_TEXT_COLS] = '\0';
+	reset(SCREEN_WHITE);
+	screen_text(fb, UI_PANE_X, UI_PANE_Y, row, SCREEN_BLACK);
+	ink = 0;
+	for (y = UI_PANE_Y; y < UI_PANE_Y + SCREEN_GLYPH_H; y++)
+		for (x = UI_PANE_X + UI_TEXT_COLS * SCREEN_ADVANCE; x < SCREEN_W; x++)
+			ink += px(x, y) != SCREEN_WHITE;
+	check(ink == 0, "a full-width pane row stops before the scroll bar");
+	ink = 0;
+	for (y = UI_PANE_Y; y < UI_PANE_Y + SCREEN_GLYPH_H; y++)
+		for (x = UI_PANE_X + (UI_TEXT_COLS - 1) * SCREEN_ADVANCE;
+		     x < UI_PANE_X + UI_TEXT_COLS * SCREEN_ADVANCE; x++)
+			ink += px(x, y) != SCREEN_WHITE;
+	check(ink > 0, "and its last column is drawn");
+	check(guards_ok(), "a full-width pane row stays inside the framebuffer");
+
+	/* Longer than the pane: the glyphs run to the framebuffer edge and stop.
+	 * Nothing lands on the row below, so a long name cannot shift the row
+	 * under it. */
+	row[UI_TEXT_COLS] = 'I';
+	reset(SCREEN_WHITE);
+	screen_text(fb, UI_PANE_X, UI_PANE_Y, row, SCREEN_BLACK);
+	ink = 0;
+	for (y = UI_PANE_Y + SCREEN_LINE_H; y < UI_PANE_Y + SCREEN_LINE_H * 2; y++)
+		for (x = 0; x < SCREEN_W; x++)
+			ink += px(x, y) != SCREEN_WHITE;
+	check(ink == 0, "an over-long row draws nothing on the row below");
+	check(guards_ok(), "an over-long row stays inside the framebuffer");
+}
+
 static void test_clear(void)
 {
 	reset(SCREEN_WHITE);
@@ -345,6 +395,7 @@ int main(void)
 	test_glyph_table();
 	test_advance();
 	test_clip();
+	test_pane_row();
 	test_clear();
 
 	if (failures) {

@@ -66,14 +66,19 @@ only difference is the word that decides the relation.
 
 | pair | rows | note |
 | --- | --- | --- |
-| `sin_eval/cos_eval` | 0 | no spec for one side |
-| `fahrenheit_to_celsius/celsius_to_fahrenheit` | 0 | no spec for one side |
-| `geom_seq/arith_seq` | 0 | no spec for one side |
-| `percent_change/percent_error` | 0 | no spec for one side |
 | `calorimetry_c/calorimetry_mass` | 6 |  |
 | `h_from_ph/ph` | 6 |  |
 | `dilution/dilution_v1` | 6 |  |
 | `carnot_efficiency/carnot` | 0 | same quantity in two formats, no wording decides it (ELV-77) |
+
+## Pairs with no contrast rows, and why
+
+| pair | why no contrast rows |
+| --- | --- |
+| `sin_eval/cos_eval` | no spec for `sin_eval`, `cos_eval` — maths relations, deferred to the subject phasing |
+| `fahrenheit_to_celsius/celsius_to_fahrenheit` | no spec for `fahrenheit_to_celsius`, `celsius_to_fahrenheit` — maths relations, deferred to the subject phasing |
+| `geom_seq/arith_seq` | no spec for `geom_seq`, `arith_seq` — maths relations, deferred to the subject phasing |
+| `percent_change/percent_error` | no spec for `percent_change`, `percent_error` — maths relations, deferred to the subject phasing |
 
 ## Refusals, with the reason
 

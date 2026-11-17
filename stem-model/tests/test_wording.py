@@ -108,6 +108,27 @@ def test_contrast_rows_put_both_sides_on_the_same_numbers():
         assert len(side_rows) % 2 == 0, pair
 
 
+def test_the_split_is_a_function_of_the_structure_alone():
+    """A structure added later cannot change an earlier structure's side."""
+    import gen_wording
+
+    verdicts = {structure.id: gen_wording.held_out("molarity", structure.id)
+                for structure in grammar.structures(spec.SPECS["molarity"])}
+    later = {"each|what|": verdicts.get("each|what|")}
+    for structure_id, side in verdicts.items():
+        assert gen_wording.held_out("molarity", structure_id) == side
+    assert later["each|what|"] == verdicts["each|what|"]
+    assert len(set(verdicts.values())) == 2, "the holdout splits this relation"
+
+
+def test_ledger_names_the_pairs_it_cannot_carry():
+    with open(os.path.join(HERE, "..", "docs", "wording-ledger.md")) as handle:
+        ledger = handle.read()
+    for pair in ("sin_eval/cos_eval", "percent_change/percent_error"):
+        assert pair in ledger
+    assert "ELV-77" in ledger
+
+
 def test_generated_artifacts_are_current():
     result = subprocess.run([sys.executable, "gen_wording.py", "--check"],
                             cwd=HERE, capture_output=True, text=True)

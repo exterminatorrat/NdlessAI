@@ -672,3 +672,74 @@ BLOCKED_SPECIES = {
 SYNONYMS = {
     "carnot": "carnot_efficiency",
 }
+
+# The four maths pairs that carry the largest share of the measured wrong-relation
+# calls. They are spec'd for the contrast corpus, not because maths is the next
+# subject: a minimal pair needs both sides to exist as rows, and these eight
+# relations are the only maths the contrast work touches.
+MATH_PAIRS = {
+    "sin_eval": _spec(
+        "sin_eval",
+        [("a", _slot("angle", "angle", "degrees"))],
+        _slot("sine", "ratio", ""),
+        ("sine", "sin"),
+        confusable=("cos_eval", "tan_eval"),
+    ),
+    "cos_eval": _spec(
+        "cos_eval",
+        [("a", _slot("angle", "angle", "degrees"))],
+        _slot("cosine", "ratio", ""),
+        ("cosine", "cos"),
+        confusable=("sin_eval", "tan_eval"),
+    ),
+    "fahrenheit_to_celsius": _spec(
+        "fahrenheit_to_celsius",
+        [("f", _slot("temperature in Fahrenheit", "temperature", "F"))],
+        _slot("temperature in Celsius", "temperature", "C"),
+        ("temperature in Celsius", "Celsius temperature"),
+        confusable=("celsius_to_fahrenheit",),
+    ),
+    "celsius_to_fahrenheit": _spec(
+        "celsius_to_fahrenheit",
+        [("c", _slot("temperature in Celsius", "temperature", "C"))],
+        _slot("temperature in Fahrenheit", "temperature", "F"),
+        ("temperature in Fahrenheit", "Fahrenheit temperature"),
+        confusable=("fahrenheit_to_celsius",),
+    ),
+    "geom_seq": _spec(
+        "geom_seq",
+        [("a1", _slot("first term", "count", "")),
+         ("r", _slot("common ratio", "ratio", "")),
+         ("n", _slot("term number", "count", ""))],
+        _slot("nth term", "count", ""),
+        ("nth term", "term at that position"),
+        confusable=("arith_seq",),
+    ),
+    "arith_seq": _spec(
+        "arith_seq",
+        [("a1", _slot("first term", "count", "")),
+         ("d", _slot("common difference", "count", "")),
+         ("n", _slot("term number", "count", ""))],
+        _slot("nth term", "count", ""),
+        ("nth term", "term at that position"),
+        confusable=("geom_seq",),
+    ),
+    "percent_change": _spec(
+        "percent_change",
+        [("original", _slot("original value", "count", "")),
+         ("new", _slot("new value", "count", ""))],
+        _slot("percent change", "percent", "%"),
+        ("percent change", "percentage change"),
+        confusable=("percent_error", "percent_of"),
+    ),
+    "percent_error": _spec(
+        "percent_error",
+        [("measured", _slot("measured value", "count", "")),
+         ("accepted", _slot("accepted value", "count", ""))],
+        _slot("percent error", "percent", "%"),
+        ("percent error", "percentage error"),
+        confusable=("percent_change", "percent_of"),
+    ),
+}
+
+SPECS.update(MATH_PAIRS)

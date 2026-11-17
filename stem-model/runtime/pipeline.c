@@ -13,6 +13,25 @@
 #include "solvers.h"
 #include "steps.h"
 
+/*
+ * How close the runner-up relation may come before the decode is treated as a
+ * guess.
+ *
+ * Calibrated, not chosen: the split was swept one threshold at a time on the
+ * 2,150-row hand-written eval split and the 2,000-row generated gate, two seeds
+ * each, and the trade measured is "answers that were wrong and are now refused"
+ * against "answers that were right and are now refused". This value catches 29
+ * wrong answers for 10 right ones on the hand-written split (2.9:1, 74% of the
+ * refusals avoiding a wrong answer) and 4 wrong for 2 right on the generated
+ * gate. Above it the ratio falls and keeps falling: at 5,000 the hand-written
+ * trade is 113 to 54.
+ *
+ * The units are pipeline_alt_t.margin's: the gap between the two best relation
+ * logits, in fixed point. A margin of zero is an exact tie, and the largest gap
+ * this model produces is about 51,000.
+ */
+#define RELATION_MARGIN_MIN 750
+
 #define PROMPT_SUFFIX " <sep>"
 #define MAX_GEN 20
 #define MAX_PROMPT 256
@@ -225,6 +244,7 @@ int pipeline_init(pipeline_t *p, const char *weights_path, int seq)
 		return -1;
 	p->model.seq = seq;
 	p->seq = seq;
+	p->margin_min = RELATION_MARGIN_MIN;
 	if (bpe_init(&p->tok) < 0)
 		goto fail;
 	if (qstate_init(&p->qs, &p->model, seq) < 0)
@@ -416,6 +436,19 @@ int pipeline_answer(pipeline_t *p, const char *question,
 
 	if (ids_to_text(&p->tok, ids + n, gen, call, call_max) < 0)
 		return PIPELINE_ERR;
+	/*
+	 * A relation the decode all but tied is a guess, and a guess printed as an
+	 * answer is the failure this program is built around. The margin is
+	 * already collected for the screen, so asking it here costs nothing and
+	 * refuses before the solver runs: the answer is empty, the call is still
+	 * there for the screen to show what it nearly said, and the alternatives
+	 * are still ranked behind it.
+	 */
+	if (p->margin_min > 0 && p->n_alts > 1 &&
+	    p->alts[1].margin < p->margin_min) {
+		answer[0] = '\0';
+		return PIPELINE_UNCERTAIN;
+	}
 	/*
 	 * The dominant failure on hand-written wording is a digit one keystroke
 	 * off, not the wrong relation. Snap an ungrounded argument back to the one

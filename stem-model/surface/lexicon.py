@@ -126,6 +126,41 @@ SCENE = {
 }
 
 
+# Applied-context nouns: the apparatus and situation a row is set in. The register
+# study measured that apparatus vocabulary mostly already exists in our bank but
+# context nouns do not, so these are picked per dimension and per subject rather
+# than rebuilt wholesale. Our own list; nothing here is a source sentence.
+CONTEXT = {
+    "energy": ("calorimeter", "immersion heater", "kettle"),
+    "temperature": ("thermometer", "oven", "condenser"),
+    "mass": ("balance", "sample", "pellet"),
+    "volume": ("graduated cylinder", "flask", "tank"),
+    "pressure": ("gauge", "manometer", "cylinder"),
+    "time": ("stopwatch", "timer", "run"),
+    "concentration": ("probe", "assay", "burette"),
+    "specific_heat": ("calorimeter", "data sheet", "sample"),
+    "latent": ("calorimeter", "data table", "kettle"),
+    "length": ("ruler", "tape", "grating"),
+    "area": ("panel", "collector", "plate"),
+    "wavelength": ("spectrometer", "grating", "laser"),
+    "frequency": ("counter", "oscillator", "dial"),
+    "power": ("nameplate", "meter", "lamp"),
+    "potential": ("voltmeter", "meter", "cell"),
+    "current": ("ammeter", "meter", "circuit"),
+    "resistance": ("resistor", "meter", "wire"),
+    "enthalpy": ("calorimeter", "data sheet", "reaction"),
+    "entropy": ("table", "cycle", "engine"),
+}
+
+
+def context_noun(slot, variant):
+    """The apparatus or situation a slot's reading is taken in, or None."""
+    nouns = CONTEXT.get(slot.dim)
+    if not nouns:
+        return None
+    return nouns[variant % len(nouns)]
+
+
 def scene_phrase(slot, value_text, variant):
     """A narration fragment for one slot, or None when its dimension has none."""
     fragments = SCENE.get(slot.dim)

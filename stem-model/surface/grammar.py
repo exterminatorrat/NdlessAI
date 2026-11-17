@@ -20,7 +20,7 @@ from collections import namedtuple
 
 from . import lexicon, numbers
 
-Structure = namedtuple("Structure", "given ask framing names_roles id")
+Structure = namedtuple("Structure", "given ask framing names_roles id ask_first")
 Row = namedtuple("Row", "text structure")
 
 
@@ -88,6 +88,43 @@ def _given_applied(spec, parts, register, variant):
     return " ".join(clauses)
 
 
+def _given_equipment(spec, parts, register, variant):
+    """The lab-sheet shape: an instrument, second person, a reading per slot.
+
+    The register study measured apparatus in 31% of one source's items and second
+    person in half of them, against 4% and 19% in the exam bank. The instrument is
+    a context noun, not a rebuilt apparatus vocabulary.
+    """
+    clauses = []
+    for index, (param, slot) in enumerate(spec.slots.items()):
+        noun = lexicon.context_noun(slot, variant + index)
+        role = _role(slot, register, variant + index)
+        if noun is None:
+            clauses.append(f"You record the {role} as {parts[param]}.")
+        else:
+            clauses.append(f"You load the {noun} and read the {role} as {parts[param]}.")
+    return " ".join(clauses)
+
+
+def _given_condition_first(spec, parts, register, variant):
+    """A condition stated before the system, as the chemistry corpus does.
+
+    The slot whose dimension is a condition (temperature or pressure) leads, so a
+    row opens on "At 300 K, ..." rather than burying the condition mid-sentence.
+    """
+    order = list(spec.slots.items())
+    lead = [item for item in order if item[1].dim in ("temperature", "pressure")]
+    rest = [item for item in order if item not in lead]
+    if not lead:
+        return None
+    first_param, first_slot = lead[0]
+    clauses = [f"At a {_role(first_slot, register, variant)} of {parts[first_param]}"]
+    for index, (param, slot) in enumerate(rest):
+        role = _role(slot, register, variant + index)
+        clauses.append(f"the {role} {_is(role)} {parts[param]}")
+    return clauses[0] + ", " + ", ".join(clauses[1:]) + "."
+
+
 def _given_list(spec, parts, register, variant):
     values = ", ".join(parts[param] for param in spec.slots)
     verb = "are" if len(parts) > 1 else "is"
@@ -95,13 +132,30 @@ def _given_list(spec, parts, register, variant):
     return f"The {noun} {verb} {values}."
 
 
+def _always(spec):
+    return True
+
+
+def _has_condition(spec):
+    return any(slot.dim in ("temperature", "pressure") for slot in spec.slots.values())
+
+
+def _has_context(spec):
+    return any(lexicon.context_noun(slot, 0) for slot in spec.slots.values())
+
+
+# The last field says whether the family can render this relation at all. A
+# family offered where it cannot apply would produce "None" and call it a
+# sentence, so applicability is declared rather than discovered at render time.
 GIVEN = (
-    ("each", _given_each, True),
-    ("record", _given_record, True),
-    ("equals", _given_equals, True),
-    ("given", _given_given, True),
-    ("list", _given_list, False),
-    ("applied", _given_applied, True),
+    ("each", _given_each, True, _always),
+    ("record", _given_record, True, _always),
+    ("equals", _given_equals, True, _always),
+    ("given", _given_given, True, _always),
+    ("list", _given_list, False, _always),
+    ("applied", _given_applied, True, _always),
+    ("equipment", _given_equipment, True, _has_context),
+    ("condition", _given_condition_first, True, _has_condition),
 )
 
 # The third field says whether the ask needs a unit to write; the fourth whether
@@ -116,12 +170,14 @@ ASK = (
     ("express", "Express the {answer} in {unit}.", True, False),
     ("worked", "The next line of the solution asks for the {answer}.", False, False),
     ("applied", "What {answer} does the setup give?", False, False),
+    ("estimate", "Estimate the {answer} to one significant figure.", False, False),
 )
 
 # A framing is only offered when the relation has the dimensions it talks about,
 # so a molality question is never told to treat the gases as ideal.
 FRAMING = (
     ("", (), lambda dims: True),
+
     ("volumes", ("volume",), lambda dims: dims.count("volume") >= 2),
     ("constant_t", ("temperature",), lambda dims: "temperature" in dims),
     ("ideal_gas", ("pressure", "volume"),
@@ -129,8 +185,36 @@ FRAMING = (
     ("dissociation", ("concentration",), lambda dims: "concentration" in dims),
 )
 
+# Which relations declare the idealisation clause. It removes a quantity from
+# consideration rather than binding arithmetic, so it only belongs where the
+# quantity it removes is genuinely ignorable for that relation.
+IDEALISED = {
+    "specific_heat": ("containers",),
+    "calorimetry_c": ("containers",),
+    "calorimetry_mass": ("containers",),
+    "latent_heat": ("containers",),
+    "conduction_rate": ("edges",),
+    "radiation_power": ("surroundings",),
+    "gas_heat_cp": ("containers",),
+    "entropy_change": ("reversibility",),
+    "wave_speed": ("medium",),
+    "double_slit_fringe": ("slits",),
+    "doppler_freq": ("medium",),
+    "mixture_final_temperature": ("containers",),
+    "heat_reaction": ("containers",),
+}
+
+# An idealisation removes one quantity from consideration, so the clause has to
+# name the quantity it removes; a single sentence for every relation would tell a
+# Doppler question to neglect the container's heat capacity.
 FRAMING_TEXT = {
     "": "",
+    "idealisation:containers": " Assume the container takes up none of the heat.",
+    "idealisation:edges": " Assume no heat escapes from the edges.",
+    "idealisation:surroundings": " Treat the surroundings as much colder than the surface.",
+    "idealisation:reversibility": " Treat the process as reversible.",
+    "idealisation:medium": " Treat the medium as uniform and still.",
+    "idealisation:slits": " Treat the slits as vanishingly narrow.",
     "volumes": " Assume the volumes are additive.",
     "constant_t": " The temperature does not change.",
     "ideal_gas": " Treat the gas as ideal.",
@@ -165,26 +249,38 @@ def framings_for(spec):
     declared = RELATION_FRAMINGS.get(spec.name, ())
     dims = [slot.dim for slot in spec.slots.values()]
     allowed = {name for name, _, applies in FRAMING if applies(dims)}
-    return ("",) + tuple(name for name in declared if name in allowed)
+    chosen = tuple(name for name in declared if name in allowed)
+    if spec.name in IDEALISED:
+        chosen += tuple(f"idealisation:{kind}" for kind in IDEALISED[spec.name])
+    return ("",) + chosen
 
 
 def structures(spec):
     """Every structure this relation admits, refused ones included in the count."""
     names = framings_for(spec)
-    for given_name, _, names_roles in GIVEN:
+    for given_name, _, names_roles, applies in GIVEN:
+        if not applies(spec):
+            continue
         for ask_name, _, needs_unit, forbids_unit in ASK:
             if needs_unit and not spec.answer.unit:
                 continue
             if forbids_unit and not spec.answer.unit:
                 continue
             for framing in names:
-                yield Structure(
-                    given=given_name,
-                    ask=ask_name,
-                    framing=framing,
-                    names_roles=names_roles,
-                    id=f"{given_name}|{ask_name}|{framing}",
-                )
+                for ask_first in (False, True):
+                    # Where the ask sits is a register fact, not a style choice:
+                    # 39% of exam items ask in the last sentence, a third of the
+                    # lab register asks mid-sentence, and a generator trained on
+                    # one position fails on the other.
+                    position = "ask-first" if ask_first else "ask-last"
+                    yield Structure(
+                        given=given_name,
+                        ask=ask_name,
+                        framing=framing,
+                        names_roles=names_roles,
+                        id=f"{given_name}|{ask_name}|{framing}|{position}",
+                        ask_first=ask_first,
+                    )
 
 
 def refusal(spec, structure):
@@ -207,11 +303,14 @@ def render(spec, args, structure, register, variant):
         if text is None:
             return None
         parts[param] = text
-    given = dict((name, fn) for name, fn, _ in GIVEN)[structure.given]
+    given = {name: fn for name, fn, _, _ in GIVEN}[structure.given]
     body = given(spec, parts, register, variant)
     ask_words = lexicon.answer_words(spec, register)
     answer = ask_words[variant % len(ask_words)]
     ask_text = {name: text for name, text, _, _ in ASK}[structure.ask]
     ask = ask_text.format(answer=answer, unit=spec.answer.unit or "the given unit")
-    text = f"{body} {ask}{FRAMING_TEXT[structure.framing]}"
+    if structure.ask_first:
+        text = f"{ask} {body}{FRAMING_TEXT[structure.framing]}"
+    else:
+        text = f"{body} {ask}{FRAMING_TEXT[structure.framing]}"
     return Row(text=" ".join(text.split()), structure=structure)

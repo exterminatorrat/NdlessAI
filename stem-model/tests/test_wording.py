@@ -112,13 +112,14 @@ def test_the_split_is_a_function_of_the_structure_alone():
     """A structure added later cannot change an earlier structure's side."""
     import gen_wording
 
+    entry = spec.SPECS["molarity"]
     verdicts = {structure.id: gen_wording.held_out("molarity", structure.id)
-                for structure in grammar.structures(spec.SPECS["molarity"])}
-    later = {"each|what|": verdicts.get("each|what|")}
+                for structure in grammar.structures(entry)}
     for structure_id, side in verdicts.items():
         assert gen_wording.held_out("molarity", structure_id) == side
-    assert later["each|what|"] == verdicts["each|what|"]
     assert len(set(verdicts.values())) == 2, "the holdout splits this relation"
+    first_id = sorted(verdicts)[0]
+    assert gen_wording.held_out("molarity", first_id) == verdicts[first_id]
 
 
 def test_ledger_names_the_pairs_it_cannot_carry():

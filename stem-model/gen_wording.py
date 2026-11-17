@@ -268,7 +268,10 @@ def deferred_pairs():
 
 def ledger_text(ledger, contrast=()):
     total_structures = sum(entry["structures"] for entry in ledger)
-    total_rows = sum(entry["rows"] for entry in ledger)
+    # The header counts the file, so paired contrast rows are included even though
+    # they are reported per pair rather than per relation.
+    total_rows = (sum(entry["rows"] for entry in ledger)
+                  + sum(entry["rows"] for entry in contrast))
     total_refused = sum(entry["refused"] for entry in ledger)
     total_eval = sum(entry["eval_rows"] for entry in ledger)
     subjects = sorted({RELATIONS[entry["relation"]].subject for entry in ledger})

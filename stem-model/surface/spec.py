@@ -82,7 +82,7 @@ SPECS = {
          ("V1", _slot("initial volume", "volume", "L")),
          ("V2", _slot("final volume", "volume", "L"))],
         _slot("final pressure", "pressure", "atm"),
-        ("final pressure", "new pressure", "pressure after the change"),
+        ("pressure after compression", "resulting pressure"),
         confusable=("charles", "combined_gas", "gas_mixture_pressure"),
     ),
     "buffer_ph": _spec(
@@ -205,7 +205,7 @@ SPECS = {
          ("V_i", _slot("initial volume", "volume", "L")),
          ("V_f", _slot("final volume", "volume", "L"))],
         _slot("final pressure", "pressure", "atm"),
-        ("final pressure", "total pressure after combining"),
+        ("final total pressure", "pressure of the combined gases"),
         confusable=("boyles", "partial_pressure"),
     ),
     "gas_p": _spec(

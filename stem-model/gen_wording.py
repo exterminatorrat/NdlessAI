@@ -308,6 +308,16 @@ def ledger_text(ledger, contrast=()):
         ]
         for entry in contrast:
             lines.append(f"| `{entry['pair']}` | {entry['rows']} | {entry['note']} |")
+    if grammar.DEFERRED_SHAPES:
+        lines += [
+            "",
+            "## Shapes this generator does not carry, and why",
+            "",
+            "| shape | why |",
+            "| --- | --- |",
+        ]
+        for shape, reason in grammar.DEFERRED_SHAPES.items():
+            lines.append(f"| {shape} | {reason} |")
     if deferred:
         lines += [
             "",

@@ -36,6 +36,60 @@ static void expect_refused(const char *text)
 	}
 }
 
+/*
+ * Where the offline path sends text it cannot answer exactly.
+ *
+ * The exact engine has a fixed node pool, so long arithmetic fails to parse.
+ * It must not then reach the decoder: the decoder reads it as a word problem
+ * and answers with invented numbers, which is worse than saying it cannot.
+ */
+static int sum_of_ones(char *out, int terms)
+{
+	int len = 0;
+
+	out[0] = '\0';
+	for (int i = 0; i < terms; i++)
+		len += sprintf(out + len, "%s1", i ? "+" : "");
+	return len;
+}
+
+static void check_too_long_is_not_a_word_problem(void)
+{
+	char answer[64], call[64], sum[300];
+
+	/* 65 terms is 129 characters: past the pool, and not a word problem. The
+	 * code is its own so the screen can say which of the two happened. */
+	sum_of_ones(sum, 65);
+	if (pipeline_answer_offline(sum, answer, (int)sizeof answer, call,
+	                            (int)sizeof call) != 3) {
+		printf("FAIL a 65-term sum reaches the decoder\n");
+		failures++;
+	}
+	/* 64 terms is 127 characters, the last length the pool holds. */
+	sum_of_ones(sum, 64);
+	if (pipeline_answer_offline(sum, answer, (int)sizeof answer, call,
+	                            (int)sizeof call) != 0 || strcmp(answer, "64")) {
+		printf("FAIL a 64-term sum is not answered exactly: %s\n", answer);
+		failures++;
+	}
+	/* Prose that merely contains arithmetic still belongs to the decoder. */
+	if (pipeline_answer_offline("What is 2+2?", answer, (int)sizeof answer,
+	                            call, (int)sizeof call) != 1) {
+		printf("FAIL a question about arithmetic is refused\n");
+		failures++;
+	}
+	if (pipeline_answer_offline("2+2=?", answer, (int)sizeof answer, call,
+	                            (int)sizeof call) != 1) {
+		printf("FAIL arithmetic with a question mark is refused\n");
+		failures++;
+	}
+	if (pipeline_answer_offline("2+2", answer, (int)sizeof answer, call,
+	                            (int)sizeof call) != 0 || strcmp(answer, "4")) {
+		printf("FAIL short arithmetic stopped being exact: %s\n", answer);
+		failures++;
+	}
+}
+
 int main(void)
 {
 	expect("2+2", "4");
@@ -99,6 +153,8 @@ int main(void)
 	expect_refused("integrate(x,0,x)");
 	expect_refused("integrate(1/x,-1,1)");
 	expect_refused("");
+
+	check_too_long_is_not_a_word_problem();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

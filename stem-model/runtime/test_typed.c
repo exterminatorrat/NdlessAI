@@ -130,6 +130,39 @@ static void check_a_large_index_is_not_a_wrong_angle(void)
 	}
 }
 
+/*
+ * A rate is a rate whether or not it is a whole number.
+ *
+ * Both growth solvers used to require an integer percent and refuse 7.5, which
+ * the corpus writes: 26 of the 4,571 distinct corpus calls were refused for a
+ * constraint the relations' own definitions do not have.
+ */
+static void check_a_fractional_rate_is_a_rate(void)
+{
+	static const char *const rates[][2] = {
+		{ "doubling_time 7.5", "9.584" },
+		{ "doubling_time 3.2", "22.01" },
+		{ "continuous_growth 1200 2.5 5", "1360" },
+		{ "continuous_growth 500 3.5 7", "638.8" },
+		{ "continuous_growth 950 5.5 4", "1184" },
+		{ "doubling_time 7", "10.24" },
+		{ "continuous_growth 2000 5 4", "2443" },
+	};
+	char got[64];
+
+	for (int i = 0; i < (int)(sizeof rates / sizeof rates[0]); i++) {
+		int rc = pipeline_answer_offline(rates[i][0], got, (int)sizeof got,
+		                                NULL, 0);
+
+		if (rc != PIPELINE_OFFLINE_ANSWERED || strcmp(got, rates[i][1])) {
+			printf("FAIL %s -> %s (rc %d), wanted %s\n", rates[i][0],
+			       rc == PIPELINE_OFFLINE_ANSWERED ? got : "-", rc,
+			       rates[i][1]);
+			failures++;
+		}
+	}
+}
+
 static void check_no_value_is_not_a_number(void)
 {
 	static const char *const useless[] = {
@@ -237,6 +270,7 @@ int main(void)
 	check_too_long_is_not_a_word_problem();
 	check_no_value_is_not_a_number();
 	check_a_large_index_is_not_a_wrong_angle();
+	check_a_fractional_rate_is_a_rate();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

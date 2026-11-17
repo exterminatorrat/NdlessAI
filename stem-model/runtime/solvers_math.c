@@ -346,9 +346,12 @@ static int solve_continuous_growth(const char *const *args, char *out,
 		return rc;
 	if (P.n <= 0 || r.n < 0 || t.n <= 0)
 		return -4;
-	if (r.d != 1 || t.d != 1)
+	/* x = r*t/100 at 1e9 scale. A rate of 2.5 percent is a rate, so the product
+	 * is taken from the rationals; the bounds keep r.n*t.n*1e7 inside a long
+	 * long, and a call past them refuses rather than wrapping. */
+	if (r.d > 1000000LL || t.d > 1000000LL || r.n > 900000LL || t.n > 900000LL)
 		return -4;
-	x9 = r.n * t.n * 10000000LL;
+	x9 = r.n * t.n * 10000000LL / (r.d * t.d);
 	e9 = exp_9(x9, &rc);
 	if (rc != 0)
 		return rc;
@@ -399,9 +402,11 @@ static int solve_doubling_time(const char *const *args, char *out,
 
 	if ((rc = parse_rat(args[0], &r, NULL)) != 0)
 		return rc;
-	if (r.n <= 0 || r.d != 1)
+	if (r.n <= 0 || r.d > 100000000LL)
 		return -4;
-	l = ln_9(100 + r.n, 100, &rc);
+	/* ln(1 + r/100) from the rate as it was written, so 7.5 percent a year is
+	 * a rate and not a reason to refuse. */
+	l = ln_9(100 * r.d + r.n, 100 * r.d, &rc);
 	if (rc != 0)
 		return rc;
 	if (l <= 0)

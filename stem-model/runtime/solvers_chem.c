@@ -812,6 +812,174 @@ static int solve_wavelength_from_frequency(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_percent_dissociation(const char *const *args, char *out,
+                                      size_t outlen)
+{
+	rat ka, c0, r;
+	long long root;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &c0, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ka, NULL)) != 0)
+		return rc;
+	if (c0.n <= 0 || ka.n <= 0)
+		return -4;
+	if ((rc = rat_div(&r, &ka, &c0)) != 0)
+		return rc;
+
+	/*
+	 * percent = 100*sqrt(Ka/c0), the small-x approximation an exam answer is
+	 * written from. The ratio is exact, so the root is taken on a 1e12 grid and
+	 * lands on 1e6 of the square root; printing that over 1e4 keeps four
+	 * figures, two more than the grid error can reach. relations/chemistry.py
+	 * runs the same integer arithmetic, which is what makes the two prints
+	 * identical rather than merely close.
+	 */
+	if (r.n > 8000000)
+		return -4;
+	root = (long long)isqrt64((unsigned long long)(r.n * 1000000000000LL / r.d));
+	if ((rc = dec4_render(root, 10000, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s%%", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_mixing_concentration(const char *const *args, char *out,
+                                      size_t outlen)
+{
+	rat v1, c1, v2, c2, m1, m2, moles, vol, c;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &v1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &c1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &c2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&m1, &c1, &v1)) != 0 ||
+	    (rc = rat_mul(&m2, &c2, &v2)) != 0 ||
+	    (rc = rat_add(&moles, &m1, &m2)) != 0 ||
+	    (rc = rat_add(&vol, &v1, &v2)) != 0)
+		return rc;
+	if (vol.n == 0)
+		return -4;
+	if ((rc = rat_div(&c, &moles, &vol)) != 0)
+		return rc;
+	if ((rc = dec4_render(c.n, c.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_hydrate_water(const char *const *args, char *out,
+                               size_t outlen)
+{
+	rat m_hydrate, m_anhydrous, mm_anhydrous, mm_water, water, salt, x;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &m_hydrate, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &m_anhydrous, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &mm_anhydrous, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &mm_water, NULL)) != 0)
+		return rc;
+	if (mm_water.n == 0 || mm_anhydrous.n == 0 || m_anhydrous.n == 0 ||
+	    m_hydrate.n <= m_anhydrous.n)
+		return -4;
+	if ((rc = rat_sub(&x, &m_hydrate, &m_anhydrous)) != 0 ||
+	    (rc = rat_div(&water, &x, &mm_water)) != 0 ||
+	    (rc = rat_div(&salt, &m_anhydrous, &mm_anhydrous)) != 0)
+		return rc;
+	if ((rc = rat_div(&x, &water, &salt)) != 0)
+		return rc;
+	if ((rc = dec4_render(x.n, x.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_faraday_deposit(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat faradays, n, mm, q, m;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &faradays, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &mm, NULL)) != 0)
+		return rc;
+	if (n.n == 0)
+		return -4;
+	if ((rc = rat_mul(&q, &faradays, &mm)) != 0 ||
+	    (rc = rat_div(&m, &q, &n)) != 0)
+		return rc;
+	if ((rc = dec4_render(m.n, m.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s g", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_rate_factor(const char *const *args, char *out,
+                             size_t outlen)
+{
+	rat f1, o1, f2, o2, p1, p2, one = { 1, 1 };
+	int rc, i, n1, n2;
+	char f1s[48];
+
+	if ((rc = parse_rat(args[0], &f1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &o1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &f2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &o2, NULL)) != 0)
+		return rc;
+	if (o1.d != 1 || o2.d != 1 || o1.n < 0 || o1.n > 4 ||
+	    o2.n < 0 || o2.n > 4 || f1.n <= 0 || f2.n <= 0)
+		return -4;
+	n1 = (int)o1.n;
+	n2 = (int)o2.n;
+	p1 = one;
+	for (i = 0; i < n1; i++)
+		if ((rc = rat_mul(&p1, &p1, &f1)) != 0)
+			return rc;
+	p2 = one;
+	for (i = 0; i < n2; i++)
+		if ((rc = rat_mul(&p2, &p2, &f2)) != 0)
+			return rc;
+	p1.n *= p2.n;
+	p1.d *= p2.d;
+	if ((rc = rat_norm(&p1)) != 0)
+		return rc;
+	if ((rc = dec4_render(p1.n, p1.d, f1s, sizeof(f1s))) != 0)
+		return rc;
+	out_set(out, outlen, f1s);
+	return 0;
+}
+
+static int solve_mass_from_molarity(const char *const *args, char *out,
+                                    size_t outlen)
+{
+	rat c, v, mm, moles, m;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &mm, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&moles, &c, &v)) != 0 ||
+	    (rc = rat_mul(&m, &moles, &mm)) != 0)
+		return rc;
+	if ((rc = dec4_render(m.n, m.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s g", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -995,6 +1163,36 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "wavelength_from_frequency") == 0) {
 		if (nargs == 1)
 			rc = solve_wavelength_from_frequency(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "percent_dissociation") == 0) {
+		if (nargs == 2)
+			rc = solve_percent_dissociation(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mixing_concentration") == 0) {
+		if (nargs == 4)
+			rc = solve_mixing_concentration(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "hydrate_water") == 0) {
+		if (nargs == 4)
+			rc = solve_hydrate_water(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "faraday_deposit") == 0) {
+		if (nargs == 3)
+			rc = solve_faraday_deposit(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "rate_factor") == 0) {
+		if (nargs == 4)
+			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mass_from_molarity") == 0) {
+		if (nargs == 3)
+			rc = solve_mass_from_molarity(args, out, outlen);
 		else
 			rc = -2;
 	} else {

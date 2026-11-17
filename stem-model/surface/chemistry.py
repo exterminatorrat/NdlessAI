@@ -446,3 +446,87 @@ TEMPLATES["wavelength_from_frequency"] = [
     "An ultraviolet lamp runs at {frequency_thz} THz. What is its wavelength in metres?",
     "What is the wavelength, in metres, of light of frequency {frequency_thz} THz?",
 ]
+
+TEMPLATES["percent_dissociation"] = [
+    "A weak acid of concentration {c0} mol/L has Ka = {Ka}. Find its percent dissociation.",
+    "Find the percent dissociation of a {c0} mol/L weak acid whose Ka is {Ka}.",
+    "What is the percent dissociation when a weak acid is {c0} mol/L and Ka is {Ka}?",
+    "Compute the percent dissociation for a {c0} mol/L solution of an acid with Ka = {Ka}.",
+    "A {c0} mol/L solution of a weak acid has Ka = {Ka}. Use the small-x approximation and give the percent dissociation.",
+    "Calculate the percentage of a {c0} mol/L weak acid that dissociates, given Ka = {Ka}.",
+    "Find the percent ionization of a weak acid at {c0} mol/L with Ka = {Ka}.",
+    "Given a weak acid concentration of {c0} mol/L and Ka = {Ka}, what percent dissociates?",
+    "Determine the percent dissociation of a {c0} mol/L acid of Ka {Ka}, assuming x is small against the initial concentration.",
+    "A weak acid solution of {c0} mol/L reports Ka = {Ka}. What fraction of it dissociates, as a percentage?",
+    "What percent dissociation does a {c0} mol/L weak acid of Ka = {Ka} show?",
+]
+
+TEMPLATES["mixing_concentration"] = [
+    "A volume of {v1} mL of a {c1} mol/L solution is added to {v2} mL of a {c2} mol/L solution of the same solute. Find the concentration of the mixture.",
+    "Find the concentration after {v1} mL of a {c1} mol/L solution is mixed with {v2} mL of a {c2} mol/L solution.",
+    "What is the concentration of a solution made from {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L of the same solute?",
+    "Compute the final concentration when {v1} mL of {c1} mol/L is added to {v2} mL of {c2} mol/L.",
+    "{v1} mL of {c1} mol/L is poured into {v2} mL of {c2} mol/L of the same solute. Determine the resulting concentration.",
+    "Calculate the concentration of the mixture formed from {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L.",
+    "Find the molarity after {v1} mL of a {c1} M solution and {v2} mL of a {c2} M solution are combined.",
+    "Given {v1} mL of {c1} mol/L and {v2} mL of {c2} mol/L of the same substance, what is the mixture's concentration?",
+    "Determine the concentration of the solution obtained by mixing {v1} mL of {c1} mol/L with {v2} mL of {c2} mol/L.",
+    "Two portions of the same solution, {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L, are combined. What concentration results?",
+    "What concentration does a mixture of {v1} mL of {c1} mol/L and {v2} mL of {c2} mol/L have?",
+]
+
+TEMPLATES["hydrate_water"] = [
+    "A hydrated salt of mass {mass_hydrate} g is heated until the water is driven off, leaving {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol. Water has molar mass {mm_water} g/mol. Find the number of moles of water per mole of anhydrous salt.",
+    "Find x in salt.xH2O when {mass_hydrate} g of the hydrate leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water being {mm_water} g/mol.",
+    "What is the water of crystallisation per formula unit if {mass_hydrate} g of a hydrate gives {mass_anhydrous} g of the anhydrous salt of molar mass {mm_anhydrous} g/mol, with water at {mm_water} g/mol?",
+    "Compute the moles of water per mole of salt for a hydrate where {mass_hydrate} g loses water to leave {mass_anhydrous} g of anhydrous material of molar mass {mm_anhydrous} g/mol, water at {mm_water} g/mol.",
+    "Heating {mass_hydrate} g of a hydrate drives off its water and leaves {mass_anhydrous} g of the anhydrous salt, molar mass {mm_anhydrous} g/mol. Determining the moles of water per mole requires water's molar mass of {mm_water} g/mol.",
+    "Calculate the ratio of water to salt for a hydrate of initial mass {mass_hydrate} g that leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water at {mm_water} g/mol.",
+    "Find how many waters of hydration each formula unit carries when {mass_hydrate} g of hydrate yields {mass_anhydrous} g of the anhydrous salt of molar mass {mm_anhydrous} g/mol, taking water as {mm_water} g/mol.",
+    "Given {mass_hydrate} g of a hydrate, {mass_anhydrous} g of anhydrous salt, a salt molar mass of {mm_anhydrous} g/mol and water at {mm_water} g/mol, what is the water-to-salt ratio?",
+    "Determine the moles of water bound per mole of salt if {mass_hydrate} g of a hydrate leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, with {mm_water} g/mol for water.",
+    "A sample of {mass_hydrate} g of a hydrate loses its water in an oven and weighs {mass_anhydrous} g afterwards; the anhydrous salt has molar mass {mm_anhydrous} g/mol and water {mm_water} g/mol. What is x in the hydrate formula?",
+    "What number of water molecules per formula unit does a hydrate have if {mass_hydrate} g of it drives off water to {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water being {mm_water} g/mol?",
+]
+
+TEMPLATES["faraday_deposit"] = [
+    "Electrolysis passes {faradays} faraday of charge through a solution in which each metal ion takes {electrons_per_ion} electrons to plate out. The metal has molar mass {molar_mass} g/mol. Find the mass deposited.",
+    "Find the mass of metal plated out when {faradays} faraday of charge reduces ions that need {electrons_per_ion} electrons each, the metal's molar mass being {molar_mass} g/mol.",
+    "What mass of metal deposits when {faradays} faraday of electricity passes through a solution of ions requiring {electrons_per_ion} electrons each, for a metal of molar mass {molar_mass} g/mol?",
+    "Compute the deposit mass for {faradays} faraday through a bath where the ion takes {electrons_per_ion} electrons and the metal has molar mass {molar_mass} g/mol.",
+    "A plating bath receives {faradays} faraday of charge; the metal ion needs {electrons_per_ion} electrons and the metal's molar mass is {molar_mass} g/mol. Determine the mass deposited.",
+    "Calculate how many grams plate out when {faradays} faraday of charge is passed and the ion requires {electrons_per_ion} electrons, the metal being {molar_mass} g/mol.",
+    "Find the mass of metal deposited by {faradays} faraday on a cathode where the ion takes {electrons_per_ion} electrons and the metal has molar mass {molar_mass} g/mol.",
+    "Given {faradays} faraday of charge, an ion taking {electrons_per_ion} electrons and a metal of molar mass {molar_mass} g/mol, what mass is deposited?",
+    "Determine the mass electroplated when {faradays} faraday passes through a solution whose ions need {electrons_per_ion} electrons each, the metal at {molar_mass} g/mol.",
+    "An electrolysis cell passes {faradays} faraday of charge to deposit a metal of molar mass {molar_mass} g/mol whose ion takes {electrons_per_ion} electrons. What mass is collected?",
+    "What mass of metal does {faradays} faraday of charge deposit from a solution of ions taking {electrons_per_ion} electrons, if the metal is {molar_mass} g/mol?",
+]
+
+TEMPLATES["rate_factor"] = [
+    "The first reactant's concentration is multiplied by {f1} and its order is {o1}; the second reactant's concentration is multiplied by {f2} and its order is {o2}. By what factor does the rate change?",
+    "Find the factor by which the rate changes when the first concentration is multiplied by {f1} with order {o1} and the second by {f2} with order {o2}.",
+    "What happens to the rate if the first reactant's concentration is scaled by {f1}, order {o1}, and the second scaled by {f2}, order {o2}?",
+    "Compute the rate factor for a change of {f1} in the first concentration (order {o1}) and {f2} in the second (order {o2}).",
+    "A rate law is first order {o1} in one reactant and order {o2} in the other. The concentrations are multiplied by {f1} and by {f2} respectively: what is the new rate factor?",
+    "Calculate how much faster the reaction runs when the first concentration is multiplied by {f1} (order {o1}) and the second by {f2} (order {o2}).",
+    "Find the multiplier on the rate when the first concentration changes by a factor of {f1} with order {o1} and the second by {f2} with order {o2}.",
+    "Given a factor of {f1} applied to a reactant of order {o1} and {f2} applied to one of order {o2}, what is the overall rate factor?",
+    "Determine the factor by which the rate is multiplied when the first concentration is scaled by {f1}, its order being {o1}, and the second by {f2}, its order being {o2}.",
+    "Two concentrations change: the first is multiplied by {f1} (order {o1}) and the second by {f2} (order {o2}). What is the resulting rate ratio?",
+    "What factor multiplies the rate when one concentration is scaled by {f1} with order {o1} and another by {f2} with order {o2}?",
+]
+
+TEMPLATES["mass_from_molarity"] = [
+    "A volume of {V} L of a {c} mol/L solution contains a solute of molar mass {molar_mass} g/mol. Find the mass of solute dissolved.",
+    "Find the mass of solute in {V} L of a {c} mol/L solution whose molar mass is {molar_mass} g/mol.",
+    "What mass of solute is present in {V} L of a {c} mol/L solution of molar mass {molar_mass} g/mol?",
+    "Compute the mass of solute for {V} L at {c} mol/L with molar mass {molar_mass} g/mol.",
+    "A {V} L portion of a {c} mol/L solution holds a solute of molar mass {molar_mass} g/mol. Determine its mass.",
+    "Calculate the grams of solute in {V} L of a {c} mol/L solution of a substance of molar mass {molar_mass} g/mol.",
+    "Find how many grams of solute {V} L of a {c} mol/L solution contains, the solute being {molar_mass} g/mol.",
+    "Given {V} L of a {c} mol/L solution and a solute molar mass of {molar_mass} g/mol, what mass is dissolved?",
+    "Determine the mass of solute dissolved in {V} L of a {c} mol/L solution of molar mass {molar_mass} g/mol.",
+    "An aliquot of {V} L is taken from a {c} mol/L solution of a solute of molar mass {molar_mass} g/mol. What mass does it carry?",
+    "What mass of solute does {V} L of a {c} mol/L solution hold when the solute's molar mass is {molar_mass} g/mol?",
+]

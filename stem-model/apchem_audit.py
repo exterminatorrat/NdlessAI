@@ -21,7 +21,17 @@ the strict verdict wins:
   broken                        extraction did not survive; not judged on content
 
 Classification is a rule table, so it can be wrong, and the way to keep a rule
-table honest is to publish the rules and check a sample by hand. `--rules` prints
+table honest is to publish the rules and check a sample by hand. It is also only
+a rule table: an item moving from an unnamed bucket into `relation` because a
+pattern learned a new phrasing is a **coverage** change, never a capability
+change, and the two are reported apart. A rule loosened this way names the items
+it newly claims in the thread report, because a rule that catches more items
+without saying which is indistinguishable from a rule that lies.
+
+Likewise `quantity_lost` is a fact about the source — the question asked for a
+quantity and the page drew its name as a picture — and it is kept out of the
+catalogue-gap count so that a limit of the PDF is never booked as a limit of the
+program. `--rules` prints
 the table, `--sample` prints N items with their verdict for that check.
 
 Nothing here writes the copyright text anywhere but the gitignored corpus: the
@@ -59,6 +69,7 @@ CATEGORIES = (
     "unanswerable_design",
     "unanswerable_setup",
     "unanswerable_open",
+    "quantity_lost",
     "options_lost",
     "broken",
 )
@@ -91,13 +102,21 @@ DESIGN = re.compile(
     r"which procedure|should the student do|to test the|"
     r"to determine whether|experimental design|which of the following (should|"
     r"would best|is the best))\b", re.I)
+# "Calculate the value of ." and "the mass of  that contains  of  ." — the
+# question asks for a quantity and the page did not carry its name, because the
+# species or symbol is a drawn image. That is a fact about the source, and it is
+# reported apart from a gap in the catalogue.
+QUANTITY_HOLE = re.compile(
+    r"\b(calculate|compute|determine|find|what is)\b[^.?]{0,40}\b(value|mass|concentration|"
+    r"pressure|volume|energy|amount|number|ratio|constant)\b[^.?]{0,20}\bof\s*(that|is|in|at|for|"
+    r"when|\?|\.|$)|\b(of|that contains)\s+(of|\.)\s")
 SETUP = re.compile(
     r"\b(show (the )?setup|write the (expression|equation|setup)|"
     r"set up the calculation|write a balanced|complete the (equation|table))\b",
     re.I)
 MULTI = re.compile(
     r"\b(using your answer|based on your answer|from part|in part|"
-    r"and then|after that|using the (value|result|answer) (from|you))\b", re.I)
+    r"and then|after that|from step \d|using the (value|result|answer) (from|you))\b", re.I)
 DRAW = re.compile(r"\b(draw|sketch|label|plot the|graph the)\b", re.I)
 SCALAR_PROMPT = re.compile(
     r"\b(calculate|determine|what is|what will|how many|how much|find|compute|"
@@ -111,27 +130,29 @@ SCALAR_PROMPT = re.compile(
 RELATION_RULES = (
     ("molarity", r"\bmolarity\b|\bwhat is the (molar )?concentration\b|\bmol/l\b"
                  r"|\bconcentration of\b.*\b(resulting|solution)\b", 2),
-    ("dilution", r"\bdilut(e|ed|ion)\b", 3),
+    ("dilution", r"\bdilut(e|ed|ion)\b|\bneeded to prepare\b", 3),
     ("moles", r"\bhow many (moles|mol)\b|\bnumber of moles\b|\bmoles of\b", 2),
-    ("mass_percent", r"\bmass percent\b|\bpercent by mass\b", 2),
+    ("mass_percent", r"\bmass percent\b|\bpercent by mass\b|\bpercent of \w+ by mass\b", 2),
     ("molality", r"\bmolality\b|\bmol/kg\b", 2),
     ("mole_fraction", r"\bmole fraction\b", 2),
     ("percent_yield", r"\bpercent(age)? yield\b|\byield of\b.*%", 2),
     ("buffer_ph", r"\bbuffer\b.*\bpH\b|\bpKa\b", 3),
     ("poh", r"\bpOH\b", 1),
     ("ph", r"\bpH\b", 1),
-    ("kc_from_conc", r"\bKc\b|\bequilibrium constant\b", 3),
+    ("kc_from_conc", r"\bKc\b|\bKp\b|\bequilibrium constant\b", 3),
     ("gibbs", r"\bΔG\b|\bGibbs\b", 3),
     ("specific_heat", r"\bspecific heat\b|\bJ/\(g", 3),
     ("calorimetry_c", r"\bcalorimeter\b|\bheat (released|absorbed)\b", 3),
-    ("latent_heat", r"\bheat of (fusion|vaporization|sublimation)\b|\blatent\b", 2),
+    ("latent_heat", r"\bheat of (fusion|vaporization|sublimation)\b|\blatent\b"
+                   r"|\b(energy|heat)\b[^.?]{0,60}\b(melt|freeze|vaporiz\w*|condens\w*)\b", 2),
     ("heat_reaction", r"\bΔH\b.*\bmol", 2),
     ("limiting_moles", r"\blimiting (reactant|reagent)\b", 4),
-    ("stoich_mass", r"\b(grams|mass) of\b.*\b(produced|formed)\b", 4),
+    ("stoich_mass", r"\b(grams|mass) of\b.*\b(produced|formed|to produce|necessary)\b", 4),
     ("stoichiometry", r"\bstoichiometr", 2),
-    ("combined_gas", r"\bideal gas\b|\bPV ?= ?nRT\b", 4),
-    ("boyles", r"\bconstant temperature\b|\bBoyle", 3),
-    ("charles", r"\bconstant pressure\b|\bCharles", 3),
+    ("combined_gas", r"\bideal gas\b|\bPV ?= ?nRT\b"
+                     r"|\brigid (container|flask|vessel)\b.*\bpressure\b", 4),
+    ("boyles", r"\bconstant temperature\b|\bBoyle\b", 3),
+    ("charles", r"\bconstant pressure\b|\bCharles\b|\bmovable piston\b", 3),
     ("gas_p", r"\bpressure\b.*\bvolume\b.*\btemperature\b", 3),
     ("avg_rate", r"\baverage rate\b|\brate of (reaction|disappearance|formation)\b", 2),
     ("density", r"\bdensity\b", 2),
@@ -166,9 +187,25 @@ GAP_RULES = (
     ("hybridization", r"\bhybridization\b", "(domains) -> sp^n"),
     ("partial_pressure", r"\bpartial pressure\b|\bmole fraction\b.*\bpressure\b",
      "(n_i, n_total, P_total) -> atm"),
-    ("atoms_from_mass", r"\bhow many (atoms|molecules|ions)\b|\bnumber of (atoms|molecules)\b",
+    ("gas_mixture_pressure", r"\bare combined in\b|\bare pumped into\b",
+     "(P_i, V_i, V_f) -> atm"),
+    ("mass_from_molarity", r"\bmass of\b.*\brequired to prepare\b|\brequired to prepare\b",
+     "(c, V, molar_mass) -> g"),
+    ("mixture_final_temperature", r"\bis mixed with\b.*\btemperature\b",
+     "(m1, T1, m2, T2) -> K"),
+    ("kc_from_pressures", r"\b(Kc|Kp|equilibrium constant)\b.*\bpressures?\b"
+                          r"|\bpressures?\b.*\b(Kc|Kp)\b",
+     "(P0, P_eq, coefficients) -> Kc"),
+    ("stoich_volume_gas", r"\bvolume of\b.*\brequired to react\b",
+     "(V_given, ratio) -> L"),
+    ("percent_composition_reverse", r"\bpercent of \w+ in the sample\b|\breported as being\b",
+     "(percent_element, formula) -> percent"),
+    ("vsepr_bond_angle", r"\bbond angle\b", "(geometry) -> degrees"),
+    ("ph_of_water_kw", r"\bof pure water\b|\bKw\b", "(Kw, T) -> pH"),
+    ("atoms_from_mass", r"\bhow many \w* ?(atoms|molecules|ions)\b"
+                        r"|\bnumber of (atoms|molecules)\b",
      "(mass, molar_mass) -> count"),
-    ("balance_coefficients", r"\b(equation (above|below) is balanced|all coefficients)\b",
+    ("balance_coefficients", r"\bis balanced\b|\ball coefficients\b",
      "(equation) -> coefficients"),
     ("hydrate_water", r"\bhydrate\b|\bwater of (hydration|crystallization)\b",
      "(mass_hydrate, mass_anhydrous) -> formula"),
@@ -189,7 +226,7 @@ GAP_RULES = (
     ("percent_dissociation", r"\bpercent (dissociation|ionization)\b", "(c0, Ka) -> percent"),
     ("cell_potential", r"\b(cell potential|E°?cell|standard reduction potential)\b", "(E_red, E_ox) -> V"),
     ("nernst", r"\bNernst\b", "(E0, n, Q) -> V"),
-    ("faraday_deposit", r"\belectroly\w+\b|\bFaraday\b", "(current, time, n) -> g"),
+    ("faraday_deposit", r"\belectroly\w+\b|\bFaraday\b|\bcurrent of\b", "(current, time, n) -> g"),
     ("entropy_change", r"\bΔS\b|\bentropy\b", "(states) -> J/K"),
     ("graham_effusion", r"\b(effusion|Graham)\b", "(m1, m2) -> ratio"),
     ("colligative_freezing", r"\bfreezing point\b|\bboiling point elevation\b|\bosmotic pressure\b", "(molality, Kf) -> °C"),
@@ -302,6 +339,8 @@ def classify_mcq(item):
         return "new_relation", gap, shape
     if MULTI.search(text):
         return "unanswerable_multistep", None, "refers to an earlier result"
+    if QUANTITY_HOLE.search(text):
+        return "quantity_lost", None, "the quantity asked for is a drawn image"
     return "numeric_unmapped", None, "numeric answer, quantity not identified"
 
 
@@ -333,6 +372,8 @@ def classify_frq_part(item, part):
         return "new_relation", gap, shape
     if part.get("subs") or MULTI.search(text):
         return "unanswerable_multistep", None, "several steps to the answer"
+    if QUANTITY_HOLE.search(text):
+        return "quantity_lost", None, "the quantity asked for is a drawn image"
     return "numeric_unmapped", None, "numeric answer, quantity not identified"
 
 

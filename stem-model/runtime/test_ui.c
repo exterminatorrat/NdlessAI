@@ -745,6 +745,54 @@ static void test_errors(void)
 	      "a sum the engine cannot hold answers without a model too");
 	check(!rows_have("No model file"), "and is not reported as a missing model");
 	check(!rows_have("weights.bin.tns"), "with no file blamed for it");
+
+	/*
+	 * Arithmetic with no value: nine measured paths, two stories (no value, or
+	 * a value past the Q16.16 range). No model is consulted for any of them, so
+	 * the screen must not reach for the weights even when the loaded ones are
+	 * the mismatched fixture above, and it must cover both stories in one
+	 * sentence because the code does not distinguish them.
+	 */
+	model.model.vocab = BPE_VOCAB_SIZE - 64;
+	ui_init(&u, &model, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ui_result(&u, "q", PIPELINE_NO_VALUE, "", "");
+	render();
+	check(band_is_text(UI_PANE_Y, "There is no answer this build can give.",
+	                   SCREEN_WHITE),
+	      "a value the engine does not have draws its own headline");
+	check(band_is_text(UI_PANE_Y + 5 * SCREEN_LINE_H,
+	                   "build holds. Check the numbers, or work", SCREEN_DIM),
+	      "and gives the next step under the explanation");
+	check(!rows_have("weights.bin.tns") && !rows_have("tokenizer") &&
+	      !rows_have("vocabulary"),
+	      "arithmetic with no value blames neither the weights nor the tokenizer");
+	check(u.nrows <= UI_PANE_ROWS, "the no-value note fits the pane");
+
+	/* End to end, on the calculator with no weights file: the offline code has
+	 * to survive ask() rather than becoming a missing-model message. */
+	ui_init(&u, NULL, "weights.bin.tns is not beside this program.");
+	ui_key(&u, UI_KEY_MODE);
+	ask("1/0");
+	render();
+	check(band_is_text(UI_PANE_Y, "There is no answer this build can give.",
+	                   SCREEN_WHITE),
+	      "1/0 answers with no value and no model");
+	check(!rows_have("No model file"), "and is not reported as a missing model");
+
+	/* And end to end through the pipeline itself, on the overflow that #145
+	 * made a refusal: 2^15 is past the range, so it no longer prints 32768. */
+	memset(&model, 0, sizeof model);
+	model.ready = 1;
+	model.model.vocab = BPE_VOCAB_SIZE;
+	ui_init(&u, &model, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ask("2^15");
+	render();
+	check(band_is_text(UI_PANE_Y, "There is no answer this build can give.",
+	                   SCREEN_WHITE),
+	      "2^15 is refused rather than answered with 32768");
+	check(!rows_have("32768"), "and the saturated number is not shown");
 }
 
 /* ---- the working above the answer ---- */

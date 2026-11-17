@@ -1,12 +1,25 @@
 /*
- * The unit check, on fixed cases for each outcome: what it reads after a
- * number, what it converts, what it refuses, and what it leaves alone.
+ * The unit check: fixed cases for each outcome, then, with --cases, every
+ * correct call gen_unit_cases.py writes from the generators and the
+ * hand-written corpus. Three passes over that corpus:
+ *
+ *  - a correct call must come back unchanged, so a wrong slot unit in
+ *    param_units.py or a misread unit in quantity.c fails here instead of
+ *    refusing a student's right answer;
+ *  - every tagged number is rewritten into each other unit of its kind, and
+ *    the converted call must reach the solver and answer what the original
+ *    did, so a conversion that is right as text but overflows or misleads the
+ *    solver fails too;
+ *  - swapped arguments are counted, not gated: how many the units now catch.
  *
  *     ./test_quantity
+ *     python3 ../gen_unit_cases.py | ./test_quantity --cases
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "grounding.h"
 #include "quantity.h"
 #include "reltable.h"
 #include "solvers.h"
@@ -314,8 +327,396 @@ static void zero_cases(void)
 	       "CALL charles 2 273.15 300.15");
 }
 
-int main(void)
+/* ---- the corpus ---- */
+
+static int split_args(char *call, char **field, int max)
 {
+	int n = 0;
+
+	for (char *t = strtok(call, " "); t && n < max; t = strtok(NULL, " "))
+		field[n++] = t;
+	return n;
+}
+
+static const rel_row_t *row_named(const char *name)
+{
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		if (strcmp(rel_rows[i].name, name) == 0)
+			return &rel_rows[i];
+	return NULL;
+}
+
+/* The `i`-th space-separated unit of a row, into out. */
+static void slot_unit(const rel_row_t *row, int i, char *out, size_t outlen)
+{
+	const char *p = row->units;
+
+	while (i-- > 0 && (p = strchr(p, ' ')))
+		p++;
+	snprintf(out, outlen, "%.*s", p ? (int)strcspn(p, " ") : 0, p ? p : "");
+}
+
+static int answers_agree(const char *a, const char *b)
+{
+	char *ea, *eb;
+	double x = strtod(a, &ea), y = strtod(b, &eb), scale;
+
+	if (ea == a || eb == b || strcmp(ea, eb) != 0)
+		return strcmp(a, b) == 0;
+	scale = x < 0 ? -x : x;
+	/* Four displayed digits, after a six-digit round trip: 0.2% is the
+	 * rounding, and nothing a wrong unit produces is that close. */
+	return (x - y < 0 ? y - x : x - y) <= 2e-3 * (scale > 1e-9 ? scale : 1e-9);
+}
+
+/*
+ * Whether `got`, the value the check passed to the solver, is the number the
+ * question wrote: `written` in `unit`, converted on its own into `slot`. A
+ * shared rounding that drifts from it, as Fahrenheit did near absolute zero,
+ * fails here even when the solver answers.
+ */
+static int value_faithful(const char *got, const char *written,
+                          const char *unit, const char *slot)
+{
+	char ref[32];
+	double g, r;
+
+	if (quantity_convert(written, unit, slot, ref, (int)sizeof ref) < 0)
+		return 1;   /* nothing independent to compare against */
+	g = strtod(got, NULL);
+	r = strtod(ref, NULL);
+	return (g - r < 0 ? r - g : g - r) <= 1e-3 * (r < 0 ? -r : r) + 1e-12;
+}
+
+static struct {
+	long tried, converted, ambiguous, refused, broken, inexact, failed;
+	long drifted;
+} trip;
+
+/* Significant digits as written: "0.0250" has three, "300" three. */
+static int sig_digits(const char *s)
+{
+	int n = 0, lead = 1;
+
+	for (; *s && *s != 'e' && *s != 'E'; s++)
+		if (*s >= '0' && *s <= '9') {
+			if (*s != '0')
+				lead = 0;
+			if (!lead)
+				n++;
+		}
+	return n ? n : 1;
+}
+
+/*
+ * The question rewritten so argument `i` is written in unit `to`, and the
+ * call the model would copy from it.
+ *
+ * When the rewrite is exact ("20 m/s" as "72 km/h") it is the same question,
+ * so the converted call must answer what the original did. When it is not
+ * ("3 m" as 118.110 inch), the number is rounded to the digits the original
+ * was written with, "118 inch", which is a different but realistic question:
+ * there the converted call must reach an answer at all, because a solver that
+ * refuses or overflows on it is exactly what a student typing it would hit.
+ */
+/* Where `arg` is written followed by the unit `slot`, or NULL. */
+static const char *tagged_at(const char *question, const char *arg,
+                             const char *slot)
+{
+	size_t n = strlen(arg);
+
+	for (const char *p = question; (p = strstr(p, arg)) != NULL; p++) {
+		const char *u;
+
+		if ((p > question && (p[-1] == '-' || p[-1] == '.')) ||
+		    !grounding_number_boundary(question, p, (int)n))
+			continue;
+		u = quantity_unit_after(p + n, NULL);
+		if (u && strcmp(u, slot) == 0)
+			return p;
+	}
+	return NULL;
+}
+
+static void round_trip(const char *question, char **f, int nf, int i,
+                       const char *slot)
+{
+	const char *arg = f[i], *p = tagged_at(question, f[i], slot), *to;
+	size_t n = strlen(arg);
+
+	if (!p)
+		return;
+	for (int k = 0; (to = quantity_unit_alternative(slot, k)) != NULL; k++) {
+		char value[32], q[1200], call[256], out[256], want[128], got[128];
+		const char *args[8], *conv[8];
+		char work[256], *g[12];
+		int span, len, rc, ng;
+
+		int exact = quantity_convert(arg, slot, to, value, (int)sizeof value);
+
+		if (exact < 0)
+			continue;
+		exact = exact == 0;
+		if (!exact)
+			snprintf(value, sizeof value, "%.*g", sig_digits(arg),
+			         strtod(value, NULL));
+		quantity_unit_after(p + n, &span);
+		snprintf(q, sizeof q, "%.*s%s %s%s", (int)(p - question), question,
+		         value, to, p + n + span);
+		len = snprintf(call, sizeof call, "CALL %s", f[1]);
+		for (int j = 2; j < nf; j++)
+			len += snprintf(call + len, sizeof call - (size_t)len, " %s",
+			                j == i ? value : f[j]);
+		trip.tried++;
+		rc = quantity_check_call(call, q, out, (int)sizeof out);
+		if (rc == QUANTITY_SAME) {
+			trip.ambiguous++;   /* the new number collides with another */
+			continue;
+		}
+		if (rc == QUANTITY_MISMATCH) {
+			if (trip.refused++ < 5)
+				printf("refused: %s | %s\n", q, call);
+			continue;
+		}
+		trip.converted++;
+		for (int j = 2; j < nf; j++)
+			args[j - 2] = f[j];
+		snprintf(work, sizeof work, "%s", out);
+		ng = split_args(work, g, 12);
+		if (ng == nf && !value_faithful(g[i], value, to, slot) &&
+		    trip.drifted++ < 10)
+			printf("drifted: %s | %s -> %s\n", q, call, out);
+		for (int j = 2; j < ng; j++)
+			conv[j - 2] = g[j];
+		if (solvers_solve(f[1], args, nf - 2, want, sizeof want) != 0)
+			continue;
+		got[0] = '\0';
+		rc = ng == nf ? solvers_solve(g[1], conv, ng - 2, got, sizeof got) : -1;
+		if (exact && (rc != 0 || !answers_agree(want, got))) {
+			if (trip.broken++ < 10)
+				printf("broken: %s | %s -> %s answers \"%s\", wanted \"%s\"\n",
+				       q, call, out, got, want);
+		} else if (!exact) {
+			trip.inexact++;
+			if (rc != 0 && trip.failed++ < 10)
+				printf("solver refused: %s | %s -> %s\n", q, call, out);
+		}
+	}
+}
+
+static struct {
+	long tried, converted, ambiguous, refused, broken, inexact, failed;
+	long drifted;
+} group;
+
+/*
+ * Every number written in `slot` rewritten into `to` at once: "3 kg and 7 kg"
+ * as "6.61 lb and 15.4 lb". This is where the arguments of one call stop being
+ * independent, so it is where shared units and shared rounding are tested;
+ * one number at a time never reaches them.
+ */
+static void round_trip_group(const char *question, char **f, int nf,
+                             const rel_row_t *row, const char *slot)
+{
+	const char *at[8], *to;
+	int member[8], m = 0;
+
+	for (int i = 2; i < nf; i++) {
+		char u[24];
+
+		slot_unit(row, i - 2, u, sizeof u);
+		if (strcmp(u, slot) != 0 || f[i][0] == '-' ||
+		    !(at[m] = tagged_at(question, f[i], slot)))
+			continue;
+		for (int k = 0; k < m; k++)
+			if (at[k] == at[m])
+				return;   /* two arguments read from one number */
+		member[m++] = i;
+	}
+	if (m < 2)
+		return;
+	/* Rewrite left to right, so order the members by where they are. */
+	for (int a = 0; a < m; a++)
+		for (int b = a + 1; b < m; b++)
+			if (at[b] < at[a]) {
+				const char *t = at[a];
+				int ti = member[a];
+
+				at[a] = at[b];
+				at[b] = t;
+				member[a] = member[b];
+				member[b] = ti;
+			}
+	for (int k = 0; (to = quantity_unit_alternative(slot, k)) != NULL; k++) {
+		char value[8][32], q[1200], call[256], out[256], want[128], got[128];
+		char work[256], *g[12];
+		const char *args[8], *conv[8], *from = question;
+		int exact = 1, len = 0, ng, rc, ok = 1;
+
+		for (int a = 0; a < m && ok; a++) {
+			int i = member[a], span;
+
+			rc = quantity_convert(f[i], slot, to, value[a], (int)sizeof value[a]);
+			if (rc < 0) {
+				ok = 0;
+				break;
+			}
+			if (rc == 1) {
+				exact = 0;
+				snprintf(value[a], sizeof value[a], "%.*g", sig_digits(f[i]),
+				         strtod(value[a], NULL));
+			}
+			quantity_unit_after(at[a] + strlen(f[i]), &span);
+			len += snprintf(q + len, sizeof q - (size_t)len, "%.*s%s %s",
+			                (int)(at[a] - from), from, value[a], to);
+			from = at[a] + strlen(f[i]) + span;
+		}
+		if (!ok)
+			continue;
+		snprintf(q + len, sizeof q - (size_t)len, "%s", from);
+		len = snprintf(call, sizeof call, "CALL %s", f[1]);
+		for (int j = 2; j < nf; j++) {
+			const char *v = f[j];
+
+			for (int a = 0; a < m; a++)
+				if (member[a] == j)
+					v = value[a];
+			len += snprintf(call + len, sizeof call - (size_t)len, " %s", v);
+		}
+		group.tried++;
+		rc = quantity_check_call(call, q, out, (int)sizeof out);
+		if (rc == QUANTITY_SAME) {
+			group.ambiguous++;
+			continue;
+		}
+		if (rc == QUANTITY_MISMATCH) {
+			if (group.refused++ < 5)
+				printf("group refused: %s | %s\n", q, call);
+			continue;
+		}
+		group.converted++;
+		for (int j = 2; j < nf; j++)
+			args[j - 2] = f[j];
+		snprintf(work, sizeof work, "%s", out);
+		ng = split_args(work, g, 12);
+		for (int a = 0; a < m && ng == nf; a++)
+			if (!value_faithful(g[member[a]], value[a], to, slot)) {
+				if (group.drifted++ < 10)
+					printf("group drifted: %s | %s -> %s\n", q, call, out);
+				break;
+			}
+		for (int j = 2; j < ng; j++)
+			conv[j - 2] = g[j];
+		if (solvers_solve(f[1], args, nf - 2, want, sizeof want) != 0)
+			continue;
+		got[0] = '\0';
+		rc = ng == nf ? solvers_solve(g[1], conv, ng - 2, got, sizeof got) : -1;
+		if (exact && (rc != 0 || !answers_agree(want, got))) {
+			if (group.broken++ < 10)
+				printf("group broken: %s | %s -> %s answers \"%s\", wanted "
+				       "\"%s\"\n", q, call, out, got, want);
+		} else if (!exact) {
+			group.inexact++;
+			if (rc != 0 && group.failed++ < 10)
+				printf("group solver refused: %s | %s -> %s\n", q, call, out);
+		}
+	}
+}
+
+static int corpus(void)
+{
+	char line[1024], out[256];
+	long rows = 0, changed = 0, swaps = 0, caught = 0;
+
+	while (fgets(line, sizeof line, stdin)) {
+		char *tab = strchr(line, '\t'), *nl, *f[12], work[256];
+		int nf;
+
+		if (!tab)
+			continue;
+		*tab = '\0';
+		if ((nl = strchr(tab + 1, '\n')))
+			*nl = '\0';
+		rows++;
+		if (quantity_check_call(tab + 1, line, out, (int)sizeof out) !=
+		    QUANTITY_SAME) {
+			if (changed < 20)
+				printf("changed: %s | %s -> %s\n", line, tab + 1, out);
+			changed++;
+		}
+
+		/* The failure this exists to catch: two arguments in each other's
+		 * places. Measured, not gated; a swap of two values of one kind is
+		 * invisible to units by construction. */
+		snprintf(work, sizeof work, "%s", tab + 1);
+		nf = split_args(work, f, 12);
+		{
+			const rel_row_t *row = nf >= 2 ? row_named(f[1]) : NULL;
+
+			for (int i = 2; row && i < nf && nf - 2 == row->arity; i++) {
+				char slot[24];
+
+				slot_unit(row, i - 2, slot, sizeof slot);
+				if (strcmp(slot, "-") != 0 && f[i][0] != '-')
+					round_trip(line, f, nf, i, slot);
+			}
+			for (int i = 2; row && i < nf && nf - 2 == row->arity; i++) {
+				char slot[24], earlier[24];
+				int seen = 0;
+
+				slot_unit(row, i - 2, slot, sizeof slot);
+				for (int j = 2; j < i; j++) {
+					slot_unit(row, j - 2, earlier, sizeof earlier);
+					seen |= strcmp(earlier, slot) == 0;
+				}
+				if (strcmp(slot, "-") != 0 && !seen)
+					round_trip_group(line, f, nf, row, slot);
+			}
+		}
+		for (int i = 2; i < nf; i++)
+			for (int j = i + 1; j < nf; j++) {
+				char swapped[256];
+				int len;
+
+				if (strcmp(f[i], f[j]) == 0)
+					continue;
+				len = snprintf(swapped, sizeof swapped, "CALL %s", f[1]);
+				for (int k = 2; k < nf; k++)
+					len += snprintf(swapped + len, sizeof swapped - (size_t)len,
+					                " %s", k == i ? f[j] : k == j ? f[i] : f[k]);
+				swaps++;
+				if (quantity_check_call(swapped, line, out, (int)sizeof out) ==
+				    QUANTITY_MISMATCH)
+					caught++;
+			}
+	}
+	printf("swapped arguments: %ld tried, %ld refused (%.1f%%)\n", swaps, caught,
+	       swaps ? 100.0 * (double)caught / (double)swaps : 0.0);
+	printf("other units: %ld rewritten, %ld converted, %ld left alone, "
+	       "%ld refused; exact rewrites answered wrong: %ld; rounded rewrites "
+	       "the solver could not answer: %ld of %ld\n", trip.tried,
+	       trip.converted, trip.ambiguous, trip.refused, trip.broken,
+	       trip.failed, trip.inexact);
+	printf("same-unit groups: %ld rewritten, %ld converted, %ld left alone, "
+	       "%ld refused; exact rewrites answered wrong: %ld; rounded rewrites "
+	       "the solver could not answer: %ld of %ld\n", group.tried,
+	       group.converted, group.ambiguous, group.refused, group.broken,
+	       group.failed, group.inexact);
+	printf("converted values off their own exact conversion: %ld single, "
+	       "%ld in groups\n", trip.drifted, group.drifted);
+	printf("correct calls: %ld rows, %ld changed\n", rows, changed);
+	/* The rounded rewrites the solver cannot answer are reported, not gated:
+	 * the exact solvers refuse many plain decimals with no unit involved
+	 * ("free_fall 9.9 9.81"), which is their limit, not this module's. */
+	return rows > 0 && changed == 0 && trip.broken == 0 && trip.refused == 0 &&
+	       group.broken == 0 && group.refused == 0 && trip.drifted == 0 &&
+	       group.drifted == 0 ? 0 : 1;
+}
+
+int main(int argc, char **argv)
+{
+	if (argc > 1 && strcmp(argv[1], "--cases") == 0)
+		return corpus();
 	fixed_cases();
 	zero_cases();
 	if (failures) {

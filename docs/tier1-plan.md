@@ -442,6 +442,15 @@ the weights trained from `edbe24a6`, through `runtime/main_device`:
 | SAT / ACT maths | 460 | 67.2% | 67.2 |
 | Intro high-school physics and chemistry | 752 | 64.2% | 64.2 |
 
+*Corrected 2026-11-17:* the eval split is **2,078 hand-written rows across 135
+relations**, not 1,942 — the r4 wording batches landed after this baseline was
+recorded. At that size the per-course rows are AP Precalculus 561, SAT/ACT 516,
+intro 776, and AP Calculus AB 46 and BC 0 unchanged. All three judged courses
+still clear their floors on the current checkpoint — 72.7% against 61.6, 77.1%
+against 67.2 and 77.2% against 64.2 on `weights_640_s2fin.bin` — so the
+difference is drift in the split's size, not a regression. The measurements
+above stay as measured.
+
 Two things the table says that a headline number could not. AP Calculus BC has
 no corpus rows at all, because the only calculus relations are `deriv_poly3` and
 `integr_poly3` and both are AB's: BC is served by the typed engine, and its

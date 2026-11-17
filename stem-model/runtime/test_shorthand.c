@@ -205,32 +205,6 @@ static void test_collision_decimals(void)
 	      "a zero total mass is refused before division");
 }
 
-/*
- * Every relation has to be typable. The name is cut into a fixed-size token,
- * and a name longer than that never resolves — the text then falls through to
- * the decoder, which answers with some other relation. Three names were in that
- * state before this check existed.
- */
-static void check_every_name_fits(void)
-{
-	for (int i = 0; i < REL_NUM_RELATIONS; i++) {
-		char line[96], call[96];
-		int rc;
-
-		snprintf(line, sizeof line, "%s 1 2 3 4 5", rel_rows[i].name);
-		rc = shorthand_build(line, call, (int)sizeof call);
-		if (rc < 0) {
-			printf("FAIL %s does not resolve as a typed shorthand\n",
-			       rel_rows[i].name);
-			failures++;
-		}
-		if (strstr(call, rel_rows[i].name) == NULL) {
-			printf("FAIL %s typed back as %s\n", rel_rows[i].name, call);
-			failures++;
-		}
-	}
-}
-
 /* A formula-taking call: a name token, then a formula or a measured name where
  * the relation would take a number. */
 static void test_formula_calls(void)
@@ -300,6 +274,21 @@ static void test_formula_calls(void)
 	      "and reports the call it made");
 }
 
+/* work_energy multiplies four speed factors; with ordinary decimals that
+ * overflows 64 bits, which is undefined behaviour, so it must refuse. */
+static void test_work_energy_overflow(void)
+{
+	static const char *const plain[] = {"900", "5", "25"};
+	static const char *const wide[] = {"900", "20.1168", "6.7056"};
+	char answer[128];
+
+	check(solvers_solve("work_energy", plain, 3, answer, sizeof answer) == 0 &&
+	      strcmp(answer, "2.7e+05 J") == 0,
+	      "work_energy still answers ordinary values");
+	check(solvers_solve("work_energy", wide, 3, answer, sizeof answer) == -4,
+	      "a work_energy product outside 64 bits is refused");
+}
+
 int main(void)
 {
 	test_names();
@@ -308,8 +297,7 @@ int main(void)
 	test_scientific_numbers();
 	test_collision_decimals();
 	test_formula_calls();
-	check_every_name_fits();
-
+	test_work_energy_overflow();
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;

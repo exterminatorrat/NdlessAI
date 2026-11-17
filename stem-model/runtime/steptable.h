@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 5edc873fa47188a8
+ * STEP_SOURCE_SHA 75bcce0284a3f437
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 143
+#define STEP_NUM_ROWS 149
 
 typedef struct {
 	const char *name;
@@ -69,6 +69,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"entropy_change", "dS = Q/T", "@1 / @2"},
 	{"exp_solve", "x = ln(k)/ln(b)", "ln(@2)/ln(@1)"},
 	{"fahrenheit_to_celsius", "C = (F - 32)*5/9", "(@1 - 32)*5/9"},
+	{"faraday_deposit", "m = faradays * M / n", "@1 * @3 / @2"},
 	{"first_law", "dU = q + w", "@1 + @2"},
 	{"free_fall", "v = sqrt(2*g*h)", "sqrt(2*@2*@1)"},
 	{"friction_force", "f = mu*N", "@1*@2"},
@@ -83,6 +84,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"half_life_fraction", "f = 0.5^(t/t_half)", "0.5^(@1/@2)"},
 	{"heat_pump_cop", "COP = Tc/(Th - Tc)", "@1 / (@2 - @1)"},
 	{"heat_reaction", "q = n * dH", "@1 * @2"},
+	{"hydrate_water", "x = ((m_h - m_a)/M_w) / (m_a/M_a)", "((@1 - @2) / @4) / (@2 / @3)"},
 	{"impulse", "J = F*t", "@1 * @2"},
 	{"index_from_speed", "n = c/v", "3/@1"},
 	{"integr_poly3", "int(a*x^3 + b*x^2 + c*x + d) from lo to hi", "(@1*@6^4/4 + @2*@6^3/3 + @3*@6^2/2 + @4*@6) - (@1*@5^4/4 + @2*@5^3/3 + @3*@5^2/2 + @4*@5)"},
@@ -104,8 +106,10 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"log_eval", "log_b(x) = ln(x)/ln(b)", "ln(@2)/ln(@1)"},
 	{"m_to_cm", "cm = m*100", "@1*100"},
 	{"mass_energy_mev", "E = 931.5*m", "931.5*@1"},
+	{"mass_from_molarity", "m = c * V * M", "@1 * @2 * @3"},
 	{"mass_percent", "mass% = solute/solution * 100", "@1 / @2 * 100"},
 	{"mirror_image_distance", "1/f = 1/do + 1/di", "1/(1/@1 - 1/@2)"},
+	{"mixing_concentration", "c = (c1*v1 + c2*v2) / (v1 + v2)", "(@2 * @1 + @4 * @3) / (@1 + @3)"},
 	{"molality", "m = n / kg", "@1 / @2"},
 	{"molarity", "M = n/V", "@1 / @2"},
 	{"mole_fraction", "xA = nA/(nA + nB)", "@1 / (@1 + @2)"},
@@ -121,6 +125,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"pascal_press", "F2 = F1*A2/A1", "@1*@3/@2"},
 	{"pendulum_period", "T = 2*pi*sqrt(L/g)", "2*pi*sqrt(@1/@2)"},
 	{"percent_change", "change% = (new - original) / original * 100", "(@2 - @1) / @1 * 100"},
+	{"percent_dissociation", "percent = 100*sqrt(Ka/c0), small-x approximation", "100 * sqrt(@2 / @1)"},
 	{"percent_error", "error% = |m - a| / a * 100", "abs(@1 - @2) / @2 * 100"},
 	{"percent_of", "part = percent/100 * whole", "@1 / 100 * @2"},
 	{"percent_yield", "yield% = actual/theoretical*100", "@1/@2*100"},
@@ -136,6 +141,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"proj_range", "R = v0^2*sin(2*theta)/g", "@1^2*sin(2*@2)/@3"},
 	{"pythagoras", "c = sqrt(a^2 + b^2)", "sqrt(@1^2 + @2^2)"},
 	{"radiation_power", "P = sigma*A*T^4", "5.67e-8*@2*@1^4"},
+	{"rate_factor", "factor = f1^o1 * f2^o2", "@1^@2 * @3^@4"},
 	{"ratio_share", "first share = total * a / (a + b)", "@1 * @2 / (@2 + @3)"},
 	{"rectangle_area", "A = w * h", "@1 * @2"},
 	{"rms_speed", "v = sqrt(3*R*T/M)", "sqrt(3*8.314*@1/@2)"},

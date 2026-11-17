@@ -36,9 +36,10 @@ rules keep it from being surprising:
 Two properties fall out of this and both matter more than the typing saved:
 
 - **It needs no model and no weights file.** A calculator with only
-  `stemhelp.tns` copied on can answer all 136 relations this way; the arithmetic
-  path already worked without weights, and now the whole catalogue does. The
-  model is only needed to read English.
+  `stemhelp.tns` copied on can answer every relation in the catalogue this way —
+  136 at the time of writing, 171 today; the arithmetic path already worked
+  without weights, and now the whole catalogue does. The model is only needed to
+  read English.
 - **It is exact and instant.** One comparison and one solver call, against a
   decode that costs seconds and can be wrong.
 

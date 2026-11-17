@@ -352,18 +352,21 @@ class Gibbs:
         return f"{dec_exact(_exact(dH) - _exact(dS) * _exact(T) / 1000)} kJ"
 
 @relation("carnot", "chemistry", ["t_hot", "t_cold"], exact=False,
-          step=dict(line="eff = (Th - Tc)/Th * 100", expr="(@1 - @2) / @1 * 100"))
+          step=dict(line="eff = (Th - Tc)/Th", expr="(@1 - @2) / @1"))
 class Carnot:
     @staticmethod
     def gen(rng):
         t_cold = rng.choice([200, 250, 300, 350, 400, 500])
         t_hot = t_cold + rng.choice([100, 150, 200, 300, 400, 500])
         return [t_hot, t_cold], (f"A Carnot engine operates between {t_hot} K "
-                                 f"and {t_cold} K. Find its efficiency.")
+                                 f"and {t_cold} K. Find its efficiency as a decimal.")
 
     @staticmethod
     def solve(t_hot, t_cold):
-        return f"{dec_exact(sp.Rational(100 * (t_hot - t_cold), t_hot))}%"
+        # A fraction, like every other efficiency in the catalogue. This relation
+        # and `carnot_efficiency` are one quantity under two names, and one
+        # quantity has one format (ELV-77).
+        return dec_exact(sp.Rational(t_hot - t_cold, t_hot))
 
 # ---------------------------------------------------------------------------
 # Wave 3.3: the parts of AP Chemistry the catalogue had no relation for.

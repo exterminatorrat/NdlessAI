@@ -3,7 +3,7 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 9c713d132f55cd35
+ * STEP_SOURCE_SHA c12e591a40392a9d
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
@@ -40,7 +40,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"calorimetry_mass", "m = q/(c*dT)", "@1/(@2*@3)"},
 	{"capacitor_charge", "Q = C*V", "@1 * @2"},
 	{"capacitor_energy", "E = Q*V / 2", "@1 * @2 / 2"},
-	{"carnot", "eff = (Th - Tc)/Th * 100", "(@1 - @2) / @1 * 100"},
+	{"carnot", "eff = (Th - Tc)/Th", "(@1 - @2) / @1"},
 	{"carnot_efficiency", "eta = 1 - Tc/Th", "1 - @1/@2"},
 	{"cell_potential", "E_cell = E_cathode - E_anode", "@1 - @2"},
 	{"celsius_to_fahrenheit", "F = C*9/5 + 32", "@1*9/5 + 32"},

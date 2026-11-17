@@ -444,25 +444,23 @@ static int solve_gibbs(const char *const *args, char *out, size_t outlen)
 
 static int solve_carnot(const char *const *args, char *out, size_t outlen)
 {
-	rat th, tc, d, hundred, p;
+	rat th, tc, d;
 	int rc;
-	char f1[48], buf[64];
+	char f1[48];
 
 	if ((rc = parse_rat(args[0], &th, NULL)) != 0 ||
 	    (rc = parse_rat(args[1], &tc, NULL)) != 0)
 		return rc;
 	if (th.n == 0)
 		return -4;
-	hundred.n = 100;
-	hundred.d = 1;
+	/* A fraction, not a percent: this relation and carnot_efficiency are one
+	 * quantity under two names, and one quantity has one format (ELV-77). */
 	if ((rc = rat_sub(&d, &th, &tc)) != 0 ||
-	    (rc = rat_mul(&p, &d, &hundred)) != 0 ||
-	    (rc = rat_div(&p, &p, &th)) != 0)
+	    (rc = rat_div(&d, &d, &th)) != 0)
 		return rc;
-	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+	if ((rc = dec4_render(d.n, d.d, f1, sizeof(f1))) != 0)
 		return rc;
-	snprintf(buf, sizeof(buf), "%s%%", f1);
-	out_set(out, outlen, buf);
+	out_set(out, outlen, f1);
 	return 0;
 }
 

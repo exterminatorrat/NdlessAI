@@ -99,13 +99,13 @@
 {"relation": "calorimetry_mass", "args": [1596, 4.18, 19], "question": "Only the mass is missing. Heat in: 1596 J. c: 4.18 J/(g C). Rise: 19 degrees.", "split": "eval"}
 {"relation": "calorimetry_mass", "args": [240, 0.24, 25], "question": "Once 240 J has warmed a sample of c = 0.24 J/(g C) by 25 degrees, what mass is involved?", "split": "eval"}
 {"relation": "carnot", "args": [520, 260], "question": "Engine A works between 520 K and 260 K; engine B between 300 K and 150 K. Give engine A's efficiency.", "split": "train"}
-{"relation": "carnot", "args": [440, 275], "question": "Find the Carnot efficiency for 440 K and 275 K, then say whether it beats 40 percent.", "split": "train"}
+{"relation": "carnot", "args": [440, 275], "question": "Find the Carnot efficiency for 440 K and 275 K, then say whether it beats 0.4.", "split": "train"}
 {"relation": "carnot", "args": [380, 285], "question": "Three engines all ran between 380 K and 285 K; give the ideal efficiency they share.", "split": "train"}
 {"relation": "carnot", "args": [760, 456], "question": "The plant ran all week and the logs give 760 K on the furnace side and 456 K on the condenser side, and the sheet wants the ideal efficiency.", "split": "train"}
 {"relation": "carnot", "args": [840, 420], "question": "Engine card - source 840 K, sink 420 K: give the efficiency.", "split": "train"}
 {"relation": "carnot", "args": [460, 345], "question": "What remains to be found is the Carnot efficiency between 460 K and 345 K.", "split": "train"}
 {"relation": "carnot", "args": [1080, 540], "question": "The assessor wants the Carnot efficiency for reservoirs at 1080 K and 540 K.", "split": "train"}
-{"relation": "carnot", "args": [800, 200], "question": "The draft says 75 percent for 800 K and 200 K. Check that figure.", "split": "train"}
+{"relation": "carnot", "args": [800, 200], "question": "The draft gives 0.75 for 800 K and 200 K. Check that figure.", "split": "train"}
 {"relation": "carnot", "args": [1000, 400], "question": "The Carnot limit is 1 minus the temperature ratio. For 1000 K and 400 K, what does it give?", "split": "train"}
 {"relation": "carnot", "args": [600, 360], "question": "The last cell is blank under efficiency, with T_hot = 600 K and T_cold = 360 K. Fill it.", "split": "train"}
 {"relation": "carnot", "args": [540, 405], "question": "Given {T_hot: 540 K, T_cold: 405 K}, compute the efficiency.", "split": "train"}

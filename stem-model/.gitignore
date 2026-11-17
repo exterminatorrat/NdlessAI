@@ -19,6 +19,7 @@ weights2.bin
 *.pt
 *.bin
 data_v2/
+data_apchem_r5/
 model_v2.pt
 model3.pt
 device/*.o

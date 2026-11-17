@@ -59,6 +59,11 @@ DPI = 200
 # line is inside one".
 MARGIN_PT = 46
 
+# Bumped whenever a change lands in how a page is turned into lines, because the
+# page cache stores the lines themselves and would otherwise answer for code that
+# no longer exists.
+SCHEMA = 4
+
 MCQ_TB = re.compile(r"^tb-unit (\d)-mcq\.pdf$")
 MCQ_SG = re.compile(r"^sg-unit (\d)-mcq\.pdf$")
 FRQ_TB = re.compile(r"^tb-frq-(\d+)\.pdf$")
@@ -136,13 +141,23 @@ def build_ocr(cache):
     return target
 
 
+CHARGE_ONLY = re.compile(r"^\d?[+\u2212-]$")
+
+
 def typed_lines(page):
-    """The PDF text layer as lines with pixel boxes, subscripts glued back on.
+    """The PDF text layer as lines with pixel boxes, superscripts in place.
 
     The layer stores `Na`, `2`, `O` as three runs, the 2 at a smaller size and a
-    lower baseline, which is why a naive extractor either loses the subscript or
-    detaches it. Runs are grouped by baseline and ordered by x, which is what
-    makes `Na2O` come back out.
+    lower baseline, and a charge or an exponent is a separate run lifted clean
+    off the line: `[Al]` then `3+` four and a half points higher. Grouping by
+    "close to the previous run" turned that `3+` into a line of its own, so it
+    was later appended to whatever line it landed beside and `[Al]3+ … is 0.10 M`
+    came out as `… is 3+ 0.10 M`, a stray charge sitting on the wrong number.
+
+    So the body text is grouped into baselines first, at the dominant font size,
+    and every raised or lowered run is then attached to the baseline nearest to
+    it, which is the line it belongs to. Order inside a line is by x, so the
+    charge lands back where it was printed.
     """
 
     scale = DPI / 72.0
@@ -157,19 +172,52 @@ def typed_lines(page):
         runs.append((y, x, size or 10.0, text))
 
     page.extract_text(visitor_text=visit)
-    runs.sort(key=lambda r: (-r[0], r[1]))
+    if not runs:
+        return []
 
+    body_size = max(run[2] for run in runs)
     lines = []
-    for y, x, size, text in runs:
-        if lines and abs(lines[-1][0] - y) < max(2.5, size * 0.35):
-            lines[-1][1].append((x, text))
-            lines[-1][0] = (lines[-1][0] * (len(lines[-1][1]) - 1) + y) / len(lines[-1][1])
+    for y, x, size, text in sorted(runs, key=lambda run: (-run[0], run[1])):
+        if size >= body_size * 0.9:
+            if lines and abs(lines[-1][0] - y) < 2.5:
+                lines[-1][1].append((x, text))
+            else:
+                lines.append([y, [(x, text)]])
+    for y, x, size, text in sorted(runs, key=lambda run: (-run[0], run[1])):
+        if size >= body_size * 0.9:
+            continue
+        # Height alone is not enough on an equation page: a raised charge sits
+        # about as far above its own line as it is above the prompt number of the
+        # next item, and picking by height alone glued `-+2+` onto `41.` and left
+        # the equation blind. Among the lines close enough vertically, the one
+        # whose printed text is nearest horizontally is the one it came from.
+        candidates = []
+        for line in lines:
+            dy = abs(line[0] - y)
+            if dy > body_size * 0.7:
+                continue
+            dx = min(abs(x - chunk_x) for chunk_x, _ in line[1])
+            candidates.append((dx, dy, line))
+        best, best_dy = None, None
+        if candidates:
+            _, best_dy, best = min(candidates, key=lambda c: (c[0], c[1]))
+        if best is not None:
+            # A charge that sits left of everything printed on its line is not
+            # part of that line: in a drawn equation the raised runs carry
+            # coordinates from another origin and collapse to a `+2+` in front
+            # of the first species. Dropping those is the conservative side of
+            # the choice — a missing charge is legible, a stray one is not.
+            first = min(chunk[0] for chunk in best[1])
+            if CHARGE_ONLY.match(text) and x < first - 12:
+                continue
+            best[1].append((x, text))
         else:
             lines.append([y, [(x, text)]])
+
     out = []
     for y, chunks in lines:
-        chunks.sort(key=lambda c: c[0])
-        text = clean("".join(c[1] for c in chunks))
+        chunks.sort(key=lambda chunk: chunk[0])
+        text = clean("".join(chunk[1] for chunk in chunks))
         if not text:
             continue
         out.append({
@@ -308,6 +356,7 @@ def read_pdf(path, cache, ocr=True):
     # amounts of the same page and must not answer for each other.
     digest = hashlib.sha256(open(path, "rb").read()).hexdigest()[:16]
     digest += "-ocr" if ocr else "-txt"
+    digest += f"-v{SCHEMA}"
     target = os.path.join(cache, os.path.basename(digest + ".json"))
     if os.path.exists(target):
         return json.load(open(target))

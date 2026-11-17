@@ -5,69 +5,69 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-59 relations, 2970 structures, 1419 rows (542 eval), 235 structures refused as unresolvable.
+59 relations, 9888 structures, 1999 rows (1838 eval), 570 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
-| `atoms_from_mass` | 2 | - | 48 | 0 | 24 | 9 |
-| `avg_rate` | 2 | - | 48 | 0 | 24 | 8 |
-| `beat_freq` | 2 | f1/f2 | 48 | 8 | 24 | 7 |
-| `beer_lambert` | 3 | - | 48 | 0 | 24 | 8 |
-| `boyles` | 3 | V1/V2 | 96 | 16 | 24 | 21 |
-| `buffer_ph` | 3 | acid/base | 30 | 5 | 24 | 2 |
-| `calorimetry_c` | 3 | - | 48 | 0 | 24 | 8 |
-| `calorimetry_mass` | 3 | - | 48 | 0 | 24 | 8 |
-| `carnot` | 2 | t_cold/t_hot | 48 | 8 | 24 | 7 |
-| `carnot_efficiency` | 2 | Tc/Th | 30 | 5 | 24 | 3 |
-| `cell_potential` | 2 | e_anode/e_cathode | 48 | 8 | 24 | 9 |
-| `charles` | 3 | T1/T2 | 48 | 8 | 24 | 4 |
-| `combined_gas` | 5 | P1/P2; T1/T2 | 96 | 16 | 24 | 18 |
-| `conduction_rate` | 4 | - | 48 | 0 | 24 | 10 |
-| `density` | 2 | - | 48 | 0 | 24 | 6 |
-| `dilution` | 3 | v1/v2 | 96 | 16 | 24 | 10 |
-| `dilution_v1` | 3 | m1/m2 | 48 | 8 | 24 | 9 |
-| `doppler_freq` | 3 | v/vs | 48 | 8 | 24 | 4 |
-| `double_slit_fringe` | 4 | L/d | 48 | 0 | 24 | 12 |
-| `entropy_change` | 2 | - | 48 | 0 | 24 | 8 |
-| `faraday_deposit` | 3 | - | 48 | 0 | 24 | 10 |
-| `first_law` | 2 | q/w | 48 | 8 | 24 | 9 |
-| `gas_heat_cp` | 3 | - | 48 | 0 | 24 | 8 |
-| `gas_mixture_pressure` | 3 | V_f/V_i | 144 | 24 | 27 | 27 |
-| `gas_p` | 3 | - | 48 | 0 | 24 | 9 |
-| `gibbs` | 3 | - | 48 | 0 | 24 | 10 |
-| `h_from_ph` | 1 | - | 48 | 0 | 24 | 10 |
-| `heat_reaction` | 2 | - | 48 | 0 | 24 | 4 |
-| `hydrate_water` | 4 | mass_anhydrous/mass_hydrate; mm_anhydrous/mm_water | 30 | 5 | 24 | 3 |
-| `kc_from_conc` | 3 | product/reactant | 30 | 5 | 24 | 5 |
-| `ksp_from_solubility` | 3 | anion_count/cation_count | 30 | 5 | 24 | 4 |
-| `latent_heat` | 2 | - | 48 | 0 | 24 | 8 |
-| `limiting_moles` | 4 | mass_a/mass_b; mm_a/mm_b | 48 | 8 | 24 | 8 |
-| `mass_from_molarity` | 3 | - | 48 | 0 | 24 | 12 |
-| `mass_from_percent_composition` | 2 | - | 48 | 0 | 24 | 10 |
-| `mass_percent` | 2 | solute/solution | 48 | 8 | 24 | 14 |
-| `mixing_concentration` | 4 | c1/c2; v1/v2 | 96 | 16 | 24 | 19 |
-| `mixture_final_temperature` | 4 | m1/m2; T1/T2 | 48 | 8 | 24 | 5 |
-| `molality` | 2 | - | 48 | 0 | 24 | 13 |
-| `molarity` | 2 | - | 48 | 0 | 24 | 13 |
-| `mole_fraction` | 2 | na/nb | 30 | 5 | 24 | 6 |
-| `moles` | 2 | - | 48 | 0 | 24 | 10 |
-| `partial_pressure` | 3 | n_i/n_total | 48 | 8 | 24 | 9 |
-| `percent_dissociation` | 2 | - | 96 | 0 | 24 | 22 |
-| `percent_yield` | 2 | actual/theoretical | 48 | 8 | 24 | 11 |
-| `ph` | 1 | - | 30 | 0 | 24 | 5 |
-| `ph_from_poh` | 1 | - | 30 | 0 | 24 | 4 |
-| `ph_of_water` | 1 | - | 30 | 0 | 24 | 3 |
-| `poh` | 1 | - | 30 | 0 | 24 | 3 |
-| `radiation_power` | 2 | - | 48 | 0 | 24 | 9 |
-| `rate_factor` | 4 | f1/f2; o1/o2 | 30 | 5 | 24 | 3 |
-| `specific_heat` | 3 | - | 48 | 0 | 24 | 12 |
-| `standing_wave_freq` | 3 | - | 48 | 0 | 24 | 13 |
-| `stoich_mass` | 4 | mm_given/mm_product | 48 | 8 | 24 | 5 |
-| `stoich_volume_gas` | 2 | - | 48 | 0 | 24 | 15 |
-| `stoichiometry` | 2 | - | 48 | 0 | 24 | 12 |
-| `vsepr_bond_angle` | 2 | electron_domains/lone_pairs | 48 | 8 | 24 | 13 |
-| `wave_speed` | 2 | - | 48 | 0 | 24 | 9 |
-| `wavelength_from_frequency` | 1 | - | 48 | 0 | 24 | 6 |
+| `atoms_from_mass` | 2 | - | 126 | 0 | 27 | 27 |
+| `avg_rate` | 2 | - | 126 | 0 | 24 | 22 |
+| `beat_freq` | 2 | f1/f2 | 126 | 18 | 24 | 20 |
+| `beer_lambert` | 3 | - | 126 | 0 | 25 | 25 |
+| `boyles` | 3 | V1/V2 | 288 | 36 | 55 | 55 |
+| `buffer_ph` | 3 | acid/base | 84 | 12 | 24 | 11 |
+| `calorimetry_c` | 3 | - | 288 | 0 | 52 | 52 |
+| `calorimetry_mass` | 3 | - | 288 | 0 | 60 | 60 |
+| `carnot` | 2 | t_cold/t_hot | 144 | 18 | 20 | 20 |
+| `carnot_efficiency` | 2 | Tc/Th | 96 | 12 | 21 | 16 |
+| `cell_potential` | 2 | e_anode/e_cathode | 126 | 18 | 24 | 24 |
+| `charles` | 3 | T1/T2 | 144 | 18 | 21 | 21 |
+| `combined_gas` | 5 | P1/P2; T1/T2 | 288 | 36 | 34 | 34 |
+| `conduction_rate` | 4 | - | 288 | 0 | 54 | 54 |
+| `density` | 2 | - | 126 | 0 | 24 | 24 |
+| `dilution` | 3 | v1/v2 | 252 | 36 | 39 | 39 |
+| `dilution_v1` | 3 | m1/m2 | 126 | 18 | 24 | 23 |
+| `doppler_freq` | 3 | v/vs | 252 | 36 | 42 | 42 |
+| `double_slit_fringe` | 4 | L/d | 252 | 0 | 43 | 43 |
+| `entropy_change` | 2 | - | 288 | 0 | 50 | 50 |
+| `faraday_deposit` | 3 | - | 108 | 0 | 24 | 22 |
+| `first_law` | 2 | q/w | 126 | 18 | 24 | 24 |
+| `gas_heat_cp` | 3 | - | 288 | 0 | 60 | 60 |
+| `gas_mixture_pressure` | 3 | V_f/V_i | 432 | 54 | 81 | 81 |
+| `gas_p` | 3 | - | 144 | 0 | 32 | 32 |
+| `gibbs` | 3 | - | 144 | 0 | 28 | 28 |
+| `h_from_ph` | 1 | - | 108 | 0 | 24 | 22 |
+| `heat_reaction` | 2 | - | 252 | 0 | 49 | 49 |
+| `hydrate_water` | 4 | mass_anhydrous/mass_hydrate; mm_anhydrous/mm_water | 84 | 12 | 24 | 16 |
+| `kc_from_conc` | 3 | product/reactant | 84 | 12 | 24 | 17 |
+| `ksp_from_solubility` | 3 | anion_count/cation_count | 84 | 12 | 24 | 13 |
+| `latent_heat` | 2 | - | 252 | 0 | 54 | 54 |
+| `limiting_moles` | 4 | mass_a/mass_b; mm_a/mm_b | 126 | 18 | 24 | 22 |
+| `mass_from_molarity` | 3 | - | 126 | 0 | 24 | 22 |
+| `mass_from_percent_composition` | 2 | - | 126 | 0 | 26 | 26 |
+| `mass_percent` | 2 | solute/solution | 126 | 18 | 31 | 31 |
+| `mixing_concentration` | 4 | c1/c2; v1/v2 | 252 | 36 | 45 | 45 |
+| `mixture_final_temperature` | 4 | m1/m2; T1/T2 | 288 | 36 | 40 | 40 |
+| `molality` | 2 | - | 126 | 0 | 27 | 27 |
+| `molarity` | 2 | - | 126 | 0 | 27 | 27 |
+| `mole_fraction` | 2 | na/nb | 72 | 12 | 24 | 13 |
+| `moles` | 2 | - | 126 | 0 | 25 | 25 |
+| `partial_pressure` | 3 | n_i/n_total | 144 | 18 | 28 | 28 |
+| `percent_dissociation` | 2 | - | 252 | 0 | 52 | 52 |
+| `percent_yield` | 2 | actual/theoretical | 126 | 18 | 24 | 20 |
+| `ph` | 1 | - | 84 | 0 | 24 | 18 |
+| `ph_from_poh` | 1 | - | 72 | 0 | 24 | 10 |
+| `ph_of_water` | 1 | - | 72 | 0 | 24 | 10 |
+| `poh` | 1 | - | 84 | 0 | 24 | 18 |
+| `radiation_power` | 2 | - | 288 | 0 | 61 | 61 |
+| `rate_factor` | 4 | f1/f2; o1/o2 | 72 | 12 | 24 | 10 |
+| `specific_heat` | 3 | - | 288 | 0 | 59 | 59 |
+| `standing_wave_freq` | 3 | - | 126 | 0 | 27 | 27 |
+| `stoich_mass` | 4 | mm_given/mm_product | 126 | 18 | 24 | 18 |
+| `stoich_volume_gas` | 2 | - | 126 | 0 | 34 | 34 |
+| `stoichiometry` | 2 | - | 108 | 0 | 24 | 19 |
+| `vsepr_bond_angle` | 2 | electron_domains/lone_pairs | 108 | 18 | 25 | 25 |
+| `wave_speed` | 2 | - | 252 | 0 | 51 | 51 |
+| `wavelength_from_frequency` | 1 | - | 126 | 0 | 24 | 20 |
 
 ## Contrast pairs
 
@@ -132,29 +132,29 @@ which: two slots of the relation share a dimension and the given block does
 not name roles. That is a property of the relation's slots rather than of the
 wording, so the fraction is reported here and not in a pull request body.
 
-- `beat_freq` — 8 of 48 structures (17%): two slots share a dimension and the same unit: f1, f2
-- `boyles` — 16 of 96 structures (17%): two slots share a dimension and the same unit: V1, V2
-- `buffer_ph` — 5 of 30 structures (17%): two slots share a dimension and the same unit: acid, base
-- `carnot` — 8 of 48 structures (17%): two slots share a dimension and the same unit: t_cold, t_hot
-- `carnot_efficiency` — 5 of 30 structures (17%): two slots share a dimension and the same unit: Tc, Th
-- `cell_potential` — 8 of 48 structures (17%): two slots share a dimension and the same unit: e_anode, e_cathode
-- `charles` — 8 of 48 structures (17%): two slots share a dimension and the same unit: T1, T2
-- `combined_gas` — 16 of 96 structures (17%): two slots share a dimension and the same unit: P1, P2
-- `dilution` — 16 of 96 structures (17%): two slots share a dimension and the same unit: v1, v2
-- `dilution_v1` — 8 of 48 structures (17%): two slots share a dimension and the same unit: m1, m2
-- `doppler_freq` — 8 of 48 structures (17%): two slots share a dimension and the same unit: v, vs
-- `first_law` — 8 of 48 structures (17%): two slots share a dimension and the same unit: q, w
-- `gas_mixture_pressure` — 24 of 144 structures (17%): two slots share a dimension and the same unit: V_f, V_i
-- `hydrate_water` — 5 of 30 structures (17%): two slots share a dimension and the same unit: mass_anhydrous, mass_hydrate
-- `kc_from_conc` — 5 of 30 structures (17%): two slots share a dimension and the same unit: product, reactant
-- `ksp_from_solubility` — 5 of 30 structures (17%): two slots share a dimension and the same unit: anion_count, cation_count
-- `limiting_moles` — 8 of 48 structures (17%): two slots share a dimension and the same unit: mass_a, mass_b
-- `mass_percent` — 8 of 48 structures (17%): two slots share a dimension and the same unit: solute, solution
-- `mixing_concentration` — 16 of 96 structures (17%): two slots share a dimension and the same unit: c1, c2
-- `mixture_final_temperature` — 8 of 48 structures (17%): two slots share a dimension and the same unit: m1, m2
-- `mole_fraction` — 5 of 30 structures (17%): two slots share a dimension and the same unit: na, nb
-- `partial_pressure` — 8 of 48 structures (17%): two slots share a dimension and the same unit: n_i, n_total
-- `percent_yield` — 8 of 48 structures (17%): two slots share a dimension and the same unit: actual, theoretical
-- `rate_factor` — 5 of 30 structures (17%): two slots share a dimension and the same unit: f1, f2
-- `stoich_mass` — 8 of 48 structures (17%): two slots share a dimension and the same unit: mm_given, mm_product
-- `vsepr_bond_angle` — 8 of 48 structures (17%): two slots share a dimension and the same unit: electron_domains, lone_pairs
+- `beat_freq` — 18 of 126 structures (14%): two slots share a dimension and the same unit: f1, f2
+- `boyles` — 36 of 288 structures (12%): two slots share a dimension and the same unit: V1, V2
+- `buffer_ph` — 12 of 84 structures (14%): two slots share a dimension and the same unit: acid, base
+- `carnot` — 18 of 144 structures (12%): two slots share a dimension and the same unit: t_cold, t_hot
+- `carnot_efficiency` — 12 of 96 structures (12%): two slots share a dimension and the same unit: Tc, Th
+- `cell_potential` — 18 of 126 structures (14%): two slots share a dimension and the same unit: e_anode, e_cathode
+- `charles` — 18 of 144 structures (12%): two slots share a dimension and the same unit: T1, T2
+- `combined_gas` — 36 of 288 structures (12%): two slots share a dimension and the same unit: P1, P2
+- `dilution` — 36 of 252 structures (14%): two slots share a dimension and the same unit: v1, v2
+- `dilution_v1` — 18 of 126 structures (14%): two slots share a dimension and the same unit: m1, m2
+- `doppler_freq` — 36 of 252 structures (14%): two slots share a dimension and the same unit: v, vs
+- `first_law` — 18 of 126 structures (14%): two slots share a dimension and the same unit: q, w
+- `gas_mixture_pressure` — 54 of 432 structures (12%): two slots share a dimension and the same unit: V_f, V_i
+- `hydrate_water` — 12 of 84 structures (14%): two slots share a dimension and the same unit: mass_anhydrous, mass_hydrate
+- `kc_from_conc` — 12 of 84 structures (14%): two slots share a dimension and the same unit: product, reactant
+- `ksp_from_solubility` — 12 of 84 structures (14%): two slots share a dimension and the same unit: anion_count, cation_count
+- `limiting_moles` — 18 of 126 structures (14%): two slots share a dimension and the same unit: mass_a, mass_b
+- `mass_percent` — 18 of 126 structures (14%): two slots share a dimension and the same unit: solute, solution
+- `mixing_concentration` — 36 of 252 structures (14%): two slots share a dimension and the same unit: c1, c2
+- `mixture_final_temperature` — 36 of 288 structures (12%): two slots share a dimension and the same unit: m1, m2
+- `mole_fraction` — 12 of 72 structures (17%): two slots share a dimension and the same unit: na, nb
+- `partial_pressure` — 18 of 144 structures (12%): two slots share a dimension and the same unit: n_i, n_total
+- `percent_yield` — 18 of 126 structures (14%): two slots share a dimension and the same unit: actual, theoretical
+- `rate_factor` — 12 of 72 structures (17%): two slots share a dimension and the same unit: f1, f2
+- `stoich_mass` — 18 of 126 structures (14%): two slots share a dimension and the same unit: mm_given, mm_product
+- `vsepr_bond_angle` — 18 of 108 structures (17%): two slots share a dimension and the same unit: electron_domains, lone_pairs

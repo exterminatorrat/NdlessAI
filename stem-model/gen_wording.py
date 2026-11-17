@@ -23,6 +23,10 @@ import random
 import re
 import sys
 
+import subprocess
+import sys
+
+from gen_traces import render_call
 from relations import RELATIONS
 from surface import grammar, lexicon, numbers, spec
 
@@ -192,9 +196,7 @@ def contrast_rows(seed, per_pair=3):
                           "note": UNRESOLVABLE_PAIRS[(left, right)]})
             continue
         if left not in spec.SPECS or right not in spec.SPECS:
-            notes.append({"pair": f"{left}/{right}", "rows": 0,
-                          "note": "no spec for one side"})
-            continue
+            continue  # reported under the deferred pairs, with the reason
         left_spec, right_spec = spec.SPECS[left], spec.SPECS[right]
         if len(left_spec.slots) != len(right_spec.slots):
             notes.append({"pair": f"{left}/{right}", "rows": 0,
@@ -250,6 +252,20 @@ def contrast_rows(seed, per_pair=3):
     return made, notes
 
 
+def deferred_pairs():
+    """Measured confusion pairs this corpus cannot yet carry, with the reason."""
+    out = []
+    for left, right in CONTRAST:
+        pair = f"{left}/{right}"
+        if (left, right) in UNRESOLVABLE_PAIRS:
+            continue
+        if left not in spec.SPECS or right not in spec.SPECS:
+            missing = [name for name in (left, right) if name not in spec.SPECS]
+            out.append((pair, "no spec for " + ", ".join(f"`{name}`" for name in missing)
+                        + " — maths relations, deferred to the subject phasing"))
+    return out
+
+
 def ledger_text(ledger, contrast=()):
     total_structures = sum(entry["structures"] for entry in ledger)
     total_rows = sum(entry["rows"] for entry in ledger)
@@ -274,6 +290,7 @@ def ledger_text(ledger, contrast=()):
         lines.append(f"| `{entry['relation']}` | {entry['slots']} | {pairs} | "
                      f"{entry['structures']} | {entry['refused']} | {entry['rows']} | "
                      f"{entry['eval_rows']} |")
+    deferred = deferred_pairs()
     if contrast:
         lines += [
             "",
@@ -287,6 +304,16 @@ def ledger_text(ledger, contrast=()):
         ]
         for entry in contrast:
             lines.append(f"| `{entry['pair']}` | {entry['rows']} | {entry['note']} |")
+    if deferred:
+        lines += [
+            "",
+            "## Pairs with no contrast rows, and why",
+            "",
+            "| pair | why no contrast rows |",
+            "| --- | --- |",
+        ]
+        for pair, reason in deferred:
+            lines.append(f"| `{pair}` | {reason} |")
     lines += [
         "",
         "## Refusals, with the reason",
@@ -325,13 +352,70 @@ def write(seed):
     return rows, ledger
 
 
+def cohort(ceiling, weights, binary, seq, max_new):
+    """Hardness of the held-out structures, through the model.
+
+    The eval side of the corpus is held out by structure hash, so it measures
+    structures the model has never trained on. A corpus whose held-out
+    structures are read perfectly has stopped containing structures it has not
+    seen — it has drifted back toward memorised wording — and this is the only
+    place in the pipeline that would notice.
+    """
+    if not os.path.exists(weights) or not os.path.exists(binary):
+        print(f"cannot run here: missing {weights if not os.path.exists(weights) else binary}")
+        return 77
+    tokenizer_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                  "data", "tokenizer.json")
+    if not os.path.exists(tokenizer_path):
+        print("cannot run here: no data/tokenizer.json")
+        return 77
+    import json as _json
+
+    from tokenizer import EOS, Tokenizer
+
+    tokenizer = Tokenizer.from_json(_json.load(open(tokenizer_path)))
+    rows, _, _ = all_rows(1)
+    held = [row for row in rows if row["split"] == "eval"]
+    exact = 0
+    for row in held:
+        ids = tokenizer.encode(f"{row['question']} <sep>")
+        env = {"NSM_GEN": str(max_new), "NSM_SEQ": str(seq), "PATH": "/usr/bin:/bin"}
+        out = subprocess.run([binary, weights, *map(str, ids)],
+                             capture_output=True, text=True, env=env).stdout
+        generated = [int(x) for line in out.splitlines() if line.startswith("gen ")
+                     for x in line.split()[1:]]
+        got = tokenizer.decode([token for token in generated if token != EOS]).strip()
+        exact += got == render_expected(row)
+    share = exact / len(held) if held else 1.0
+    print(f"{len(held)} held-out structures: {exact} exact, {share:.1%}")
+    if share > ceiling:
+        print(f"too easy: {share:.1%} is above the {ceiling:.0%} drift ceiling")
+        return 1
+    return 0
+
+
+def render_expected(row):
+    return render_call(row["relation"], row["args"])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="rewrite the corpus and the ledger")
     ap.add_argument("--check", action="store_true", help="fail when either file is stale")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--per-relation", type=int, default=PER_RELATION)
+    ap.add_argument("--cohort", action="store_true",
+                    help="measure how hard the held-out structures still are")
+    ap.add_argument("--ceiling", type=float, default=0.75,
+                    help="the drift ceiling for --cohort")
+    ap.add_argument("--weights", default="weights.bin")
+    ap.add_argument("--binary", default="runtime/infer_host")
+    ap.add_argument("--seq", type=int, default=192)
+    ap.add_argument("--max-new", type=int, default=24)
     args = ap.parse_args()
+
+    if args.cohort:
+        return cohort(args.ceiling, args.weights, args.binary, args.seq, args.max_new)
 
     rows, ledger, notes = all_rows(args.seed, args.per_relation)
     text = ledger_text(ledger, notes)

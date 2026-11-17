@@ -109,6 +109,11 @@ else
     skip "python tests (pytest, torch, numpy or sympy missing)"
 fi
 
+# The ledger and the corpus are generated artifacts like reltable.h: a stale one
+# is a failure, not a skip, because a relation that silently loses structures is
+# exactly the drift this gate exists to catch.
+run "wording ledger in sync" $PY gen_wording.py --check
+
 echo "=== tokenizer sync ==="
 if [ -f data/tokenizer.json ]; then
     run "bpe.h matches tokenizer" $PY check_tokenizer_sync.py
@@ -135,6 +140,11 @@ elif [ -f weights.bin ] && [ -f data/held_out.jsonl ]; then
     else
         failg "wrong relation <= 5% (got ${wrong:-?}%)"
     fi
+    # How hard the held-out structures still are. A corpus whose unseen
+    # structures are all read correctly has stopped containing structures it has
+    # not seen, and nothing else in the pipeline would notice.
+    run "generated structures still hard" $PY gen_wording.py --cohort
+
     # The aggregate number hid which relations carry the deficit for three
     # slices. This gate scores the honest corpus split per relation and fails
     # when more relations than the recorded budget fall below 50% on at least

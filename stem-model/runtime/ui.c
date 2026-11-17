@@ -173,6 +173,14 @@ static int has_input(const ui_t *u)
 	       find_active(u);
 }
 
+/* The editor's own ceiling. The ask and graph lines and the formula picker's
+ * fields have different buffers, and every one of them has to refuse at its own
+ * length rather than truncate a value on submission. */
+static int input_limit(const ui_t *u)
+{
+	return (u->mode == UI_MODE_TMPL ? UI_TMPL_ARG : UI_INPUT_MAX) - 1;
+}
+
 /* ---- text building ---- */
 
 static void put_ch(char **at, const char *end, char c)
@@ -1307,7 +1315,7 @@ int ui_type(ui_t *u, char c)
 	if (args && !((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' ||
 	              c == 'e' || c == 'E'))
 		return 0;
-	if (u->input_len >= UI_INPUT_MAX - 1)
+	if (u->input_len >= input_limit(u))
 		return 0;
 	if (u->cursor < 0)
 		u->cursor = 0;
@@ -1621,6 +1629,11 @@ static void draw_input(const ui_t *u, uint16_t *fb)
 static void draw_footer(const ui_t *u, uint16_t *fb)
 {
 	const char *first, *second;
+	/* The finder's query is a different buffer with its own ceiling, so the
+	 * notice is only about the line ui_type actually fills. */
+	int editable = u->mode == UI_MODE_ASK || u->mode == UI_MODE_GRAPH ||
+	               (u->mode == UI_MODE_TMPL && u->tmpl_step == UI_TMPL_STEP_ARGS);
+	int full = editable && u->input_len >= input_limit(u);
 
 	if (u->mode == UI_MODE_MENU) {
 		first = "ENTER choose   UP/DOWN move";
@@ -1652,7 +1665,12 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 		first = "ENTER ask   DEL erase   ESC clear";
 		second = "LEFT/RIGHT history   UP/DOWN scroll";
 	}
-	screen_text(fb, 4, UI_FOOTER_Y, first, UI_DIM);
+	/* A full line is the one state the student cannot diagnose: the keys keep
+	 * working and the text stops appearing. Say it where the keys are listed,
+	 * and leave the second row alone so the rest of the hints stay put. */
+	if (full)
+		first = "Input full: DEL erase or ESC clear";
+	screen_text(fb, 4, UI_FOOTER_Y, first, full ? UI_ACCENT : UI_DIM);
 	screen_text(fb, 4, UI_FOOTER_Y + 11, second, UI_DIM);
 	/* The answer screen has two pictures on offer, and neither is guessable
 	 * from the keypad, so the line that advertises them is the last text row

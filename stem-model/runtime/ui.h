@@ -45,7 +45,18 @@
 
 #define UI_FOOTER_Y   199
 
-#define UI_INPUT_MAX  64
+/* 256 rather than 64: a hand-written chemistry question runs past 63
+ * characters, and the editor silently stopped accepting the rest.
+ *
+ * The decoder's prompt buffer is 272 bytes -- MAX_PROMPT + 16 at
+ * pipeline.c:16-18, which is another unit's file and owns that number -- and it
+ * spends 6 of them on PROMPT_SUFFIX. Text the pipeline can never decode must not
+ * be typeable, so the editor's ceiling is pinned to that budget instead of
+ * drifting: 272 - 6 - 1 spare = 265 characters, and UI_INPUT_MAX counts the
+ * terminating NUL. */
+#define UI_INPUT_MAX  256
+_Static_assert(UI_INPUT_MAX - 1 <= 272 - 6 - 1,
+               "UI_INPUT_MAX must stay inside the decoder's 272-byte prompt budget");
 #define UI_ROWS_MAX   64
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048

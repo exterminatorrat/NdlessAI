@@ -194,6 +194,23 @@ def test_no_row_reproduces_seven_words_of_a_source():
         os.path.expanduser("~/.capy/work/ndlessai-apchem/corpora"), rows) == 0
 
 
+def test_the_contrast_corpus_pairs_are_genuine_minimal_pairs():
+    path = os.path.join(HERE, "fixtures", "paraphrase_contrast_r7.jsonl")
+    with open(path) as handle:
+        rows = [json.loads(line) for line in handle if line.strip()]
+    assert rows
+    pairs = {}
+    for row in rows:
+        assert row["pair"].split("/")[0] in RELATIONS, row["pair"]
+        assert row["relation"] in row["pair"], row
+        assert row["split"] == "train"
+        assert row.get("missed_by"), row
+        pairs.setdefault(row["pair"], []).append(row)
+    for pair, side_rows in pairs.items():
+        assert len({tuple(row["args"]) for row in side_rows}) == 1, pair
+        assert {row["relation"] for row in side_rows} == set(pair.split("/")), pair
+
+
 def test_generated_artifacts_are_current():
     result = subprocess.run([sys.executable, "gen_wording.py", "--check"],
                             cwd=HERE, capture_output=True, text=True)

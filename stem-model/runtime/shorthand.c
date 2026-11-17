@@ -17,7 +17,13 @@
 #include "shorthand.h"
 
 #define TOKENS    9
-#define TOKLEN    24
+/* Long enough for the longest relation name in reltable.h, which is
+ * mass_from_percent_composition at 29 characters. At 24 the three longest names
+ * were cut short, resolve() could not match them, and a typed
+ * "wavelength_from_frequency 200" fell through to the decoder — which answered
+ * it with a different relation entirely. test_shorthand fails if a name ever
+ * outgrows this. */
+#define TOKLEN    32
 #define MIN_PREFIX 3
 
 static int lower(int c)

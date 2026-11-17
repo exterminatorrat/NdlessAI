@@ -153,7 +153,7 @@ def corpus_rows(args):
     """The eval split of the paraphrase corpus, as (relation, question, call)."""
 
     rows = []
-    for row in load_corpora(args.corpus):
+    for row in load_corpora(args.corpus or "fixtures/paraphrase_*.jsonl"):
         if row["split"] != args.split:
             continue
         rows.append((row["relation"], row["question"],
@@ -171,6 +171,44 @@ def course_rows(rows, code):
     """
 
     return [row for row in rows if code in courses.courses_for(row[0])]
+
+
+def floor_rows(args):
+    """The rows the course floors were recorded on.
+
+    A floor is a regression test against a fixed set of hand-written eval rows,
+    so scoring it over whatever the corpus has grown into measures the corpus,
+    not the program: the r6 build read 58.5% over a corpus that had gained 2,697
+    generated rows and 71.4% over the calibrated 2,150. The default is therefore
+    the calibrated set, and a drifted set is scored only when it is asked for.
+    """
+
+    if args.source == "held-out":
+        if not args.allow_drift:
+            raise SystemExit(
+                "the course floors are hand-written accuracy; scoring generated "
+                "rows against them needs --allow-drift")
+        return held_out_rows(args)
+
+    if not args.corpus:
+        rows = []
+        for name in courses.FLOOR_CORPUS:
+            for row in load_corpora(os.path.join("fixtures", name)):
+                if row["split"] == args.split:
+                    rows.append((row["relation"], row["question"],
+                                 render_call(row["relation"], row["args"])))
+        print(f"course floors: the calibrated set, {len(rows)} eval rows from "
+              f"{len(courses.FLOOR_CORPUS)} hand-written files")
+        return rows
+
+    rows = corpus_rows(args)
+    if len(rows) != courses.FLOOR_EVAL_ROWS and not args.allow_drift:
+        raise SystemExit(
+            f"the floors were recorded on {courses.FLOOR_EVAL_ROWS} eval rows; "
+            f"this corpus has {len(rows)}, so the number would not be a floor. "
+            f"Pass --allow-drift to score it anyway, or leave --corpus off to "
+            f"score the calibrated set.")
+    return rows
 
 
 def course_floors(rows, args):
@@ -238,7 +276,9 @@ def main():
                     default="paraphrase",
                     help="held-out generated rows, or the hand-written corpus")
     ap.add_argument("--data", default=DEFAULT_DATA)
-    ap.add_argument("--corpus", default="fixtures/paraphrase_*.jsonl")
+    ap.add_argument("--corpus", default=None,
+                    help="corpus glob to score; defaults to all of it, or to "
+                         "the calibrated set under --course-floor")
     ap.add_argument("--split", default="eval",
                     help="corpus split to score: eval is the honest one")
     ap.add_argument("--weights", default="weights.bin")
@@ -263,13 +303,19 @@ def main():
     ap.add_argument("--course-floor", action="store_true",
                     help="per-course floors recorded in courses.py; exits 1 "
                          "when a course is more than FLOOR_SLACK below its own")
+    ap.add_argument("--allow-drift", action="store_true",
+                    help="score the floors on a set other than the one they "
+                         "were recorded on; the number is then not a floor")
     args = ap.parse_args()
 
     for path in (args.binary, args.weights):
         if not os.path.exists(path):
             raise SystemExit(f"{path} missing; run `make -C runtime` first")
 
-    rows = held_out_rows(args) if args.source == "held-out" else corpus_rows(args)
+    if args.course_floor:
+        rows = floor_rows(args)
+    else:
+        rows = held_out_rows(args) if args.source == "held-out" else corpus_rows(args)
     if args.limit:
         rows = rows[: args.limit]
     if not rows:

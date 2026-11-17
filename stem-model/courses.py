@@ -53,6 +53,29 @@ FLOOR_SLACK = 2.0
 # A course needs this many scored rows before its floor is allowed to judge it.
 MIN_ROWS = 60
 
+# The floors above are hand-written accuracy recorded on the eval rows of these
+# files. `report_relations.py --course-floor` scores this set by default and
+# refuses one that has drifted from it: a floor whose denominator moves
+# underneath it is not a floor. 2,150 eval rows.
+FLOOR_CORPUS = (
+    "paraphrase_cases.jsonl",
+    "paraphrase_chem-units.jsonl",
+    "paraphrase_chem-units_r2.jsonl",
+    "paraphrase_chem-units_r3.jsonl",
+    "paraphrase_chem-units_r4.jsonl",
+    "paraphrase_chem-units_r5.jsonl",
+    "paraphrase_math.jsonl",
+    "paraphrase_math_r2.jsonl",
+    "paraphrase_math_r3.jsonl",
+    "paraphrase_math_r4.jsonl",
+    "paraphrase_physics.jsonl",
+    "paraphrase_physics_r2.jsonl",
+    "paraphrase_physics_r3.jsonl",
+    "paraphrase_physics_r4.jsonl",
+    "paraphrase_units_r4.jsonl",
+)
+FLOOR_EVAL_ROWS = 2150
+
 
 def rel(*names):
     """One claim per relation name, as a list so units can be concatenated."""

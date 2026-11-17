@@ -308,6 +308,21 @@ def ledger_text(ledger, contrast=()):
         ]
         for entry in contrast:
             lines.append(f"| `{entry['pair']}` | {entry['rows']} | {entry['note']} |")
+    if spec.BLOCKED_SPECIES:
+        lines += [
+            "",
+            "## Relations where a species would contradict the call",
+            "",
+            "The formula-led frame names a substance. It is offered only where the name",
+            "cannot change the answer, because the alternative is a row whose species",
+            "contradicts the numbers it prints — a molar mass the call takes as an",
+            "argument, a Ka, a coefficient. These are the rest, with the reason.",
+            "",
+            "| relation | why no species |",
+            "| --- | --- |",
+        ]
+        for name, reason in sorted(spec.BLOCKED_SPECIES.items()):
+            lines.append(f"| `{name}` | {reason} |")
     if grammar.DEFERRED_SHAPES:
         lines += [
             "",

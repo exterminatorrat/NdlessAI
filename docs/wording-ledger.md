@@ -5,69 +5,69 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-59 relations, 11370 structures, 2215 rows (2122 eval), 570 structures refused as unresolvable.
+59 relations, 13530 structures, 2624 rows (2555 eval), 636 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
 | `atoms_from_mass` | 2 | - | 144 | 0 | 32 | 32 |
-| `avg_rate` | 2 | - | 144 | 0 | 25 | 25 |
-| `beat_freq` | 2 | f1/f2 | 144 | 18 | 24 | 22 |
-| `beer_lambert` | 3 | - | 144 | 0 | 30 | 30 |
-| `boyles` | 3 | V1/V2 | 324 | 36 | 63 | 63 |
+| `avg_rate` | 2 | - | 324 | 0 | 62 | 62 |
+| `beat_freq` | 2 | f1/f2 | 162 | 18 | 29 | 29 |
+| `beer_lambert` | 3 | - | 162 | 0 | 33 | 33 |
+| `boyles` | 3 | V1/V2 | 360 | 36 | 69 | 69 |
 | `buffer_ph` | 3 | acid/base | 108 | 12 | 24 | 13 |
 | `calorimetry_c` | 3 | - | 324 | 0 | 58 | 58 |
 | `calorimetry_mass` | 3 | - | 324 | 0 | 67 | 67 |
 | `carnot` | 2 | t_cold/t_hot | 162 | 18 | 23 | 23 |
 | `carnot_efficiency` | 2 | Tc/Th | 108 | 12 | 21 | 16 |
 | `cell_potential` | 2 | e_anode/e_cathode | 144 | 18 | 26 | 26 |
-| `charles` | 3 | T1/T2 | 162 | 18 | 23 | 23 |
-| `combined_gas` | 5 | P1/P2; T1/T2 | 324 | 36 | 43 | 43 |
+| `charles` | 3 | T1/T2 | 180 | 18 | 26 | 26 |
+| `combined_gas` | 5 | P1/P2; T1/T2 | 360 | 36 | 51 | 51 |
 | `conduction_rate` | 4 | - | 324 | 0 | 61 | 61 |
-| `density` | 2 | - | 144 | 0 | 26 | 26 |
-| `dilution` | 3 | v1/v2 | 288 | 36 | 45 | 45 |
-| `dilution_v1` | 3 | m1/m2 | 144 | 18 | 28 | 28 |
+| `density` | 2 | - | 162 | 0 | 29 | 29 |
+| `dilution` | 3 | v1/v2 | 486 | 54 | 85 | 85 |
+| `dilution_v1` | 3 | m1/m2 | 324 | 36 | 60 | 60 |
 | `doppler_freq` | 3 | v/vs | 288 | 36 | 47 | 47 |
 | `double_slit_fringe` | 4 | L/d | 288 | 0 | 48 | 48 |
-| `entropy_change` | 2 | - | 324 | 0 | 56 | 56 |
+| `entropy_change` | 2 | - | 540 | 0 | 99 | 99 |
 | `faraday_deposit` | 3 | - | 126 | 0 | 26 | 26 |
-| `first_law` | 2 | q/w | 144 | 18 | 26 | 26 |
+| `first_law` | 2 | q/w | 162 | 18 | 29 | 29 |
 | `gas_heat_cp` | 3 | - | 324 | 0 | 67 | 67 |
-| `gas_mixture_pressure` | 3 | V_f/V_i | 486 | 54 | 88 | 88 |
-| `gas_p` | 3 | - | 162 | 0 | 37 | 37 |
+| `gas_mixture_pressure` | 3 | V_f/V_i | 540 | 54 | 96 | 96 |
+| `gas_p` | 3 | - | 180 | 0 | 40 | 40 |
 | `gibbs` | 3 | - | 162 | 0 | 32 | 32 |
-| `h_from_ph` | 1 | - | 144 | 0 | 28 | 28 |
+| `h_from_ph` | 1 | - | 162 | 0 | 31 | 31 |
 | `heat_reaction` | 2 | - | 288 | 0 | 61 | 61 |
 | `hydrate_water` | 4 | mass_anhydrous/mass_hydrate; mm_anhydrous/mm_water | 96 | 12 | 24 | 22 |
 | `kc_from_conc` | 3 | product/reactant | 108 | 12 | 24 | 23 |
 | `ksp_from_solubility` | 3 | anion_count/cation_count | 108 | 12 | 24 | 20 |
 | `latent_heat` | 2 | - | 288 | 0 | 61 | 61 |
 | `limiting_moles` | 4 | mass_a/mass_b; mm_a/mm_b | 144 | 18 | 30 | 30 |
-| `mass_from_molarity` | 3 | - | 144 | 0 | 25 | 25 |
+| `mass_from_molarity` | 3 | - | 162 | 0 | 27 | 27 |
 | `mass_from_percent_composition` | 2 | - | 144 | 0 | 28 | 28 |
 | `mass_percent` | 2 | solute/solution | 144 | 18 | 34 | 34 |
-| `mixing_concentration` | 4 | c1/c2; v1/v2 | 288 | 36 | 49 | 49 |
-| `mixture_final_temperature` | 4 | m1/m2; T1/T2 | 324 | 36 | 47 | 47 |
-| `molality` | 2 | - | 144 | 0 | 30 | 30 |
-| `molarity` | 2 | - | 144 | 0 | 30 | 30 |
-| `mole_fraction` | 2 | na/nb | 84 | 12 | 24 | 15 |
+| `mixing_concentration` | 4 | c1/c2; v1/v2 | 324 | 36 | 55 | 55 |
+| `mixture_final_temperature` | 4 | m1/m2; T1/T2 | 360 | 36 | 59 | 59 |
+| `molality` | 2 | - | 162 | 0 | 35 | 35 |
+| `molarity` | 2 | - | 324 | 0 | 63 | 63 |
+| `mole_fraction` | 2 | na/nb | 96 | 12 | 24 | 19 |
 | `moles` | 2 | - | 144 | 0 | 29 | 29 |
-| `partial_pressure` | 3 | n_i/n_total | 162 | 18 | 33 | 33 |
+| `partial_pressure` | 3 | n_i/n_total | 360 | 36 | 70 | 70 |
 | `percent_dissociation` | 2 | - | 324 | 0 | 63 | 63 |
 | `percent_yield` | 2 | actual/theoretical | 144 | 18 | 24 | 23 |
-| `ph` | 1 | - | 108 | 0 | 24 | 19 |
-| `ph_from_poh` | 1 | - | 96 | 0 | 24 | 17 |
+| `ph` | 1 | - | 240 | 0 | 49 | 49 |
+| `ph_from_poh` | 1 | - | 108 | 0 | 24 | 18 |
 | `ph_of_water` | 1 | - | 84 | 0 | 24 | 12 |
-| `poh` | 1 | - | 108 | 0 | 25 | 25 |
-| `radiation_power` | 2 | - | 324 | 0 | 69 | 69 |
-| `rate_factor` | 4 | f1/f2; o1/o2 | 84 | 12 | 24 | 12 |
+| `poh` | 1 | - | 240 | 0 | 57 | 57 |
+| `radiation_power` | 2 | - | 360 | 0 | 74 | 74 |
+| `rate_factor` | 4 | f1/f2; o1/o2 | 192 | 24 | 31 | 31 |
 | `specific_heat` | 3 | - | 324 | 0 | 66 | 66 |
 | `standing_wave_freq` | 3 | - | 144 | 0 | 30 | 30 |
 | `stoich_mass` | 4 | mm_given/mm_product | 144 | 18 | 24 | 22 |
 | `stoich_volume_gas` | 2 | - | 144 | 0 | 37 | 37 |
 | `stoichiometry` | 2 | - | 126 | 0 | 24 | 22 |
 | `vsepr_bond_angle` | 2 | electron_domains/lone_pairs | 126 | 18 | 28 | 28 |
-| `wave_speed` | 2 | - | 288 | 0 | 59 | 59 |
-| `wavelength_from_frequency` | 1 | - | 144 | 0 | 25 | 25 |
+| `wave_speed` | 2 | - | 324 | 0 | 68 | 68 |
+| `wavelength_from_frequency` | 1 | - | 324 | 0 | 64 | 64 |
 
 ## Contrast pairs
 
@@ -80,6 +80,40 @@ only difference is the word that decides the relation.
 | `h_from_ph/ph` | 6 |  |
 | `dilution/dilution_v1` | 6 |  |
 | `carnot_efficiency/carnot` | 0 | same quantity in two formats, no wording decides it (ELV-77) |
+
+## Relations where a species would contradict the call
+
+The formula-led frame names a substance. It is offered only where the name
+cannot change the answer, because the alternative is a row whose species
+contradicts the numbers it prints — a molar mass the call takes as an
+argument, a Ka, a coefficient. These are the rest, with the reason.
+
+| relation | why no species |
+| --- | --- |
+| `atoms_from_mass` | naming the substance would imply its molar mass |
+| `buffer_ph` | naming the buffer pair would imply its pKa |
+| `calorimetry_c` | naming the substance would imply its specific heat |
+| `calorimetry_mass` | naming the substance would imply the specific heat |
+| `cell_potential` | naming the cell would imply the electrode potentials |
+| `conduction_rate` | naming the material would imply its conductivity |
+| `faraday_deposit` | naming the metal would imply its molar mass and electrons |
+| `gas_heat_cp` | naming the gas would imply its molar heat capacity |
+| `gibbs` | naming the reaction would imply its enthalpy and entropy |
+| `heat_reaction` | naming the reaction would imply its enthalpy |
+| `hydrate_water` | naming the salt would imply its molar masses |
+| `kc_from_conc` | naming the salt would imply its coefficients |
+| `ksp_from_solubility` | naming the salt would imply its ion counts |
+| `latent_heat` | naming the substance would imply its latent heat |
+| `limiting_moles` | naming the reactants would imply their molar masses |
+| `mass_percent` | the solute is part of the answer's definition |
+| `moles` | naming the substance would imply its molar mass |
+| `percent_dissociation` | naming the acid would imply the Ka the call takes |
+| `percent_yield` | the yield is the answer, so the frame cannot decorate it |
+| `specific_heat` | naming the substance would imply its specific heat |
+| `stoich_mass` | naming the species would imply the molar masses |
+| `stoich_volume_gas` | naming the gas would imply the mole ratio |
+| `stoichiometry` | naming the reaction would imply its mole ratio |
+| `vsepr_bond_angle` | naming the molecule would imply its domains and lone pairs |
 
 ## Shapes this generator does not carry, and why
 
@@ -140,29 +174,29 @@ which: two slots of the relation share a dimension and the given block does
 not name roles. That is a property of the relation's slots rather than of the
 wording, so the fraction is reported here and not in a pull request body.
 
-- `beat_freq` — 18 of 144 structures (12%): two slots share a dimension and the same unit: f1, f2
-- `boyles` — 36 of 324 structures (11%): two slots share a dimension and the same unit: V1, V2
+- `beat_freq` — 18 of 162 structures (11%): two slots share a dimension and the same unit: f1, f2
+- `boyles` — 36 of 360 structures (10%): two slots share a dimension and the same unit: V1, V2
 - `buffer_ph` — 12 of 108 structures (11%): two slots share a dimension and the same unit: acid, base
 - `carnot` — 18 of 162 structures (11%): two slots share a dimension and the same unit: t_cold, t_hot
 - `carnot_efficiency` — 12 of 108 structures (11%): two slots share a dimension and the same unit: Tc, Th
 - `cell_potential` — 18 of 144 structures (12%): two slots share a dimension and the same unit: e_anode, e_cathode
-- `charles` — 18 of 162 structures (11%): two slots share a dimension and the same unit: T1, T2
-- `combined_gas` — 36 of 324 structures (11%): two slots share a dimension and the same unit: P1, P2
-- `dilution` — 36 of 288 structures (12%): two slots share a dimension and the same unit: v1, v2
-- `dilution_v1` — 18 of 144 structures (12%): two slots share a dimension and the same unit: m1, m2
+- `charles` — 18 of 180 structures (10%): two slots share a dimension and the same unit: T1, T2
+- `combined_gas` — 36 of 360 structures (10%): two slots share a dimension and the same unit: P1, P2
+- `dilution` — 54 of 486 structures (11%): two slots share a dimension and the same unit: v1, v2
+- `dilution_v1` — 36 of 324 structures (11%): two slots share a dimension and the same unit: m1, m2
 - `doppler_freq` — 36 of 288 structures (12%): two slots share a dimension and the same unit: v, vs
-- `first_law` — 18 of 144 structures (12%): two slots share a dimension and the same unit: q, w
-- `gas_mixture_pressure` — 54 of 486 structures (11%): two slots share a dimension and the same unit: V_f, V_i
+- `first_law` — 18 of 162 structures (11%): two slots share a dimension and the same unit: q, w
+- `gas_mixture_pressure` — 54 of 540 structures (10%): two slots share a dimension and the same unit: V_f, V_i
 - `hydrate_water` — 12 of 96 structures (12%): two slots share a dimension and the same unit: mass_anhydrous, mass_hydrate
 - `kc_from_conc` — 12 of 108 structures (11%): two slots share a dimension and the same unit: product, reactant
 - `ksp_from_solubility` — 12 of 108 structures (11%): two slots share a dimension and the same unit: anion_count, cation_count
 - `limiting_moles` — 18 of 144 structures (12%): two slots share a dimension and the same unit: mass_a, mass_b
 - `mass_percent` — 18 of 144 structures (12%): two slots share a dimension and the same unit: solute, solution
-- `mixing_concentration` — 36 of 288 structures (12%): two slots share a dimension and the same unit: c1, c2
-- `mixture_final_temperature` — 36 of 324 structures (11%): two slots share a dimension and the same unit: m1, m2
-- `mole_fraction` — 12 of 84 structures (14%): two slots share a dimension and the same unit: na, nb
-- `partial_pressure` — 18 of 162 structures (11%): two slots share a dimension and the same unit: n_i, n_total
+- `mixing_concentration` — 36 of 324 structures (11%): two slots share a dimension and the same unit: c1, c2
+- `mixture_final_temperature` — 36 of 360 structures (10%): two slots share a dimension and the same unit: m1, m2
+- `mole_fraction` — 12 of 96 structures (12%): two slots share a dimension and the same unit: na, nb
+- `partial_pressure` — 36 of 360 structures (10%): two slots share a dimension and the same unit: n_i, n_total
 - `percent_yield` — 18 of 144 structures (12%): two slots share a dimension and the same unit: actual, theoretical
-- `rate_factor` — 12 of 84 structures (14%): two slots share a dimension and the same unit: f1, f2
+- `rate_factor` — 24 of 192 structures (12%): two slots share a dimension and the same unit: f1, f2
 - `stoich_mass` — 18 of 144 structures (12%): two slots share a dimension and the same unit: mm_given, mm_product
 - `vsepr_bond_angle` — 18 of 126 structures (14%): two slots share a dimension and the same unit: electron_domains, lone_pairs

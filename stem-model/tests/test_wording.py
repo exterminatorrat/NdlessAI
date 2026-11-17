@@ -40,9 +40,10 @@ def test_structure_ids_are_unique_within_a_relation():
 
 
 def test_framings_are_declared_per_relation_and_always_offer_the_bare_one():
-    assert grammar.framings_for(spec.SPECS["mixing_concentration"]) == ("", "volumes")
-    assert grammar.framings_for(spec.SPECS["molarity"]) == ("",)
-    assert grammar.framings_for(spec.SPECS["avg_rate"]) == ("",)
+    assert "volumes" in grammar.framings_for(spec.SPECS["mixing_concentration"])
+    assert grammar.framings_for(spec.SPECS["avg_rate"]) == ("", "modifier")
+    assert "modifier" not in grammar.framings_for(spec.SPECS["percent_yield"])
+    assert grammar.framings_for(spec.SPECS["atoms_from_mass"]) == ("",)
 
 
 def test_a_lexicon_word_never_replaces_a_precise_role():
@@ -135,6 +136,27 @@ def test_every_spec_has_provenance_and_a_known_source():
         registers, key = spec.PROVENANCE.get(name, spec.DEFAULT_PROVENANCE)
         assert registers, name
         assert key in spec.SOURCES, (name, key)
+
+
+def test_a_modifier_that_restates_the_answer_is_refused():
+    """The guard the double-decoration bug needs: 'percent yield' twice."""
+    from surface import grammar as g
+
+    entry = spec.SPECS["percent_yield"]
+    g.MODIFIERS["percent_yield"] = (" For this yield, read on.", ("yield",))
+    try:
+        assert g.modifier_for(entry) is None
+        g.MODIFIERS["percent_yield"] = (" Read on.", ("percent",))
+        assert g.modifier_for(entry) is None
+    finally:
+        del g.MODIFIERS["percent_yield"]
+
+
+def test_species_are_only_offered_where_they_cannot_change_the_answer():
+    for name in spec.BLOCKED_SPECIES:
+        assert name not in spec.SPECIES, name
+    for name in spec.SPECIES:
+        assert name in spec.SPECS, name
 
 
 def test_the_physics_clusters_are_specd_with_applied_registers():

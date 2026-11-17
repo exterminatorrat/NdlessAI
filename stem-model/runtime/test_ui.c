@@ -1004,6 +1004,20 @@ static void test_slots(void)
 	      "the sixth argument is the sixth parameter");
 	check(ui_type(&u, 'a') == 0, "a letter is still not an argument");
 	check(ui_type(&u, '7') == 1, "a digit still is");
+
+	/* The footer advertises DEL on this screen, so a mistyped number has to be
+	 * fixable without clearing the slot. */
+	type_text("25");
+	check(strcmp(u.input, "725") == 0, "the slot line takes what is typed");
+	ui_key(&u, UI_KEY_DELETE);
+	check(strcmp(u.input, "72") == 0, "DEL erases the digit behind the cursor");
+	ui_key(&u, UI_KEY_LEFT);
+	ui_key(&u, UI_KEY_DELETE);
+	check(strcmp(u.input, "2") == 0, "the arrow moves the cursor and DEL follows it");
+	check(u.cursor == 0, "and the cursor stays where the delete left it");
+	ui_type(&u, '4');
+	check(strcmp(u.input, "42") == 0, "typing inserts where the cursor is");
+	check(u.recall < 0, "the slot line never pulls the answer history in");
 }
 
 /*

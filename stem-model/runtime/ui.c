@@ -902,6 +902,14 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 			u->input_len = (int)strlen(u->input);
 			u->cursor = u->input_len;
 			u->recall = -1;
+		} else if (k == UI_KEY_DELETE || k == UI_KEY_LEFT ||
+		           k == UI_KEY_RIGHT) {
+			/* The footer advertises DEL on this screen, and a mistyped
+			 * number has to be fixable without clearing the whole slot.
+			 * The line is a number field, so there is no history ring
+			 * behind the arrows, and the arrows do not scroll a pane the
+			 * form is covering. */
+			edit_key(u, k, 0);
 		} else if (k == UI_KEY_BACK) {
 			if (u->input_len > 0) {
 				u->input[0] = '\0';

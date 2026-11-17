@@ -16,6 +16,7 @@
 #include "graph.h"
 #include "reltable.h"
 #include "coursetable.h"
+#include "steptable.h"
 #include "solvers.h"
 
 #define UI_BG      SCREEN_BLACK
@@ -214,6 +215,58 @@ static void copy_trunc(char *dst, size_t cap, const char *src)
 	memcpy(dst + cap - 4, "...", 4);
 }
 
+/*
+ * The relation's formula as the step table writes it, or an empty string for a
+ * relation that has none. This is the only per-argument description the tables
+ * carry: "rate = (f(b) - f(a)) / (b - a)" is what tells a student that the slot
+ * called "fa" wants f(a), and it costs one scan of 137 rows to find.
+ */
+static const char *step_line_for(const char *name)
+{
+	for (int i = 0; i < STEP_NUM_ROWS; i++)
+		if (strcmp(step_rows[i].name, name) == 0)
+			return step_rows[i].line;
+	return "";
+}
+
+/*
+ * The number at the front of an answer, which is the only part an argument slot
+ * can take: "200 N" gives 200, "8350 J" gives 8350. A multi-part answer such as
+ * "x=2, y=3" gives nothing, because picking its first number would be a guess
+ * dressed up as the last answer.
+ */
+static void last_number(const char *answer, char *out, int outlen)
+{
+	const char *s = answer;
+	int n = 0, digits = 0;
+
+	out[0] = '\0';
+	if (!s)
+		return;
+	while (*s == ' ' || *s == '=')
+		s++;
+	if (*s == '-' || *s == '+')
+		out[n++] = *s++;
+	while (*s && n < outlen - 2) {
+		int exp = (*s == 'e' || *s == 'E') && digits &&
+		          ((s[1] >= '0' && s[1] <= '9') ||
+		           ((s[1] == '+' || s[1] == '-') &&
+		            s[2] >= '0' && s[2] <= '9'));
+
+		if (*s >= '0' && *s <= '9') {
+			digits = 1;
+			out[n++] = *s++;
+		} else if (*s == '.' || exp) {
+			out[n++] = *s++;
+		} else {
+			break;
+		}
+	}
+	out[n] = '\0';
+	if (!digits)
+		out[0] = '\0';
+}
+
 /* ---- the pane ---- */
 
 /*
@@ -372,6 +425,10 @@ void ui_result(ui_t *u, const char *question, int rc,
 	/* A new answer replaces whatever diagram the last one was showing. */
 	u->diagram = 0;
 	copy_trunc(u->last_call, sizeof u->last_call, call ? call : "");
+	/* What a second step can take from this one: the number it answered with,
+	 * if it answered with one. */
+	last_number(rc == PIPELINE_OK ? answer : "", u->last_num,
+	            (int)sizeof u->last_num);
 	if (rc == PIPELINE_OK) {
 		if (pipeline_steps(call, answer ? answer : "", block, (int)sizeof block) == 1) {
 			char *last;
@@ -752,6 +809,8 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 {
 	int arity;
 
+	/* A note explains the last key, so any other key retires it. */
+	u->tmpl_note[0] = '\0';
 	switch (u->tmpl_step) {
 	case UI_TMPL_STEP_SUBJECT:
 		if (k == UI_KEY_UP && u->tmpl_sel > 0) {
@@ -828,6 +887,21 @@ static ui_key_t tmpl_key(ui_t *u, ui_key_t k)
 			u->cursor = 0;
 			if (++u->tmpl_arg >= arity)
 				tmpl_solve(u);
+		} else if (k == UI_KEY_DIAGRAM) {
+			/* TAB on the keypad, the diagram key everywhere else. A slot
+			 * takes the number the last answer gave, so a two-step problem
+			 * does not mean retyping it. It fills the line rather than
+			 * pressing ENTER, because the reused number is often one digit
+			 * away from what this step needs. */
+			if (!u->last_num[0]) {
+				copy_trunc(u->tmpl_note, sizeof u->tmpl_note,
+				           "no answer yet to reuse");
+				break;
+			}
+			copy_trunc(u->input, sizeof u->input, u->last_num);
+			u->input_len = (int)strlen(u->input);
+			u->cursor = u->input_len;
+			u->recall = -1;
 		} else if (k == UI_KEY_BACK) {
 			if (u->input_len > 0) {
 				u->input[0] = '\0';
@@ -1324,16 +1398,29 @@ static void draw_pick(const ui_t *u, uint16_t *fb)
 }
 
 /*
- * The argument prompts: the relation's name, then one line per argument with
- * the value already given. The current one is marked and gets the input line,
- * so the student never has to remember how many arguments are left.
+ * The argument prompts: the relation's name, its formula, then one line per
+ * argument with the value already given. The current one is marked and gets the
+ * input line, so the student never has to remember how many arguments are left.
+ *
+ * The formula is what says what a slot wants. "mu" and "N" are readable on
+ * their own; "fa" and "fb" in average_rate_of_change are not, and the formula
+ * the step table already stores for every relation is the one place the tables
+ * explain them.
  */
 static void draw_tmpl_form(const ui_t *u, uint16_t *fb)
 {
 	const rel_row_t *row = &rel_rows[u->tmpl_rels[u->tmpl_rel]];
+	const char *formula = step_line_for(row->name);
 	int y = UI_PANE_Y;
 
 	screen_text(fb, UI_PANE_X, y, row->name, UI_FG);
+	y += SCREEN_LINE_H;
+	if (formula[0]) {
+		char line[UI_TEXT_COLS + 1];
+
+		copy_trunc(line, sizeof line, formula);
+		screen_text(fb, UI_PANE_X, y, line, UI_DIM);
+	}
 	y += SCREEN_LINE_H * 2;
 	for (int i = 0; i < row->arity && i < UI_TMPL_ARGS; i++) {
 		char label[UI_TMPL_ARG];
@@ -1363,6 +1450,11 @@ static void draw_tmpl_form(const ui_t *u, uint16_t *fb)
 	}
 	screen_text(fb, UI_PANE_X, y + SCREEN_LINE_H,
 	            "type the number, ENTER next", UI_DIM);
+	/* Why the last key did nothing. In the pane, under the prompts, so the
+	 * key hints keep their own rows. */
+	if (u->tmpl_note[0])
+		screen_text(fb, UI_PANE_X, y + SCREEN_LINE_H * 2, u->tmpl_note,
+		            UI_DIM);
 }
 
 /* The input line under an argument prompt, labelled with the argument's name. */
@@ -1541,7 +1633,10 @@ static void draw_footer(const ui_t *u, uint16_t *fb)
 		second = "ESC back";
 	} else if (u->mode == UI_MODE_TMPL) {
 		first = "ENTER next number   DEL erase";
-		second = "ESC back";
+		/* TAB is the diagram key on an answer; here it takes the number the
+		 * last answer gave, which is the key a two-step problem needs and
+		 * would never guess. */
+		second = "TAB last answer   ESC back";
 	} else if (u->mode == UI_MODE_GRAPH) {
 		first = "ENTER plot   DEL erase   ESC clear";
 		second = "LEFT/RIGHT history   UP/DOWN scroll";

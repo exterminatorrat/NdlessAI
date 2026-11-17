@@ -138,6 +138,10 @@ typedef struct {
 	/* The call the last answer came from: a diagram is drawn from it, and an
 	 * answer that did not come from a relation has none. */
 	char last_call[UI_CALL_MAX];
+	/* The number at the front of the last answer, so a second step can take it
+	 * as an argument instead of making the student retype it. Empty when the
+	 * answer had no single number at the front. */
+	char last_num[UI_TMPL_ARG];
 	int diagram;
 
 	/* Solve by formula's three steps, and the state each one keeps. */

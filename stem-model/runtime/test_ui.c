@@ -107,6 +107,27 @@ static void put(char **at, const char *end, const char *s)
 		put_ch(at, end, *s++);
 }
 
+/*
+ * Whether one line of the frame is exactly this text, in this colour, on the
+ * background the screens clear to. The expected frame is drawn by the same
+ * renderer into a scratch buffer, so the assertion is about the string and the
+ * colour at that row rather than about "something was drawn here".
+ */
+static int band_is_text(int y, const char *text, uint16_t colour)
+{
+	static uint16_t scratch[SCREEN_W * SCREEN_HEIGHT];
+
+	if (y < 0 || y + SCREEN_LINE_H > SCREEN_HEIGHT)
+		return 0;
+	screen_clear(scratch, SCREEN_BLACK);
+	screen_text(scratch, UI_PANE_X, y, text, colour);
+	for (int r = y; r < y + SCREEN_LINE_H; r++)
+		for (int c = 0; c < SCREEN_W; c++)
+			if (fb[r * SCREEN_W + c] != scratch[r * SCREEN_W + c])
+				return 0;
+	return 1;
+}
+
 static void type_text(const char *s)
 {
 	while (*s)
@@ -869,9 +890,18 @@ static void test_find(void)
 			found = 1;
 	check(found, "a match need not start at the first character");
 
+	/* The name typed exactly as it is printed matches too, underscores and
+	 * all: that is what a student copies off a help page. */
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("friction_force");
+	check(u.tmpl_count == 1 &&
+	      strcmp(rel_rows[u.tmpl_rels[0]].name, "friction_force") == 0,
+	      "the name typed exactly as printed matches");
+
 	/* Choosing one opens its prompts, and back returns to the narrowed list
 	 * rather than to the catalogue: the query is still what was typed. */
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 14; i++)
 		ui_key(&u, UI_KEY_DELETE);
 	type_text("friction");
 	ui_key(&u, UI_KEY_ACCEPT);
@@ -908,6 +938,141 @@ static void test_find(void)
 		check(screen_text_w(rel_rows[i].name) <=
 		      (UI_TEXT_COLS - 2) * SCREEN_ADVANCE,
 		      "every relation name fits the list column");
+}
+
+
+/* The form's rows, as the drawing puts them: name, formula, blank, then one
+ * row per argument, then the hint and the note. */
+#define FORM_SLOT(i)  (UI_PANE_Y + SCREEN_LINE_H * (3 + (i)))
+#define FORM_HINT     (UI_PANE_Y + SCREEN_LINE_H * 6)
+#define FORM_NOTE     (UI_PANE_Y + SCREEN_LINE_H * 7)
+
+/*
+ * The argument prompts say what they want. The names and their order come from
+ * the relation table's own parameter list, and the formula above them comes from
+ * the step table — the only place the tables explain a symbol like "fa". Each
+ * band is compared against a frame drawn from the expected string, so this
+ * asserts the exact text and colour at the exact row.
+ */
+static void test_slots(void)
+{
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction_force");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_step == UI_TMPL_STEP_ARGS, "the finder opens the prompts");
+	render();
+	check(band_is_text(UI_PANE_Y, "friction_force", SCREEN_WHITE),
+	      "the relation's name heads the prompts");
+	check(band_is_text(UI_PANE_Y + SCREEN_LINE_H, "f = mu*N", SCREEN_DIM),
+	      "its formula from the step table sits under it, dimmed");
+	check(band_is_text(FORM_SLOT(1), "2. N = -", SCREEN_WHITE),
+	      "each slot is named from the relation's own parameter list");
+	check(band_is_text(FORM_HINT, "type the number, ENTER next", SCREEN_DIM),
+	      "and the line under them says what ENTER does");
+
+	/* The case this exists for: "fa" and "fb" are unreadable on their own, and
+	 * the formula is what says they are f(a) and f(b). */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("average_rate_of_change");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	check(band_is_text(UI_PANE_Y + SCREEN_LINE_H,
+	                   "rate = (f(b) - f(a)) / (b - a)", SCREEN_DIM),
+	      "a four-slot relation shows the formula that explains its slots");
+	check(band_is_text(FORM_SLOT(3), "4. fb = -", SCREEN_WHITE),
+	      "and all four of its slots in order");
+
+	/* Six arguments, and no step row: the formula band stays empty rather than
+	 * borrowing the name's row, and the sixth slot still lands where the layout
+	 * says it does. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("linear2");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	check(band_is_text(UI_PANE_Y + SCREEN_LINE_H, "", SCREEN_DIM),
+	      "a relation with no step row draws no formula");
+	check(band_is_text(FORM_SLOT(5), "6. c2 = -", SCREEN_WHITE),
+	      "the sixth argument is the sixth parameter");
+	check(ui_type(&u, 'a') == 0, "a letter is still not an argument");
+	check(ui_type(&u, '7') == 1, "a digit still is");
+}
+
+/*
+ * The last answer as an argument. This is the chain the keypad-help page prints
+ * as "<1>", done by picking a relation instead of typing its name: the speed a
+ * first step answered with becomes the speed a second step needs.
+ */
+static void test_reuse(void)
+{
+	unsigned long footer;
+
+	/* Nothing to reuse yet: the key explains itself, in the pane, and the key
+	 * hints keep their own rows while it does. */
+	ui_init(&u, NULL, NULL);
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("friction_force");
+	ui_key(&u, UI_KEY_ACCEPT);
+	render();
+	footer = hash(0, UI_FOOTER_Y, SCREEN_W, SCREEN_HEIGHT - UI_FOOTER_Y);
+	check(ui_key(&u, UI_KEY_DIAGRAM) == UI_KEY_NONE,
+	      "the reuse key stays on the screen");
+	check(u.input_len == 0, "with no answer there is nothing to insert");
+	check(strcmp(u.tmpl_note, "no answer yet to reuse") == 0, "and it says why");
+	render();
+	check(band_is_text(FORM_NOTE, "no answer yet to reuse", SCREEN_DIM),
+	      "the note is drawn under the prompts");
+	check(hash(0, UI_FOOTER_Y, SCREEN_W, SCREEN_HEIGHT - UI_FOOTER_Y) == footer,
+	      "and a note leaves the key hints exactly as they were");
+
+	/* Step one, by formula: 0 + 3*4 = 12 m/s. */
+	ui_init(&u, NULL, NULL);
+	u.mode = UI_MODE_ASK;
+	ui_result(&u, "kinematic_v 0 3 4", PIPELINE_OK, "12 m/s",
+	          "CALL kinematic_v 0 3 4");
+	check(strcmp(u.last_num, "12") == 0, "the answer's number is kept");
+
+	/* Step two: the mass is typed, the speed is taken. */
+	ui_key(&u, UI_KEY_MODE);            /* back to the menu */
+	for (int i = 0; i < 5; i++)
+		ui_key(&u, UI_KEY_DOWN);
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("kinetic_energy");
+	ui_key(&u, UI_KEY_ACCEPT);
+	type_text("5");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.tmpl_arg == 1, "the first argument is in");
+	check(ui_key(&u, UI_KEY_DIAGRAM) == UI_KEY_NONE,
+	      "the reuse key fills the second instead of leaving");
+	check(strcmp(u.input, "12") == 0, "with the number the first step gave");
+	check(u.cursor == u.input_len, "and the cursor after it, so it can be edited");
+	ui_key(&u, UI_KEY_ACCEPT);
+	check(u.mode == UI_MODE_ASK, "the completed formula answers");
+	check(strcmp(ui_last_call(&u), "CALL kinetic_energy 5 12") == 0,
+	      "with the reused number as its argument");
+	check(strcmp(ui_row(&u, u.nrows - 1), "= 360 J") == 0, "and the right answer");
+	check(strcmp(u.last_num, "360") == 0, "which becomes the next answer to reuse");
+
+	/* An answer with no single number at the front cannot be reused, and
+	 * saying so beats inserting half of it. */
+	ui_result(&u, "quad", PIPELINE_OK, "x=2, y=3", "CALL quad_solve 1 -5 6");
+	check(u.last_num[0] == '\0', "a multi-part answer keeps no number");
+	ui_result(&u, "heat", PIPELINE_OK, "8350 J", "CALL latent_heat 25 334");
+	check(strcmp(u.last_num, "8350") == 0, "an answer with a unit keeps its number");
+	ui_result(&u, "drop", PIPELINE_OK, "-4.5 m", "CALL free_fall 0.3");
+	check(strcmp(u.last_num, "-4.5") == 0, "a signed decimal keeps its sign");
+	ui_result(&u, "q", PIPELINE_ERR, "", "CALL friction 3 4");
+	check(u.last_num[0] == '\0', "a failed question clears it rather than keeping a stale one");
 }
 
 /*
@@ -1176,6 +1341,8 @@ int main(void)
 	test_plot_key();
 	test_template();
 	test_find();
+	test_slots();
+	test_reuse();
 	test_course_picker();
 	test_template_multi_argument();
 	test_graph_mode();

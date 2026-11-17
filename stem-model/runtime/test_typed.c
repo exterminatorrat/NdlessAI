@@ -98,6 +98,38 @@ static void check_too_long_is_not_a_word_problem(void)
  * all answered 32768 before this test existed, and a student had no way to tell
  * that from a real value.
  */
+/*
+ * A solver's arithmetic has limits, and a wrong number is worse than a refusal.
+ *
+ * critical_angle scales both indices to 1e9 and then multiplies by 1e9 again, so
+ * an index past 9.2 overflowed a long long: critical_angle 150 100 answered
+ * 2.968 where the angle is 41.81. The ratio is reduced before it is scaled now,
+ * and a ratio too large to hold at 1e9 is refused instead of answered.
+ */
+static void check_a_large_index_is_not_a_wrong_angle(void)
+{
+	static const char *const angles[][2] = {
+		{ "critical_angle 1.5 1.0", "41.81" },
+		{ "critical_angle 150 100", "41.81" },
+		{ "critical_angle 1500 1000", "41.81" },
+		{ "critical_angle 160 133", "56.23" },
+		{ "critical_angle 1000000 999983", "89.67" },
+	};
+	char got[64];
+
+	for (int i = 0; i < (int)(sizeof angles / sizeof angles[0]); i++) {
+		int rc = pipeline_answer_offline(angles[i][0], got, (int)sizeof got,
+		                                NULL, 0);
+
+		if (rc != PIPELINE_OFFLINE_ANSWERED || strcmp(got, angles[i][1])) {
+			printf("FAIL %s -> %s (rc %d), wanted %s\n", angles[i][0],
+			       rc == PIPELINE_OFFLINE_ANSWERED ? got : "-", rc,
+			       angles[i][1]);
+			failures++;
+		}
+	}
+}
+
 static void check_no_value_is_not_a_number(void)
 {
 	static const char *const useless[] = {
@@ -204,6 +236,7 @@ int main(void)
 
 	check_too_long_is_not_a_word_problem();
 	check_no_value_is_not_a_number();
+	check_a_large_index_is_not_a_wrong_angle();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

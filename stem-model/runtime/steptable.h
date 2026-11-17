@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA 906089c4d00027cd
+ * STEP_SOURCE_SHA 5edc873fa47188a8
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 137
+#define STEP_NUM_ROWS 143
 
 typedef struct {
 	const char *name;
@@ -23,11 +23,13 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"activity_bq", "A = 0.693*N/t_half", "0.693*@1/@2"},
 	{"adiabatic_work", "W = (P1*V1 - P2*V2)/(gamma - 1)", "(@1*@2 - @3*@4)/(@5 - 1)"},
 	{"arc_length", "s = r*theta*pi/180", "@1*@2*pi/180"},
+	{"atoms_from_mass", "N = (m/M) * 6.022e23", "@1 / @2 * 6.022 * 10^23"},
 	{"average", "mean = (a + b + c + d)/4", "(@1 + @2 + @3 + @4) / 4"},
 	{"average_rate_of_change", "rate = (f(b) - f(a)) / (b - a)", "(@4 - @2) / (@3 - @1)"},
 	{"average_speed", "v = d / t", "@1 / @2"},
 	{"avg_rate", "rate = change/time", "@1 / @2"},
 	{"beat_freq", "f_b = |f1 - f2|", "abs(@1 - @2)"},
+	{"beer_lambert", "c = A / (epsilon * l)", "@1 / (@2 * @3)"},
 	{"bernoulli_pressure", "P2 = P1 + rho*(v1^2 - v2^2)/2 + rho*g*(h1 - h2)", "@1 + @6*(@2^2 - @3^2)/2 + @6*9.8*(@4 - @5)"},
 	{"bohr_energy_ev", "E_n = -13.6/n^2", "-13.6/@1^2"},
 	{"bohr_transition_nm", "lambda = 1240/(13.6*(1/n1^2 - 1/n2^2))", "1240/(13.6*(1/@1^2 - 1/@2^2))"},
@@ -40,6 +42,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"capacitor_energy", "E = Q*V / 2", "@1 * @2 / 2"},
 	{"carnot", "eff = (Th - Tc)/Th * 100", "(@1 - @2) / @1 * 100"},
 	{"carnot_efficiency", "eta = 1 - Tc/Th", "1 - @1/@2"},
+	{"cell_potential", "E_cell = E_cathode - E_anode", "@1 - @2"},
 	{"celsius_to_fahrenheit", "F = C*9/5 + 32", "@1*9/5 + 32"},
 	{"charles", "V2 = V1*T2/T1", "@1*@3/@2"},
 	{"circular_accel", "a = v^2/r", "@1^2/@2"},
@@ -89,6 +92,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"kinematic_v", "v = v0 + a*t", "@1 + @2*@3"},
 	{"kinetic_energy", "KE = m*v^2 / 2", "@1 * @2^2 / 2"},
 	{"km_to_m", "m = km*1000", "@1*1000"},
+	{"ksp_from_solubility", "Ksp = (n*s)^n * (m*s)^m", "(@1*@2)^@2 * (@1*@3)^@3"},
 	{"latent_heat", "Q = m * L", "@1 * @2"},
 	{"law_cosines", "c = sqrt(a^2 + b^2 - 2ab*cos(C))", "sqrt(@1^2 + @2^2 - 2*@1*@2*cos(@3))"},
 	{"law_sines", "b = a*sin(B)/sin(A)", "@1*sin(@3)/sin(@2)"},
@@ -113,6 +117,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"ohm_power", "P = I*V", "@1*@2"},
 	{"ohm_v", "V = I*R", "@1*@2"},
 	{"parallel_resistance", "R = 1/(1/R1 + 1/R2)", "1 / (1/@1 + 1/@2)"},
+	{"partial_pressure", "P_i = n_i * P_total / n_total", "@1 * @3 / @2"},
 	{"pascal_press", "F2 = F1*A2/A1", "@1*@3/@2"},
 	{"pendulum_period", "T = 2*pi*sqrt(L/g)", "2*pi*sqrt(@1/@2)"},
 	{"percent_change", "change% = (new - original) / original * 100", "(@2 - @1) / @1 * 100"},
@@ -155,6 +160,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"volume_flow_rate", "Q = A*v", "@1*@2"},
 	{"volume_prism", "V = l * w * h", "@1 * @2 * @3"},
 	{"wave_speed", "v = f*lambda", "@1*@2"},
+	{"wavelength_from_frequency", "lambda = c / f, c = 2.998e8 m/s", "2.998 * 10^8 / (@1 * 10^12)"},
 	{"work", "W = F*d*cos(theta)", "@1*@2*cos(@3)"},
 	{"work_energy", "W = m*(v^2 - v0^2)/2", "@1*(@3^2 - @2^2)/2"},
 };

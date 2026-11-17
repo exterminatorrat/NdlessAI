@@ -154,6 +154,12 @@ TEMPLATES = {
     "mass_energy_mev": "A second nucleus in the same sample has mass {n} u.",
     "half_life_fraction": "A second isotope in the same table has half life {n} years.",
     "activity_bq": "A second source in the same lab holds {n} nuclei.",
+    "partial_pressure": "A second vessel in the same problem holds {n} mol of gas in total.",
+    "cell_potential": "A second cell in the same problem uses a half-cell at {n} V.",
+    "ksp_from_solubility": "A second salt in the same problem has a solubility of {n} mol/L.",
+    "beer_lambert": "A second sample in the same experiment has absorbance {n}.",
+    "atoms_from_mass": "A second sample in the same problem has a mass of {n} g.",
+    "wavelength_from_frequency": "A second source in the same problem runs at {n} THz.",
 }
 
 POOLS = {
@@ -195,6 +201,12 @@ POOLS = {
     "volume_flow_rate": [1, 2, 3, 4, 5, 6, 8, 10],
     "pascal_press": [60, 100, 150, 200, 250, 300],
     "submerged_fraction": [400, 500, 600, 700, 800],
+    "partial_pressure": [0.5, 1, 2, 3, 4, 5],
+    "cell_potential": [0.13, 0.34, 0.44, 0.8, 1.36, 2.87],
+    "ksp_from_solubility": [0.001, 0.002, 0.005, 0.01, 0.02, 0.05],
+    "beer_lambert": [0.2, 0.3, 0.4, 0.6, 0.9],
+    "atoms_from_mass": [1, 2, 5, 10, 25, 50],
+    "wavelength_from_frequency": [250, 350, 600, 900],
 }
 
 

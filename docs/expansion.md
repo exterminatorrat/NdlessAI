@@ -36,9 +36,9 @@ Effort labels are estimates: **d** days, **w** weeks, **m** months.
 | --- | --- | --- | --- |
 | 1 | **Promote `graph.c`'s parser into a shared expression core**, with evaluation, Newton/bisection roots, and adaptive Simpson | Turns the device into a working calculus calculator for typed input at **zero inference cost**. Covers AP Calc AB outright and much of BC, and the 48-node Q16 parser with `+ - * / ^ sin cos tan` and implicit multiplication already exists | 1-2 w |
 | 2 | **Fix the latency budget**: measure prefill on device, then widen the vocabulary to 1024 and thin the prompt | 8 s of a 9.4 s answer is prefill. A 1024-token vocabulary restores 462 merges at 300 relations, and more merges means a shorter prompt. This is the difference between "tolerable" and "unusable" and it is mostly a config change plus one retrain | d |
-| 3 | **Constrained decoding**: a trie over relation name, arity, and numeric slots | An invalid call becomes structurally impossible. Removes a whole failure class with no retrain and no accuracy trade | d |
+| 3 | **Constrained decoding**: a trie over relation name, arity, and numeric slots | An invalid call becomes structurally impossible. Removes a whole failure class with no retrain and no accuracy trade. **The numeric half was built and reverted** — exact calls identical and none of 253 re-decoded refusals became exact, because the model's error is a choice among the numbers already present, not an invented one. See `closed-lines.md` | d |
 | 4 | **Edit-distance digit recovery** on the grounding guard | The dominant failure is mis-copying a digit (`4188` becomes `418`). Repairing a single unambiguous edit recovers answers the guard currently throws away — `sig_figs` sits at 80% for this reason alone | d |
-| 5 | **Step display, keypad templates, error explanations** (D5, D8, D12) | The answer is usually already right; the interface is what makes it believed. Keypad templates also delete the worst part of the current UI, freehand typing on a calculator | d each |
+| 5 | **Step display, keypad templates, error explanations** (D5, D8, D12) | The answer is usually already right; the interface is what makes it believed. **All three are built in part**: the answer pane prints the call, the substituted formula and the result; finding a relation by name, the formula above its prompts and the unit in each prompt replace freehand typing; the four refusal branches say what happened (#103, #104, #138, #144, #146, #153) | d each |
 
 Items 3 and 4 are the cheapest accuracy improvements available anywhere in the
 plan. Both are pure C, both fit inside a week, neither needs a retrain.
@@ -48,10 +48,10 @@ plan. Both are pure C, both fit inside a week, neither needs a retrain.
 | # | Change | Value | Effort |
 | --- | --- | --- | --- |
 | 6 | **`solve_for(unknown)` over direction-agnostic equations** (B2) | The single biggest structural win. `ohms_law solve_for I` replaces `ohm_i`; one equation replaces every hand-written inverse. Roughly 2.5-4x the questions per relation slot, which is how AP coverage fits in a 1024-token vocabulary | 2-3 w |
-| 7 | **Adversarial distractors and real wording** (A10, A9) | The dominant error is copying a plausible number, and the phrasing banks are synthetic. This is the lever that moves measured accuracy, and it is data plus a retrain, not code | d-w |
+| 7 | **Adversarial distractors and real wording** (A10, A9) | On long rows the dominant error is a plausible number in the wrong slot rather than an invented one, and the phrasing banks are synthetic. This row used to claim it was the lever that moves measured accuracy; **it is not, and that is now measured** — corpus composition bought +0.45 points against a 2.6-point seed spread, contrast rows were flat on held-out rows, and register breadth moved the held-out structures without moving accuracy. See `closed-lines.md` | d-w |
 | 8 | **Force them into the gate** (F1, F4) | `stress_cases.py` and `evaluate_paraphrase.py` already exist as scripts. As gates with a per-relation dashboard they stop accuracy from silently regressing between relation batches | d |
 | 9 | **Exact rational linear algebra**: n x n Gauss-Jordan, determinant, inverse, rank | Cheap on the existing rational helpers, and it unlocks equation systems, chemistry ICE tables, redox balancing, and Kirchhoff in one move | d |
-| 10 | **Abstention from the call-token margin** (A1) | The product's stated rule is that refusals beat wrong answers. Today the guard enforces that by string matching; a margin turns silent wrong relations into explicit refusals | d |
+| 10 | **Abstention from the call-token margin** (A1) | The product's stated rule is that refusals beat wrong answers. **Built** (#122) at a 500-unit margin: 22 rows caught and 7 lost over the 4,300 hand-written rows, 3.1:1 at 76% precision, with exactness flat at 73.1% → 72.9%. It converts wrong answers into refusals rather than raising the score | d |
 
 ### Tier B — subject breadth, predictable value per relation
 
@@ -95,9 +95,11 @@ device into a real calculus calculator; items 3 and 4 are two days that raise
 the measured answer rate; item 9 is one day that unlocks systems, equilibrium,
 and circuits.
 
-If the goal is the largest *measured accuracy* jump, the order is **3, 4, 7, 8**.
-Every one of them is either pure C or a data batch, and all four fit in a
-fortnight.
+If the goal is the largest *measured accuracy* jump, two of the four rows above
+have since been tried and did not deliver: the numeric half of item 3 changed no
+exact call, and item 7's wording levers moved nothing measurable
+(`closed-lines.md`). Items 4 and 8 are untested. What the evidence now points at
+— capacity, or a multi-step tape — is not ranked by this table at all.
 
 If the goal is AP exam coverage as a catalogue, the order is **6, then 11-15**.
 Nothing there is research; it is formula writing against a solved architecture.

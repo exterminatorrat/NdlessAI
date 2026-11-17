@@ -325,13 +325,15 @@ catalogue should be checked against its sentences for this.
 
 **The 640-entry vocabulary, measured.** Retraining the same catalogue at 640
 entries turns the run that scored 75.8% at 512 into **90.2%** on the same 500
-held-out rows, with reserved-wording accuracy at **98.4%** instead of 82.3%. The
+held-out rows, with a reserved-wording figure of **98.4%** instead of 82.3% — a
+number since withdrawn, see the correction in P8. The
 bad basin the 512 vocabulary could fall into - a 15-point swing between seeds -
 is gone at 640, which is consistent with the merge starvation: 101 merges at 512
 against 226 at 640, and a mean of 62.0 row tokens against 51.9.
 
 Both seeds at 640, finished and scored on the same 500 rows: **90.2% and
-93.6%** exact, with reserved-wording accuracy at **98.4% and 98.6%**. The spread
+93.6%** exact, with reserved-wording figures of **98.4% and 98.6%** — both
+withdrawn, see the correction in P8. The spread
 is 3.4 points, back at the level measured before the merge starvation, against
 the 15 points the same pair produced at 512.
 
@@ -387,9 +389,20 @@ and error bounds.
 **What was measured on which split.** The course numbers above are the
 hand-written corpus, which is what a student types. The generated split reads
 higher and is not the headline: 90.2% and 93.6% exact on 500 held-out phrasing
-rows at the 640-entry vocabulary, with 2.2-3.2% wrong relation. Wording the
-model has never seen reads 98.4% and 98.6% exact against 98.5% on ordinary
-wording from the same weights, which is the one claim immune to seed variance.
+rows at the 640-entry vocabulary, with 2.2-3.2% wrong relation.
+
+**Correction, 2026-11-18: every reserved-wording figure in this document —
+98.4%, 98.6%, 98.5%, 98.9%, 98.2% and 98.1%, in the cycle tables as well as
+here — is withdrawn.** They name no weights file, tokenizer or corpus state, and
+no tree on the build machine reproduces them. The pre-batch tree preserved at
+`~/.capy/work/ndlessai-train/stem-model/` — 153 relations, 226 merges, its own
+tokenizer and checkpoint — reads **71.4% (seed 1) and 76.6% (seed 2fin), mean
+74.0%**, over the same 2,078 eval rows, whose fixtures hash byte-identical to the
+current ones. The current pair reads 72.9% and 72.0% on those rows, so there was
+no regression and there was also no 98%: the row should not be quoted as a
+baseline again. The rule this document should have followed is the one
+`docs/status.md` now states at the top — a number names its weights, its
+tokenizer and its corpus, or it is not a measurement.
 
 **What a student can reach.** The picker opens on their course, lists that
 course's callable topics, and never offers a gap or a typed-engine topic as a

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "grounding.h"
 #include "pipeline.h"
 
 /* Revised 2026-11-16: cover chemistry quantities and numeric boundaries. */
@@ -105,6 +106,28 @@ int main(void)
 	expect("CALL sig_figs 0.0046 2",
 	       "Round 0.004567 to 2 significant figures.", 0,
 	       "rounded value is not the given value");
+
+	/* The span scan is the shared half of the rule: repair picks from it and
+	 * the grounding guard searches the same text. It finds numbers in the order
+	 * they are written, keeps a coefficient's digit ("5x") out of the list, and
+	 * keeps a subscript's digit in it — an underscore is notation, so "a_3"
+	 * writes three the way "log_2(8)" writes two. */
+	{
+		grounding_span_t spans[GROUNDING_MAX_SPANS];
+		const char *q = "A 12 kg mass moves at 34 m/s; 5x is a "
+		                "coefficient and a_3 names the third, and 0.25 mol is.";
+		int n = grounding_spans(q, spans, GROUNDING_MAX_SPANS);
+
+		if (n != 4 || strcmp(spans[0].text, "12") ||
+		    strcmp(spans[1].text, "34") || strcmp(spans[2].text, "3") ||
+		    strcmp(spans[3].text, "0.25")) {
+			printf("FAIL span scan found %d spans", n);
+			for (int i = 0; i < n; i++)
+				printf(" \"%s\"", spans[i].text);
+			printf("\n");
+			failures++;
+		}
+	}
 
 	if (failures) {
 		printf("%d guard case(s) failed\n", failures);

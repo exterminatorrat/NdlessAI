@@ -89,8 +89,12 @@ if [ -d runtime ]; then
     run "typed calls"            sh -c 'cd runtime && ./test_shorthand | grep -q "all checks passed"'
     run "plans"                  sh -c 'cd runtime && ./test_plan | grep -q "all checks passed"'
     run "digit repair"           sh -c 'cd runtime && ./test_repair | grep -q "all checks passed"'
-    # Units: what the unit checker reads and decides, on fixed cases.
-    run "unit tags"              sh -c 'cd runtime && ./test_quantity | grep -q "all checks passed"'
+    # Units: the fixed cases, then every correct call the generators and the
+    # hand-written corpus make. None may change, every number rewritten
+    # exactly into another unit must convert back to the same answer, and none
+    # may be refused. It also reports how many swapped-argument calls it now
+    # refuses, and how many rounded rewrites the exact solvers cannot compute.
+    run "unit tags"              sh -c "cd runtime && ./test_quantity | grep -q 'all checks passed' && cd .. && $PY gen_unit_cases.py | runtime/test_quantity --cases"
     run "tokenizer fixture sync" sh -c "$PY gen_bpe_cases.py --check >/dev/null"
     run "steptable in sync"      sh -c "$PY export_steps.py --check >/dev/null"
     # The units the slot prompts show come from the phrasing bank, so the header

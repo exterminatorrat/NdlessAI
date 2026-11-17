@@ -57,7 +57,13 @@ int plan_execute(const char *text, plan_t *p);
  */
 int plan_render(const plan_t *p, char *out, int outlen);
 
-/* Whether `text` looks like a plan at all, cheaply: it has a step separator. */
+/*
+ * Whether `text` is a plan at all: it has a step separator, and every segment
+ * between separators is a call the solvers could run — a relation's own name
+ * and arguments that are numbers or <n> references. A question that merely
+ * contains a ';' is a question, because being read as a plan costs the answer
+ * and being read as a question only costs a decode.
+ */
 int plan_is(const char *text);
 
 /* The call for step n (1-based) of a plan in text form, or NULL. */

@@ -104,8 +104,49 @@ static void test_rules(void)
 	      "a step with the wrong argument count fails");
 	check(strstr(plan.err, "step 2") != NULL, "and the error names the step");
 
-	check(plan_execute("CALL newton2 1 1 ; nonsense 1", &plan) == -2,
-	      "a step that is not a call fails");
+	/*
+	 * A segment that names no relation is not a plan at all: the guard cannot
+	 * tell a mistyped name from a sentence, and a sentence read as a plan
+	 * loses its answer, so this one goes on to the decoder instead.
+	 */
+	check(plan_execute("CALL newton2 1 1 ; nonsense 1", &plan) == -1,
+	      "a step naming no relation is a question, not a failed plan");
+}
+
+/*
+ * A ';' separates prose as often as it separates steps, and the two mistakes
+ * are not the same size: a question read as a plan loses the answer outright,
+ * while a chain read as a question only reaches the decoder. These are the
+ * shapes that were dying before a token was decoded.
+ */
+static void test_questions(void)
+{
+	plan_t plan;
+	char answer[128], call[128];
+
+	check(!plan_is("The bottle is 0.5 M; 25 mL is measured out and made up to "
+	               "250 mL. New concentration?"),
+	      "a chemistry question with a semicolon is a question");
+	check(!plan_is("A 4 L balloon sits at 300 K; heat it to 450 K at fixed "
+	               "pressure; what volume does it reach?"),
+	      "a question with two semicolons is a question");
+	check(!plan_is("work done is 3 J; what power is that over 2 s?"),
+	      "a segment that opens with a relation's own name but is not a call");
+	check(plan_execute("The bottle is 0.5 M; 25 mL is measured out", &plan) == -1,
+	      "and running a question as a plan is refused, not half-answered");
+
+	/* A real chain is still a chain, in both spellings. */
+	check(plan_is("CALL newton2 2 9.8 ; CALL friction_force 0.2 <1>"),
+	      "a two-step plan is still a plan");
+	check(plan_is("newton2 2 9.8 ; friction_force 0.2 <1>"),
+	      "and so is the shorthand spelling");
+
+	/* The question reaches the model path instead of dying in front of it. */
+	check(pipeline_answer_offline("The bottle is 0.5 M; 25 mL is measured out "
+	                              "and made up to 250 mL. New concentration?",
+	                              answer, (int)sizeof answer, call,
+	                              (int)sizeof call) == 1,
+	      "a prose semicolon leaves the offline path for the decoder");
 }
 
 static void test_working(void)
@@ -155,6 +196,7 @@ int main(void)
 {
 	test_chains();
 	test_rules();
+	test_questions();
 	test_working();
 	test_pipeline();
 	if (failures) {

@@ -33,4 +33,23 @@ int grounding_number_boundary(const char *text, const char *start, int len);
 /* Whether every argument of "CALL name a b ..." is in the question. */
 int grounding_call_grounded(const char *call, const char *question);
 
+#define GROUNDING_MAX_SPANS 24
+#define GROUNDING_SPAN_LEN 24
+
+/* One number as the question writes it, and where it sits. */
+typedef struct {
+	char text[GROUNDING_SPAN_LEN];
+	int start;
+	int end;
+} grounding_span_t;
+
+/*
+ * Every number the question writes, in reading order.
+ *
+ * This is the span scan the repair pass and the argument mask both work from,
+ * so a number the repair would accept and a number the mask would offer cannot
+ * disagree about what counts as a number. Returns the count, at most `max`.
+ */
+int grounding_spans(const char *text, grounding_span_t *out, int max);
+
 #endif

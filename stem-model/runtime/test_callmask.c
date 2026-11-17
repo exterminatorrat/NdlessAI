@@ -13,9 +13,12 @@
 
 #include "bpe.h"
 #include "callmask.h"
+#include "grounding.h"
 #include "reltable.h"
 
-#define VOCAB 512
+/* The real vocabulary, not a sample of it: a merge token for "44" can sit
+ * above the first 512 entries, and scanning a prefix would report no token. */
+#define VOCAB BPE_VOCAB_SIZE
 
 static int32_t logits[VOCAB];
 static unsigned char allow[VOCAB];
@@ -83,6 +86,103 @@ static void expect_count(const char *sofar, int want, const char *why)
 	if (got != want) {
 		printf("FAIL %s: %d tokens allowed, want %d\n  text: \"%s\"\n",
 		       why, got, want, sofar);
+		failures++;
+	}
+}
+
+/* The argument mask, driven through the same body of tests as the header. */
+static void mask_args_only(const bpe_tok *tok, const char *sofar,
+                           const char *question)
+{
+	callmask_args(sofar, question, tok, allow, VOCAB);
+}
+
+static void expect_arg_allowed(const bpe_tok *tok, const char *sofar,
+                               const char *question, int id, int want,
+                               const char *why)
+{
+	mask_args_only(tok, sofar, question);
+	if (!!allow[id] != want) {
+		printf("FAIL %s: token %d is %s\n", why, id,
+		       allow[id] ? "allowed" : "blocked");
+		failures++;
+	}
+}
+
+static int arg_allowed_count(const bpe_tok *tok, const char *sofar,
+                             const char *question)
+{
+	int n = 0;
+
+	mask_args_only(tok, sofar, question);
+	for (int i = 0; i < VOCAB; i++)
+		n += allow[i] ? 1 : 0;
+	return n;
+}
+
+/*
+ * The rule the retry depends on: only what the question writes, each number
+ * spendable once, 0 and 1 free, and no constraint at all before the arguments
+ * begin.
+ *
+ * The assertions are on one-character tokens, which exist in every vocabulary,
+ * rather than on a whole two-digit token: whether "88" is one token is the
+ * tokenizer's business, whether "8" may begin an argument is this mask's.
+ */
+static void check_arguments(void)
+{
+	bpe_tok tok;
+	const char *q = "A 12 kg mass moves at 34 m/s.";
+	const char *rule = "CALL kinetic_energy ";
+
+	if (bpe_init(&tok) < 0) {
+		printf("FAIL bpe_init\n");
+		failures++;
+		return;
+	}
+
+	/* Before the header is through, the argument rule says nothing. */
+	mask_args_only(&tok, "", q);
+	for (int i = 0; i < VOCAB; i++)
+		if (!allow[i]) {
+			printf("FAIL an empty decode is not the argument rule's step\n");
+			failures++;
+			break;
+		}
+
+	/* Both numbers in the sentence are reachable, a number it never wrote is not. */
+	expect_arg_allowed(&tok, rule, q, '1', 1, "12 is in the question");
+	expect_arg_allowed(&tok, rule, q, '3', 1, "34 is in the question");
+	expect_arg_allowed(&tok, rule, q, '7', 0, "7 is not a number the question writes");
+
+	/* A spent number is not offered again: 12 cannot be spelled twice, though
+	 * the free value 1 may still begin the next argument. */
+	expect_arg_allowed(&tok, "CALL kinetic_energy 12 1", q, '2', 0,
+	                   "12 has been spent by the first argument");
+	expect_arg_allowed(&tok, "CALL kinetic_energy 12 ", q, '3', 1,
+	                   "34 is still unspent");
+
+	/* Implicit coefficients are free values, as they are for grounding. */
+	expect_arg_allowed(&tok, "CALL deriv_poly3 ", "x^3 + 2x^2 - 6 at x = 4",
+	                   '0', 1, "0 is an implicit coefficient");
+	expect_arg_allowed(&tok, "CALL deriv_poly3 ", "x^3 + 2x^2 - 6 at x = 4",
+	                   '1', 1, "1 is an implicit coefficient");
+
+	/* A space ends a complete argument, and a prefix of one is not complete. */
+	mask_args_only(&tok, "CALL kinetic_energy 12", q);
+	if (!allow[32]) {
+		printf("FAIL a complete argument cannot be closed\n");
+		failures++;
+	}
+	mask_args_only(&tok, "CALL kinetic_energy 3", q);
+	if (allow[32]) {
+		printf("FAIL a prefix of a number was closed as if complete\n");
+		failures++;
+	}
+
+	/* A call already off the rails is left alone rather than deadlocked. */
+	if (arg_allowed_count(&tok, "CALL kinetic_energy 999 ", q) < VOCAB / 2) {
+		printf("FAIL an ungrounded argument does not deadlock the mask\n");
 		failures++;
 	}
 }
@@ -163,6 +263,7 @@ int main(void)
 	}
 
 	check_table_matches_tokenizer();
+	check_arguments();
 
 	/* (a) Step 0. The model would rather emit a digit, the mask still makes
 	 * CALL the only legal opening token. */

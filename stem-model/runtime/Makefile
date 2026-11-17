@@ -72,8 +72,8 @@ test_fixed: test_fixed.c fixed.c infer.c $(HEADERS)
 test_guard: test_guard.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_guard.c $(PIPELINE) $(LDLIBS)
 
-test_callmask: test_callmask.c callmask.c bpe.c $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_callmask.c callmask.c bpe.c
+test_callmask: test_callmask.c callmask.c bpe.c grounding.c $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_callmask.c callmask.c bpe.c grounding.c
 
 test_graph: test_graph.c graph.c screen.c expr.c steps.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c steps.c $(LDLIBS)

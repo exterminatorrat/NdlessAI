@@ -138,6 +138,27 @@ static void mask_logits(pipeline_t *p, const char *sofar)
 			p->logits[i] = INT32_MIN;
 }
 
+/*
+ * The retry's mask: the header rules plus the argument rule that only numbers
+ * the question writes, and only as many times as it writes them, can be said.
+ *
+ * The argument buffer is static because this file is on the device path, where
+ * two more kilobytes of stack inside the decode is not free.
+ */
+static void mask_logits_args(pipeline_t *p, const char *sofar, const char *question)
+{
+	static unsigned char arg_allow[MAX_VOCAB];
+	unsigned char allow[MAX_VOCAB];
+
+	if (p->model.vocab <= 0 || p->model.vocab > MAX_VOCAB)
+		return;
+	callmask_next(sofar, allow, p->model.vocab);
+	callmask_args(sofar, question, &p->tok, arg_allow, p->model.vocab);
+	for (int i = 0; i < p->model.vocab; i++)
+		if (!allow[i] || !arg_allow[i])
+			p->logits[i] = INT32_MIN;
+}
+
 typedef struct {
 	const char *name;
 	const char *args[8];
@@ -367,13 +388,63 @@ int pipeline_answer_offline(const char *question, char *answer, int answer_max,
 	return 0;
 }
 
+/*
+ * One greedy decode, from the prompt to a call's text. `question` non-NULL turns
+ * on the argument mask, which only the retry passes: the first decode must stay
+ * exactly the decode it was, or the screen's ranking and every measured row
+ * would move for a reason that is not the constraint.
+ */
+static int decode_pass(pipeline_t *p, const uint16_t *ids, int n,
+                       const char *question, int record_alts,
+                       char *call, int call_max)
+{
+	uint16_t gen_ids[MAX_GEN];
+	int pos = 0, gen = 0;
+
+	for (int i = 0; i < n; i++)
+		if (forward_q(&p->model, &p->qs, &p->qw, ids[i], pos++,
+		              p->logits) < 0)
+			return -1;
+
+	for (int i = 0; i < MAX_GEN && pos < p->seq; i++) {
+		char sofar[MAX_PROMPT + 1];
+		int next;
+
+		if (ids_to_text(&p->tok, gen_ids, gen, sofar,
+		                (int)sizeof sofar) < 0)
+			return -1;
+		if (question)
+			mask_logits_args(p, sofar, question);
+		else
+			mask_logits(p, sofar);
+		/* The separator is out, so this is the step that names the
+		 * relation and the only one whose ranking the screen wants. */
+		if (record_alts && strcmp(sofar, "CALL ") == 0)
+			keep_alts(p);
+		next = argmax32(p->logits, p->model.vocab);
+
+		if (next == 258 || next == 256)
+			break;
+		/* MAX_GEN tokens in total, as the inline loop this replaced allowed:
+		 * a call of five arguments can need every one of them, and stopping at
+		 * nineteen truncated the last argument by a digit. */
+		if (gen >= MAX_GEN)
+			break;
+		gen_ids[gen++] = (uint16_t)next;
+		if (forward_q(&p->model, &p->qs, &p->qw, next, pos++,
+		              p->logits) < 0)
+			break;
+	}
+	return ids_to_text(&p->tok, gen_ids, gen, call, call_max) < 0 ? -1 : 0;
+}
+
 int pipeline_answer(pipeline_t *p, const char *question,
                     char *answer, int answer_max,
                     char *call, int call_max)
 {
 	uint16_t ids[MAX_PROMPT];
 	char prompt[MAX_PROMPT + 16];
-	int n, pos = 0, gen = 0;
+	int n;
 	int rc_offline;
 	size_t qlen = strlen(question);
 
@@ -411,33 +482,7 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	if (n <= 0 || n >= p->seq)
 		return PIPELINE_ERR;
 
-	for (int i = 0; i < n; i++)
-		if (forward_q(&p->model, &p->qs, &p->qw, ids[i], pos++, p->logits) < 0)
-			return PIPELINE_ERR;
-
-	for (int i = 0; i < MAX_GEN && pos < p->seq; i++) {
-		char sofar[MAX_PROMPT + 1];
-		int next;
-
-		if (ids_to_text(&p->tok, ids + n, gen, sofar, (int)sizeof sofar) < 0)
-			return PIPELINE_ERR;
-		mask_logits(p, sofar);
-		/* The separator is out, so this is the step that names the
-		 * relation and the only one whose ranking the screen wants. */
-		if (strcmp(sofar, "CALL ") == 0)
-			keep_alts(p);
-		next = argmax32(p->logits, p->model.vocab);
-
-		if (next == 258 || next == 256)
-			break;
-		if (n + gen + 1 >= MAX_PROMPT)
-			break;
-		ids[n + gen++] = (uint16_t)next;
-		if (forward_q(&p->model, &p->qs, &p->qw, next, pos++, p->logits) < 0)
-			break;
-	}
-
-	if (ids_to_text(&p->tok, ids + n, gen, call, call_max) < 0)
+	if (decode_pass(p, ids, n, NULL, 1, call, call_max) < 0)
 		return PIPELINE_ERR;
 	/*
 	 * A relation the decode all but tied is a guess, and a guess printed as an
@@ -464,6 +509,22 @@ int pipeline_answer(pipeline_t *p, const char *question,
 		if (repair_call(call, question, repaired, (int)sizeof repaired) > 0 &&
 		    strlen(repaired) < (size_t)call_max)
 			snprintf(call, (size_t)call_max, "%s", repaired);
+	}
+	/*
+	 * The arguments named something the question never wrote. One retry with
+	 * the argument mask makes every value outside the question unreachable, so
+	 * the retry comes back with numbers the text actually contains or not at
+	 * all; the refusal below is still the answer when it does not. A plan is
+	 * left alone: its chains of calls are not one argument list.
+	 */
+	if (!pipeline_args_grounded(call, question) && !strchr(call, ';')) {
+		char retry[256];
+
+		if (decode_pass(p, ids, n, question, 0, retry,
+		                (int)sizeof retry) == 0 && retry[0] != '\0' &&
+		    pipeline_args_grounded(retry, question) &&
+		    strlen(retry) < (size_t)call_max)
+			snprintf(call, (size_t)call_max, "%s", retry);
 	}
 	if (run_call_text(call, answer, answer_max) < 0)
 		return PIPELINE_ERR;

@@ -132,6 +132,17 @@ static void test_questions(void)
 	      "a question with two semicolons is a question");
 	check(!plan_is("work done is 3 J; what power is that over 2 s?"),
 	      "a segment that opens with a relation's own name but is not a call");
+	/* The chemistry register (#132) writes semicolon prose on purpose: a list
+	 * of given quantities, not a chain of calls. The guard must read it as the
+	 * question it is, or a whole register dies in front of the decoder. */
+	check(!plan_is("For the system: mass of the sample = 100 g; molar mass = "
+	               "98 g/mol."),
+	      "the chemistry register's semicolon list is a question");
+	check(pipeline_answer_offline("For the system: mass of the sample = 100 g; "
+	                              "molar mass = 98 g/mol.",
+	                              answer, (int)sizeof answer, call,
+	                              (int)sizeof call) == 1,
+	      "and it reaches the decoder instead of dying in front of it");
 	check(plan_execute("The bottle is 0.5 M; 25 mL is measured out", &plan) == -1,
 	      "and running a question as a plan is refused, not half-answered");
 

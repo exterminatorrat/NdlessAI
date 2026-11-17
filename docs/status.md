@@ -29,7 +29,7 @@ calculator, and it takes Ndless on a supported OS to get that far.
 | 153 relations, Python reference | done | `sh stem-model/gate.sh` |
 | 153 relations, C solvers | done | eleven per-subject units; `test_solvers` reports 13,978 assertions on every run |
 | Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
-| Model picks the right tool | done, and the current limit | 76.8% exact call on the 2,078-question hand-written split, 135 relations; 93.7% exact and 2.4% wrong relation on the 2,000-row generated gate, both `weights_640_s2fin.bin`, both through `runtime/main_device`; 60/60 through the full on-device path |
+| Model picks the right tool | done, and the current limit | 76.8% exact call on the hand-written split, now 2,150 questions over 171 relations (the figure was measured when it was 2,078 over 135); 93.7% exact and 2.4% wrong relation on the 2,000-row generated gate, both `weights_640_s2fin.bin`, both through `runtime/main_device`; 60/60 through the full on-device path |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
 | Typed expressions, no model needed | done | `integrate(x^2,0,3)` answers 9 and `d/dx`, `det`, `inv`, `rank`, `solve` answer on exact rationals; `integrate(x^2)` answers `x^3/3 + C`, `series(exp(x),0,5)` a Taylor polynomial, `ode(2y,0,1,1,64)` a numerical solution and `desolve(2y,0,1)` its closed form `exp(2x)` |
 | Function graphing | done | `test_graph`, merged in PR #8 |

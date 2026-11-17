@@ -204,6 +204,45 @@ static void check_a_large_triangle_is_not_a_wrong_side(void)
 	}
 }
 
+/*
+ * e^x was right up to x = 2 and wrong above it, because the guard said 20 and
+ * the arithmetic could hold 3.4: continuous_growth 1000 10 30 answered 1639 for
+ * 2.01e+04. The multiply is checked now, so the guard is the limit.
+ */
+static void check_a_large_exponent_is_not_a_small_answer(void)
+{
+	static const char *const growth[][2] = {
+		{ "continuous_growth 1000 10 5", "1649" },
+		{ "continuous_growth 1000 10 20", "7389" },
+		{ "continuous_growth 1000 10 25", "1.218e+04" },
+		{ "continuous_growth 1000 10 30", "2.009e+04" },
+		{ "continuous_growth 1000 10 40", "5.46e+04" },
+		{ "continuous_growth 1000 10 90", "8.103e+06" },
+		{ "continuous_growth 1000 25 50", NULL },
+	};
+	char got[64];
+
+	for (int i = 0; i < (int)(sizeof growth / sizeof growth[0]); i++) {
+		int rc = pipeline_answer_offline(growth[i][0], got, (int)sizeof got,
+		                                NULL, 0);
+
+		if (growth[i][1] == NULL) {
+			if (rc == PIPELINE_OFFLINE_ANSWERED) {
+				printf("FAIL %s -> %s, wanted a refusal\n",
+				       growth[i][0], got);
+				failures++;
+			}
+			continue;
+		}
+		if (rc != PIPELINE_OFFLINE_ANSWERED || strcmp(got, growth[i][1])) {
+			printf("FAIL %s -> %s (rc %d), wanted %s\n", growth[i][0],
+			       rc == PIPELINE_OFFLINE_ANSWERED ? got : "-", rc,
+			       growth[i][1]);
+			failures++;
+		}
+	}
+}
+
 static void check_no_value_is_not_a_number(void)
 {
 	static const char *const useless[] = {
@@ -313,6 +352,7 @@ int main(void)
 	check_a_large_index_is_not_a_wrong_angle();
 	check_a_fractional_rate_is_a_rate();
 	check_a_large_triangle_is_not_a_wrong_side();
+	check_a_large_exponent_is_not_a_small_answer();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

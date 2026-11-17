@@ -4,19 +4,19 @@ Where the project stands, what was planned, and what is left. Read this first
 when resuming work; it is the map, and `stem-model/PROGRESS.md` is the
 per-relation ledger.
 
-Last updated: 2026-11-11, at commit `2beba30`.
+Last updated: 2026-11-17, at commit `fcb5e1c`.
 
 ## One paragraph
 
 The system reads an English word problem, a 5.2M-parameter model picks one of
-153 exact solvers, and C code computes the answer. Waves 1 through 3 are on
-master: 153 relations across ten subject tags, the typed expression path for
+171 exact solvers, and C code computes the answer. Waves 1 through 3 are on
+master: 171 relations across ten subject tags, the typed expression path for
 calculus and linear algebra, and the wording work that took hand-written
 accuracy from 43.4% to 72.3%. On 500 held-out rows the model reads 90.2% exact
 with 3.2% wrong relation, and on 1,052 rows whose wording never appears in
 training it reads 98.4% exact against 98.5% on ordinary wording from the same
 weights. The catalogue no longer starves its own vocabulary: at 640 entries it
-keeps 226 BPE merges, where 512 entries had 101 at 150 relations —
+keeps 208 BPE merges at 171 relations, where 512 entries had 101 at 150 —
 `docs/tier1-plan.md` carries that measurement and `docs/waves.md` the earlier
 one. The device app
 builds to `stemhelp.tns`. The one thing never done is running it on a physical
@@ -26,8 +26,8 @@ calculator, and it takes Ndless on a supported OS to get that far.
 
 | Capability | State | Evidence |
 |---|---|---|
-| 153 relations, Python reference | done | `sh stem-model/gate.sh` |
-| 153 relations, C solvers | done | eleven per-subject units; `test_solvers` reports 13,978 assertions on every run |
+| 171 relations, Python reference | done | `sh stem-model/gate.sh` |
+| 171 relations, C solvers | done | eleven per-subject units; `test_solvers` reports 14,180 assertions on every run |
 | Tokenizer, Python and C | done | `test_bpe` round-trip, `check_tokenizer_sync.py` against `data/tokenizer.json` |
 | Model picks the right tool | done, and the current limit | 76.8% exact call on the hand-written split, now 2,150 questions over 171 relations (the figure was measured when it was 2,078 over 135); 93.7% exact and 2.4% wrong relation on the 2,000-row generated gate, both `weights_640_s2fin.bin`, both through `runtime/main_device`; 60/60 through the full on-device path |
 | Grounding guard | done | refuses calls whose arguments are not in the question |
@@ -38,12 +38,12 @@ calculator, and it takes Ndless on a supported OS to get that far.
 
 ## The relation set
 
-153 relations, in ten subject tags:
+171 relations, in ten subject tags:
 
 | Subject | Count | Examples |
 |---|---|---|
 | Physics | 56 | kinetic energy, momentum, projectile range, springs, waves and sound, Snell's law, lenses, fluid pressure, Bernoulli |
-| Chemistry | 30 | molarity, pH, gas laws, stoichiometry, equilibrium, kinetics, thermochemistry |
+| Chemistry | 48 | molarity, pH, gas laws, stoichiometry, equilibrium, kinetics, thermochemistry, VSEPR bond angles |
 | Units | 20 | km/m, Celsius/Fahrenheit, significant figures, percent change, ratios, rates, areas, volumes, probability |
 | Modern physics | 9 | photon energy, photoelectric effect, de Broglie wavelength, Bohr levels, mass-energy, activity |
 | Trig | 9 | sin/cos/tan, law of cosines, arc length |
@@ -55,21 +55,27 @@ calculator, and it takes Ndless on a supported OS to get that far.
 | Precalc | 7 | quadratic roots, 2x2 system, `b^x = k`, average rate of change, vector arithmetic |
 | Calculus | 2 | derivative and integral of a cubic |
 
+The two physics rows above split `physics` rather than adding to it: all 171
+relations are filed under the ten tags in `runtime/reltable.h`, and the
+catalogue total is the sum of those tags, not of this table.
+
 Adding relations is not free: each one renumbers the vocabulary and forces a
 retrain, which is why a catalogue change is never a source-only pull. What the
 retrain costs in accuracy is now measured rather than assumed: 84, 90 and 102
-relations read 95.0%, 94.2% and 90.5% on the generated gate, 136 relations read
-90.3%, and 153 relations read 90.2% on 500 held-out rows. Two seeds of identical
-data differ by up to 15 points on that probe, so a single run is a sample rather
-than a property; `docs/tier1-plan.md` records the spread and what fixed it. `docs/waves.md` holds the table and the protocol behind it.
-
+relations read 95.0%, 94.2% and 90.5% on the generated gate, 136 relations
+read 90.3%, and 153 relations read 90.2% on 500 held-out rows. Each of those
+figures is a measurement at the catalogue size it names, not a statement about
+the 171 relations the catalogue holds today. Two seeds of identical data
+differ by up to 15 points on that probe, so a single run is a sample rather
+than a property; `docs/tier1-plan.md` records the spread and what fixed it.
+`docs/waves.md` holds the table and the protocol behind it.
 ## The tiers, and where each stands
 
 `ROADMAP.md` holds the full reasoning. This is the scoreboard.
 
 | Tier | What it is | State |
 |---|---|---|
-| 1 | Breadth: relations, model unchanged | **complete**, and well past it at 153 |
+| 1 | Breadth: relations, model unchanged | **complete**, and well past it at 171 |
 | 2 | Graphs: plot `y = f(x)`, pan, zoom, trace | **complete** (PR #8), and wave 4.6 added the plot of a relation's own call with the answer marked on it, parameter families, slope fields and subject diagrams. The function is typed on the screen's own input line and the plot carries the same title bar and key hints as the rest of the program, so no path enters through a message box |
 | 3 | Expression engine: parse, differentiate, integrate | **done for what the roadmap asked**: Q16 parser, symbolic differentiation and integration, numeric integration, Taylor series, exact rational linear algebra, and differential equations — RK4, constant-coefficient closed forms, and separable forms including a rate that depends on x. What is not there is convergence tests, first-order linear equations with a non-zero x-dependent forcing term, and a computer algebra system, which is the next tier |
 | 4 | Full CAS | not started, and deliberately last |

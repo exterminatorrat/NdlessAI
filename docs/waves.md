@@ -196,8 +196,8 @@ branch, and that branch is what merged. The `Where it lives` column names the
 file or gate that proves the row, so the claim can be rechecked without trusting
 this table.
 
-Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
-102 relations in ten subject modules.
+Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue was
+102 relations in ten subject modules when that wave closed, and is 171 today.
 
 | Workstream | State on master | Where it lives |
 | --- | --- | --- |
@@ -216,10 +216,10 @@ Waves 1 through 3 are on master through #51, #53 and #58–#62. The catalogue is
 | 3.1 pulled forward: definite integrals | merged; #30 closed as folded | `gexpr_integrate()` and `integr_poly3` |
 | 3.2 exact linear algebra | merged, #59 and #60 | `runtime/matrix.c`; typed `det`/`inv`/`rank`/`solve` on exact rationals |
 | 3.3 the rest of AP Chemistry | merged, #61 | `relations/chemistry.py`, 29 relations |
-| 3.3 follow-up: scientific-notation input | not merged; verified on `fix/scientific-notation-input`, 2026-11-16; counts corrected 2026-11-17 | `parse_rat()` accepts signed e/E notation; shorthand and formula-picker regressions pass under ASan/UBSan; 13,978 solver assertions and 3,672 parity cases have zero mismatches, measured on master `5b0016e` and at #102's head; hardware not run. The 54,400 this row quoted was the older table's 136 relations × 400 rows (`--n 400`); `af76bb9` regenerated at the generator's default 24 rows per relation, so the fall is 16.7× fewer instances per relation over 153 relations, not lost relations. Regenerate with `--n 400` before quoting a soak depth |
+| 3.3 follow-up: scientific-notation input | not merged; verified on `fix/scientific-notation-input`, 2026-11-16; counts corrected 2026-11-17 | `parse_rat()` accepts signed e/E notation; shorthand and formula-picker regressions pass under ASan/UBSan; 13,978 solver assertions and 3,672 parity cases have zero mismatches, measured on master `5b0016e` and at #102's head; hardware not run. The 54,400 this row quoted was the older table's 136 relations × 400 rows (`--n 400`); `af76bb9` regenerated at the generator's default 24 rows per relation, so the fall is 16.7× fewer instances per relation over the 153 relations it listed then, not lost relations. Regenerate with `--n 400` before quoting a soak depth |
 | 3.4 the rest of thermodynamics | merged, #62 | `relations/thermo.py`, 6 relations |
 | 3.5 electricity and magnetism | merged, #62 | `relations/em.py`, 6 relations |
-| 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate. The hand-written split those numbers come from is 2,078 rows across 135 relations, not the 1,942 quoted elsewhere in this file | `gate.sh` gates generated phrasing and wrong relation only |
+| 3.6 real wording data | **partly done**: three rounds shipped and are in the corpus; round four is parked on a branch, and hand-written accuracy was never made a gate. The hand-written split those numbers come from is 2,150 rows across 171 relations; the 1,942 quoted further down is a wave-4 measurement, not today's split | `gate.sh` gates generated phrasing and wrong relation only |
 | Free-fall zero-height division by zero | merged; #26 closed as folded | the guard in `solvers_physics.c` |
 | 4.5 follow-up: formula picker argument overflow | not merged; verified on `fix/formula-picker-argument-overflow`, 2026-11-16 | `tmpl_solve()` uses `UI_TMPL_ARGS`; `test_ui` drives three- through six-argument formulas, passing under ASan/UBSan and an optimized `-Werror` build; hardware not run |
 | Follow-up: collision solver decimal overflow (#102) | merged, #102 | `solve_collision_velocity()` in `runtime/solvers_physics.c`, cases in `runtime/test_shorthand.c`. A pound/mph collision reaches the solver as `1.3608 5.81152 3.1752 -2.68224`, and its four-denominator products overflow signed 64-bit at `solvers_physics.c:520`, which UBSan reproduces on the pre-#102 tree. The fix reduces masses to an integer ratio and combines velocities at one shared decimal scale, refusing unrepresentable intermediates and zero total mass. Over 400,000 generated collisions, 44 answers change and all 44 were pre-#102 master being wrong — 35 silent wrong answers now correct, 9 now refused — with no correct answer lost. A refusal still cannot say so: it shows the generic failure screen, which blames the tokenizer. The ARM lane cross-compiles it for arm926ej-s; not run locally or on hardware |

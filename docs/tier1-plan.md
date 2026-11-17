@@ -373,13 +373,16 @@ accuracy on hand-written rows, measured through the int8 C engine.
 | AP Calculus AB | 69.6% (32/46) | 71.7% (33/46) | not judged, 46 rows | the typed engine, not relations: limits, area between curves, volume of revolution |
 | AP Calculus BC | no rows | no rows | not judged | polar area and parametric arc length are typed-engine work |
 
-**What the catalogue covers now.** 153 relations; intro physics and chemistry
-answers all 42 of its topics, AP Precalculus 29 of 31, SAT/ACT 28 of 32, AP
-Calculus AB 11 of 20. Nineteen topics across the five courses remain open, and
-every one of them is analytical rather than numeric: asymptotes, polar
-graphing, tangent lines, chain rule inside a word problem, implicit
-differentiation, related rates, optimisation, straight-line motion, critical
-points, Mean Value Theorem, Riemann sums, series convergence and error bounds.
+**What the catalogue covered at 153 relations.** These topic counts are the
+measurement made at that size; the catalogue is 171 today, and the eighteen
+chemistry relations that landed in #117 are not reflected in them. At 153,
+intro physics and chemistry answered all 42 of its topics, AP Precalculus 29
+of 31, SAT/ACT 28 of 32, AP Calculus AB 11 of 20. Nineteen topics across the
+five courses remain open, and every one of them is analytical rather than
+numeric: asymptotes, polar graphing, tangent lines, chain rule inside a word
+problem, implicit differentiation, related rates, optimisation, straight-line
+motion, critical points, Mean Value Theorem, Riemann sums, series convergence
+and error bounds.
 
 **What was measured on which split.** The course numbers above are the
 hand-written corpus, which is what a student types. The generated split reads
@@ -398,11 +401,11 @@ by-parts and improper-integral rules (P2c), which the typed engine already
 answers numerically; and AP Statistics, AP Physics C, multivariable calculus and
 every course whose answer is a derivation rather than a number.
 
-**The one number that is not closed.** The accuracy ceiling is 90-94% on unseen
-phrasings at 153 relations, and it did not move when the vocabulary stopped
-starving itself. That ceiling is a training-recipe problem, not a catalogue
-problem: more relations will not raise it, and the recipe is where the next
-tier should start.
+**The one number that is not closed.** The accuracy ceiling is 90-94% on
+unseen phrasings at the 153 relations of that measurement, and it did not move
+when the vocabulary stopped starving itself. That ceiling is a training-recipe
+problem, not a catalogue problem: more relations will not raise it, and the
+recipe is where the next tier should start.
 
 ## Ownership matrix
 

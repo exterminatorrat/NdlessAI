@@ -1,0 +1,24 @@
+{"relation": "partial_pressure", "args": [0.2, 0.5, 1], "question": "A 0.5 mol gas sample is 0.2 mol argon and the rest neon, held at a total pressure of 1 atm. What pressure does the argon contribute?", "split": "eval"}
+{"relation": "partial_pressure", "args": [1, 4, 2], "question": "Methane makes up 1 mol of a 4 mol gas mixture standing at 2 atm. Find the partial pressure of the methane.", "split": "eval"}
+{"relation": "partial_pressure", "args": [0.1, 0.25, 4], "question": "In a vessel holding 0.1 mol of nitrogen out of 0.25 mol of gas at a total pressure of 4 atm, what is nitrogen's partial pressure?", "split": "eval"}
+{"relation": "partial_pressure", "args": [2, 5, 10], "question": "One component supplies 2 mol of a 5 mol mixture whose total pressure is 10 atm. Find that component's partial pressure.", "split": "eval"}
+{"relation": "cell_potential", "args": [0.34, -0.76], "question": "A cell pairs a cathode half-cell at 0.34 V with an anode half-cell at -0.76 V. Find the standard cell potential.", "split": "eval"}
+{"relation": "cell_potential", "args": [1.36, 0.8], "question": "The standard reduction potentials are 1.36 V at the cathode and 0.8 V at the anode. What emf does this cell deliver?", "split": "eval"}
+{"relation": "cell_potential", "args": [-0.28, -0.44], "question": "Both half-reactions are listed with negative potentials, -0.28 V at the cathode and -0.44 V at the anode. Find the cell potential.", "split": "eval"}
+{"relation": "cell_potential", "args": [0.13, 0], "question": "A cathode at 0.13 V sits against a standard hydrogen anode at 0 V. What is the cell emf?", "split": "eval"}
+{"relation": "ksp_from_solubility", "args": [0.005, 1, 2], "question": "A salt giving 1 cation and 2 anions per formula unit has a molar solubility of 0.005 mol/L. Find its solubility product.", "split": "eval"}
+{"relation": "ksp_from_solubility", "args": [0.01, 2, 1], "question": "In a saturated solution the salt dissolves at 0.01 mol/L and yields 2 cations and 1 anion per formula unit. What is Ksp?", "split": "eval"}
+{"relation": "ksp_from_solubility", "args": [0.002, 3, 2], "question": "Its molar solubility is 0.002 mol/L, and every formula unit releases 3 cations and 2 anions. Find the solubility product constant.", "split": "eval"}
+{"relation": "ksp_from_solubility", "args": [0.02, 1, 1], "question": "A salt of molar solubility 0.02 mol/L supplies 1 cation and 1 anion per formula unit. Find Ksp.", "split": "eval"}
+{"relation": "beer_lambert", "args": [0.45, 1500, 1], "question": "The absorbance is 0.45, the molar absorptivity 1500 L/(mol cm) and the path length 1 cm. Find the concentration.", "split": "eval"}
+{"relation": "beer_lambert", "args": [0.25, 2500, 2], "question": "A dye reads 0.25 in absorbance, with a molar absorptivity of 2500 L/(mol cm) in a 2 cm cuvette. What is its concentration?", "split": "eval"}
+{"relation": "beer_lambert", "args": [0.75, 1200, 5], "question": "Measurements give an absorbance of 0.75 for a species of molar absorptivity 1200 L/(mol cm) over a 5 cm path. Find the molarity.", "split": "eval"}
+{"relation": "beer_lambert", "args": [0.15, 4000, 1], "question": "Absorbance 0.15, molar absorptivity 4000 L/(mol cm), light path 1 cm. Find the concentration of the sample.", "split": "eval"}
+{"relation": "atoms_from_mass", "args": [36, 18], "question": "A 36 g portion of a compound of molar mass 18 g/mol. How many atoms are in it?", "split": "eval"}
+{"relation": "atoms_from_mass", "args": [2, 44], "question": "2 g of a substance whose molar mass is 44 g/mol. Find how many atoms the sample holds.", "split": "eval"}
+{"relation": "atoms_from_mass", "args": [100, 142], "question": "100 g of a compound with a molar mass of 142 g/mol. Give the number of atoms present.", "split": "eval"}
+{"relation": "atoms_from_mass", "args": [18, 180], "question": "18 g of a substance of molar mass 180 g/mol contains how many atoms?", "split": "eval"}
+{"relation": "wavelength_from_frequency", "args": [600], "question": "Light has a frequency of 600 THz. What wavelength, in metres, does it have?", "split": "eval"}
+{"relation": "wavelength_from_frequency", "args": [750], "question": "A laser runs at 750 THz. Find its wavelength in metres.", "split": "eval"}
+{"relation": "wavelength_from_frequency", "args": [200], "question": "Radiation at 200 THz is used in a photolysis experiment. What is its wavelength in metres?", "split": "eval"}
+{"relation": "wavelength_from_frequency", "args": [900], "question": "Find the wavelength in metres of a wave whose frequency is 900 THz.", "split": "eval"}

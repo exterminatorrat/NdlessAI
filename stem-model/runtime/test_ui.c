@@ -134,6 +134,31 @@ static void type_text(const char *s)
 		ui_type(&u, *s++);
 }
 
+/*
+ * How many catalogued names contain `q` verbatim. The finder's own matcher also
+ * folds case and treats a space as an underscore, and those are asserted as
+ * behaviour below rather than folded in here: the count has to come from the
+ * catalogue, and the promises from the finder.
+ */
+static int names_containing(const char *q)
+{
+	int n = 0;
+
+	for (int i = 0; i < REL_NUM_RELATIONS; i++)
+		if (strstr(rel_rows[i].name, q))
+			n++;
+	return n;
+}
+
+/* Whether the finder's current list holds this name at all. */
+static int listed(const char *name)
+{
+	for (int i = 0; i < u.tmpl_count; i++)
+		if (strcmp(rel_rows[u.tmpl_rels[i]].name, name) == 0)
+			return 1;
+	return 0;
+}
+
 static int page_has(const char *needle)
 {
 	for (int i = 0; i < u.nrows; i++)
@@ -825,13 +850,57 @@ static void test_find(void)
 	check(ink(4, UI_FOOTER_Y, 300, 20) > 0, "the finder has key hints");
 
 	type_text("perc");
-	check(u.tmpl_count == 5, "a partial name narrows the list to its matches");
-	check(strcmp(rel_rows[u.tmpl_rels[0]].name, "percent_change") == 0,
+	/*
+	 * The count is derived, not written down. It read 5 until the catalogue
+	 * grew two more names containing "perc" and broke a gate that was
+	 * really about arithmetic on a stale constant; a batch of relations
+	 * must not be able to fail a test of the finder.
+	 */
+	check(u.tmpl_count == names_containing("perc"),
+	      "the list is every name that contains the query");
+	check(u.tmpl_count > 0 &&
+	      strncmp(rel_rows[u.tmpl_rels[0]].name, "perc", 4) == 0,
 	      "a name the query starts is offered before one that contains it");
-	check(strcmp(rel_rows[u.tmpl_rels[1]].name, "percent_error") == 0,
-	      "percent_error is the second of them");
-	check(strcmp(rel_rows[u.tmpl_rels[4]].name, "mass_percent") == 0,
-	      "mass_percent still matches, after the four it starts");
+	check(listed("percent_error"), "percent_error is still found by perc");
+	check(listed("mass_percent"),
+	      "mass_percent still matches, after the ones it starts");
+	{
+		/* The ranking itself: all the names the query starts, then all the
+		 * ones that only contain it. Asserted as an order over whatever
+		 * the catalogue holds rather than over three fixed rows. */
+		int inside_seen = 0, ordered = 1;
+
+		for (int i = 0; i < u.tmpl_count; i++) {
+			int head = strncmp(rel_rows[u.tmpl_rels[i]].name, "perc", 4) == 0;
+
+			if (!head)
+				inside_seen = 1;
+			else if (inside_seen)
+				ordered = 0;
+		}
+		check(ordered, "every prefix match ranks before a mid-name match");
+	}
+	{
+		/* Case is folded: the same query in capitals is the same list in
+		 * the same order, which no count of the table can establish. */
+		unsigned char first = u.tmpl_rels[0];
+		unsigned char last = u.tmpl_rels[u.tmpl_count - 1];
+		int want = u.tmpl_count;
+
+		while (u.input_len > 0)
+			ui_key(&u, UI_KEY_DELETE);
+		type_text("PERC");
+		check(u.tmpl_count == want && u.tmpl_rels[0] == first &&
+		      u.tmpl_rels[want - 1] == last,
+		      "the filter folds case and keeps the order");
+	}
+	/* A space stands for the underscore a name is written with. */
+	while (u.input_len > 0)
+		ui_key(&u, UI_KEY_DELETE);
+	type_text("percent error");
+	check(u.tmpl_count == 1 &&
+	      strcmp(rel_rows[u.tmpl_rels[0]].name, "percent_error") == 0,
+	      "a typed space matches the underscore in a name");
 	render();
 	check(ink_of(UI_INPUT_X, UI_INPUT_Y, 120, 9, SCREEN_WHITE) > 0,
 	      "the query is drawn in the input line");
@@ -843,7 +912,7 @@ static void test_find(void)
 	/* No match: the pane says so, and the hints do not move to make room. */
 	render();
 	footer = hash(0, UI_FOOTER_Y, SCREEN_W, SCREEN_HEIGHT - UI_FOOTER_Y);
-	for (int i = 0; i < 4; i++)
+	while (u.input_len > 0)
 		ui_key(&u, UI_KEY_DELETE);
 	type_text("zz");
 	check(u.tmpl_count == 0, "a query with no match empties the list");

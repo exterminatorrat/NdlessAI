@@ -627,6 +627,191 @@ static int solve_limiting_moles(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_partial_pressure(const char *const *args, char *out,
+                                  size_t outlen)
+{
+	rat n_i, n_total, p_total, t, p;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &n_i, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n_total, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &p_total, NULL)) != 0)
+		return rc;
+	if (n_total.n == 0)
+		return -4;
+	if ((rc = rat_mul(&t, &n_i, &p_total)) != 0 ||
+	    (rc = rat_div(&p, &t, &n_total)) != 0)
+		return rc;
+	if ((rc = dec4_render(p.n, p.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s atm", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_cell_potential(const char *const *args, char *out,
+                                size_t outlen)
+{
+	rat e_cat, e_an, e_cell;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &e_cat, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &e_an, NULL)) != 0)
+		return rc;
+	if ((rc = rat_sub(&e_cell, &e_cat, &e_an)) != 0)
+		return rc;
+	if ((rc = dec4_render(e_cell.n, e_cell.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s V", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_ksp_from_solubility(const char *const *args, char *out,
+                                     size_t outlen)
+{
+	rat s, n, m;
+	long long num = 1, den = 1, g;
+	int rc, i, in, im;
+
+	if ((rc = parse_rat(args[0], &s, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &n, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &m, NULL)) != 0)
+		return rc;
+	if ((rc = rat_norm(&s)) != 0)
+		return rc;
+	if (s.n <= 0 || s.d <= 0 || n.d != 1 || m.d != 1 ||
+	    n.n < 1 || n.n > 8 || m.n < 1 || m.n > 8)
+		return -4;
+	in = (int)n.n;
+	im = (int)m.n;
+
+	/*
+	 * Ksp = (in*s)^in * (im*s)^im with s = sn/sd, so the exact answer is
+	 * in^in * im^im * sn^(in+im) / sd^(in+im). Built as integers rather than
+	 * through rat_mul: rat_norm refuses a numerator or denominator above
+	 * 2e9, and a Ksp of 1e-14 is a denominator of 1e14. The three factors
+	 * are multiplied with an overflow guard, reduced once, and only then
+	 * measured against what the renderer accepts, which is the same test the
+	 * catalogue applies to the reduced rational.
+	 */
+	for (i = 0; i < in; i++) {
+		if (num > P10[17] / in)
+			return -4;
+		num *= in;
+	}
+	for (i = 0; i < im; i++) {
+		if (num > P10[17] / im)
+			return -4;
+		num *= im;
+	}
+	for (i = 0; i < in + im; i++) {
+		if (num > P10[18] / s.n || den > P10[18] / s.d)
+			return -4;
+		num *= s.n;
+		den *= s.d;
+	}
+	g = gcd_ll(num, den);
+	num /= g;
+	den /= g;
+	if (num > WIDE_LIMIT || den > P10[17])
+		return -4;
+	if ((rc = dec4_render(num, den, out, outlen)) != 0)
+		return rc;
+	return 0;
+}
+
+static int solve_beer_lambert(const char *const *args, char *out,
+                              size_t outlen)
+{
+	rat a, eps, l, el, c;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &eps, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &l, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&el, &eps, &l)) != 0)
+		return rc;
+	if (el.n == 0)
+		return -4;
+	if ((rc = rat_div(&c, &a, &el)) != 0)
+		return rc;
+	if ((rc = dec4_render(c.n, c.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_atoms_from_mass(const char *const *args, char *out,
+                                 size_t outlen)
+{
+	rat mass, mm, r, avo = { 6022, 1000 };
+	int rc, e = 0;
+	char f1[48], buf[72];
+
+	if ((rc = parse_rat(args[0], &mass, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &mm, NULL)) != 0)
+		return rc;
+	if (mass.n <= 0 || mm.n <= 0)
+		return -4;
+	if ((rc = rat_mul(&r, &mass, &avo)) != 0 ||
+	    (rc = rat_div(&r, &r, &mm)) != 0)
+		return rc;
+
+	/*
+	 * N = (m/M) * 6.022e23, which is around 1e22 and cannot be one rational
+	 * for dec4_render: its numerator stops at 9e15. Shifting the exact
+	 * rational into [1, 10) before rounding keeps the four printed figures
+	 * identical to the catalogue's dec_exact, and the exponent is printed
+	 * rather than computed.
+	 */
+	while (r.n >= r.d * 10) {
+		if (r.d > P10[17] / 10)
+			return -4;
+		r.d *= 10;
+		e++;
+	}
+	while (r.n < r.d) {
+		if (r.n > WIDE_LIMIT / 10)
+			return -4;
+		r.n *= 10;
+		e--;
+	}
+	if ((rc = dec4_render(r.n, r.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%se+%02d atoms", f1, 23 + e);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_wavelength_from_frequency(const char *const *args, char *out,
+                                           size_t outlen)
+{
+	rat f;
+	long long den;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &f, NULL)) != 0)
+		return rc;
+	/* The argument is in THz, so lambda = 2.998e8 / (f * 1e12) m, which is
+	 * 2998 / (1e7 * f). Built as integers for the same reason as Ksp: the
+	 * answer is a few hundred nanometres, far below rat_norm's 2e9 floor. */
+	if (f.n <= 0 || f.d != 1 || f.n > P10[17] / 10000000LL)
+		return -4;
+	den = f.n * 10000000LL;
+	if ((rc = dec4_render(2998, den, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s m", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -780,6 +965,36 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "heat_reaction") == 0) {
 		if (nargs == 2)
 			rc = solve_heat_reaction(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "partial_pressure") == 0) {
+		if (nargs == 3)
+			rc = solve_partial_pressure(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "cell_potential") == 0) {
+		if (nargs == 2)
+			rc = solve_cell_potential(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ksp_from_solubility") == 0) {
+		if (nargs == 3)
+			rc = solve_ksp_from_solubility(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "beer_lambert") == 0) {
+		if (nargs == 3)
+			rc = solve_beer_lambert(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "atoms_from_mass") == 0) {
+		if (nargs == 2)
+			rc = solve_atoms_from_mass(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "wavelength_from_frequency") == 0) {
+		if (nargs == 1)
+			rc = solve_wavelength_from_frequency(args, out, outlen);
 		else
 			rc = -2;
 	} else {

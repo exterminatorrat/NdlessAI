@@ -362,3 +362,87 @@ TEMPLATES["limiting_moles"] = [
     "Two reagents are weighed out at {mass_a} g and {mass_b} g, with molar masses {mm_a} and {mm_b}. Give the smaller mole value.",
     "Find how many moles the limiting reagent supplies: {mass_a} g of {mm_a} g/mol against {mass_b} g of {mm_b} g/mol.",
 ]
+
+TEMPLATES["partial_pressure"] = [
+    "A gas mixture holds {n_i} mol of one component out of {n_total} mol in total. The total pressure is {P_total} atm. Find the partial pressure of that component.",
+    "Find the partial pressure of {n_i} mol of a gas in a mixture of {n_total} mol whose total pressure is {P_total} atm.",
+    "What is the partial pressure of a component present at {n_i} mol in a mixture of {n_total} mol at {P_total} atm in total?",
+    "{n_i} mol of gas A is mixed with other gases to give {n_total} mol in total at a pressure of {P_total} atm. Find the partial pressure of A.",
+    "Compute the partial pressure of a gas that contributes {n_i} mol to {n_total} mol of mixture held at {P_total} atm.",
+    "A sealed vessel holds {n_i} mol of oxygen among {n_total} mol of gas at a total pressure of {P_total} atm. Determine the partial pressure of the oxygen.",
+    "Determine the partial pressure of a gas of {n_i} mol in a {n_total} mol mixture at {P_total} atm.",
+    "Find the pressure that {n_i} mol exerts in a mixture of {n_total} mol at a total pressure of {P_total} atm.",
+    "Given {n_i} mol of one gas, {n_total} mol of mixture and {P_total} atm of total pressure, find the partial pressure of that gas.",
+    "Exhaled gas holds {n_i} mol of water vapour in {n_total} mol of gas at {P_total} atm. What is the partial pressure of the vapour?",
+    "What partial pressure does a component at {n_i} mol have in a mixture totalling {n_total} mol at {P_total} atm?",
+]
+
+TEMPLATES["cell_potential"] = [
+    "A voltaic cell has a cathode with standard reduction potential {e_cathode} V and an anode with standard reduction potential {e_anode} V. Find the standard cell potential.",
+    "Find the standard cell potential of a cell whose cathode half-reaction has E = {e_cathode} V and whose anode half-reaction has E = {e_anode} V.",
+    "What is the cell potential when the cathode's standard reduction potential is {e_cathode} V and the anode's is {e_anode} V?",
+    "Compute the standard cell potential for a cathode at {e_cathode} V paired with an anode at {e_anode} V.",
+    "A cell is built from a cathode half-cell at {e_cathode} V and an anode half-cell at {e_anode} V. Determine its standard potential.",
+    "Calculate the cell potential for the pair {e_cathode} V at the cathode and {e_anode} V at the anode.",
+    "A galvanic cell couples a cathode at {e_cathode} V to an anode at {e_anode} V. What voltage does it deliver under standard conditions?",
+    "Given a cathode standard potential of {e_cathode} V and an anode standard potential of {e_anode} V, find the standard cell emf.",
+    "Determine the standard cell potential from a cathode at {e_cathode} V and an anode at {e_anode} V.",
+    "A table lists {e_cathode} V for the cathode half-reaction and {e_anode} V for the anode half-reaction. What is the standard cell potential?",
+    "What standard emf results when the cathode half-cell is at {e_cathode} V and the anode half-cell is at {e_anode} V?",
+]
+
+TEMPLATES["ksp_from_solubility"] = [
+    "A sparingly soluble salt dissolves to give {s} mol per litre of dissolved formula units. Each formula unit supplies {cation_count} cations and {anion_count} anions. Find the solubility product constant.",
+    "Find Ksp for a salt whose molar solubility is {s} mol/L and which yields {cation_count} cations and {anion_count} anions per formula unit.",
+    "What is Ksp when {s} mol/L of a salt dissolves, giving {cation_count} cations and {anion_count} anions per formula unit?",
+    "Compute Ksp for a salt of solubility {s} mol/L that dissociates into {cation_count} cations and {anion_count} anions.",
+    "A saturated solution holds {s} mol/L of dissolved salt; each formula unit gives {cation_count} cations and {anion_count} anions. Determine its Ksp.",
+    "Calculate the solubility product for {s} mol/L of a salt producing {cation_count} cations and {anion_count} anions per formula unit.",
+    "Find Ksp for a salt whose molar solubility is {s} mol/L and whose formula contains {cation_count} cations and {anion_count} anions.",
+    "Given a molar solubility of {s} mol/L with {cation_count} cations and {anion_count} anions per formula unit, what is Ksp?",
+    "Determine the solubility product constant of a salt dissolving at {s} mol/L into {cation_count} cations and {anion_count} anions.",
+    "A saturated solution of a salt has a molar solubility of {s} mol/L, releasing {cation_count} cations and {anion_count} anions per formula unit. What is its Ksp?",
+    "What solubility product does a salt have if {s} mol/L dissolves and each unit releases {cation_count} cations and {anion_count} anions?",
+]
+
+TEMPLATES["beer_lambert"] = [
+    "A solution has an absorbance of {A} with a molar absorptivity of {epsilon} L/(mol cm) through a path length of {l} cm. Find its concentration.",
+    "Find the concentration of a solution of absorbance {A}, molar absorptivity {epsilon} L/(mol cm) and path length {l} cm.",
+    "What concentration gives an absorbance of {A} when the molar absorptivity is {epsilon} L/(mol cm) and the cell is {l} cm long?",
+    "Compute the concentration for absorbance {A}, molar absorptivity {epsilon} L/(mol cm), and a path of {l} cm.",
+    "A spectrophotometer reads {A} for a solution of molar absorptivity {epsilon} L/(mol cm), in a cuvette {l} cm thick. Determine its concentration.",
+    "Calculate the concentration from an absorbance of {A}, a molar absorptivity of {epsilon} L/(mol cm), and {l} cm of solution in the light path.",
+    "Find the molarity of a solution of absorbance {A} and molar absorptivity {epsilon} L/(mol cm) measured through {l} cm.",
+    "Given absorbance {A}, molar absorptivity {epsilon} L/(mol cm) and path length {l} cm, what is the concentration?",
+    "Determine the concentration of a sample reading {A} at a molar absorptivity of {epsilon} L/(mol cm) in a {l} cm cell.",
+    "A Beer's law experiment gives {A} for a dye of molar absorptivity {epsilon} L/(mol cm) in a cell {l} cm wide. What is the dye concentration?",
+    "What concentration corresponds to an absorbance of {A} for a species of molar absorptivity {epsilon} L/(mol cm) in a {l} cm path?",
+]
+
+TEMPLATES["atoms_from_mass"] = [
+    "A sample of mass {mass} g has a molar mass of {molar_mass} g/mol. Find the number of atoms in it.",
+    "Find the number of atoms in {mass} g of a substance whose molar mass is {molar_mass} g/mol.",
+    "How many atoms are present in {mass} g of a substance of molar mass {molar_mass} g/mol?",
+    "Compute the atom count for {mass} g of a substance with molar mass {molar_mass} g/mol.",
+    "A {mass} g sample of a metal has molar mass {molar_mass} g/mol. Determine how many atoms it contains.",
+    "Calculate the number of atoms in a sample of {mass} g whose molar mass is {molar_mass} g/mol.",
+    "Find how many atoms {mass} g of a substance represents, given a molar mass of {molar_mass} g/mol.",
+    "Given {mass} g of a substance of molar mass {molar_mass} g/mol, what number of atoms is that?",
+    "Determine the atom count in {mass} g of a compound of molar mass {molar_mass} g/mol.",
+    "How many atoms does {mass} g of a substance of molar mass {molar_mass} g/mol hold?",
+    "What number of atoms is there in {mass} g of material of molar mass {molar_mass} g/mol?",
+]
+
+TEMPLATES["wavelength_from_frequency"] = [
+    "Radiation has a frequency of {frequency_thz} THz. Find its wavelength in metres.",
+    "Find the wavelength in metres of radiation whose frequency is {frequency_thz} THz.",
+    "What wavelength does radiation at {frequency_thz} THz have, in metres?",
+    "Compute the wavelength in metres for a frequency of {frequency_thz} THz.",
+    "A wave oscillates at {frequency_thz} THz. Determine its wavelength in metres.",
+    "Calculate the wavelength of a photon of frequency {frequency_thz} THz, in metres.",
+    "Find the wavelength in metres corresponding to {frequency_thz} THz.",
+    "Given a frequency of {frequency_thz} THz, what is the wavelength in metres?",
+    "Determine the wavelength in metres of electromagnetic radiation at {frequency_thz} THz.",
+    "An ultraviolet lamp runs at {frequency_thz} THz. What is its wavelength in metres?",
+    "What is the wavelength, in metres, of light of frequency {frequency_thz} THz?",
+]

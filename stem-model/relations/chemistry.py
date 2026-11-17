@@ -499,3 +499,166 @@ class LimitingMoles:
     @staticmethod
     def solve(mass_a, mm_a, mass_b, mm_b):
         return dec_exact(min(sp.Rational(mass_a, mm_a), sp.Rational(mass_b, mm_b)))
+
+
+# ---------------------------------------------------------------------------
+# AP Chemistry batch A. The bank's audit named these as relations it could not
+# reach; each is a single exact step over the numbers the sentence states, so
+# each answer is an exact rational of those decimals and the rounding is
+# dec_exact's.
+#
+# Argument order is the order the sentence reads them, not the order the
+# formula is written in on paper. `average_rate_of_change` failed every held-out
+# row because its call had to be reordered out of the sentence, so each of these
+# is checked against its own phrasings in surface/chemistry.py before it lands.
+# ---------------------------------------------------------------------------
+
+
+@relation("partial_pressure", "chemistry", ["n_i", "n_total", "P_total"],
+          exact=False,
+          step=dict(line="P_i = n_i * P_total / n_total",
+                    expr="@1 * @3 / @2"))
+class PartialPressure:
+    @staticmethod
+    def gen(rng):
+        n_total = rng.choice([0.5, 1, 1.5, 2, 2.5, 3, 4, 5])
+        n_i = rng.choice([0.1, 0.2, 0.25, 0.5, 1, 1.5, 2])
+        while n_i >= n_total:
+            n_i = rng.choice([0.1, 0.2, 0.25, 0.5, 1, 1.5, 2])
+        P_total = rng.choice([1, 2, 3, 4, 5, 6, 8, 10])
+        return [n_i, n_total, P_total], (
+            f"A gas mixture contains {n_i} mol of one component out of "
+            f"{n_total} mol of gas in total. The total pressure is "
+            f"{P_total} atm. Find the partial pressure of that component.")
+
+    @staticmethod
+    def solve(n_i, n_total, P_total):
+        p_i = _exact(n_i) * _exact(P_total) / _exact(n_total)
+        return f"{dec_exact(p_i)} atm"
+
+
+@relation("cell_potential", "chemistry", ["e_cathode", "e_anode"],
+          exact=False,
+          step=dict(line="E_cell = E_cathode - E_anode", expr="@1 - @2"))
+class CellPotential:
+    @staticmethod
+    def gen(rng):
+        e_cathode = rng.choice([0.13, 0.34, 0.4, 0.52, 0.8, 1.36, 1.51, 2.87])
+        e_anode = rng.choice([-0.76, -0.44, -0.28, -0.14, 0, 0.13, 0.34, 0.8])
+        return [e_cathode, e_anode], (
+            f"A voltaic cell has a cathode whose standard reduction potential "
+            f"is {e_cathode} V and an anode whose standard reduction potential "
+            f"is {e_anode} V. Find the standard cell potential.")
+
+    @staticmethod
+    def solve(e_cathode, e_anode):
+        return f"{dec_exact(_exact(e_cathode) - _exact(e_anode))} V"
+
+
+@relation("ksp_from_solubility", "chemistry",
+          ["s", "cation_count", "anion_count"], exact=False,
+          step=dict(line="Ksp = (n*s)^n * (m*s)^m",
+                    expr="(@1*@2)^@2 * (@1*@3)^@3"))
+class KspFromSolubility:
+    @staticmethod
+    def _ksp(s, n, m):
+        x = _exact(s)
+        return (x * n) ** n * (x * m) ** m
+
+    @staticmethod
+    def gen(rng):
+        # A salt whose arithmetic leaves the renderer: 1/(1000^5) is fine,
+        # 1/(10000^6) is not, so the combination is drawn until it renders.
+        while True:
+            s = rng.choice([0.001, 0.002, 0.005, 0.01, 0.02, 0.05])
+            n = rng.choice([1, 2, 3])
+            m = rng.choice([1, 2, 3])
+            ksp = KspFromSolubility._ksp(s, n, m)
+            if ksp.p <= 9 * 10 ** 15 and ksp.q <= 10 ** 17:
+                break
+        return [s, n, m], (
+            f"A sparingly soluble salt dissolves to give {s} mol per litre of "
+            f"dissolved formula units. Each formula unit supplies {n} cations "
+            f"and {m} anions. Find the solubility product constant Ksp.")
+
+    @staticmethod
+    def solve(s, n, m):
+        return dec_exact(KspFromSolubility._ksp(s, n, m))
+
+
+@relation("beer_lambert", "chemistry", ["A", "epsilon", "l"], exact=False,
+          step=dict(line="c = A / (epsilon * l)", expr="@1 / (@2 * @3)"))
+class BeerLambert:
+    @staticmethod
+    def gen(rng):
+        A = rng.choice([0.15, 0.25, 0.3, 0.45, 0.6, 0.75, 0.9])
+        epsilon = rng.choice([150, 1200, 1500, 2500, 4000])
+        l = rng.choice([1, 2, 5])
+        return [A, epsilon, l], (
+            f"A solution has an absorbance of {A} at a wavelength where its "
+            f"molar absorptivity is {epsilon} L/(mol cm), measured through a "
+            f"path length of {l} cm. Find its concentration.")
+
+    @staticmethod
+    def solve(A, epsilon, l):
+        return f"{dec_exact(_exact(A) / (_exact(epsilon) * _exact(l)))} mol/L"
+
+
+@relation("atoms_from_mass", "chemistry", ["mass", "molar_mass"], exact=False,
+          step=dict(line="N = (m/M) * 6.022e23", expr="@1 / @2 * 6.022 * 10^23"))
+class AtomsFromMass:
+    @staticmethod
+    def _normalised(mass, molar_mass):
+        """N as a mantissa in [1, 10) and the exponent it belongs to.
+
+        The renderer takes a numerator up to 9e15 and an atom count is around
+        1e22, so the answer cannot be one rational handed to dec4_render. It is
+        the same number written in scientific notation, with the shifting done
+        on the exact rational before any rounding, so both sides print the same
+        four figures.
+        """
+
+        r = _exact(mass) / _exact(molar_mass) * sp.Rational(6022, 1000)
+        e = 0
+        while r >= 10:
+            r /= 10
+            e += 1
+        while r < 1:
+            r *= 10
+            e -= 1
+        return r, 23 + e
+
+    @staticmethod
+    def gen(rng):
+        mass = rng.choice([1, 2, 5, 10, 18, 25, 44, 58, 100, 180, 250])
+        mm = rng.choice([18, 44, 58.5, 98, 142, 180, 342])
+        return [mass, mm], (
+            f"A sample of a substance has a mass of {mass} g and a molar mass "
+            f"of {mm} g/mol. Find the number of atoms in the sample, using "
+            f"6.022 x 10^23 for Avogadro's number.")
+
+    @staticmethod
+    def solve(mass, molar_mass):
+        mant, e = AtomsFromMass._normalised(mass, molar_mass)
+        return f"{dec_exact(mant)}e+{e:02d} atoms"
+
+
+@relation("wavelength_from_frequency", "chemistry", ["frequency_thz"],
+          exact=False,
+          step=dict(line="lambda = c / f, c = 2.998e8 m/s",
+                    expr="2.998 * 10^8 / (@1 * 10^12)"))
+class WavelengthFromFrequency:
+    @staticmethod
+    def gen(rng):
+        f = rng.choice([150, 200, 300, 400, 500, 600, 750, 900, 1000])
+        return [f], (
+            f"Electromagnetic radiation has a frequency of {f} THz. Find its "
+            f"wavelength in metres, using 2.998 x 10^8 m/s for the speed of "
+            f"light.")
+
+    @staticmethod
+    def solve(frequency_thz):
+        # c = 2.998e8 m/s and the argument is in THz, so the constant that
+        # survives is c * 1e-12 = 2.998e-4 m per (1/THz).
+        lam = sp.Rational(2998, 10) * 10 ** -6 / _exact(frequency_thz)
+        return f"{dec_exact(lam)} m"

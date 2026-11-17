@@ -20,17 +20,20 @@
  * Calibrated, not chosen: the split was swept one threshold at a time on the
  * 2,150-row hand-written eval split and the 2,000-row generated gate, two seeds
  * each, and the trade measured is "answers that were wrong and are now refused"
- * against "answers that were right and are now refused". This value catches 29
- * wrong answers for 10 right ones on the hand-written split (2.9:1, 74% of the
- * refusals avoiding a wrong answer) and 4 wrong for 2 right on the generated
- * gate. Above it the ratio falls and keeps falling: at 5,000 the hand-written
- * trade is 113 to 54.
+ * against "answers that were right and are now refused". This value catches 22
+ * wrong answers for 7 right ones on the hand-written split (3.1:1, 76% of the
+ * refusals avoiding a wrong answer, 19 of the 22 wrong on the relation itself)
+ * and 1 wrong for 1 right on the generated gate. The curve is flat either side
+ * of it: 250 catches 10 for 4 (2.5:1), 750 catches 29 for 10 (2.9:1), 2,000
+ * catches 56 for 22 (2.5:1). Inside that band the choice is a taste call, and
+ * this is the lowest threshold swept that reaches the 3:1 the ratio test asks
+ * for; past 3,000 the ratio falls and keeps falling.
  *
  * The units are pipeline_alt_t.margin's: the gap between the two best relation
  * logits, in fixed point. A margin of zero is an exact tie, and the largest gap
  * this model produces is about 51,000.
  */
-#define RELATION_MARGIN_MIN 750
+#define RELATION_MARGIN_MIN 500
 
 #define PROMPT_SUFFIX " <sep>"
 #define MAX_GEN 20

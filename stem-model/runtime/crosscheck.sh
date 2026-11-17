@@ -14,11 +14,12 @@ OUT=${TMPDIR:-/tmp}/nsm-arm-check
 command -v "$CC" >/dev/null 2>&1 || { echo "skip: $CC not found"; exit 77; }
 
 mkdir -p "$OUT"
+# Revised 2026-11-17: check both course routing and local quantity checks.
 # Every source file on the device path. A new one must be added here or the
 # link below fails with undefined references, which is how expr.c was caught.
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
          solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern formula infer pipeline main_device graph diagram expr \
-         callmask matrix shorthand plan grounding repair steps screen ui coursemap; do
+         callmask matrix shorthand plan grounding repair quantity steps screen ui coursemap; do
     # shellcheck disable=SC2086
     $CC $ARCH -I. -c "$f.c" -o "$OUT/$f.o"
 done
@@ -41,7 +42,7 @@ done
 
 status=0
 for f in bpe fixed solvers solvers_math equation solvers_trig solvers_physics \
-         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern formula graph diagram expr callmask matrix shorthand plan grounding repair steps screen ui coursemap; do
+         solvers_chem solvers_thermo solvers_em solvers_units solvers_optics solvers_waves solvers_fluids solvers_modern formula graph diagram expr callmask matrix shorthand plan grounding repair quantity steps screen ui coursemap; do
     # Two named functions own their soft-float, and nothing else may: qstate_init
     # builds the rope and activation tables once at startup, and solve_exp's
     # fallback for an exponent that is not a rational power of the base renders

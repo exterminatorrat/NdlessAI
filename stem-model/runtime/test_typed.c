@@ -163,6 +163,47 @@ static void check_a_fractional_rate_is_a_rate(void)
 	}
 }
 
+/*
+ * The law of cosines, at magnitudes that overflowed it.
+ *
+ * The solver took its square root at a scale whose product wrapped above
+ * c^2 = 1.8e7, and built c^2 with a remainder times 1e9 that overflowed long
+ * before that — undefined behaviour, which is why 5.5 11.25 90 answered 12.49
+ * for a side of 12.52. Both are fixed; a product that cannot be held refuses.
+ */
+static void check_a_large_triangle_is_not_a_wrong_side(void)
+{
+	static const char *const sides[][2] = {
+		{ "law_cosines 5 11 135", "14.96" },
+		{ "law_cosines 5.5 11.25 90", "12.52" },
+		{ "law_cosines 2000 4000 135", "5596" },
+		{ "law_cosines 3000 6000 135", "8394" },
+		{ "law_cosines 5000 11000 135", "1.496e+04" },
+		{ "law_cosines 100000 200000 135", NULL },
+	};
+	char got[64];
+
+	for (int i = 0; i < (int)(sizeof sides / sizeof sides[0]); i++) {
+		int rc = pipeline_answer_offline(sides[i][0], got, (int)sizeof got,
+		                                NULL, 0);
+
+		if (sides[i][1] == NULL) {
+			if (rc == PIPELINE_OFFLINE_ANSWERED) {
+				printf("FAIL %s -> %s, wanted a refusal\n",
+				       sides[i][0], got);
+				failures++;
+			}
+			continue;
+		}
+		if (rc != PIPELINE_OFFLINE_ANSWERED || strcmp(got, sides[i][1])) {
+			printf("FAIL %s -> %s (rc %d), wanted %s\n", sides[i][0],
+			       rc == PIPELINE_OFFLINE_ANSWERED ? got : "-", rc,
+			       sides[i][1]);
+			failures++;
+		}
+	}
+}
+
 static void check_no_value_is_not_a_number(void)
 {
 	static const char *const useless[] = {
@@ -271,6 +312,7 @@ int main(void)
 	check_no_value_is_not_a_number();
 	check_a_large_index_is_not_a_wrong_angle();
 	check_a_fractional_rate_is_a_rate();
+	check_a_large_triangle_is_not_a_wrong_side();
 
 	if (failures) {
 		printf("%d failure(s)\n", failures);

@@ -134,11 +134,25 @@ static int solve_law_sines(const char *const *args, char *out, size_t outlen)
 	return 0;
 }
 
+/* x*y, or 0 when the product would not fit a long long. The law of cosines
+ * multiplies four factors at a time, and an overflowed product answered a wrong
+ * side: 100000 200000 135 gave 6.706e+04 where the side is 279793. */
+static int mul_fits(long long x, long long y, long long *out)
+{
+	unsigned long long ax = x < 0 ? -(unsigned long long)x : (unsigned long long)x;
+	unsigned long long ay = y < 0 ? -(unsigned long long)y : (unsigned long long)y;
+
+	if (ax != 0 && ay > 9200000000000000000ULL / ax)
+		return 0;
+	*out = (long long)((x < 0) != (y < 0) ? 0ULL - ax * ay : ax * ay);
+	return 1;
+}
+
 static int solve_law_cosines(const char *const *args, char *out, size_t outlen)
 {
 	rat a, b, C;
 	int rc, eC;
-	long long sC, num, den, c2_9, c6, rr;
+	long long sC, num, den, c2_9, c6, rr, sq, unit, ta, tb, t, cross;
 	char f1[48];
 
 	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
@@ -151,18 +165,58 @@ static int solve_law_cosines(const char *const *args, char *out, size_t outlen)
 	sC = sin9(C.n + 90LL * P10[eC], eC, &rc);
 	if (rc != 0)
 		return rc;
-	num = (a.n * a.n * b.d * b.d + b.n * b.n * a.d * a.d) * 1000000000LL
-	      - 2 * a.n * b.n * a.d * b.d * sC;
-	den = a.d * a.d * b.d * b.d * 1000000000LL;
+	if (!mul_fits(a.n, a.n, &ta) || !mul_fits(b.d, b.d, &t) ||
+	    !mul_fits(ta, t, &ta))
+		return -4;
+	if (!mul_fits(b.n, b.n, &tb) || !mul_fits(a.d, a.d, &t) ||
+	    !mul_fits(tb, t, &tb))
+		return -4;
+	if (!mul_fits(a.n, b.n, &t) || !mul_fits(t, a.d, &t) ||
+	    !mul_fits(t, b.d, &t) || !mul_fits(t, sC, &cross))
+		return -4;
+	if (!mul_fits(ta + tb, 1000000000LL, &num) || !mul_fits(2, cross, &cross))
+		return -4;
+	num -= cross;
+	if (!mul_fits(a.d, a.d, &t) || !mul_fits(t, b.d, &t) ||
+	    !mul_fits(t, b.d, &den) || !mul_fits(den, 1000000000LL, &den))
+		return -4;
 	if (num <= 0 || den <= 0)
 		return -4;
-	c2_9 = (num / den) * 1000000000LL + ((num % den) * 1000000000LL) / den;
+	if (den > 900000000000000000LL)
+		return -4;
+	/* c^2 at 1e9, as the quotient plus nine digits of the remainder taken one at
+	 * a time: (num % den) * 1e9 overflows a long long, and a product that
+	 * overflows is undefined — it answered 12.49 for a side of 12.52. */
+	{
+		long long q = num / den, r = num % den, frac = 0;
+
+		if (q > 9000000000LL)
+			return -4;
+		for (int i = 0; i < 9; i++) {
+			r *= 10;
+			frac = frac * 10 + r / den;
+			r %= den;
+		}
+		c2_9 = q * 1000000000LL + frac;
+	}
 	if (c2_9 <= 0)
 		return -4;
-	c6 = (long long)isqrt64((unsigned long long)c2_9 * 1000ULL);
-	rr = c2_9 * 1000LL - c6 * c6;
+	/* c = sqrt(c2_9/1e9). The root is wanted at a scale that keeps the
+	 * product inside a long long: c2_9 * 1000 overflows above c^2 = 1.8e7,
+	 * which answered 3587 for law_cosines 2000 4000 135 where the side is
+	 * 5596. Above that the product is divided down instead, at the cost of
+	 * one significant figure that dec4_render does not print anyway. */
+	if (c2_9 <= 18000000000000000LL) {
+		sq = c2_9 * 1000LL;
+		unit = 1000000LL;
+	} else {
+		sq = c2_9 / 10;
+		unit = 10000LL;
+	}
+	c6 = (long long)isqrt64((unsigned long long)sq);
+	rr = sq - c6 * c6;
 	c6 += div_round(rr, 2 * c6);
-	if ((rc = dec4_render(c6, 1000000LL, f1, sizeof(f1))) != 0)
+	if ((rc = dec4_render(c6, unit, f1, sizeof(f1))) != 0)
 		return rc;
 	out_set(out, outlen, f1);
 	return 0;

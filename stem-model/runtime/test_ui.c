@@ -697,6 +697,54 @@ static void test_errors(void)
 	      "a mismatch is named whatever verdict came with it");
 	check(!rows_have("not in the question"),
 	      "and is not reported as the question's own numbers");
+
+	/*
+	 * Arithmetic too big for the exact engine. No model is consulted for it and
+	 * nothing was guessed, so the screen must not reach for the weights or the
+	 * tokenizer even when the loaded weights are the mismatched ones above: the
+	 * refusal is a property of the expression, not of the build.
+	 */
+	ui_result(&u, "q", PIPELINE_TOO_LONG, "", "");
+	render();
+	check(band_is_text(UI_PANE_Y,
+	                   "That is arithmetic this build cannot work out.",
+	                   SCREEN_WHITE),
+	      "arithmetic the engine cannot hold draws its own headline");
+	check(band_is_text(UI_PANE_Y + 3 * SCREEN_LINE_H,
+	                   "a formula goes. Split it into two steps,", SCREEN_DIM),
+	      "and says to split it, under a dimmed explanation");
+	check(!rows_have("weights.bin.tns") && !rows_have("tokenizer") &&
+	      !rows_have("vocabulary"),
+	      "a too-long expression blames neither the weights nor the tokenizer");
+	check(u.nrows <= UI_PANE_ROWS, "the too-long note fits the pane");
+
+	/*
+	 * The same question on a calculator with no weights file at all. This is the
+	 * calculator arithmetic-only work lives on, so a 65-term sum has to reach
+	 * the arithmetic answer rather than the missing-model one.
+	 */
+	ui_init(&u, NULL, "weights.bin.tns is not beside this program.");
+	ui_key(&u, UI_KEY_MODE);
+	{
+		char sum[130];
+		int n = 0;
+
+		for (int i = 0; i < 65; i++) {
+			if (i)
+				sum[n++] = '+';
+			sum[n++] = '1';
+		}
+		sum[n] = '\0';
+		check((int)strlen(sum) > 127, "the test sum is past the engine's pool");
+		ask(sum);
+	}
+	render();
+	check(band_is_text(UI_PANE_Y,
+	                   "That is arithmetic this build cannot work out.",
+	                   SCREEN_WHITE),
+	      "a sum the engine cannot hold answers without a model too");
+	check(!rows_have("No model file"), "and is not reported as a missing model");
+	check(!rows_have("weights.bin.tns"), "with no file blamed for it");
 }
 
 /* ---- the working above the answer ---- */

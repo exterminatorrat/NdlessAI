@@ -166,6 +166,12 @@ TEMPLATES = {
     "faraday_deposit": "A second cell in the same experiment passes {n} faraday.",
     "rate_factor": "A second run of the same reaction doubles the first concentration {n} times.",
     "mass_from_molarity": "A second portion in the same problem measures {n} L.",
+    "gas_mixture_pressure": "A second vessel in the same problem holds {n} L.",
+    "mixture_final_temperature": "A third sample in the same problem sits at {n} K.",
+    "stoich_volume_gas": "A second product in the same reaction has a mole ratio of {n}.",
+    "mass_from_percent_composition": "A second sample in the same problem has a mass of {n} g.",
+    "ph_of_water": "A second row of the same table gives pKw = {n}.",
+    "vsepr_bond_angle": "A second molecule in the same exercise has {n} electron domains.",
 }
 
 POOLS = {
@@ -219,6 +225,12 @@ POOLS = {
     "faraday_deposit": [0.1, 0.2, 0.25, 0.5, 1, 2],
     "rate_factor": [2, 3, 4, 5],
     "mass_from_molarity": [0.25, 0.5, 1, 2, 2.5],
+    "gas_mixture_pressure": [1, 2, 5, 10, 20, 25],
+    "mixture_final_temperature": [280, 290, 300, 310, 320, 340, 373],
+    "stoich_volume_gas": [1, 2, 3, 4, 5],
+    "mass_from_percent_composition": [10, 20, 50, 100, 200, 250],
+    "ph_of_water": [12.26, 13.26, 13.99, 14.17, 14.94],
+    "vsepr_bond_angle": [2, 3, 4, 6],
 }
 
 

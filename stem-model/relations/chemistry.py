@@ -827,3 +827,150 @@ class MassFromMolarity:
     @staticmethod
     def solve(c, V, molar_mass):
         return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"
+
+
+# ---------------------------------------------------------------------------
+# AP Chemistry batch C. Five of these are one exact step each, like the two
+# batches before them. The sixth, vsepr_bond_angle, is a table rather than a
+# computation and carries no `step`: there is no working to show for a lookup,
+# and a fabricated `expr` is exactly the plausible-wrong display check_steps.py
+# exists to catch.
+# ---------------------------------------------------------------------------
+
+
+@relation("gas_mixture_pressure", "chemistry", ["P_i", "V_i", "V_f"],
+          exact=False,
+          step=dict(line="P_f = P_i * V_i / V_f", expr="@1 * @2 / @3"))
+class GasMixturePressure:
+    @staticmethod
+    def gen(rng):
+        P_i = rng.choice([0.5, 1, 1.5, 2, 3, 4])
+        V_i = rng.choice([1, 2, 5, 10, 20])
+        V_f = rng.choice([1, 2, 5, 10, 20, 25, 50])
+        while V_f == V_i:
+            V_f = rng.choice([1, 2, 5, 10, 20, 25, 50])
+        return [P_i, V_i, V_f], (
+            f"One component of a gas mixture exerts {P_i} atm while it occupies "
+            f"{V_i} L. The mixture is transferred to a {V_f} L vessel at "
+            f"constant temperature. Find that component's new partial "
+            f"pressure.")
+
+    @staticmethod
+    def solve(P_i, V_i, V_f):
+        return f"{dec_exact(_exact(P_i) * _exact(V_i) / _exact(V_f))} atm"
+
+
+@relation("mixture_final_temperature", "chemistry", ["m1", "T1", "m2", "T2"],
+          exact=False,
+          step=dict(line="T = (m1*T1 + m2*T2) / (m1 + m2)",
+                    expr="(@1 * @2 + @3 * @4) / (@1 + @3)"))
+class MixtureFinalTemperature:
+    @staticmethod
+    def gen(rng):
+        m1 = rng.choice([10, 20, 25, 50, 75, 100, 150, 200])
+        T1 = rng.choice([280, 285, 290, 295, 300, 310, 320, 340, 350, 373])
+        m2 = rng.choice([10, 20, 25, 50, 75, 100, 150, 200])
+        T2 = rng.choice([280, 285, 290, 295, 300, 310, 320, 340, 350, 373])
+        while T2 == T1:
+            T2 = rng.choice([280, 285, 290, 295, 300, 310, 320, 340, 350, 373])
+        return [m1, T1, m2, T2], (
+            f"A mass of {m1} g of water at {T1} K is mixed with {m2} g of water "
+            f"at {T2} K in an insulated container. Find the final temperature.")
+
+    @staticmethod
+    def solve(m1, T1, m2, T2):
+        total = _exact(m1) * _exact(T1) + _exact(m2) * _exact(T2)
+        return f"{dec_exact(total / (_exact(m1) + _exact(m2)))} K"
+
+
+@relation("stoich_volume_gas", "chemistry", ["V_given", "ratio"], exact=False,
+          step=dict(line="V = V_given * ratio", expr="@1 * @2"))
+class StoichVolumeGas:
+    @staticmethod
+    def gen(rng):
+        V_given = rng.choice([1, 2, 2.5, 5, 10, 20, 22.4, 44.8])
+        ratio = rng.choice([1, 2, 3, 4, 5])
+        return [V_given, ratio], (
+            f"{V_given} L of a gaseous reactant is consumed at constant "
+            f"temperature and pressure. Each mole of it produces {ratio} mol of "
+            f"gaseous product. Find the volume of product formed.")
+
+    @staticmethod
+    def solve(V_given, ratio):
+        return f"{dec_exact(_exact(V_given) * _exact(ratio))} L"
+
+
+@relation("mass_from_percent_composition", "chemistry",
+          ["percent", "total_mass"], exact=False,
+          step=dict(line="m = percent / 100 * total_mass", expr="@1 / 100 * @2"))
+class MassFromPercentComposition:
+    @staticmethod
+    def gen(rng):
+        percent = rng.choice([5, 10, 12.5, 20, 25, 40, 50, 62.5])
+        total_mass = rng.choice([10, 20, 50, 100, 200, 250, 500])
+        return [percent, total_mass], (
+            f"A sample is {percent} percent of one element by mass and has a "
+            f"total mass of {total_mass} g. Find the mass of that element in "
+            f"the sample.")
+
+    @staticmethod
+    def solve(percent, total_mass):
+        return f"{dec_exact(_exact(percent) / 100 * _exact(total_mass))} g"
+
+
+@relation("ph_of_water", "chemistry", ["pkw"], exact=False,
+          step=dict(line="pH = pKw / 2", expr="@1 / 2"))
+class PhOfWater:
+    @staticmethod
+    def gen(rng):
+        # pKw, not Kw. The audit asked for (Kw, T); Kw at 25 C is 1e-14 and the
+        # runtime's logarithm takes a denominator up to 1e9, so Kw would have to
+        # be rescaled before it could be read at all. pKw is the same
+        # information, is what a table prints, and makes the answer one exact
+        # halving: [H+] = sqrt(Kw), so pH = pKw/2 with no root and no log.
+        pkw = rng.choice([12.26, 13.26, 13.62, 13.99, 14, 14.17, 14.94])
+        return [pkw], (
+            f"At a particular temperature the ionic product of water makes "
+            f"pKw = {pkw}. Find the pH of pure water at that temperature.")
+
+    @staticmethod
+    def solve(pkw):
+        return dec_exact(_exact(pkw) / 2)
+
+
+VSEPR_ANGLES = {
+    (2, 0): sp.Rational(180),
+    (3, 0): sp.Rational(120),
+    (4, 0): sp.Rational(1095, 10),
+    (3, 1): sp.Rational(107),
+    (2, 2): sp.Rational(1045, 10),
+    (6, 0): sp.Rational(90),
+}
+
+
+@relation("vsepr_bond_angle", "chemistry",
+          ["electron_domains", "lone_pairs"], exact=False)
+class VseprBondAngle:
+    """The bond angle VSEPR assigns to a shape, read from a table.
+
+    This computes nothing: it looks the shape up. Shapes with two distinct bond
+    angles, such as the trigonal bipyramid, are deliberately absent, because a
+    single-number answer for them would have to choose between 90 and 120
+    degrees and would be wrong about half the bonds either way. Anything not in
+    the table is refused rather than guessed.
+    """
+
+    @staticmethod
+    def gen(rng):
+        domains, lone = rng.choice(sorted(VSEPR_ANGLES))
+        return [domains, lone], (
+            f"A molecule has {domains} electron domains around its central atom "
+            f"and {lone} of them are lone pairs. Find its bond angle in "
+            f"degrees, from the VSEPR table.")
+
+    @staticmethod
+    def solve(electron_domains, lone_pairs):
+        key = (int(electron_domains), int(lone_pairs))
+        if key not in VSEPR_ANGLES:
+            raise ValueError(f"no single bond angle is tabulated for {key}")
+        return dec_exact(VSEPR_ANGLES[key])

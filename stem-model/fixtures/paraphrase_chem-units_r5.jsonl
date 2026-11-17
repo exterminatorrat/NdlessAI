@@ -22,3 +22,51 @@
 {"relation": "wavelength_from_frequency", "args": [750], "question": "A laser runs at 750 THz. Find its wavelength in metres.", "split": "eval"}
 {"relation": "wavelength_from_frequency", "args": [200], "question": "Radiation at 200 THz is used in a photolysis experiment. What is its wavelength in metres?", "split": "eval"}
 {"relation": "wavelength_from_frequency", "args": [900], "question": "Find the wavelength in metres of a wave whose frequency is 900 THz.", "split": "eval"}
+{"relation": "percent_dissociation", "args": [1, 0.0001], "question": "A weak acid solution is 1 mol/L in the acid and has Ka = 0.0001. What percent of it dissociates?", "split": "eval"}
+{"relation": "percent_dissociation", "args": [0.5, 0.00012], "question": "Ka for a weak acid is 0.00012 at a formal concentration of 0.5 mol/L. Find the percent dissociation.", "split": "eval"}
+{"relation": "percent_dissociation", "args": [1, 0.00029], "question": "A 1 mol/L solution of a weak acid with Ka = 0.00029. What percentage of the acid ionizes?", "split": "eval"}
+{"relation": "percent_dissociation", "args": [2, 0.0004], "question": "At 2 mol/L a weak acid has Ka = 0.0004. What percent of the acid dissociates?", "split": "eval"}
+{"relation": "mixing_concentration", "args": [25, 0.2, 50, 1], "question": "25 mL of a 0.2 mol/L solution is added to 50 mL of a 1 mol/L solution of the same salt. Find the resulting concentration.", "split": "eval"}
+{"relation": "mixing_concentration", "args": [40, 1.5, 60, 0.5], "question": "A 40 mL portion of a 1.5 mol/L solution is poured into 60 mL of a 0.5 mol/L solution of the same solute. What concentration results?", "split": "eval"}
+{"relation": "mixing_concentration", "args": [100, 0.1, 20, 2], "question": "100 mL at 0.1 mol/L is combined with 20 mL at 2 mol/L of the same substance. Find the final concentration.", "split": "eval"}
+{"relation": "mixing_concentration", "args": [15, 3, 35, 1], "question": "15 mL of a 3 mol/L acid and 35 mL of a 1 mol/L acid of the same kind are poured together. What is the acid's new concentration?", "split": "eval"}
+{"relation": "hydrate_water", "args": [232, 160, 160, 18], "question": "A 232 g sample of a hydrate loses its water on heating to leave 160 g of the anhydrous salt of molar mass 160 g/mol; water is 18 g/mol. How many moles of water are there per mole of salt?", "split": "eval"}
+{"relation": "hydrate_water", "args": [466, 286, 286, 18], "question": "Heating 466 g of a hydrate leaves 286 g of anhydrous salt whose molar mass is 286 g/mol, water having molar mass 18 g/mol. Find the water-to-salt mole ratio.", "split": "eval"}
+{"relation": "hydrate_water", "args": [464, 284, 142, 18], "question": "464 g of a hydrated salt gives up its water to leave 284 g of the anhydrous compound of molar mass 142 g/mol; water is 18 g/mol. What number of waters per formula unit does that correspond to?", "split": "eval"}
+{"relation": "hydrate_water", "args": [156, 120, 120, 18], "question": "A hydrate of initial mass 156 g weighs 120 g after the water is removed; the anhydrous salt has molar mass 120 g/mol and water 18 g/mol. Determine the moles of water per mole of anhydrous salt.", "split": "eval"}
+{"relation": "faraday_deposit", "args": [1, 2, 63.55], "question": "1 faraday of charge is passed through a solution whose ions take 2 electrons each to plate a metal of molar mass 63.55 g/mol. What mass is deposited?", "split": "eval"}
+{"relation": "faraday_deposit", "args": [0.5, 3, 26.98], "question": "0.5 faraday of charge passes through a bath where each ion needs 3 electrons and the metal is 26.98 g/mol. Find the mass deposited.", "split": "eval"}
+{"relation": "faraday_deposit", "args": [2, 1, 107.87], "question": "2 faraday of charge through a solution of ions taking 1 electron each, depositing a metal of molar mass 107.87 g/mol. What mass of metal forms?", "split": "eval"}
+{"relation": "faraday_deposit", "args": [0.25, 2, 65.38], "question": "0.25 faraday is passed and the ion takes 2 electrons; the metal's molar mass is 65.38 g/mol. How many grams plate out?", "split": "eval"}
+{"relation": "rate_factor", "args": [2, 1, 2, 1], "question": "The concentration of the first reactant is multiplied by 2 and it is first order; the second is also multiplied by 2 and is first order. By what factor does the rate change?", "split": "eval"}
+{"relation": "rate_factor", "args": [2, 2, 3, 1], "question": "The first reactant's concentration is multiplied by 2 and its order is 2; the second is multiplied by 3 with order 1. Find the factor by which the rate changes.", "split": "eval"}
+{"relation": "rate_factor", "args": [0.5, 1, 2, 2], "question": "One concentration is multiplied by 0.5 with order 1 and another by 2 with order 2. What factor multiplies the rate?", "split": "eval"}
+{"relation": "rate_factor", "args": [3, 0, 2, 1], "question": "The first concentration is multiplied by 3 but its order is 0; the second is multiplied by 2 with order 1. What is the rate factor?", "split": "eval"}
+{"relation": "mass_from_molarity", "args": [0.5, 2, 58.5], "question": "2 L of a 0.5 mol/L salt solution whose molar mass is 58.5 g/mol. How many grams of solute does it hold?", "split": "eval"}
+{"relation": "mass_from_molarity", "args": [1.5, 0.5, 98], "question": "A 0.5 L portion of a 1.5 mol/L solution of molar mass 98 g/mol. Find the mass of solute in it.", "split": "eval"}
+{"relation": "mass_from_molarity", "args": [0.25, 4, 142], "question": "4 L of a 0.25 mol/L solution of a solute of molar mass 142 g/mol. What mass is dissolved in it?", "split": "eval"}
+{"relation": "mass_from_molarity", "args": [2, 2.5, 180], "question": "2.5 L at 2 mol/L of a substance of molar mass 180 g/mol. Give the mass of solute present.", "split": "eval"}
+{"relation": "gas_mixture_pressure", "args": [1, 10, 2], "question": "A gas component exerting 1 atm in 10 L is compressed to 2 L at constant temperature. What is its new partial pressure?", "split": "eval"}
+{"relation": "gas_mixture_pressure", "args": [0.5, 5, 20], "question": "0.5 atm of a component fills 5 L, and the mixture is expanded to 20 L at the same temperature. Find that component's partial pressure.", "split": "eval"}
+{"relation": "gas_mixture_pressure", "args": [3, 2, 10], "question": "A component at 3 atm in a 2 L vessel is transferred to a 10 L vessel. What partial pressure does it now exert?", "split": "eval"}
+{"relation": "gas_mixture_pressure", "args": [2, 25, 50], "question": "A component exerts 2 atm while occupying 25 L and is then held in 50 L at constant temperature. Find its partial pressure.", "split": "eval"}
+{"relation": "mixture_final_temperature", "args": [100, 350, 50, 290], "question": "100 g of water at 350 K is mixed with 50 g of water at 290 K in an insulated cup. Find the final temperature.", "split": "eval"}
+{"relation": "mixture_final_temperature", "args": [20, 373, 80, 293], "question": "20 g of water at 373 K is added to 80 g at 293 K. What temperature do they reach together?", "split": "eval"}
+{"relation": "mixture_final_temperature", "args": [50, 300, 150, 320], "question": "Mixing 50 g of water at 300 K with 150 g at 320 K, and losing no heat, gives what final temperature?", "split": "eval"}
+{"relation": "mixture_final_temperature", "args": [200, 280, 200, 340], "question": "200 g of water at 280 K meets 200 g at 340 K in an insulated container. Find the equilibrium temperature.", "split": "eval"}
+{"relation": "stoich_volume_gas", "args": [2, 3], "question": "2 L of a gaseous reactant is consumed and each mole gives 3 mol of gaseous product at the same temperature and pressure. What volume of product forms?", "split": "eval"}
+{"relation": "stoich_volume_gas", "args": [10, 2], "question": "10 L of gas reacts at constant pressure and temperature, yielding 2 mol of product gas per mole consumed. Find the product volume.", "split": "eval"}
+{"relation": "stoich_volume_gas", "args": [22.4, 1], "question": "22.4 L of a gaseous reactant reacts one mole to one mole of product gas at constant temperature and pressure. What volume of product results?", "split": "eval"}
+{"relation": "stoich_volume_gas", "args": [5, 4], "question": "A reaction consumes 5 L of gas and produces 4 mol of gas for each mole consumed, at constant temperature and pressure. What volume of gas is produced?", "split": "eval"}
+{"relation": "mass_from_percent_composition", "args": [12.5, 200], "question": "A 200 g sample analyses as 12.5 percent of one element by mass. What mass of that element does it contain?", "split": "eval"}
+{"relation": "mass_from_percent_composition", "args": [25, 100], "question": "An element makes up 25 percent by mass of a 100 g sample. Find the mass of the element.", "split": "eval"}
+{"relation": "mass_from_percent_composition", "args": [62.5, 50], "question": "Taking a 50 g sample that is 62.5 percent one element, how many grams of that element are present?", "split": "eval"}
+{"relation": "mass_from_percent_composition", "args": [40, 250], "question": "What mass of element is in 250 g of material that is 40 percent that element by mass?", "split": "eval"}
+{"relation": "ph_of_water", "args": [14], "question": "At 25 degrees Celsius pKw = 14. Find the pH of pure water there.", "split": "eval"}
+{"relation": "ph_of_water", "args": [14.94], "question": "Pure water at 0 degrees Celsius has pKw = 14.94. What is its pH?", "split": "eval"}
+{"relation": "ph_of_water", "args": [13.62], "question": "Where pKw = 13.62, what pH does neutral water show?", "split": "eval"}
+{"relation": "ph_of_water", "args": [12.26], "question": "Water at a high temperature has pKw = 12.26. Find its pH.", "split": "eval"}
+{"relation": "vsepr_bond_angle", "args": [4, 0], "question": "A central atom carries 4 electron domains and 0 lone pairs. What bond angle does the VSEPR table give?", "split": "eval"}
+{"relation": "vsepr_bond_angle", "args": [3, 1], "question": "With 3 electron domains and 1 lone pair, what bond angle should the molecule show?", "split": "eval"}
+{"relation": "vsepr_bond_angle", "args": [2, 0], "question": "A linear arrangement of 2 electron domains with 0 lone pairs: what is the bond angle in degrees?", "split": "eval"}
+{"relation": "vsepr_bond_angle", "args": [2, 2], "question": "2 electron domains and 2 lone pairs around the central atom. Give the bond angle it implies.", "split": "eval"}

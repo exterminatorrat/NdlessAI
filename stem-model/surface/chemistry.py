@@ -446,3 +446,171 @@ TEMPLATES["wavelength_from_frequency"] = [
     "An ultraviolet lamp runs at {frequency_thz} THz. What is its wavelength in metres?",
     "What is the wavelength, in metres, of light of frequency {frequency_thz} THz?",
 ]
+
+TEMPLATES["percent_dissociation"] = [
+    "A weak acid of concentration {c0} mol/L has Ka = {Ka}. Find its percent dissociation.",
+    "Find the percent dissociation of a {c0} mol/L weak acid whose Ka is {Ka}.",
+    "What is the percent dissociation when a weak acid is {c0} mol/L and Ka is {Ka}?",
+    "Compute the percent dissociation for a {c0} mol/L solution of an acid with Ka = {Ka}.",
+    "A {c0} mol/L solution of a weak acid has Ka = {Ka}. Use the small-x approximation and give the percent dissociation.",
+    "Calculate the percentage of a {c0} mol/L weak acid that dissociates, given Ka = {Ka}.",
+    "Find the percent ionization of a weak acid at {c0} mol/L with Ka = {Ka}.",
+    "Given a weak acid concentration of {c0} mol/L and Ka = {Ka}, what percent dissociates?",
+    "Determine the percent dissociation of a {c0} mol/L acid of Ka {Ka}, assuming x is small against the initial concentration.",
+    "A weak acid solution of {c0} mol/L reports Ka = {Ka}. What fraction of it dissociates, as a percentage?",
+    "What percent dissociation does a {c0} mol/L weak acid of Ka = {Ka} show?",
+]
+
+TEMPLATES["mixing_concentration"] = [
+    "A volume of {v1} mL of a {c1} mol/L solution is added to {v2} mL of a {c2} mol/L solution of the same solute. Find the concentration of the mixture.",
+    "Find the concentration after {v1} mL of a {c1} mol/L solution is mixed with {v2} mL of a {c2} mol/L solution.",
+    "What is the concentration of a solution made from {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L of the same solute?",
+    "Compute the final concentration when {v1} mL of {c1} mol/L is added to {v2} mL of {c2} mol/L.",
+    "{v1} mL of {c1} mol/L is poured into {v2} mL of {c2} mol/L of the same solute. Determine the resulting concentration.",
+    "Calculate the concentration of the mixture formed from {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L.",
+    "Find the molarity after {v1} mL of a {c1} M solution and {v2} mL of a {c2} M solution are combined.",
+    "Given {v1} mL of {c1} mol/L and {v2} mL of {c2} mol/L of the same substance, what is the mixture's concentration?",
+    "Determine the concentration of the solution obtained by mixing {v1} mL of {c1} mol/L with {v2} mL of {c2} mol/L.",
+    "Two portions of the same solution, {v1} mL at {c1} mol/L and {v2} mL at {c2} mol/L, are combined. What concentration results?",
+    "What concentration does a mixture of {v1} mL of {c1} mol/L and {v2} mL of {c2} mol/L have?",
+]
+
+TEMPLATES["hydrate_water"] = [
+    "A hydrated salt of mass {mass_hydrate} g is heated until the water is driven off, leaving {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol. Water has molar mass {mm_water} g/mol. Find the number of moles of water per mole of anhydrous salt.",
+    "Find x in salt.xH2O when {mass_hydrate} g of the hydrate leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water being {mm_water} g/mol.",
+    "What is the water of crystallisation per formula unit if {mass_hydrate} g of a hydrate gives {mass_anhydrous} g of the anhydrous salt of molar mass {mm_anhydrous} g/mol, with water at {mm_water} g/mol?",
+    "Compute the moles of water per mole of salt for a hydrate where {mass_hydrate} g loses water to leave {mass_anhydrous} g of anhydrous material of molar mass {mm_anhydrous} g/mol, water at {mm_water} g/mol.",
+    "Heating {mass_hydrate} g of a hydrate drives off its water and leaves {mass_anhydrous} g of the anhydrous salt, molar mass {mm_anhydrous} g/mol. Determining the moles of water per mole requires water's molar mass of {mm_water} g/mol.",
+    "Calculate the ratio of water to salt for a hydrate of initial mass {mass_hydrate} g that leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water at {mm_water} g/mol.",
+    "Find how many waters of hydration each formula unit carries when {mass_hydrate} g of hydrate yields {mass_anhydrous} g of the anhydrous salt of molar mass {mm_anhydrous} g/mol, taking water as {mm_water} g/mol.",
+    "Given {mass_hydrate} g of a hydrate, {mass_anhydrous} g of anhydrous salt, a salt molar mass of {mm_anhydrous} g/mol and water at {mm_water} g/mol, what is the water-to-salt ratio?",
+    "Determine the moles of water bound per mole of salt if {mass_hydrate} g of a hydrate leaves {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, with {mm_water} g/mol for water.",
+    "A sample of {mass_hydrate} g of a hydrate loses its water in an oven and weighs {mass_anhydrous} g afterwards; the anhydrous salt has molar mass {mm_anhydrous} g/mol and water {mm_water} g/mol. What is x in the hydrate formula?",
+    "What number of water molecules per formula unit does a hydrate have if {mass_hydrate} g of it drives off water to {mass_anhydrous} g of anhydrous salt of molar mass {mm_anhydrous} g/mol, water being {mm_water} g/mol?",
+]
+
+TEMPLATES["faraday_deposit"] = [
+    "Electrolysis passes {faradays} faraday of charge through a solution in which each metal ion takes {electrons_per_ion} electrons to plate out. The metal has molar mass {molar_mass} g/mol. Find the mass deposited.",
+    "Find the mass of metal plated out when {faradays} faraday of charge reduces ions that need {electrons_per_ion} electrons each, the metal's molar mass being {molar_mass} g/mol.",
+    "What mass of metal deposits when {faradays} faraday of electricity passes through a solution of ions requiring {electrons_per_ion} electrons each, for a metal of molar mass {molar_mass} g/mol?",
+    "Compute the deposit mass for {faradays} faraday through a bath where the ion takes {electrons_per_ion} electrons and the metal has molar mass {molar_mass} g/mol.",
+    "A plating bath receives {faradays} faraday of charge; the metal ion needs {electrons_per_ion} electrons and the metal's molar mass is {molar_mass} g/mol. Determine the mass deposited.",
+    "Calculate how many grams plate out when {faradays} faraday of charge is passed and the ion requires {electrons_per_ion} electrons, the metal being {molar_mass} g/mol.",
+    "Find the mass of metal deposited by {faradays} faraday on a cathode where the ion takes {electrons_per_ion} electrons and the metal has molar mass {molar_mass} g/mol.",
+    "Given {faradays} faraday of charge, an ion taking {electrons_per_ion} electrons and a metal of molar mass {molar_mass} g/mol, what mass is deposited?",
+    "Determine the mass electroplated when {faradays} faraday passes through a solution whose ions need {electrons_per_ion} electrons each, the metal at {molar_mass} g/mol.",
+    "An electrolysis cell passes {faradays} faraday of charge to deposit a metal of molar mass {molar_mass} g/mol whose ion takes {electrons_per_ion} electrons. What mass is collected?",
+    "What mass of metal does {faradays} faraday of charge deposit from a solution of ions taking {electrons_per_ion} electrons, if the metal is {molar_mass} g/mol?",
+]
+
+TEMPLATES["rate_factor"] = [
+    "The first reactant's concentration is multiplied by {f1} and its order is {o1}; the second reactant's concentration is multiplied by {f2} and its order is {o2}. By what factor does the rate change?",
+    "Find the factor by which the rate changes when the first concentration is multiplied by {f1} with order {o1} and the second by {f2} with order {o2}.",
+    "What happens to the rate if the first reactant's concentration is scaled by {f1}, order {o1}, and the second scaled by {f2}, order {o2}?",
+    "Compute the rate factor for a change of {f1} in the first concentration (order {o1}) and {f2} in the second (order {o2}).",
+    "A rate law is first order {o1} in one reactant and order {o2} in the other. The concentrations are multiplied by {f1} and by {f2} respectively: what is the new rate factor?",
+    "Calculate how much faster the reaction runs when the first concentration is multiplied by {f1} (order {o1}) and the second by {f2} (order {o2}).",
+    "Find the multiplier on the rate when the first concentration changes by a factor of {f1} with order {o1} and the second by {f2} with order {o2}.",
+    "Given a factor of {f1} applied to a reactant of order {o1} and {f2} applied to one of order {o2}, what is the overall rate factor?",
+    "Determine the factor by which the rate is multiplied when the first concentration is scaled by {f1}, its order being {o1}, and the second by {f2}, its order being {o2}.",
+    "Two concentrations change: the first is multiplied by {f1} (order {o1}) and the second by {f2} (order {o2}). What is the resulting rate ratio?",
+    "What factor multiplies the rate when one concentration is scaled by {f1} with order {o1} and another by {f2} with order {o2}?",
+]
+
+TEMPLATES["mass_from_molarity"] = [
+    "A volume of {V} L of a {c} mol/L solution contains a solute of molar mass {molar_mass} g/mol. Find the mass of solute dissolved.",
+    "Find the mass of solute in {V} L of a {c} mol/L solution whose molar mass is {molar_mass} g/mol.",
+    "What mass of solute is present in {V} L of a {c} mol/L solution of molar mass {molar_mass} g/mol?",
+    "Compute the mass of solute for {V} L at {c} mol/L with molar mass {molar_mass} g/mol.",
+    "A {V} L portion of a {c} mol/L solution holds a solute of molar mass {molar_mass} g/mol. Determine its mass.",
+    "Calculate the grams of solute in {V} L of a {c} mol/L solution of a substance of molar mass {molar_mass} g/mol.",
+    "Find how many grams of solute {V} L of a {c} mol/L solution contains, the solute being {molar_mass} g/mol.",
+    "Given {V} L of a {c} mol/L solution and a solute molar mass of {molar_mass} g/mol, what mass is dissolved?",
+    "Determine the mass of solute dissolved in {V} L of a {c} mol/L solution of molar mass {molar_mass} g/mol.",
+    "An aliquot of {V} L is taken from a {c} mol/L solution of a solute of molar mass {molar_mass} g/mol. What mass does it carry?",
+    "What mass of solute does {V} L of a {c} mol/L solution hold when the solute's molar mass is {molar_mass} g/mol?",
+]
+
+TEMPLATES["gas_mixture_pressure"] = [
+    "One component of a gas mixture exerts {P_i} atm while it occupies {V_i} L. The mixture is transferred to a {V_f} L vessel at constant temperature. Find that component's new partial pressure.",
+    "Find the new partial pressure of a component that exerts {P_i} atm in {V_i} L when the gas is moved to {V_f} L at constant temperature.",
+    "What partial pressure does a component of {P_i} atm in {V_i} L exert once the mixture occupies {V_f} L?",
+    "Compute the new partial pressure for a component at {P_i} atm occupying {V_i} L that is expanded to {V_f} L.",
+    "A gas component at {P_i} atm in a {V_i} L vessel is transferred to {V_f} L at the same temperature. Determine its partial pressure.",
+    "Calculate the partial pressure after a component exerting {P_i} atm in {V_i} L is moved into {V_f} L.",
+    "Find the partial pressure of a component whose {P_i} atm fills {V_i} L when the volume becomes {V_f} L.",
+    "Given {P_i} atm in {V_i} L and a new volume of {V_f} L at constant temperature, what is the partial pressure?",
+    "Determine the new partial pressure of a mixture component reading {P_i} atm in {V_i} L that is compressed or expanded to {V_f} L.",
+    "A sample of gas exerts {P_i} atm in {V_i} L and is then held in {V_f} L at the same temperature. What partial pressure does it show?",
+    "What pressure does a component at {P_i} atm in {V_i} L come to when its volume is {V_f} L?",
+]
+
+TEMPLATES["mixture_final_temperature"] = [
+    "A mass of {m1} g of water at {T1} K is mixed with {m2} g of water at {T2} K in an insulated container. Find the final temperature.",
+    "Find the final temperature when {m1} g of water at {T1} K meets {m2} g at {T2} K.",
+    "What final temperature results from mixing {m1} g of water at {T1} K with {m2} g at {T2} K?",
+    "Compute the final temperature for {m1} g at {T1} K combined with {m2} g at {T2} K.",
+    "{m1} g of water at {T1} K is poured into {m2} g at {T2} K in a calorimeter. Determine the equilibrium temperature.",
+    "Calculate the temperature reached when {m1} g of water at {T1} K and {m2} g at {T2} K are mixed.",
+    "Find the equilibrium temperature of {m1} g of water at {T1} K added to {m2} g at {T2} K.",
+    "Given {m1} g at {T1} K and {m2} g at {T2} K of the same liquid, what final temperature is reached?",
+    "Determine the final temperature after {m1} g of water at {T1} K is mixed with {m2} g at {T2} K, with no heat lost.",
+    "Two water samples, {m1} g at {T1} K and {m2} g at {T2} K, are combined in an insulated cup. What temperature do they settle at?",
+    "What temperature does a mixture of {m1} g of water at {T1} K and {m2} g at {T2} K reach?",
+]
+
+TEMPLATES["stoich_volume_gas"] = [
+    "{V_given} L of a gaseous reactant is consumed at constant temperature and pressure. Each mole of it produces {ratio} mol of gaseous product. Find the volume of product formed.",
+    "Find the product volume when {V_given} L of gas reacts, giving {ratio} mol of gas per mole consumed, at constant temperature and pressure.",
+    "What volume of gaseous product forms from {V_given} L of reactant gas in a {ratio} to one mole ratio?",
+    "Compute the product volume for {V_given} L of reactant gas with a molar ratio of {ratio}.",
+    "{V_given} L of gas reacts at constant temperature and pressure, producing {ratio} mol of gas per mole. Determine the product volume.",
+    "Calculate the volume of gas produced when {V_given} L of reactant reacts in a {ratio}:1 ratio at constant pressure.",
+    "Find the volume of gaseous product from {V_given} L of a reactant whose mole ratio to product is {ratio}.",
+    "Given {V_given} L of gaseous reactant and a mole ratio of {ratio} to the product, what volume of gas forms?",
+    "Determine the product volume when {V_given} L of gas is consumed and each mole yields {ratio} mol of product gas.",
+    "A reaction consumes {V_given} L of gas and makes {ratio} mol of product gas per mole, at the same temperature and pressure. What product volume results?",
+    "What volume of product gas is formed from {V_given} L of reactant gas at a ratio of {ratio} to one?",
+]
+
+TEMPLATES["mass_from_percent_composition"] = [
+    "A sample is {percent} percent of one element by mass and has a total mass of {total_mass} g. Find the mass of that element in the sample.",
+    "Find the mass of an element that is {percent} percent by mass of a {total_mass} g sample.",
+    "What mass of element is present when it makes up {percent} percent of a {total_mass} g sample?",
+    "Compute the element's mass for a {percent} percent composition in a {total_mass} g sample.",
+    "A sample weighing {total_mass} g is {percent} percent that element by mass. Determine the element's mass.",
+    "Calculate the mass of element in {total_mass} g of material whose composition is {percent} percent.",
+    "Find how many grams of the element a {total_mass} g sample holds at {percent} percent by mass.",
+    "Given a sample of {total_mass} g and a composition of {percent} percent, what mass is that element?",
+    "Determine the mass of element in a {total_mass} g sample that analyses as {percent} percent of it.",
+    "An analysis gives {percent} percent of one element in a {total_mass} g sample. What mass does that element contribute?",
+    "What mass of element corresponds to {percent} percent of a sample weighing {total_mass} g?",
+]
+
+TEMPLATES["ph_of_water"] = [
+    "At a particular temperature the ionic product of water makes pKw = {pkw}. Find the pH of pure water at that temperature.",
+    "Find the pH of pure water where pKw = {pkw}.",
+    "What is the pH of neutral water when pKw is {pkw}?",
+    "Compute the pH of pure water for a pKw of {pkw}.",
+    "Pure water has pKw = {pkw} at some temperature. Determine its pH.",
+    "Calculate the pH of water at a temperature where pKw = {pkw}.",
+    "Find the pH of pure water given an ionic product exponent of pKw = {pkw}.",
+    "Given pKw = {pkw}, what is the pH of pure water?",
+    "Determine the pH of neutral water whose pKw is {pkw}.",
+    "At the temperature in question pKw = {pkw}. What pH does pure water show there?",
+    "What pH does pure water have at a temperature where pKw = {pkw}?",
+]
+
+TEMPLATES["vsepr_bond_angle"] = [
+    "A molecule has {electron_domains} electron domains around its central atom and {lone_pairs} of them are lone pairs. Find its bond angle in degrees, from the VSEPR table.",
+    "Find the bond angle of a molecule with {electron_domains} electron domains and {lone_pairs} lone pairs.",
+    "What bond angle does VSEPR give for {electron_domains} electron domains with {lone_pairs} lone pairs?",
+    "Read the bond angle from the VSEPR table for {electron_domains} electron domains and {lone_pairs} lone pairs.",
+    "A molecule's central atom carries {electron_domains} electron domains, of which {lone_pairs} are lone pairs. Give its bond angle in degrees.",
+    "Look up the bond angle for {electron_domains} electron domains and {lone_pairs} lone pairs on the central atom.",
+    "What angle separates the bonds when {electron_domains} domains surround the central atom and {lone_pairs} are lone pairs?",
+    "With {electron_domains} electron domains and {lone_pairs} lone pairs, what bond angle does the VSEPR table list?",
+    "Determine the bond angle for a central atom with {electron_domains} electron domains, {lone_pairs} of them lone pairs.",
+    "A VSEPR table lists the angle for {electron_domains} electron domains and {lone_pairs} lone pairs. What angle does this molecule have?",
+    "What bond angle, in degrees, corresponds to {electron_domains} electron domains and {lone_pairs} lone pairs?",
+]

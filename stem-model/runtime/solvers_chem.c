@@ -980,6 +980,153 @@ static int solve_mass_from_molarity(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_gas_mixture_pressure(const char *const *args, char *out,
+                                      size_t outlen)
+{
+	rat p_i, v_i, v_f, pv, p_f;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &p_i, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v_i, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v_f, NULL)) != 0)
+		return rc;
+	if (v_f.n == 0)
+		return -4;
+	if ((rc = rat_mul(&pv, &p_i, &v_i)) != 0 ||
+	    (rc = rat_div(&p_f, &pv, &v_f)) != 0)
+		return rc;
+	if ((rc = dec4_render(p_f.n, p_f.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s atm", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_mixture_final_temperature(const char *const *args, char *out,
+                                           size_t outlen)
+{
+	rat m1, t1, m2, t2, h1, h2, heat, mass, t;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &m1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &t1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &m2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &t2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&h1, &m1, &t1)) != 0 ||
+	    (rc = rat_mul(&h2, &m2, &t2)) != 0 ||
+	    (rc = rat_add(&heat, &h1, &h2)) != 0 ||
+	    (rc = rat_add(&mass, &m1, &m2)) != 0)
+		return rc;
+	if (mass.n == 0)
+		return -4;
+	if ((rc = rat_div(&t, &heat, &mass)) != 0)
+		return rc;
+	if ((rc = dec4_render(t.n, t.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s K", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_stoich_volume_gas(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat v, ratio, product;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &v, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &ratio, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&product, &v, &ratio)) != 0)
+		return rc;
+	if ((rc = dec4_render(product.n, product.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_mass_from_percent_composition(const char *const *args,
+                                               char *out, size_t outlen)
+{
+	rat percent, total, hundred = { 100, 1 }, share, mass;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &percent, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &total, NULL)) != 0)
+		return rc;
+	if ((rc = rat_div(&share, &percent, &hundred)) != 0 ||
+	    (rc = rat_mul(&mass, &share, &total)) != 0)
+		return rc;
+	if ((rc = dec4_render(mass.n, mass.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s g", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_ph_of_water(const char *const *args, char *out, size_t outlen)
+{
+	rat pkw, two = { 2, 1 }, ph;
+	int rc;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &pkw, NULL)) != 0)
+		return rc;
+	if (pkw.n <= 0)
+		return -4;
+	if ((rc = rat_div(&ph, &pkw, &two)) != 0)
+		return rc;
+	if ((rc = dec4_render(ph.n, ph.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+static int solve_vsepr_bond_angle(const char *const *args, char *out,
+                                  size_t outlen)
+{
+	static const struct {
+		int domains;
+		int lone;
+		long long num;
+		long long den;
+	} table[] = {
+		{ 2, 0, 180, 1 },
+		{ 3, 0, 120, 1 },
+		{ 4, 0, 1095, 10 },
+		{ 3, 1, 107, 1 },
+		{ 2, 2, 1045, 10 },
+		{ 6, 0, 90, 1 },
+	};
+	rat domains, lone;
+	size_t i;
+	int rc;
+
+	if ((rc = parse_rat(args[0], &domains, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &lone, NULL)) != 0)
+		return rc;
+	if (domains.d != 1 || lone.d != 1)
+		return -4;
+	/*
+	 * A lookup, not a computation: this is the angle VSEPR assigns to the
+	 * shape, and a shape whose answer is not one number (the trigonal
+	 * bipyramid has 90 and 120) is absent so that the caller is told
+	 * "uncertain" rather than given half a right answer.
+	 */
+	for (i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
+		if (table[i].domains == (int)domains.n &&
+		    table[i].lone == (int)lone.n)
+			return dec4_render(table[i].num, table[i].den, out, outlen);
+	}
+	return -4;
+}
+
 int solvers_chem_solve(const char *name, const char *const *args,
                        int nargs, char *out, size_t outlen)
 {
@@ -1193,6 +1340,36 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "mass_from_molarity") == 0) {
 		if (nargs == 3)
 			rc = solve_mass_from_molarity(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "gas_mixture_pressure") == 0) {
+		if (nargs == 3)
+			rc = solve_gas_mixture_pressure(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mixture_final_temperature") == 0) {
+		if (nargs == 4)
+			rc = solve_mixture_final_temperature(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "stoich_volume_gas") == 0) {
+		if (nargs == 2)
+			rc = solve_stoich_volume_gas(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "mass_from_percent_composition") == 0) {
+		if (nargs == 2)
+			rc = solve_mass_from_percent_composition(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ph_of_water") == 0) {
+		if (nargs == 1)
+			rc = solve_ph_of_water(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "vsepr_bond_angle") == 0) {
+		if (nargs == 2)
+			rc = solve_vsepr_bond_angle(args, out, outlen);
 		else
 			rc = -2;
 	} else {

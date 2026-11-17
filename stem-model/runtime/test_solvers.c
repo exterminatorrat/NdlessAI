@@ -14611,6 +14611,81 @@ static const tcase MASS_FROM_MOLARITY[] = {
 };
 
 
+static const tcase GAS_MIXTURE_PRESSURE[] = {
+	{ { "1.5", "20", "2", "", "", "" }, "15 atm" },
+	{ { "3", "20", "1", "", "", "" }, "60 atm" },
+	{ { "3", "5", "50", "", "", "" }, "0.3 atm" },
+	{ { "3", "5", "10", "", "", "" }, "1.5 atm" },
+	{ { "3", "2", "50", "", "", "" }, "0.12 atm" },
+	{ { "0.5", "20", "1", "", "", "" }, "10 atm" },
+	{ { "1", "10", "25", "", "", "" }, "0.4 atm" },
+	{ { "0.5", "2", "10", "", "", "" }, "0.1 atm" },
+	{ { "1", "1", "50", "", "", "" }, "0.02 atm" },
+	{ { "3", "2", "5", "", "", "" }, "1.2 atm" },
+	{ { "1.5", "20", "1", "", "", "" }, "30 atm" },
+	{ { "2", "2", "20", "", "", "" }, "0.2 atm" },
+};
+static const tcase MIXTURE_FINAL_TEMPERATURE[] = {
+	{ { "100", "373", "100", "310", "", "" }, "341.5 K" },
+	{ { "20", "295", "100", "300", "", "" }, "299.2 K" },
+	{ { "20", "295", "10", "320", "", "" }, "303.3 K" },
+	{ { "75", "373", "200", "285", "", "" }, "309 K" },
+	{ { "100", "373", "50", "280", "", "" }, "342 K" },
+	{ { "25", "340", "100", "290", "", "" }, "300 K" },
+	{ { "200", "373", "25", "290", "", "" }, "363.8 K" },
+	{ { "100", "280", "200", "350", "", "" }, "326.7 K" },
+	{ { "10", "340", "20", "310", "", "" }, "320 K" },
+	{ { "10", "295", "10", "310", "", "" }, "302.5 K" },
+	{ { "150", "310", "20", "350", "", "" }, "314.7 K" },
+	{ { "10", "285", "100", "280", "", "" }, "280.5 K" },
+};
+static const tcase STOICH_VOLUME_GAS[] = {
+	{ { "22.4", "4", "", "", "", "" }, "89.6 L" },
+	{ { "2", "5", "", "", "", "" }, "10 L" },
+	{ { "44.8", "2", "", "", "", "" }, "89.6 L" },
+	{ { "22.4", "3", "", "", "", "" }, "67.2 L" },
+	{ { "20", "2", "", "", "", "" }, "40 L" },
+	{ { "2.5", "2", "", "", "", "" }, "5 L" },
+	{ { "2.5", "5", "", "", "", "" }, "12.5 L" },
+	{ { "5", "2", "", "", "", "" }, "10 L" },
+	{ { "2", "2", "", "", "", "" }, "4 L" },
+	{ { "1", "5", "", "", "", "" }, "5 L" },
+	{ { "20", "1", "", "", "", "" }, "20 L" },
+	{ { "20", "4", "", "", "", "" }, "80 L" },
+};
+static const tcase MASS_FROM_PERCENT_COMPOSITION[] = {
+	{ { "40", "20", "", "", "", "" }, "8 g" },
+	{ { "20", "50", "", "", "", "" }, "10 g" },
+	{ { "40", "250", "", "", "", "" }, "100 g" },
+	{ { "5", "100", "", "", "", "" }, "5 g" },
+	{ { "62.5", "200", "", "", "", "" }, "125 g" },
+	{ { "62.5", "500", "", "", "", "" }, "312.5 g" },
+	{ { "20", "200", "", "", "", "" }, "40 g" },
+	{ { "25", "200", "", "", "", "" }, "50 g" },
+	{ { "10", "500", "", "", "", "" }, "50 g" },
+	{ { "50", "10", "", "", "", "" }, "5 g" },
+	{ { "12.5", "500", "", "", "", "" }, "62.5 g" },
+	{ { "62.5", "50", "", "", "", "" }, "31.25 g" },
+};
+static const tcase PH_OF_WATER[] = {
+	{ { "13.62", "", "", "", "", "" }, "6.81" },
+	{ { "13.99", "", "", "", "", "" }, "6.995" },
+	{ { "14.17", "", "", "", "", "" }, "7.085" },
+	{ { "14.94", "", "", "", "", "" }, "7.47" },
+	{ { "14", "", "", "", "", "" }, "7" },
+	{ { "13.26", "", "", "", "", "" }, "6.63" },
+	{ { "12.26", "", "", "", "", "" }, "6.13" },
+};
+static const tcase VSEPR_BOND_ANGLE[] = {
+	{ { "2", "0", "", "", "", "" }, "180" },
+	{ { "3", "1", "", "", "", "" }, "107" },
+	{ { "3", "0", "", "", "", "" }, "120" },
+	{ { "2", "2", "", "", "", "" }, "104.5" },
+	{ { "6", "0", "", "", "", "" }, "90" },
+	{ { "4", "0", "", "", "", "" }, "109.5" },
+};
+
+
 int main(void)
 {
 	int total = 0, bad = 0;
@@ -14748,6 +14823,12 @@ int main(void)
 	bad += check_rel("faraday_deposit", FARADAY_DEPOSIT, (int)(sizeof(FARADAY_DEPOSIT) / sizeof(FARADAY_DEPOSIT[0])), 3, &total);
 	bad += check_rel("rate_factor", RATE_FACTOR, (int)(sizeof(RATE_FACTOR) / sizeof(RATE_FACTOR[0])), 4, &total);
 	bad += check_rel("mass_from_molarity", MASS_FROM_MOLARITY, (int)(sizeof(MASS_FROM_MOLARITY) / sizeof(MASS_FROM_MOLARITY[0])), 3, &total);
+	bad += check_rel("gas_mixture_pressure", GAS_MIXTURE_PRESSURE, (int)(sizeof(GAS_MIXTURE_PRESSURE) / sizeof(GAS_MIXTURE_PRESSURE[0])), 3, &total);
+	bad += check_rel("mixture_final_temperature", MIXTURE_FINAL_TEMPERATURE, (int)(sizeof(MIXTURE_FINAL_TEMPERATURE) / sizeof(MIXTURE_FINAL_TEMPERATURE[0])), 4, &total);
+	bad += check_rel("stoich_volume_gas", STOICH_VOLUME_GAS, (int)(sizeof(STOICH_VOLUME_GAS) / sizeof(STOICH_VOLUME_GAS[0])), 2, &total);
+	bad += check_rel("mass_from_percent_composition", MASS_FROM_PERCENT_COMPOSITION, (int)(sizeof(MASS_FROM_PERCENT_COMPOSITION) / sizeof(MASS_FROM_PERCENT_COMPOSITION[0])), 2, &total);
+	bad += check_rel("ph_of_water", PH_OF_WATER, (int)(sizeof(PH_OF_WATER) / sizeof(PH_OF_WATER[0])), 1, &total);
+	bad += check_rel("vsepr_bond_angle", VSEPR_BOND_ANGLE, (int)(sizeof(VSEPR_BOND_ANGLE) / sizeof(VSEPR_BOND_ANGLE[0])), 2, &total);
 	printf("TOTAL: %d assertions, %d mismatches -> %s\n", total, bad,
 	       bad == 0 ? "PASS" : "FAIL");
 	return bad == 0 ? 0 : 1;

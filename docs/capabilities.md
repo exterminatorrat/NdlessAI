@@ -50,7 +50,7 @@ small models.
 
 | # | Capability | What changes | Model | Work |
 | --- | --- | --- | --- | --- |
-| B1 | Units as a type | Dimension exponents and an affine-offset flag on every quantity; refuse on mismatch | none | weeks |
+| B1 | Units as a type | Dimension exponents and an affine-offset flag on every quantity; refuse on mismatch. The assignment half is measured down to 1.3 points — see below | none | weeks |
 | B2 | Direction-agnostic equations | One equation plus `solve_for(unknown)` instead of a relation per direction | retrain | weeks |
 | B3 | Expression parser beyond graphing | `ln exp sqrt abs floor`, `pi`/`e`, multi-letter variables, general `a^b` | none | weeks |
 | B4 | Symbolic differentiation | `d/dx` on the parse tree, then evaluate at a point or print the result | none | weeks |
@@ -71,6 +71,24 @@ small models.
 
 B1 through B3 are the load-bearing entries. Everything from hard thermodynamics
 to arbitrary calculus input depends on them, and none of them is a model change.
+
+**B1's assignment half, measured 2026-11-17 — and it is not worth building.** Of
+139 hand-written rows that picked the right relation with the arguments permuted,
+a dimension-only assigner decides 56 (40%), and every one of those 56 lands
+exactly on the expected call. Precision is perfect; reach is the whole limit, so
+the recoverable accuracy is **1.3 points of hand-written exactness and no more**,
+not the 3.2 a permutation count suggests. The residue is not bookkeeping: 48 rows
+write an argument with no unit at all, 25 leave two or more dimension-compatible
+assignments, and 10 write a unit that contradicts the slot. Adding quantity nouns
+as a fallback cue buys three rows, taking it to 1.37, which is why the ceiling is
+quoted as 1.3.
+
+Revisit it only with a corpus that writes units on nearly every argument, because
+that is what would move the 48 no-unit rows into reach. The artifact at
+`handoffs/ndle21-dimslots/` replays the number rather than re-arguing it:
+`python3 dimslots.py --rows permuted_rows.jsonl` prints 139 rows, 56 decided and
+the reason for each of the rest, and `python3 nouncues.py --rows
+permuted_rows.jsonl` prints the noun-cue comparison.
 
 ## C. Subject breadth
 
@@ -204,3 +222,4 @@ the whole model resident twice, is out of budget rather than merely expensive.
 | A larger model as the answer to capability | The model routes; capability lives in solvers |
 | Floating point in the hot path | No FPU, and soft-float helpers fail the cross-compile check |
 | On-device training | Out of budget and out of scope |
+| Dimension-based argument assignment | Measured at 1.3 points of hand-written exactness on the current corpus: 56 of 139 permuted rows, all decided correctly, and noun cues buy three more. Reach, not precision, is the wall — see B1 |

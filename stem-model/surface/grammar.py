@@ -29,9 +29,18 @@ def _role(slot, register, variant):
     return words[variant % len(words)]
 
 
+# Singular nouns that end in "s", so agreement does not turn "the amount of gas"
+# into a plural. Only words whose last token is one of these are exempt.
+SINGULAR_S = {"gas", "mass", "stress", "analysis", "glass", "series", "species",
+              "physics", "celsius", "kelvin", "bus", "lens", "axis"}
+
+
 def _is(role):
     """Crude number agreement, so "the electron domains is 3" never ships."""
-    return "are" if role.endswith("s") and not role.endswith("ss") else "is"
+    last = role.split()[-1].lower() if role.split() else role.lower()
+    if last in SINGULAR_S:
+        return "is"
+    return "are" if last.endswith("s") and not last.endswith("ss") else "is"
 
 
 def _value(slot, raw, register):
@@ -125,6 +134,40 @@ def _given_condition_first(spec, parts, register, variant):
     return clauses[0] + ", " + ", ".join(clauses[1:]) + "."
 
 
+def _given_declared(spec, parts, register, variant):
+    """The chemistry corpus's declared list: a system, then values separated by semicolons.
+
+    18% of the chemistry source's items hand the quantities over this way, against
+    1% of the physics source and 1% of the exam bank, so it is a chemistry shape
+    rather than a general one.
+    """
+    pairs = [f"{_role(slot, register, variant + index)} = {parts[param]}"
+             for index, (param, slot) in enumerate(spec.slots.items())]
+    return "For the system: " + "; ".join(pairs) + "."
+
+
+def _short_role(slot):
+    """A role without the equilibrium preamble, for narration mid-sentence."""
+    return slot.role.replace("equilibrium concentration of ", "")
+
+
+def _given_state(spec, parts, register, variant):
+    """The equilibrium-from-a-state frame: a system arrives somewhere, then asks.
+
+    Only relations that declare equilibrium get it; a rate or a titration question
+    told it "settles at equilibrium" would be describing a different experiment.
+    """
+    if spec.name not in EQUILIBRIUM:
+        return None
+    clauses = []
+    for index, (param, slot) in enumerate(spec.slots.items()):
+        clauses.append(f"the {_short_role(slot)} at {parts[param]}")
+    if len(clauses) == 1:
+        return "The system settles at equilibrium, with " + clauses[0] + "."
+    return ("The system settles at equilibrium, with "
+            + ", ".join(clauses[:-1]) + " and " + clauses[-1] + ".")
+
+
 def _given_list(spec, parts, register, variant):
     values = ", ".join(parts[param] for param in spec.slots)
     verb = "are" if len(parts) > 1 else "is"
@@ -156,7 +199,32 @@ GIVEN = (
     ("applied", _given_applied, True, _always),
     ("equipment", _given_equipment, True, _has_context),
     ("condition", _given_condition_first, True, _has_condition),
+    ("declared", _given_declared, True, _always),
+    ("state", _given_state, True, lambda spec: spec.name in EQUILIBRIUM),
 )
+
+# Relations whose rows can honestly be described as arriving at an equilibrium
+# state. Everything else keeps the frames that describe a measurement.
+# Shapes from the register study this generator does not carry, with the reason.
+# Recorded rather than left implicit, in the same spirit as the deferred maths
+# pairs: an absence someone can read beats an absence they have to notice.
+DEFERRED_SHAPES = {
+    "formula-led (a species formula, then conditions)":
+        "the relation contract has no species argument, so a row could state a "
+        "formula it cannot bind to a quantity; 56% of the chemistry source is "
+        "written this way, and it needs a contract change, not a clause",
+    "rate, yield or percent as a modifier on a species":
+        "same cause: the modifier attaches to a species the call does not take",
+    "the verbal ask (compare, justify, predict)":
+        "33% of the exam bank asks for an explanation; this architecture refuses "
+        "it honestly rather than pretending to answer, so it is an abstention "
+        "example and not a training row",
+}
+
+EQUILIBRIUM = {
+    "kc_from_conc", "ksp_from_solubility", "ph", "poh", "ph_from_poh",
+    "h_from_ph", "buffer_ph", "percent_dissociation",
+}
 
 # The third field says whether the ask needs a unit to write; the fourth whether
 # it needs one to avoid writing. A pH has no unit, so "give it with its unit"

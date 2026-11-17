@@ -640,6 +640,15 @@ static void test_errors(void)
 	check(ui_row_dim(&u, 0) == 0 && ui_row_dim(&u, 1) != 0,
 	      "the explanation is dimmed under the headline");
 
+	/* Revised 2026-11-18: cover the unit verdict beside the other refusals. */
+	ui_result(&u, "q", PIPELINE_UNITS, "", "CALL kinetic_energy 72 10");
+	check(strcmp(ui_row(&u, 0), "A unit here does not fit the formula.") == 0,
+	      "a unit mismatch produces its documented first line");
+	check(rows_have("CALL kinetic_energy 72 10"),
+	      "a unit mismatch shows the call it tried");
+	check(ui_row_dim(&u, 0) == 0 && ui_row_dim(&u, 1) != 0,
+	      "the unit explanation is dimmed under the headline");
+
 	/*
 	 * The ordinary refusal. The call names nothing this build can run, and the
 	 * truth available on this screen is about the question, not about the

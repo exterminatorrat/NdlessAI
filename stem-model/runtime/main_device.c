@@ -46,6 +46,9 @@ int main(int argc, char **argv)
 			printf("!too_long\t%s\n", call);
 		else if (rc == PIPELINE_NO_VALUE)
 			printf("!no_value\t%s\n", call);
+		/* Revised 2026-11-18: keep the unit verdict distinct. */
+		else if (rc == PIPELINE_UNITS)
+			printf("!units\t%s\n", call);
 		else
 			printf("!error\t%s\n", call);
 	}

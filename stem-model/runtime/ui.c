@@ -554,6 +554,22 @@ void ui_result(ui_t *u, const char *question, int rc,
 			put(&at, end, call);
 			put(&at, end, "\n");
 		}
+	} else if (rc == PIPELINE_UNITS) {
+		/*
+		 * Every number is in the question, but one of them is in a unit its
+		 * slot cannot take: a mass where a speed goes, or radians where the
+		 * formula needs degrees. That is the model putting a number in the
+		 * wrong place, so the call is shown and nothing is computed.
+		 */
+		put(&at, end, "A unit here does not fit the formula.\n");
+		put(&at, end, "I matched a relation, but a number went\n"
+		              "into a slot that needs another kind of\n"
+		              "unit, so I stopped rather than guess.\n");
+		if (call && call[0]) {
+			put(&at, end, "It tried: ");
+			put(&at, end, call);
+			put(&at, end, "\n");
+		}
 	} else if (!has_model(u)) {
 		/*
 		 * No weights file: the typed path was the only one that could have

@@ -74,6 +74,8 @@ enum {
 	 * thing a calculator must never do with a question that has no answer.
 	 */
 	PIPELINE_NO_VALUE = 3,
+	/* Revised 2026-11-18: a unit mismatch has its own verdict. */
+	PIPELINE_UNITS = 4,
 	PIPELINE_ERR = -1
 };
 
@@ -96,9 +98,14 @@ int pipeline_steps(const char *call, const char *answer, char *out, int outlen);
 void pipeline_free(pipeline_t *p);
 
 /*
- * Answers one question. On PIPELINE_OK or PIPELINE_UNCERTAIN, `call` holds the
- * generated call and `answer` holds the solver's result (empty when uncertain).
- * Both buffers are always NUL-terminated on success.
+ * Answers one question. On PIPELINE_OK, PIPELINE_UNCERTAIN or PIPELINE_UNITS,
+ * `call` holds the generated call and `answer` holds the solver's result (empty
+ * unless OK). Both buffers are always NUL-terminated on success.
+ *
+ * A number the question wrote in another unit of the same kind is converted
+ * before the solver sees it, and `call` then holds the converted call, which
+ * is the one the answer and its working came from: "10 kg at 72 km/h" answers
+ * through "CALL kinetic_energy 10 20". See quantity.h.
  */
 int pipeline_answer(pipeline_t *p, const char *question,
                     char *answer, int answer_max,

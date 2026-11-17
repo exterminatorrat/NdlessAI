@@ -7,6 +7,7 @@
 #include "matrix.h"
 #include "pipeline.h"
 #include "plan.h"
+#include "quantity.h"
 #include "grounding.h"
 #include "repair.h"
 #include "shorthand.h"
@@ -455,8 +456,9 @@ int pipeline_answer(pipeline_t *p, const char *question,
 {
 	uint16_t ids[MAX_PROMPT];
 	char prompt[MAX_PROMPT + 16];
+	char checked[256];
 	int n, pos = 0, gen = 0;
-	int rc_offline;
+	int rc_offline, grounded, units;
 	size_t qlen = strlen(question);
 
 	/* Every answer starts with nothing weighed, so a closed form that answers
@@ -553,9 +555,27 @@ int pipeline_answer(pipeline_t *p, const char *question,
 		    strlen(repaired) < (size_t)call_max)
 			snprintf(call, (size_t)call_max, "%s", repaired);
 	}
+	/*
+	 * Grounding is decided on the numbers as decoded, before any of them is
+	 * rewritten in another unit, because the rewritten ones are by design not
+	 * in the text. Then the units: a number written in a unit its slot cannot
+	 * take is an argument in the wrong place, and a convertible one is
+	 * rewritten so the solver works in the unit its formula assumes.
+	 */
+	grounded = pipeline_args_grounded(call, question);
+	units = quantity_check_call(call, question, checked, (int)sizeof checked);
+	if (units == QUANTITY_MISMATCH) {
+		answer[0] = '\0';
+		return PIPELINE_UNITS;
+	}
+	if (units == QUANTITY_CONVERTED) {
+		if (strlen(checked) >= (size_t)call_max)
+			return PIPELINE_ERR;
+		memcpy(call, checked, strlen(checked) + 1);
+	}
 	if (run_call_text(call, answer, answer_max) < 0)
 		return PIPELINE_ERR;
-	if (!pipeline_args_grounded(call, question)) {
+	if (!grounded) {
 		answer[0] = '\0';
 		return PIPELINE_UNCERTAIN;
 	}

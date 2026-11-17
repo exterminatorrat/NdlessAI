@@ -27,7 +27,7 @@ SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 # before any of them runs.
 PIPELINE = pipeline.c bpe.c fixed.c infer.c $(SOLVERS) graph.c screen.c \
 	   diagram.c expr.c callmask.c matrix.c grounding.c shorthand.c plan.c \
-	   repair.c steps.c coursemap.c
+	   repair.c steps.c quantity.c coursemap.c
 
 all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
@@ -102,8 +102,8 @@ test_plan: test_plan.c $(PIPELINE) plan.h $(HEADERS)
 test_repair: test_repair.c $(PIPELINE) repair.h $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_repair.c $(PIPELINE) $(LDLIBS)
 
-test_quantity: test_quantity.c quantity.c $(PIPELINE) $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_quantity.c quantity.c $(PIPELINE) $(LDLIBS)
+test_quantity: test_quantity.c $(PIPELINE) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_quantity.c $(PIPELINE) $(LDLIBS)
 
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)

@@ -547,10 +547,32 @@ long long ln_9(long long num, long long den, int *rc)
 	return k * 2302585093LL + 2 * s9;
 }
 
+/* v * num / den, or 0 when the product would not fit a long long. */
+static long long mul_rat9(long long v, long long num, long long den, int *rc)
+{
+	long long q, r;
+
+	if (v == 0)
+		return 0;
+	q = v / den;
+	r = v % den;
+	if (q > 9000000000000000000LL / num) {
+		*rc = -4;
+		return 0;
+	}
+	return q * num + r * num / den;
+}
+
 /*
  * e^x at 1e9 scale for x = x9/1e9.
  * Splits into an integer part and a fraction in [-0.5, 0.5]; the fraction
  * uses a Taylor series that converges in about 12 terms there.
+ *
+ * The whole part is multiplied by e one factor at a time, through mul_rat9:
+ * r9 * 2718281828 overflows once r9 passes 3.4e9, which is e^n = 3.4, while the
+ * guard below says x may be 20. Between those two numbers the function refused
+ * nothing and answered e^3 as 1639 instead of 20086. The guard is the limit
+ * now, because the arithmetic can hold what the guard allows.
  */
 long long exp_9(long long x9, int *rc)
 {
@@ -581,21 +603,23 @@ long long exp_9(long long x9, int *rc)
 	r9 = 1000000000LL;
 	if (n > 0) {
 		for (i = 0; i < n; i++) {
-			if (r9 > 3000000000000000LL) {
-				*rc = -4;
+			r9 = mul_rat9(r9, 2718281828LL, 1000000000LL, rc);
+			if (*rc != 0)
 				return 0;
-			}
-			r9 = div_round(r9 * 2718281828LL, 1000000000LL);
 		}
 	} else {
-		for (i = 0; i < -n; i++)
-			r9 = div_round(r9 * 1000000000LL, 2718281828LL);
+		for (i = 0; i < -n; i++) {
+			r9 = mul_rat9(r9, 1000000000LL, 2718281828LL, rc);
+			if (*rc != 0)
+				return 0;
+		}
 	}
-	if (r9 == 0 || s9 > 9000000000000000000LL / r9) {
+	if (r9 == 0)
 		*rc = -4;
+	if (*rc != 0)
 		return 0;
-	}
-	return div_round(s9 * r9, 1000000000LL);
+	/* The larger factor goes in first: s9 * r9 overflows for e^3 alone. */
+	return mul_rat9(r9, s9, 1000000000LL, rc);
 }
 
 

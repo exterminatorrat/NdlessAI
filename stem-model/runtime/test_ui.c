@@ -617,6 +617,9 @@ static void test_errors(void)
 {
 	memset(&model, 0, sizeof model);
 	model.ready = 1;
+	/* A weights file exported with the tokenizer this build compiles in: the
+	 * two vocabulary sizes agree, which is the only identity the pair shares. */
+	model.model.vocab = BPE_VOCAB_SIZE;
 
 	ui_init(&u, NULL, "weights.bin.tns is not beside this program.");
 	ui_key(&u, UI_KEY_MODE);
@@ -636,14 +639,64 @@ static void test_errors(void)
 	check(ui_row_dim(&u, 0) == 0 && ui_row_dim(&u, 1) != 0,
 	      "the explanation is dimmed under the headline");
 
+	/*
+	 * The ordinary refusal. The call names nothing this build can run, and the
+	 * truth available on this screen is about the question, not about the
+	 * build: the headline and the next step are drawn, and the tokenizer is
+	 * not accused of anything.
+	 */
 	ui_result(&u, "q", PIPELINE_ERR, "", "CALL friction 3 4");
-	check(strcmp(ui_row(&u, 0), "I could not read that as a problem.") == 0,
-	      "an error produces its documented first line");
-	check(rows_have("CALL friction 3 4"), "an error shows the call the model produced");
-	check(rows_have("tokenizer"), "an error names the usual cause");
+	render();
+	check(band_is_text(UI_PANE_Y, "I could not read that as a problem.",
+	                   SCREEN_WHITE),
+	      "an ordinary refusal draws its documented headline bright");
+	check(band_is_text(UI_PANE_Y + 2 * SCREEN_LINE_H, "CALL friction 3 4",
+	                   SCREEN_DIM),
+	      "and still draws the call the model produced");
+	check(band_is_text(UI_PANE_Y + 6 * SCREEN_LINE_H,
+	                   "ones it has.", SCREEN_DIM),
+	      "with the next step under it");
+	check(!rows_have("tokenizer") && !rows_have("weights.bin.tns"),
+	      "an ordinary refusal blames neither the tokenizer nor the weights");
+	check(u.nrows <= UI_PANE_ROWS, "an ordinary refusal fits the pane");
 
 	ui_result(&u, "q", PIPELINE_ERR, "", "");
 	check(rows_have("(nothing)"), "an error with no call shows that there was none");
+
+	/*
+	 * A weights file from a different export. Its vocabulary size is not the
+	 * one this build's tokenizer produces, so the pair provably does not belong
+	 * together and the screen names that and the file that fixes it.
+	 */
+	memset(&model, 0, sizeof model);
+	model.ready = 1;
+	model.model.vocab = BPE_VOCAB_SIZE - 64;
+	ui_init(&u, &model, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ui_result(&u, "q", PIPELINE_ERR, "", "CALL friction 3 4");
+	render();
+	check(band_is_text(UI_PANE_Y, "These weights do not match this build.",
+	                   SCREEN_WHITE),
+	      "a mismatched vocabulary draws its own headline");
+	check(band_is_text(UI_PANE_Y + 2 * SCREEN_LINE_H, "CALL friction 3 4",
+	                   SCREEN_DIM),
+	      "and still shows the call that came out");
+	check(rows_have("vocabulary"), "a mismatch names what disagrees");
+	check(band_is_text(UI_PANE_Y + 6 * SCREEN_LINE_H,
+	                   "weights.bin.tns beside the program.", SCREEN_DIM),
+	      "and names the file that fixes it");
+	check(u.nrows <= UI_PANE_ROWS, "a mismatch note fits the pane");
+
+	/* A mismatched pair does not always arrive as an error: a decode read from
+	 * the wrong rows can also come back looking merely uncertain, and the
+	 * verdict from those rows is worth nothing. The provable cause wins. */
+	ui_result(&u, "q", PIPELINE_UNCERTAIN, "", "CALL abs_value_eq");
+	render();
+	check(band_is_text(UI_PANE_Y, "These weights do not match this build.",
+	                   SCREEN_WHITE),
+	      "a mismatch is named whatever verdict came with it");
+	check(!rows_have("not in the question"),
+	      "and is not reported as the question's own numbers");
 }
 
 /* ---- the working above the answer ---- */

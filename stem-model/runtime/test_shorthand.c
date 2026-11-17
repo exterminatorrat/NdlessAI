@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "pipeline.h"
+#include "reltable.h"
 #include "shorthand.h"
 #include "solvers.h"
 #include "solvers_subject.h"
@@ -204,6 +205,32 @@ static void test_collision_decimals(void)
 	      "a zero total mass is refused before division");
 }
 
+/*
+ * Every relation has to be typable. The name is cut into a fixed-size token,
+ * and a name longer than that never resolves — the text then falls through to
+ * the decoder, which answers with some other relation. Three names were in that
+ * state before this check existed.
+ */
+static void check_every_name_fits(void)
+{
+	for (int i = 0; i < REL_NUM_RELATIONS; i++) {
+		char line[96], call[96];
+		int rc;
+
+		snprintf(line, sizeof line, "%s 1 2 3 4 5", rel_rows[i].name);
+		rc = shorthand_build(line, call, (int)sizeof call);
+		if (rc < 0) {
+			printf("FAIL %s does not resolve as a typed shorthand\n",
+			       rel_rows[i].name);
+			failures++;
+		}
+		if (strstr(call, rel_rows[i].name) == NULL) {
+			printf("FAIL %s typed back as %s\n", rel_rows[i].name, call);
+			failures++;
+		}
+	}
+}
+
 int main(void)
 {
 	test_names();
@@ -211,6 +238,8 @@ int main(void)
 	test_offline_path();
 	test_scientific_numbers();
 	test_collision_decimals();
+	check_every_name_fits();
+
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;

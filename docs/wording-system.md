@@ -81,13 +81,32 @@ Per relation, declare the roles, not just the parameter names:
         register=("exam", "lab", "classroom"),
     )
 
-`dim` is symbolic, so interchangeability is computable: two slots with the same
-`dim` are the ambiguous pairs, and the composer must name both of them or refuse
-the sentence. That is the design decision worth arguing: NDLE-21 showed that
-*inferring* the assignment from dimensions fails on the majority of cases, so
-this system does not infer it — it makes naming a slot a structural requirement,
-and the validator enforces it. An ambiguous sentence becomes unrepresentable
-rather than merely unwise.
+`dim` is symbolic, so the at-risk pairs are computable: two slots with the same
+`dim` are the ones a reader can be left guessing about. The dimension is
+*informational* — it tells the validator which pairs to scrutinise and the ledger
+which relations carry the risk — and it is not the exclusion rule. The exclusion
+rule is human resolvability, below.
+
+**Exclude only what a careful reader could not resolve.** Role names in the
+sentence are optional: the composer emits whatever a competent reader can answer,
+which is the distribution the hand-written split is actually in. Three cases:
+
+- *The frame decides it.* "A solution holds 0.2 mol in 0.5 L" needs no role names
+  because the units settle which is which, and a student would answer it. Keep it
+  unnamed, exactly as written.
+- *The definition decides it.* "One mass is 5 g and the other is 8 g, what is the
+  percent yield?" is answerable because the yield definition fixes which mass is
+  actual and which is theoretical. Keep it.
+- *Nothing decides it.* Two interchangeable slots with no distinguishing language
+  anywhere in the row, which a student could not answer either. Exclude the row,
+  and record the exclusion against the relation with that reason.
+
+Where a pair is *nearly* decidable the row stays in, and the abstain gate handles
+it at inference: the shipped gate catches 22 hand-written rows at 76% precision,
+which is precisely its job — refusing what the sentence did not settle. Refusing
+it at authoring time instead would narrow the training distribution to sentences
+narrower than the ones a student writes, which is the failure this whole system
+exists to fix.
 
 `confusable` is the league table of near-neighbours, taken from the measured
 confusion pairs. It drives the contrast frames: for each unordered pair, one
@@ -149,14 +168,20 @@ For every generated row, in order:
 4. novelty: the normalised sentence is not within a Jaccard threshold of an
    existing row for the same relation — *structure* novelty is what the ledger
    counts, row novelty is a cheap duplicate guard;
-5. decidability: the ask names the answer quantity and every same-dimension pair
-   in the row's structure is named.
+5. decidability: a careful reader can resolve the row from its text alone. The
+   validator rejects only unresolvable rows — two interchangeable slots with no
+   distinguishing language — and records the rejection against the relation with
+   its reason. A row that is nearly decidable stays in and is left to the abstain
+   gate at inference.
 
 The **coverage ledger** is the output that stops the illusion: distinct
-normalised structures per relation, rows per relation, held-out structures, and
-distinct lexicon variants. A relation with 400 rows from 3 structures is reported
-as 3. The ledger is generated and checked in a gate (`--check`), like every other
-generated artifact in this repository.
+normalised structures per relation, rows per relation, held-out structures,
+distinct lexicon variants, and **the excluded fraction with its reason**. A
+relation with 400 rows from 3 structures is reported as 3. The excluded fraction
+is a property of the relation's slots rather than of the wording, which is why it
+belongs in the ledger beside the structures and not in a sentence of a pull
+request body. The ledger is generated and checked in a gate (`--check`), like
+every other generated artifact in this repository.
 
 **Split by structure.** `sha256(relation|structure_id)` decides: one structure in
 five is held out whole, so its rows are eval and never trained. The hand-written
@@ -208,16 +233,23 @@ A rising generated gate is not evidence for any of them.
 
 ## Decisions I want argued
 
-1. **Naming is a structural requirement, not an inference.** If a sentence does
-   not name a same-dimension role, the row is refused. That is stricter than the
-   current corpus and it will make some perfectly ordinary sentences
-   unrepresentable ("mix 0.2 mol into 0.5 L" — is it the amount of solute or the
-   amount of solvent?). I think that is right, because NDLE-21 measured what
-   happens when the model is asked to infer it.
+1. **Exclusion is by human resolvability, not by role naming.** *(Decided, after
+   review: the first draft made role naming a structural requirement and refused
+   any sentence that left a same-dimension slot implicit. That was the wrong cut
+   and it cut toward this project's worst measured failure — a corpus narrower
+   than the sentences students write makes the hand-written eval more out of
+   distribution, not less.)* The composer emits whatever a competent reader can
+   answer, names roles optionally, and the validator rejects only text that a
+   careful reader could not resolve. Near-decidable rows stay in for the abstain
+   gate to refuse at inference.
 2. **`carnot` and `carnot_efficiency` are one quantity in two formats.** The
-   system will generate a format discriminator for them, but the real fix is a
-   contract question — collapse them, or make the output format an argument.
-   That is out of scope here and I am reporting it rather than deciding it.
+   same sentence ("A Carnot engine operates between 300 K and 500 K. Find its
+   efficiency.") returns `50%` from one relation and `0.5` from the other, and
+   they differ only in argument order. No wording distinguishes them, so this is
+   a contract defect and it is reported as an issue with both contracts side by
+   side rather than fixed in a data phase. The system will *not* generate a
+   format discriminator for it: no data can teach a distinction the contract does
+   not have.
 3. **Structure holdout at one in five.** Large enough to measure, small enough
    that a relation with 40 structures still trains on 32. If the transfer cohort
    is too noisy at that size, the fix is more structures per relation, not a

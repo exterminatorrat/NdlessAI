@@ -319,7 +319,7 @@ SPECS = {
          ("v2", _slot("volume of the second solution", "volume", "mL")),
          ("c2", _slot("concentration of the second solution", "concentration", "M"))],
         _slot("final concentration", "concentration", "M"),
-        ("final concentration", "concentration of the mixture"),
+        ("final molarity", "molarity of the mixed solution"),
         confusable=("dilution", "dilution_v1", "molarity"),
     ),
     "mixture_final_temperature": _spec(
@@ -469,3 +469,134 @@ SPECS = {
         confusable=(),
     ),
 }
+
+# Physics, heat transfer and electromagnetic waves. These are the two clusters the
+# sourcing pass measured as answerable with one numeric step (69% and 60% of their
+# textbook pools) rather than needing a figure or a derivation, so they are where a
+# real question pool exists for this catalogue to answer.
+PHYSICS = {
+    "specific_heat": _spec(
+        "specific_heat",
+        [("m", _slot("mass of the sample", "mass", "g")),
+         ("c", _slot("specific heat", "specific_heat", "J/(g C)")),
+         ("dT", _slot("temperature change", "temperature", "C"))],
+        _slot("heat transferred", "energy", "J"),
+        ("heat transferred", "heat added", "energy needed"),
+        confusable=("calorimetry_c", "calorimetry_mass", "gas_heat_cp"),
+    ),
+    "conduction_rate": _spec(
+        "conduction_rate",
+        [("k", _slot("thermal conductivity", "conductivity", "W/(m K)")),
+         ("A", _slot("area of the slab", "area", "m^2")),
+         ("dT", _slot("temperature difference", "temperature", "K")),
+         ("d", _slot("thickness of the slab", "length", "m"))],
+        _slot("rate of heat flow", "power", "W"),
+        ("rate of heat flow", "power conducted", "heat current"),
+        confusable=("radiation_power", "specific_heat"),
+    ),
+    "radiation_power": _spec(
+        "radiation_power",
+        [("T", _slot("absolute temperature", "temperature", "K")),
+         ("area", _slot("surface area", "area", "m^2"))],
+        _slot("radiated power", "power", "W"),
+        ("radiated power", "power emitted", "rate of radiation"),
+        confusable=("conduction_rate",),
+    ),
+    "gas_heat_cp": _spec(
+        "gas_heat_cp",
+        [("n", _slot("amount of gas", "amount", "mol")),
+         ("cp", _slot("molar heat capacity at constant pressure",
+                      "heat_capacity", "J/(mol K)")),
+         ("dT", _slot("temperature change", "temperature", "K"))],
+        _slot("heat absorbed", "energy", "J"),
+        ("heat absorbed", "energy supplied", "heat needed"),
+        confusable=("specific_heat", "entropy_change"),
+    ),
+    "entropy_change": _spec(
+        "entropy_change",
+        [("q", _slot("heat added reversibly", "energy", "J")),
+         ("T", _slot("absolute temperature", "temperature", "K"))],
+        _slot("entropy change", "entropy", "J/K"),
+        ("entropy change", "change in entropy"),
+        confusable=("first_law", "gas_heat_cp"),
+    ),
+    "wave_speed": _spec(
+        "wave_speed",
+        [("f", _slot("frequency", "frequency", "Hz")),
+         ("lam", _slot("wavelength", "wavelength", "m"))],
+        _slot("wave speed", "speed", "m/s"),
+        ("wave speed", "speed of the wave"),
+        confusable=("wavelength_from_frequency", "standing_wave_freq"),
+    ),
+    "standing_wave_freq": _spec(
+        "standing_wave_freq",
+        [("n", _slot("harmonic number", "count", "")),
+         ("v", _slot("wave speed", "speed", "m/s")),
+         ("L", _slot("length of the string", "length", "m"))],
+        _slot("resonant frequency", "frequency", "Hz"),
+        ("resonant frequency", "frequency of the harmonic"),
+        confusable=("wave_speed", "beat_freq", "doppler_freq"),
+    ),
+    "double_slit_fringe": _spec(
+        "double_slit_fringe",
+        [("m", _slot("fringe order", "count", "")),
+         ("lam", _slot("wavelength of the light", "wavelength", "nm")),
+         ("L", _slot("distance to the screen", "length", "m")),
+         ("d", _slot("slit separation", "length", "mm"))],
+        _slot("fringe separation", "length", "mm"),
+        ("fringe separation", "distance between fringes"),
+        confusable=("wave_speed", "standing_wave_freq"),
+    ),
+    "doppler_freq": _spec(
+        "doppler_freq",
+        [("f", _slot("emitted frequency", "frequency", "Hz")),
+         ("v", _slot("speed of sound", "speed", "m/s")),
+         ("vs", _slot("speed of the source", "speed", "m/s"))],
+        _slot("observed frequency", "frequency", "Hz"),
+        ("observed frequency", "frequency the listener hears"),
+        confusable=("beat_freq", "standing_wave_freq"),
+    ),
+    "beat_freq": _spec(
+        "beat_freq",
+        [("f1", _slot("first frequency", "frequency", "Hz")),
+         ("f2", _slot("second frequency", "frequency", "Hz"))],
+        _slot("beat frequency", "frequency", "Hz"),
+        ("beat frequency", "beat rate"),
+        confusable=("doppler_freq", "standing_wave_freq"),
+    ),
+}
+
+SPECS.update(PHYSICS)
+
+# Provenance per relation: which registers the spec's rows are written in, and
+# which entry of SOURCES the structural idea came from. The licensing rule
+# (Harry, 2026-11-17) is that non-commercial material is read for structure and
+# register only — no sentence is copied, every row is authored from a spec, and no
+# row reproduces six consecutive words of a source — so this note is what makes
+# that claim auditable later instead of a promise.
+SOURCES = {
+    "in-repo": "authored in this repository from the relation's own contract; "
+               "no outside source",
+    "physics-pool": "structural patterns only from the sourced physics pool "
+                    "(OpenStax College Physics 2e, CC BY-NC-SA 4.0; CK-12, CC "
+                    "BY-NC). No sentence was read into a fixture, and no phrase "
+                    "is reproduced",
+    "chemistry-pool": "structural patterns only from the sourced chemistry pool "
+                      "(OpenStax Chemistry 2e, CC BY-NC-SA 4.0). No sentence was "
+                      "read into a fixture, and no phrase is reproduced",
+}
+
+DEFAULT_PROVENANCE = ("labelled givens, imperative ask", "in-repo")
+
+APPLIED = "applied context (device and bench narration), worked-example prose"
+
+PROVENANCE = {name: (APPLIED, "physics-pool") for name in PHYSICS}
+PROVENANCE.update({
+    name: (APPLIED, "chemistry-pool")
+    for name in ("latent_heat", "heat_reaction", "first_law",
+                 "mixture_final_temperature", "calorimetry_c", "calorimetry_mass")
+})
+PROVENANCE["wavelength_from_frequency"] = (
+    "applied context (instrument dial and spectrum reading), worked-example prose",
+    "physics-pool",
+)

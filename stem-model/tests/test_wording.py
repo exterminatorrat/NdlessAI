@@ -129,6 +129,48 @@ def test_ledger_names_the_pairs_it_cannot_carry():
     assert "ELV-77" in ledger
 
 
+def test_every_spec_has_provenance_and_a_known_source():
+    for name in spec.SPECS:
+        registers, key = spec.PROVENANCE.get(name, spec.DEFAULT_PROVENANCE)
+        assert registers, name
+        assert key in spec.SOURCES, (name, key)
+
+
+def test_the_physics_clusters_are_specd_with_applied_registers():
+    for name in ("specific_heat", "conduction_rate", "radiation_power",
+                 "gas_heat_cp", "entropy_change", "wave_speed",
+                 "standing_wave_freq", "double_slit_fringe", "doppler_freq",
+                 "beat_freq"):
+        assert name in spec.SPECS, name
+        registers, _ = spec.PROVENANCE[name]
+        assert "applied context" in registers, name
+
+
+def test_the_applied_family_narrates_and_never_half_writes():
+    entry = spec.SPECS["conduction_rate"]
+    args = [0.5, 2, 20, 0.1]
+    applied = [structure for structure in grammar.structures(entry)
+               if structure.given == "applied"]
+    assert applied
+    rendered = [grammar.render(entry, args, structure, "lab", 0)
+                for structure in applied]
+    for row in rendered:
+        assert row is not None
+        assert "In the setup," in row.text
+        assert "{" not in row.text
+
+
+@pytest.mark.skipif(not os.path.isdir(os.path.expanduser(
+    "~/.capy/work/ndlessai-apchem/corpora")),
+    reason="no local source corpus to check against")
+def test_no_row_reproduces_seven_words_of_a_source():
+    import gen_wording
+
+    rows = gen_wording.all_rows(1)[0]
+    assert gen_wording.source_guard(
+        os.path.expanduser("~/.capy/work/ndlessai-apchem/corpora"), rows) == 0
+
+
 def test_generated_artifacts_are_current():
     result = subprocess.run([sys.executable, "gen_wording.py", "--check"],
                             cwd=HERE, capture_output=True, text=True)

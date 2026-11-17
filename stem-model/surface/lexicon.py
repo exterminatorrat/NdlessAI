@@ -93,6 +93,47 @@ WORDS = {
 }
 
 
+# Applied-context narration: how a quantity turns up inside a scenario rather than
+# as a labelled slot. These are our own sentence patterns, written for this
+# generator; no source text is copied or closely paraphrased. `{v}` is the value
+# with its unit. A dimension with no fragment falls back to the labelled clause,
+# so nothing is half-narrated.
+SCENE = {
+    "energy": ("the meter reads {v}", "the energy meter settles at {v}"),
+    "mass": ("the balance reads {v}", "it tips the balance at {v}"),
+    "volume": ("the flask is filled to {v}", "it fills a container to {v}"),
+    "temperature": ("the thermometer reads {v}", "the reading settles at {v}"),
+    "pressure": ("the gauge shows {v}", "the dial comes to rest at {v}"),
+    "time": ("the stopwatch runs for {v}", "the clock shows {v} elapsed"),
+    "concentration": ("the assay reads {v}", "the probe reports {v}"),
+    "molar_mass": ("the periodic table gives {v}", "the table lists {v}"),
+    "specific_heat": ("the data sheet lists {v}", "the manual quotes {v}"),
+    "latent": ("the data table gives {v}", "the chart lists {v}"),
+    "length": ("the ruler reads {v}", "the tape measures {v}"),
+    "area": ("the panel measures {v}", "the surface covers {v}"),
+    "wavelength": ("the spectrum peaks at {v}", "the fringe spacing gives {v}"),
+    "frequency": ("the counter reads {v}", "the dial is set to {v}"),
+    "power": ("the label says {v}", "the nameplate reads {v}"),
+    "potential": ("the meter shows {v}", "the readout sits at {v}"),
+    "current": ("the ammeter reads {v}", "the meter shows {v}"),
+    "resistance": ("the label states {v}", "the resistor is marked {v}"),
+    "enthalpy": ("the data sheet lists {v}", "the appendix gives {v}"),
+    "entropy": ("the table gives {v}", "the appendix lists {v}"),
+    "ratio": ("the equation fixes {v}", "the balance gives {v}"),
+    "factor": ("the trial sheet lists {v}", "the run sheet records {v}"),
+    "percent": ("the report quotes {v}", "the sheet shows {v}"),
+    "order": ("the run sheet notes {v}", "the trial sheet records {v}"),
+}
+
+
+def scene_phrase(slot, value_text, variant):
+    """A narration fragment for one slot, or None when its dimension has none."""
+    fragments = SCENE.get(slot.dim)
+    if not fragments:
+        return None
+    return fragments[variant % len(fragments)].format(v=value_text)
+
+
 def role_words(slot, register):
     """The phrasings for one slot in one register.
 

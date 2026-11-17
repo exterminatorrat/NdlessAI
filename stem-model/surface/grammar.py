@@ -69,6 +69,25 @@ def _given_given(spec, parts, register, variant):
     return "Given " + ", ".join(pairs) + ", work the rest out."
 
 
+def _given_applied(spec, parts, register, variant):
+    """The quantities as a scenario reports them, not as labelled slots.
+
+    This is the applied-context register the sourcing report found we lacked: a
+    device or a bench narrating its own readings. A slot whose dimension has no
+    narration fragment keeps its labelled clause, so a scene never comes out half
+    written.
+    """
+    clauses = []
+    for index, (param, slot) in enumerate(spec.slots.items()):
+        scene = lexicon.scene_phrase(slot, parts[param], variant + index)
+        if scene is None:
+            role = _role(slot, register, variant + index)
+            clauses.append(f"The {role} {_is(role)} {parts[param]}.")
+        else:
+            clauses.append(f"In the setup, {scene}.")
+    return " ".join(clauses)
+
+
 def _given_list(spec, parts, register, variant):
     values = ", ".join(parts[param] for param in spec.slots)
     verb = "are" if len(parts) > 1 else "is"
@@ -82,6 +101,7 @@ GIVEN = (
     ("equals", _given_equals, True),
     ("given", _given_given, True),
     ("list", _given_list, False),
+    ("applied", _given_applied, True),
 )
 
 # The third field says whether the ask needs a unit to write; the fourth whether
@@ -94,6 +114,8 @@ ASK = (
     ("report", "Report the {answer} to three significant figures.", False, True),
     ("howmuch", "How much is the {answer}?", False, False),
     ("express", "Express the {answer} in {unit}.", True, False),
+    ("worked", "The next line of the solution asks for the {answer}.", False, False),
+    ("applied", "What {answer} does the setup give?", False, False),
 )
 
 # A framing is only offered when the relation has the dimensions it talks about,

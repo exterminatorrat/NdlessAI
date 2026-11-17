@@ -1,3 +1,5 @@
+import math
+
 import sympy as sp
 
 from .core import relation, _exact, dec, dec_exact
@@ -662,3 +664,166 @@ class WavelengthFromFrequency:
         # survives is c * 1e-12 = 2.998e-4 m per (1/THz).
         lam = sp.Rational(2998, 10) * 10 ** -6 / _exact(frequency_thz)
         return f"{dec_exact(lam)} m"
+
+
+# ---------------------------------------------------------------------------
+# AP Chemistry batch B. Same contract as batch A: one exact step over the stated
+# decimals, argument order following the sentence, rounding by dec_exact.
+#
+# `percent_dissociation` is the one relation in the catalogue whose answer is a
+# root. It follows rms_speed: the radicand is taken on a fixed integer grid and
+# the root by integer square root, so the C solver and this one agree bit for
+# bit. It computes the small-x approximation that an exam answer is written
+# from, not the quadratic, and says so.
+# ---------------------------------------------------------------------------
+
+
+@relation("percent_dissociation", "chemistry", ["c0", "Ka"], exact=False,
+          step=dict(line="percent = 100*sqrt(Ka/c0), small-x approximation",
+                    expr="100 * sqrt(@2 / @1)"))
+class PercentDissociation:
+    @staticmethod
+    def gen(rng):
+        # Two constraints on the pools, both physical rather than cosmetic.
+        #
+        # Ka stays at or above 1e-4 because str() of a smaller float is
+        # exponent notation: 6.3e-05 in the call line against 0.000063 in the
+        # question would not ground against each other.
+        #
+        # Ka/c0 stays under 3e-4 because the solver is the small-x
+        # approximation. The exact quadratic at Ka/c0 = 3e-4 gives 0.87% less
+        # than the approximation, so every row the relation emits is inside one
+        # percent of the chemistry it names; at the ratio a first draft allowed
+        # (0.0025) the gap was 9%, which is not an answer a student should be
+        # given as the answer.
+        c0 = rng.choice([0.5, 1, 2])
+        Ka = rng.choice([ka for ka in (0.0001, 0.00012, 0.00015, 0.00018,
+                                       0.00022, 0.00029, 0.0004)
+                         if ka / c0 <= 0.0003])
+        return [c0, Ka], (
+            f"A weak acid of concentration {c0} mol/L has Ka = {Ka}. Find its "
+            f"percent dissociation, using the small-x approximation.")
+
+    @staticmethod
+    def solve(c0, Ka):
+        # The C solver takes the root on a 1e6 grid from the exact ratio; the
+        # same integer arithmetic here is what makes the two prints identical.
+        r = _exact(Ka) / _exact(c0)
+        root = math.isqrt(int(r.p) * 10 ** 12 // int(r.q))
+        return f"{dec_exact(sp.Rational(root, 10000))}%"
+
+
+@relation("mixing_concentration", "chemistry", ["v1", "c1", "v2", "c2"],
+          exact=False,
+          step=dict(line="c = (c1*v1 + c2*v2) / (v1 + v2)",
+                    expr="(@2 * @1 + @4 * @3) / (@1 + @3)"))
+class MixingConcentration:
+    @staticmethod
+    def gen(rng):
+        v1 = rng.choice([10, 20, 25, 30, 50, 70, 100])
+        c1 = rng.choice([0.1, 0.2, 0.5, 1, 1.5, 2, 3])
+        v2 = rng.choice([10, 20, 25, 30, 50, 70, 100])
+        c2 = rng.choice([0.1, 0.2, 0.5, 1, 1.5, 2, 3])
+        return [v1, c1, v2, c2], (
+            f"A volume of {v1} mL of a {c1} mol/L solution is added to {v2} mL "
+            f"of a {c2} mol/L solution of the same solute. Find the "
+            f"concentration of the mixture.")
+
+    @staticmethod
+    def solve(v1, c1, v2, c2):
+        # Volume first, because that is how the sentence reads it: "70 mL of
+        # 3.0 M is added to 30 mL of 1.0 M". The audit's own shape had the
+        # concentrations first, which is the average_rate_of_change trap.
+        moles = _exact(c1) * _exact(v1) + _exact(c2) * _exact(v2)
+        return f"{dec_exact(moles / (_exact(v1) + _exact(v2)))} mol/L"
+
+
+@relation("hydrate_water", "chemistry",
+          ["mass_hydrate", "mass_anhydrous", "mm_anhydrous", "mm_water"],
+          exact=False,
+          step=dict(line="x = ((m_h - m_a)/M_w) / (m_a/M_a)",
+                    expr="((@1 - @2) / @4) / (@2 / @3)"))
+class HydrateWater:
+    @staticmethod
+    def gen(rng):
+        mm_anhydrous = rng.choice([120, 142, 160, 246, 286])
+        mm_water = 18
+        moles = rng.choice([0.5, 1, 2])
+        x = rng.choice([2, 3, 5, 7, 10])
+        mass_anhydrous = mm_anhydrous * moles
+        mass_hydrate = mass_anhydrous + mm_water * x * moles
+        return [mass_hydrate, mass_anhydrous, mm_anhydrous, mm_water], (
+            f"A hydrated salt of mass {mass_hydrate} g is heated until the "
+            f"water is driven off, leaving {mass_anhydrous} g of the anhydrous "
+            f"salt, whose molar mass is {mm_anhydrous} g/mol. Water has molar "
+            f"mass {mm_water} g/mol. Find the number of moles of water per "
+            f"mole of anhydrous salt.")
+
+    @staticmethod
+    def solve(mass_hydrate, mass_anhydrous, mm_anhydrous, mm_water):
+        water = (_exact(mass_hydrate) - _exact(mass_anhydrous)) / _exact(mm_water)
+        salt = _exact(mass_anhydrous) / _exact(mm_anhydrous)
+        return dec_exact(water / salt)
+
+
+@relation("faraday_deposit", "chemistry",
+          ["faradays", "electrons_per_ion", "molar_mass"], exact=False,
+          step=dict(line="m = faradays * M / n", expr="@1 * @3 / @2"))
+class FaradayDeposit:
+    @staticmethod
+    def gen(rng):
+        faradays = rng.choice([0.1, 0.2, 0.25, 0.5, 1, 1.5, 2])
+        electrons = rng.choice([1, 2, 3])
+        molar_mass = rng.choice([26.98, 55.85, 58.69, 63.55, 65.38, 107.87,
+                                 196.97, 207.2])
+        return [faradays, electrons, molar_mass], (
+            f"Electrolysis passes {faradays} faraday of charge through a "
+            f"solution in which each metal ion takes {electrons} electrons to "
+            f"plate out. The metal has molar mass {molar_mass} g/mol. Find the "
+            f"mass deposited.")
+
+    @staticmethod
+    def solve(faradays, electrons_per_ion, molar_mass):
+        return (f"{dec_exact(_exact(faradays) * _exact(molar_mass) / _exact(electrons_per_ion))}"
+                f" g")
+
+
+@relation("rate_factor", "chemistry", ["f1", "o1", "f2", "o2"], exact=False,
+          step=dict(line="factor = f1^o1 * f2^o2", expr="@1^@2 * @3^@4"))
+class RateFactor:
+    @staticmethod
+    def gen(rng):
+        f1 = rng.choice([2, 3, 4, 0.5])
+        o1 = rng.choice([0, 1, 2])
+        f2 = rng.choice([2, 3, 4, 0.5])
+        o2 = rng.choice([0, 1, 2])
+        while o1 == 0 and o2 == 0:
+            o2 = rng.choice([0, 1, 2])
+        return [f1, o1, f2, o2], (
+            f"The first reactant's concentration is multiplied by {f1} and its "
+            f"order is {o1}; the second reactant's concentration is multiplied "
+            f"by {f2} and its order is {o2}. By what factor does the rate "
+            f"change?")
+
+    @staticmethod
+    def solve(f1, o1, f2, o2):
+        return dec_exact(_exact(f1) ** o1 * _exact(f2) ** o2)
+
+
+@relation("mass_from_molarity", "chemistry", ["c", "V", "molar_mass"],
+          exact=False,
+          step=dict(line="m = c * V * M", expr="@1 * @2 * @3"))
+class MassFromMolarity:
+    @staticmethod
+    def gen(rng):
+        c = rng.choice([0.1, 0.2, 0.5, 1, 1.5, 2])
+        V = rng.choice([0.25, 0.5, 1, 2, 2.5])
+        molar_mass = rng.choice([58.5, 98, 100, 142, 180, 58.69])
+        return [c, V, molar_mass], (
+            f"A volume of {V} L of a {c} mol/L solution contains a solute of "
+            f"molar mass {molar_mass} g/mol. Find the mass of solute "
+            f"dissolved.")
+
+    @staticmethod
+    def solve(c, V, molar_mass):
+        return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"

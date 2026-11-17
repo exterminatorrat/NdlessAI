@@ -160,6 +160,12 @@ TEMPLATES = {
     "beer_lambert": "A second sample in the same experiment has absorbance {n}.",
     "atoms_from_mass": "A second sample in the same problem has a mass of {n} g.",
     "wavelength_from_frequency": "A second source in the same problem runs at {n} THz.",
+    "percent_dissociation": "A second acid in the same problem has Ka = {n} mol/L.",
+    "mixing_concentration": "A third portion in the same problem measures {n} mL.",
+    "hydrate_water": "A second hydrate in the same experiment leaves {n} g of anhydrous salt.",
+    "faraday_deposit": "A second cell in the same experiment passes {n} faraday.",
+    "rate_factor": "A second run of the same reaction doubles the first concentration {n} times.",
+    "mass_from_molarity": "A second portion in the same problem measures {n} L.",
 }
 
 POOLS = {
@@ -207,6 +213,12 @@ POOLS = {
     "beer_lambert": [0.2, 0.3, 0.4, 0.6, 0.9],
     "atoms_from_mass": [1, 2, 5, 10, 25, 50],
     "wavelength_from_frequency": [250, 350, 600, 900],
+    "percent_dissociation": [0.0001, 0.00012, 0.00015, 0.00029],
+    "mixing_concentration": [10, 20, 25, 30, 50, 100],
+    "hydrate_water": [5, 10, 20, 30, 50, 100],
+    "faraday_deposit": [0.1, 0.2, 0.25, 0.5, 1, 2],
+    "rate_factor": [2, 3, 4, 5],
+    "mass_from_molarity": [0.25, 0.5, 1, 2, 2.5],
 }
 
 

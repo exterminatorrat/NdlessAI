@@ -231,6 +231,53 @@ static void check_every_name_fits(void)
 	}
 }
 
+/* A formula-taking call: a name token, then a formula or a measured name where
+ * the relation would take a number. */
+static void test_formula_calls(void)
+{
+	char answer[128], call[96];
+	int rc;
+
+	check(strcmp(built("molar_mass_formula CH3OH", &rc),
+	             "CALL molar_mass_formula CH3OH") == 0 && rc == 0,
+	      "the formula call's own name builds its call");
+	check(strcmp(built("mmf CH3OH", &rc),
+	             "CALL molar_mass_formula CH3OH") == 0 && rc == 0,
+	      "its initials resolve");
+	check(strcmp(built("molar_mass_formula methanol", &rc),
+	             "CALL molar_mass_formula methanol") == 0 && rc == 0,
+	      "a measured name is a chemistry slot");
+	check(strcmp(built("molar-mass-formula H2O", &rc),
+	             "CALL molar_mass_formula H2O") == 0 && rc == 0,
+	      "a hyphen stands in for the underscore");
+
+	/* An unreadable formula is refused with the call shown, not guessed. */
+	check(strcmp(built("molar_mass_formula H2X", &rc),
+	             "CALL molar_mass_formula H2X") == 0 && rc == 1,
+	      "an unknown formula is refused, not answered");
+	check(strcmp(built("molar_mass_formula propanol", &rc),
+	             "CALL molar_mass_formula propanol") == 0 && rc == 1,
+	      "an ambiguous name is refused");
+	check(strcmp(built("molar_mass_formula 32", &rc),
+	             "CALL molar_mass_formula 32") == 0 && rc == 1,
+	      "a bare number is not a formula");
+
+	/* The numeric catalogue keeps its own names first: "ksp" still means the
+	 * relation, and a sentence still falls through to the decoder. */
+	check(built("ksp 0.01 1 2", &rc)[0] != '\0' && rc == 0,
+	      "ksp still resolves to the numeric relation");
+	check(built("a 5 kg crate slides with friction 0.4", &rc)[0] == '\0' && rc == -1,
+	      "a sentence is still not a shorthand");
+
+	/* And the answer comes out of the chemistry, with the working beside it. */
+	check(pipeline_answer_offline("molar_mass_formula CH3OH", answer,
+	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&
+	      strcmp(answer, "32.04 g/mol") == 0,
+	      "the offline path answers a molar mass");
+	check(strcmp(call, "CALL molar_mass_formula CH3OH") == 0,
+	      "and reports the call it made");
+}
+
 int main(void)
 {
 	test_names();
@@ -238,6 +285,7 @@ int main(void)
 	test_offline_path();
 	test_scientific_numbers();
 	test_collision_decimals();
+	test_formula_calls();
 	check_every_name_fits();
 
 	if (failures) {

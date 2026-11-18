@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "formula.h"
 #include "steps.h"
 
 #define STEPTABLE_IMPL
@@ -88,8 +89,11 @@ int steps_render(const char *name, const char *const *args, int nargs,
 
 	row = find_row(name);
 	if (!row || !row->expr || !row->expr[0]) {
+		/* The formula calls carry no step row: they are not relations, and
+		 * their working is the derived quantity itself (the molar mass, the
+		 * ions per formula unit), which formula_steps renders. */
 		out[0] = 0;
-		return 0;
+		return formula_steps(name, args, nargs, answer, out, outlen);
 	}
 
 	if (row->line && row->line[0]) {

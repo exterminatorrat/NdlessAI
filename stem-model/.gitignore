@@ -47,6 +47,7 @@ runtime/test_ode
 runtime/test_alt
 runtime/test_screen
 runtime/test_ui
+runtime/test_formula
 
 # The College Board question bank, its page cache and every derived row.
 # Copyrighted exam text never enters a commit; only the ingester does.

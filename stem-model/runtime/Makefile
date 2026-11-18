@@ -19,7 +19,7 @@ HEADERS = coursetable.h bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeli
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c \
 	  solvers_optics.c solvers_waves.c solvers_fluids.c \
-	  solvers_modern.c
+	  solvers_modern.c formula.c
 
 # Everything the typed path needs: the pipeline pulls in the tokenizer, the
 # model and the expression evaluator, and matrix.c answers linear algebra
@@ -32,7 +32,7 @@ all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
      test_matrix test_steps test_symbolic test_series test_ode test_alt \
      test_screen test_ui test_diagram test_shorthand test_plan test_repair \
-     bench_kernel
+     test_formula bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -43,8 +43,8 @@ main_device: main_device.c $(PIPELINE) $(HEADERS)
 test_solvers: test_solvers.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_solvers.c $(SOLVERS) $(LDLIBS)
 
-test_steps: test_steps.c steps.c $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_steps.c steps.c
+test_steps: test_steps.c steps.c $(SOLVERS) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_steps.c steps.c $(SOLVERS) $(LDLIBS)
 test_ode: test_ode.c expr.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_ode.c expr.c $(LDLIBS)
 
@@ -75,8 +75,8 @@ test_guard: test_guard.c $(PIPELINE) $(HEADERS)
 test_callmask: test_callmask.c callmask.c bpe.c $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_callmask.c callmask.c bpe.c
 
-test_graph: test_graph.c graph.c screen.c expr.c steps.c $(HEADERS)
-	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c steps.c $(LDLIBS)
+test_graph: test_graph.c graph.c screen.c expr.c steps.c $(SOLVERS) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_graph.c graph.c screen.c expr.c steps.c $(SOLVERS) $(LDLIBS)
 
 # The font and the primitives on their own: the UI and the plotter both draw
 # through them, so a clipping bug there is a bug in two screens.
@@ -107,6 +107,9 @@ test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 test_alt: test_alt.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_alt.c $(PIPELINE) $(LDLIBS)
 
+test_formula: test_formula.c steps.c $(SOLVERS) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_formula.c steps.c $(SOLVERS) $(LDLIBS)
+
 test_matrix: test_matrix.c matrix.c $(SOLVERS) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_matrix.c matrix.c $(SOLVERS) $(LDLIBS)
 
@@ -129,6 +132,7 @@ check: all
 	./test_graph
 	./test_diagram
 	./test_shorthand
+	./test_formula
 	./test_plan
 	./test_repair
 	./test_typed
@@ -142,6 +146,6 @@ clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
 	      test_equation test_alt test_screen test_ui test_diagram test_shorthand \
-      test_plan test_repair bench_kernel
+      test_plan test_repair test_formula bench_kernel
 
 .PHONY: all clean check

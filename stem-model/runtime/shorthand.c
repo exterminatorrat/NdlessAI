@@ -9,10 +9,18 @@
  *  - It must never answer the wrong relation. The full name always matches;
  *    anything shorter has to be unique among the 136 names, and a two-letter
  *    mnemonic is refused when two relations would share it.
+ *
+ * A formula-taking call is a second kind of shorthand and is tried only after
+ * the numeric catalogue declines the name, so a token that already means a
+ * relation keeps meaning it ("ksp" is still ksp_from_solubility, not
+ * ksp_from_solubility_formula). Its chemistry slots take a formula or a
+ * measured compound name where the relation would take a number; everything
+ * else about it is the same call syntax.
  */
 #include <stdio.h>
 #include <string.h>
 
+#include "formula.h"
 #include "reltable.h"
 #include "shorthand.h"
 
@@ -193,6 +201,55 @@ static int split(const char *text, char tok[TOKENS][TOKLEN])
 	return n;
 }
 
+#define SLOT_NUMBER 0
+#define SLOT_CHEM   1
+#define FORM_SLOTS  6
+
+typedef struct {
+	const char *name;
+	unsigned char arity;
+	unsigned char slot[FORM_SLOTS];
+} form_row_t;
+
+static const form_row_t form_rows[] = {
+	{"molar_mass_formula", 1, {SLOT_CHEM}},
+};
+
+static const form_row_t *resolve_form(const char *tok)
+{
+	const form_row_t *prefix = NULL;
+	int prefix_n = 0;
+
+	if (!tok[0] || !is_name_char(tok[0]) ||
+	    (tok[0] >= '0' && tok[0] <= '9'))
+		return NULL;
+	for (int i = 0; i < (int)(sizeof form_rows / sizeof form_rows[0]); i++) {
+		const char *name = form_rows[i].name;
+		char initials[TOKLEN];
+
+		if (name_eq(tok, name))
+			return &form_rows[i];
+		initials_of(name, initials, (int)sizeof initials);
+		if (name_eq(tok, initials)) {
+			int matches = 0;
+
+			for (int j = 0;
+			     j < (int)(sizeof form_rows / sizeof form_rows[0]); j++)
+				if (same_initials(tok, form_rows[j].name))
+					matches++;
+			if (matches == 1)
+				return &form_rows[i];
+		}
+		if (name_prefix(tok, name)) {
+			prefix = &form_rows[i];
+			prefix_n++;
+		}
+	}
+	if (prefix_n == 1 && strlen(tok) >= MIN_PREFIX)
+		return prefix;
+	return NULL;
+}
+
 static void build(const rel_row_t *row, char tok[TOKENS][TOKLEN], int n,
                   char *call, int call_max)
 {
@@ -201,6 +258,29 @@ static void build(const rel_row_t *row, char tok[TOKENS][TOKLEN], int n,
 	for (int i = 1; i < n && used > 0 && used < call_max; i++)
 		used += snprintf(call + used, (size_t)(call_max - used), " %s",
 		                 tok[i]);
+}
+
+static int build_form(const form_row_t *row, char tok[TOKENS][TOKLEN], int n,
+                      char *call, int call_max)
+{
+	int used = snprintf(call, (size_t)call_max, "CALL %s", row->name);
+
+	for (int i = 1; i < n && used > 0 && used < call_max; i++)
+		used += snprintf(call + used, (size_t)(call_max - used), " %s",
+		                 tok[i]);
+	if (n - 1 != (int)row->arity)
+		return 1;
+	for (int i = 0; i < (int)row->arity; i++) {
+		if (row->slot[i] == SLOT_CHEM) {
+			/* A slope the solver cannot read is refused here, with the call
+			 * shown, rather than answered from a guessed formula. */
+			if (formula_recognise(tok[i + 1]) != 0)
+				return 1;
+		} else if (!is_number(tok[i + 1])) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 int shorthand_build(const char *text, char *call, int call_max)
@@ -215,12 +295,17 @@ int shorthand_build(const char *text, char *call, int call_max)
 	n = split(text, tok);
 	if (n < 2)
 		return -1;
+	row = resolve(tok[0]);
+	if (!row) {
+		const form_row_t *form = resolve_form(tok[0]);
+
+		if (!form)
+			return -1;
+		return build_form(form, tok, n, call, call_max);
+	}
 	for (int i = 1; i < n; i++)
 		if (!is_number(tok[i]))
 			return -1;
-	row = resolve(tok[0]);
-	if (!row)
-		return -1;
 	build(row, tok, n, call, call_max);
 	return n - 1 == (int)row->arity ? 0 : 1;
 }

@@ -36,7 +36,16 @@
 #define RELATION_MARGIN_MIN 500
 
 #define PROMPT_SUFFIX " <sep>"
-#define MAX_GEN 20
+/*
+ * The decode's token budget, measured from the trained call shape rather than
+ * guessed: "CALL newton2 2 9.8" is 6 tokens, a two-step chain 17, a three-step
+ * chain 30 and a four-step chain 39. At the 20 this used to be, a two-step
+ * chain only fitted while its numbers stayed short and every three- and
+ * four-step chain was cut off mid-call — the runtime could execute a chain it
+ * could never be handed. The window (seq, 192) still ends generation on a long
+ * question; this is only the ceiling for a short one.
+ */
+#define MAX_GEN 64
 #define MAX_PROMPT 256
 #define MAX_VOCAB 1024
 
@@ -132,7 +141,7 @@ static void mask_logits(pipeline_t *p, const char *sofar)
 	 * precondition for answering, so it must not turn into an outage. */
 	if (p->model.vocab <= 0 || p->model.vocab > MAX_VOCAB)
 		return;
-	callmask_next(sofar, allow, p->model.vocab);
+	callmask_next(sofar, allow, p->model.vocab, p->allow_chain);
 	for (int i = 0; i < p->model.vocab; i++)
 		if (!allow[i])
 			p->logits[i] = INT32_MIN;
@@ -234,10 +243,28 @@ int pipeline_steps(const char *call, const char *answer, char *out, int outlen)
  *    digits, and a positive one requires an occurrence with no minus. Without
  *    this, a model that flips a sign still passes: "x^2 - 3x + 2" contains a
  *    3, so an argument of +3 looked grounded when the answer needed -3.
+ *
+ * A chain is grounded step by step, on the text the decode wrote rather than on
+ * the numbers the plan computed: only a literal the model chose can be invented,
+ * and a "<n>" argument is the answer of a step that already ran. Grounding the
+ * executed plan would fail every reference, which is how a chain whose every
+ * number was the question's own came back uncertain.
  */
 int pipeline_args_grounded(const char *call, const char *question)
 {
-	return grounding_call_grounded(call, question);
+	char segment[PLAN_TEXT_MAX];
+
+	if (!plan_is(call))
+		return grounding_call_grounded(call, question);
+	/* A step is "name args" or "CALL name args", so grounding starts after
+	 * whichever the decoder wrote. */
+	for (int n = 1; plan_step_text(call, n, segment, (int)sizeof segment); n++) {
+		int skip = strncmp(segment, "CALL ", 5) == 0 ? 2 : 1;
+
+		if (!grounding_args_grounded(segment, skip, question))
+			return 0;
+	}
+	return 1;
 }
 
 int pipeline_init(pipeline_t *p, const char *weights_path, int seq)

@@ -449,7 +449,6 @@ void ui_result(ui_t *u, const char *question, int rc,
                const char *answer, const char *call)
 {
 	char src[UI_HIST_PANE];
-	char block[256];
 	char *at = src;
 	const char *end = src + sizeof src - 1;
 	int dim_from = 0, dim_to = 0;
@@ -462,11 +461,16 @@ void ui_result(ui_t *u, const char *question, int rc,
 	last_number(rc == PIPELINE_OK ? answer : "", u->last_num,
 	            (int)sizeof u->last_num);
 	if (rc == PIPELINE_OK) {
-		if (pipeline_steps(call, answer ? answer : "", block, (int)sizeof block) == 1) {
-			char *last;
+		/*
+		 * Straight into the pane's own buffer. A four-step chain renders more
+		 * than the 256 bytes this used to copy out of, and a working clipped
+		 * mid-number shown as if it were complete is worse than no working at
+		 * all: plan_render reports its own overflow and the answer is shown
+		 * alone instead.
+		 */
+		if (pipeline_steps(call, answer ? answer : "", src, (int)sizeof src) == 1) {
+			char *last = strrchr(src, '\n');
 
-			copy_trunc(src, sizeof src, block);
-			last = strrchr(src, '\n');
 			/* Everything before the answer line is the working. */
 			dim_to = last ? (int)(last - src) + 1 : 0;
 		} else {

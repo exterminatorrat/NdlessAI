@@ -14,8 +14,6 @@
 #include "solvers.h"
 #include "steps.h"
 
-#define PLAN_TEXT_MAX 256
-
 /* [+-]? (digits [.digits] | .digits) [e [+-]? digits] */
 static int is_number(const char *s)
 {
@@ -333,16 +331,39 @@ int plan_execute(const char *text, plan_t *p)
 	return 0;
 }
 
+/* Appends s, or reports that the buffer is full. Always keeps room for the NUL. */
+static int plan_put(char **at, char *end, const char *s)
+{
+	while (*s) {
+		if (*at >= end)
+			return -1;
+		*(*at)++ = *s++;
+	}
+	return 0;
+}
+
+static int plan_put_ch(char **at, char *end, char c)
+{
+	if (*at >= end)
+		return -1;
+	*(*at)++ = c;
+	return 0;
+}
+
 int plan_render(const plan_t *p, char *out, int outlen)
 {
-	int used = 0, wrote = 0;
+	char *at = out;
+	char *end;
+	int wrote = 0, clipped = 0;
 
 	if (!out || outlen < 1)
 		return -1;
 	out[0] = '\0';
-	for (int i = 0; i < p->n; i++) {
+	end = out + outlen - 1;
+	for (int i = 0; i < p->n && !clipped; i++) {
 		const plan_step_t *step = &p->step[i];
 		char block[192];
+		char head[16];
 		const char *argv[8];
 		int rc;
 
@@ -350,27 +371,45 @@ int plan_render(const plan_t *p, char *out, int outlen)
 		rc = steps_render(step->name, argv, step->nargs, step->answer, block,
 		                  (int)sizeof block);
 
-		if (rc <= 0)
-			continue;
-		/* "1." then the block's own first line, so the step number reads as
-		 * the plan's numbering and not as part of the formula. */
-		if (used < outlen - 1)
-			used += snprintf(out + used, (size_t)(outlen - used), "%d. ",
-			                 i + 1);
-		for (const char *s = block; *s && used < outlen - 1; s++) {
-			out[used++] = *s;
-			if (*s == '\n' && used < outlen - 2) {
-				out[used++] = ' ';
-				out[used++] = ' ';
+		/* The separator belongs to the step after the first, so the plan ends
+		 * on its last answer rather than on a blank line: the answer pane
+		 * brightens the final line and dims everything above it. */
+		if (i > 0 && plan_put(&at, end, "\n") < 0)
+			clipped = 1;
+		snprintf(head, sizeof head, "%d. ", i + 1);
+		if (plan_put(&at, end, head) < 0)
+			clipped = 1;
+		if (rc > 0) {
+			/* "1." then the block's own first line, so the step number reads
+			 * as the plan's numbering and not as part of the formula. Each
+			 * continuation line is indented under it. */
+			for (const char *s = block; *s; s++) {
+				if (plan_put_ch(&at, end, *s) < 0 ||
+				    (*s == '\n' && plan_put(&at, end, "  ") < 0)) {
+					clipped = 1;
+					break;
+				}
 			}
+		} else {
+			/* A relation with no step template still has to appear. An
+			 * intermediate the working skips is one the student has to invent,
+			 * and the call's own numbers are the only working such a relation
+			 * has. */
+			if (plan_put(&at, end, step->name) < 0)
+				clipped = 1;
+			for (int a = 0; a < step->nargs; a++) {
+				if (plan_put(&at, end, " ") < 0 ||
+				    plan_put(&at, end, step->args[a]) < 0)
+					clipped = 1;
+			}
+			if (plan_put(&at, end, "\n  = ") < 0 ||
+			    plan_put(&at, end, step->answer) < 0)
+				clipped = 1;
 		}
-		if (used < outlen - 1 && out[used - 1] != '\n')
-			out[used++] = '\n';
 		wrote = 1;
 	}
-	if (used < outlen)
-		out[used] = '\0';
-	return wrote ? (used < outlen ? 1 : -1) : 0;
+	*at = '\0';
+	return wrote ? (clipped ? -1 : 1) : 0;
 }
 
 const char *plan_step_text(const char *text, int n, char *out, int outlen)

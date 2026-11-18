@@ -164,6 +164,7 @@ static void test_working(void)
 {
 	plan_t plan;
 	char out[512];
+	char small[40];
 
 	check(plan_execute("CALL newton2 2 9.8 ; CALL friction_force 0.2 <1>", &plan) == 0,
 	      "the ramp plan runs");
@@ -172,6 +173,77 @@ static void test_working(void)
 	      "the working numbers its steps");
 	check(strstr(out, "3.92 N") != NULL, "and ends on the last answer");
 	check(strstr(out, "2. ") != NULL, "with both steps shown");
+
+	/*
+	 * Four steps is the depth a real multiple-choice item needs, and it used to
+	 * be the depth the runtime could not show: the render filled the caller's
+	 * buffer and reported success, so the answer pane printed a number cut in
+	 * half. Measured, the four-step working below is 156 bytes; the panel used
+	 * to copy it through a 256-byte block, and the longer templates overflow
+	 * that.
+	 */
+	check(plan_execute("CALL newton2 2 9.8 ; CALL friction_force 0.2 <1> ; "
+	                   "CALL work 3.92 2 0 ; CALL power 7.84 2", &plan) == 0,
+	      "four steps run");
+	check(plan_render(&plan, out, (int)sizeof out) == 1, "and render");
+	check(strstr(out, "4. ") != NULL, "with the fourth step shown");
+	check(strstr(out, "= 3.92 W") != NULL, "and the last answer in it");
+	check(out[strlen(out) - 1] != '\n',
+	      "and no blank line after the answer, which the pane would dim");
+
+	/* A buffer too small must say so. It used to report success with the
+	 * number cut in half, which is the one thing a working may not do. */
+	check(plan_render(&plan, small, (int)sizeof small) == -1,
+	      "a render that does not fit reports it");
+
+	/* Four steps whose templates are long enough to overflow that block. */
+	check(plan_execute("CALL percent_dissociation 0.1 0.0001 ; "
+	                   "CALL percent_dissociation 0.1 <1> ; "
+	                   "CALL percent_dissociation 0.1 <2> ; "
+	                   "CALL percent_dissociation 0.1 <3>", &plan) == 0,
+	      "four steps with long templates run");
+	check(plan_render(&plan, out, (int)sizeof out) == 1, "and render in full");
+	check(strlen(out) > 256, "the working is longer than the old copy buffer");
+	check(strstr(out, "= 2.738e+04%") != NULL, "and its last answer is intact");
+
+	/*
+	 * Seventeen relations carry no step template (quad_solve, limiting_moles,
+	 * sig_figs and the rest of the algebra and chemistry forms). A step that
+	 * renders nothing is an intermediate the student has to invent, so the
+	 * step falls back to the call and the number it produced.
+	 */
+	check(plan_execute("CALL sig_figs 3.14159 3 ; CALL sig_figs <1> 3", &plan) == 0,
+	      "a chain of template-less relations runs");
+	check(plan_render(&plan, out, (int)sizeof out) == 1, "and renders");
+	check(strstr(out, "1. sig_figs 3.14159") != NULL,
+	      "a step with no formula shows its own call");
+	check(strstr(out, "2. sig_figs") != NULL, "and the second step still appears");
+}
+
+/*
+ * The grounding guard is what refuses an answer built from numbers the question
+ * never wrote, and a chain used to fail it outright: the ';', the second CALL
+ * and every <n> reference are not numbers, so a decoded chain whose literals
+ * were all the question's own still came back uncertain. Grounding a chain
+ * means grounding each step's literals and letting the references be.
+ */
+static void test_grounding(void)
+{
+	const char *chain = "CALL newton2 2 9.8 ; CALL friction_force 0.2 <1> ; "
+	                    "CALL power <2> 2";
+	const char *question = "A 2 kg block is pushed with mu 0.2 at g 9.8 for 2 s.";
+
+	check(pipeline_args_grounded(chain, question),
+	      "a chain whose literals are all in the question is grounded");
+	check(pipeline_args_grounded("CALL newton2 2 9.7", question) == 0,
+	      "a single call with an invented number is still refused");
+	check(pipeline_args_grounded("CALL newton2 2 9.7 ; CALL power 3 2",
+	                             question) == 0,
+	      "and so is a chain that invents one");
+	check(pipeline_args_grounded("newton2 2 9.8 ; power 3.92 2", question) == 0,
+	      "3.92 is not in the question even though the plan would print it");
+	check(pipeline_args_grounded("newton2 2 9.8 ; power 0.2 2", question),
+	      "the shorthand spelling is grounded the same way");
 }
 
 static void test_pipeline(void)
@@ -209,6 +281,7 @@ int main(void)
 	test_rules();
 	test_questions();
 	test_working();
+	test_grounding();
 	test_pipeline();
 	if (failures) {
 		printf("%d failure(s)\n", failures);

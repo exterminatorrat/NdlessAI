@@ -63,15 +63,36 @@ int grounding_arg_in_text(const char *arg, const char *question)
 	return 0;
 }
 
-int grounding_call_grounded(const char *call, const char *question)
+/*
+ * A step reference: "<n>" and nothing else. Its value is the number an earlier
+ * step of the same plan answered with, which the plan computed rather than the
+ * decode invented, so there is nothing in the question for it to match.
+ */
+static int step_reference(const char *word)
+{
+	int digits = 0;
+
+	if (*word++ != '<')
+		return 0;
+	while (*word >= '0' && *word <= '9') {
+		word++;
+		digits++;
+	}
+	return digits > 0 && *word == '>' && word[1] == '\0';
+}
+
+int grounding_args_grounded(const char *text, int skip, const char *question)
 {
 	char work[256];
-	size_t len = strlen(call), i = 0;
+	size_t len, i = 0;
 	int word = 0;
 
+	if (!text)
+		return 0;
+	len = strlen(text);
 	if (len + 1 > sizeof work)
 		return 0;
-	memcpy(work, call, len + 1);
+	memcpy(work, text, len + 1);
 
 	while (i <= len) {
 		char *start;
@@ -85,11 +106,17 @@ int grounding_call_grounded(const char *call, const char *question)
 			i++;
 		if (i < len)
 			work[i++] = '\0';
-		if (word >= 2 && !grounding_arg_in_text(start, question))
+		if (word >= skip && !step_reference(start) &&
+		    !grounding_arg_in_text(start, question))
 			return 0;
 		word++;
 	}
 	return 1;
+}
+
+int grounding_call_grounded(const char *call, const char *question)
+{
+	return grounding_args_grounded(call, 2, question);
 }
 
 /* [+-]? (digits [.digits] | .digits): the same shape the call parser accepts. */

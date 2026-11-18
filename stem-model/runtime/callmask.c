@@ -23,12 +23,32 @@ static int spaces_only(const char *s)
 	return *s == '\0';
 }
 
-void callmask_next(const char *sofar, unsigned char *allow, int vocab)
+void callmask_next(const char *sofar, unsigned char *allow, int vocab, int chains)
 {
 	if (vocab <= 0)
 		return;
 
 	memset(allow, 0, (size_t)vocab);
+	/* Each step of a chain has its own header, so the mask has to be worked
+	 * out from the step being written rather than from the whole text. */
+	if (chains) {
+		const char *sep = strrchr(sofar, ';');
+
+		if (sep)
+			sofar = sep + 1;
+		while (*sofar == ' ')
+			sofar++;
+		if (*sofar == '\0') {
+			/* A step that has not started. The separator's own trailing space
+			 * is a token of the decode, so it stays eligible here; nothing but
+			 * the header may follow it. */
+			if (CALL_ID < vocab)
+				allow[CALL_ID] = 1;
+			if (SPACE_ID < vocab)
+				allow[SPACE_ID] = 1;
+			return;
+		}
+	}
 	if (spaces_only(sofar)) {
 		if (CALL_ID < vocab)
 			allow[CALL_ID] = 1;

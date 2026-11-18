@@ -23,10 +23,21 @@
  * A whitelist for the first two steps, a blacklist afterwards. Bytes, digits
  * and separators are never removed by the later steps.
  *
+ * With `chains` set, the same four states are masked from the first character
+ * of the step being written instead of from the start of the text: a plan is
+ * calls separated by ';', so every step's header opens exactly as the first
+ * one does. Without it the last rule above is what a chain dies of — every
+ * relation id is blocked after the first step, so a second call cannot name
+ * anything and a decoded chain is unrepresentable however well it is trained.
+ * Off by default: the vocabulary that would emit a chain does not exist yet,
+ * and letting the current weights name a second relation before they have
+ * been taught to can only turn a correct one-call answer into a broken chain.
+ *
  * Deliberately not attempted: limiting the argument count, and deciding when
  * a number is finished. A number's end is not a token boundary the runtime
  * can see, so forcing that would truncate valid values.
  */
-void callmask_next(const char *sofar, unsigned char *allow, int vocab);
+void callmask_next(const char *sofar, unsigned char *allow, int vocab,
+                   int chains);
 
 #endif

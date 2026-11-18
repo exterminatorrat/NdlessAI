@@ -84,7 +84,13 @@ enum {
 	 * thing a calculator must never do with a question that has no answer.
 	 */
 	PIPELINE_NO_VALUE = 3,
-	PIPELINE_UNITS = 2,      /* call produced, but a unit cannot fill its slot */
+	/*
+	 * A call was produced and every argument is a number the question wrote,
+	 * but a unit cannot fill its slot: a mass where a speed belongs is an
+	 * argument in the wrong place, and the answer would be a plausible number
+	 * for a question nobody asked. The screen refuses in words instead.
+	 */
+	PIPELINE_UNITS = 4,
 	PIPELINE_ERR = -1
 };
 

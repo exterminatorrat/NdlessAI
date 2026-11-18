@@ -574,6 +574,28 @@ void ui_result(ui_t *u, const char *question, int rc,
 			put(&at, end, call);
 			put(&at, end, "\n");
 		}
+	} else if (rc == PIPELINE_UNITS_LIMIT) {
+		/*
+		 * The conversion was exact and then the solver refused the numbers it
+		 * produced: "450 hours" is 1620000 s, and "1 km/h" is 0.2778 m/s, and
+		 * the exact arithmetic keeps its numerators, denominators and
+		 * comparisons inside limits that a converted number can land outside.
+		 *
+		 * The student's question was read and its units were right, so the
+		 * sentence owns the conversion rather than the question, and shows the
+		 * call it became - the converted numbers are the ones that did not fit.
+		 */
+		put(&at, end, "I converted the units and could not finish.\n");
+		put(&at, end, "The number the conversion produced is past\n"
+		              "what this build's exact arithmetic can\n"
+		              "carry: too large, or with more decimals\n"
+		              "than it holds. Round it and try again, or\n"
+		              "work it out by hand.\n");
+		if (call && call[0]) {
+			put(&at, end, "It became: ");
+			put(&at, end, call);
+			put(&at, end, "\n");
+		}
 	} else if (!has_model(u)) {
 		/*
 		 * No weights file: the typed path was the only one that could have

@@ -19,9 +19,9 @@ sources, each with one job:
 
 | Source | What it says | Coverage |
 | --- | --- | --- |
-| the reference solver in `relations/` | the answer string the app shows, e.g. `3.92 N` — so it states a step's answer *and* whether it is one number at all | 171 of 171 |
-| `runtime/unitstable.h` | the unit each argument is phrased with | 124 of 171 |
-| `surface/spec.py` | a dimension for every slot and answer | 67 of 171, all 48 chemistry relations included |
+| the reference solver in `relations/` | the answer string the app shows, e.g. `3.92 N` — so it states a step's answer *and* whether it is one number at all | 176 of 176 |
+| `runtime/unitstable.h` | the unit each argument is phrased with | 128 of 176 |
+| `surface/spec.py` | a dimension for every slot and answer | 72 of 176, all 52 chemistry relations included |
 
 An edge `S -> R` means R has a slot that can take S's answer, and it is admitted
 only when all three hold:
@@ -45,11 +45,11 @@ relation. Everything else is read from the tree.
 
 ```
 $ uv run --with sympy --with numpy python compose.py
-relations in the catalogue            174
-answers that are a single number      162
-relations with a declared slot unit   126
-composition edges                     960
-relations that can open a chain: 96
+relations in the catalogue            176
+answers that are a single number      164
+relations with a declared slot unit   128
+composition edges                    1005
+relations that can open a chain: 97
 ```
 
 The cross-check disagreed on two edges until the phrasing was fixed: `moles`
@@ -61,8 +61,29 @@ report reads zero. That is the whole value of deriving rather than declaring —
 the defect surfaced as a disagreement, not as a wrong chain.
 
 The graph is a *reachability* statement, not a plan: from the busiest source,
-`calorimetry_mass`, one call reaches 1 relation, two reach 23, three 68 and four
-102. Chain length is cheap; what limits a chain is what it can start from.
+`calorimetry_mass`, one call reaches 1 relation, two reach 23, three 70 and four
+106. Chain length is cheap; what limits a chain is what it can start from.
+
+### `min_of`: a comparison is a call, not control flow
+
+The limiting rows are the reason it exists. A row that gives two candidate
+amounts and asks how much product the reaction makes needs the *smaller* of two
+computed amounts, and there was no relation whose answer was that smaller number
+— the comparison lived in a student's head, which is the one place the runtime
+cannot read it. So `min_of a b` is a relation like any other: two magnitudes in,
+the smaller one out.
+
+That is a deliberate trade. The alternative is a plan-level *branch* — "stop if
+a < b" — and a branch is control flow: the decoder would have to emit a jump, the
+pane would have to show a step that did not run, and the grounding guard would
+have to reason about a path it never took. Making the comparison a relation
+instead keeps every step a pure function of the numbers before it, which is the
+shape the whole chain path is built on: no branches, no loops, one answer per
+step. The cost is that `min_of` answers with a bare magnitude — it compares two
+numbers and cannot know what they were counting — so a chain that ends on it
+prints `20` where the question wants `20 mol`, and the unit is the reader's to
+carry. Of the three rows that compute and ground, this is the only one whose
+answer loses its unit; `pH` and `Kc` are dimensionless.
 
 ## The 23 second-computation rows, measured
 
@@ -77,36 +98,44 @@ $ uv run --with sympy --with numpy python compose.py --rows fixtures/chain_rows.
 
 | Verdict | Rows | What it means |
 | --- | --- | --- |
-| `chain-2` | 4 | two calls of existing relations compute the row |
+| `chain-1` | 5 | labelled two-step, but one call answers it |
+| `chain-2` | 5 | two calls of existing relations compute the row |
 | `chain-3` | 4 | three calls |
-| `chain-1` | 4 | labelled two-step, but one call answers it |
-| `blocked` | 11 | no chain of catalogue relations computes it |
-| four calls | 0 | nothing in this population needs four |
+| `chain-4` | 1 | four calls: two `moles_from_molarity`, then the mixture, then `molarity` |
+| `chain-5` | 1 | five calls, the most the runtime plans (`PLAN_MAX_STEPS`) |
+| `blocked` | 7 | no chain of catalogue relations computes it |
 
 ### The curve, as each family of relations landed
 
 The batch was authored in the order the blocked counts implied, and the point of
 keeping the progression is that the batch's value is a curve rather than a claim.
 
-| Batch state | Edges | 2-call | 3-call | 1-call | Blocked |
-| --- | --- | --- | --- | --- | --- |
-| before any relation | 921 | 3 | 1 | 2 | 17 |
-| `+ moles_from_molarity` (`n = c·V`) | 944 | 4 | 2 | 2 | 15 |
-| `+ min_of` and `kc_from_ice` | 960 | 4 | 4 | 4 | 11 |
+| Batch state | Edges | 1-call | 2-call | 3-call | 4 or 5 | Blocked |
+| --- | --- | --- | --- | --- | --- | --- |
+| before any relation | 921 | 2 | 3 | 1 | 0 | 17 |
+| `+ moles_from_molarity` (`n = c·V`) | 944 | 2 | 4 | 2 | 0 | 15 |
+| `+ min_of` and `kc_from_ice` | 960 | 4 | 4 | 4 | 0 | 11 |
+| `+ ions_from_mixture` and `ion_from_ksp` | 1005 | 5 | 5 | 4 | 2 | 7 |
 
-**The honest headline: two rows of the 23 are chains the runtime computes,
-grounds and would display** (u03-187, u07-016). The decoder cannot write either
-yet — that is what a chain corpus and a retrain are for — but everything behind
-the decode is ready for them, and that is up from one before this batch. Eight
-more have arithmetic that is exactly right and a literal the grounding guard
-refuses: three carry a ratio the question writes as two coefficients, four are
-stoichiometry rows whose volumes the question states in millilitres while the
-relation takes litres, and one writes `0.0300` where the relation needs `0.03`.
-The remaining thirteen are not a chain-length problem at all.
+**The honest headline: three rows of the 23 are chains the runtime computes,
+grounds and would display** (u03-187, u04-064, u07-016), and sixteen of the 23
+are chains at all — up from six before this batch. The decoder cannot write any
+of them yet, because a relation's name reaches the plan parser only through
+`reltable.h`, which the retrain regenerates; that is what a chain corpus and a
+retrain are for. Thirteen of the sixteen have arithmetic the runtime reproduces
+exactly and at least one literal the grounding guard refuses, and the refusals
+fall into five shapes: four carry a ratio the question writes as two
+coefficients, five are rows whose volume the question states in millilitres while
+the relation takes litres, one writes `0.0300` where the relation needs `0.03`,
+one writes the ion count inside a formula (`CaCl2`) rather than as a numeral, and
+two state a number in exponent notation (`4.0 x 10-8`) that no literal can
+reproduce. The remaining seven are not a chain-length or a grounding problem at
+all.
 
-### The four chains, and what happens to them
+### The chains, and what happens to them
 
-Run through `plan_execute` on the merged runtime, with each row's own numbers:
+Run step by step through `solvers_solve` — the dispatch that answers a call —
+with each row's own numbers:
 
 | Row | Chain | Answer | Bank key |
 | --- | --- | --- | --- |
@@ -120,77 +149,109 @@ Run through `plan_execute` on the merged runtime, with each row's own numbers:
 | u04-109 | `stoichiometry 0.40 0.5 ; stoichiometry 0.40 0.6667 ; min_of <1> <2>` | `0.2 mol` | 0.20 |
 | u07-001 | `kc_from_ice 0.03 0.005 2` | `12.5` | 12.5 |
 | u07-016 | `kc_from_ice 0.0688 0.0133 2` | `7.468` | 7.47 |
+| u04-049 | `ions_from_mixture 0.10 1 0.10 2` | `0.3 mol` | 0.30 |
+| u07-105 | `ion_from_ksp 0.00000004 0.000001 2 ; moles_from_molarity <1> 1.00` | `0.2 mol` | 0.2 |
+| u03-148 | `moles_from_molarity 0.25 0.040 ; moles_from_molarity 0.15 0.060 ; ions_from_mixture <1> 1 <2> 2 ; molarity <3> 0.100` | `0.28 mol/L` | 0.28 |
+| u04-042 | `moles_from_molarity 0.20 0.020 ; moles_from_molarity 0.10 0.050 ; stoichiometry <1> 5 ; stoichiometry <2> 2 ; min_of <3> <4>` | `0.01` | 0.010 |
 
 u04-092 is shown with the ratio that makes its arithmetic reproduce the key: the
 row gives no equation, so the ratio is the solver's to know and the bank's key
 implies 2 rather than the 3 the formula suggests.
 
-Then the guard that runs before any answer is shown, `pipeline_args_grounded`,
-asked the same four chains against their own row text:
+Then the guard that runs before any answer is shown, `grounding_arg_in_text`,
+asked every literal of every chain against its own row's text. Measured, not
+assumed:
 
 | Row | Grounded | Why not |
 | --- | --- | --- |
-| u03-187 | yes | — |
-| u01-066, u04-039, u04-092 | no | the ratio (`5`, `1.5`, `3`) is not a number in the sentence |
-| u04-038, u04-046 | no | the volume is `0.020`/`0.014` L and the sentence writes `20. mL`/`14.0 mL` |
-| u04-064, u04-109 | no | the coefficients are `4`/`1` and `0.5`/`0.6667`; the equations state 4, 3 and 2 |
+| u03-187 | **yes** | — |
+| u04-064 | **yes** | the coefficients `4` and `1` are numerals in the equation |
 | u07-016 | **yes** | every argument is a number the sentence states |
-| u07-001 | no | the sentence writes `0.0300` and the call needs `0.03` |
+| u01-066, u04-039, u04-109 | no | the ratio (`5`, `1.5`, `0.5`, `0.6667`) is not a number in the sentence |
+| u04-092 | no | the ratio `3`, and the mass is written `8.0 g` where the call needs `8` |
+| u04-038, u04-046, u04-066, u03-148, u04-042 | no | the volume is `0.020`/`0.014`/`0.100`/`0.040` L and the sentence writes `20. mL`/`14.0 mL`/`100. mL`/`40.0 mL` |
+| u07-001 | no | the sentence writes `0.0300` and `0.00500` where the call needs `0.03` and `0.005` |
+| u04-049 | no | the anion count `2` is written inside `CaCl2`, not as a numeral |
+| u07-105 | no | `4.0 x 10-8` and `1 x 10-6` are exponent notation; no literal reproduces them |
+| u05-004 | no | the rate is `1.0 x 10-3 mol/(L s)`, exponent notation again |
 
-That is the second wall behind the first. A ratio is written in a balanced
-equation as two coefficients (`2 KClO3 → … 3 O2`), not as their quotient, so a
-chain cannot carry it as a literal even when both coefficients are in the text
-and the arithmetic is a two-call chain. The one row that grounds is the one
-whose chain needs no ratio at all.
+That is the second wall behind the first, and it is a *literal* wall, not an
+arithmetic one. A ratio is written in a balanced equation as two coefficients
+(`2 KClO3 → … 3 O2`), not as their quotient, so a chain cannot carry it as a
+literal even when both coefficients are in the text — which is why u04-064
+grounds: its equation writes `4` and `1` as numerals and the chain uses them
+directly. The three rows that ground are the three whose chain happens to need
+only literals the sentence already writes.
 
-### What blocks the 17
+### What blocks the 7
 
 | Blocker | Rows |
 | --- | --- |
-| ions per formula unit of a *mixture* | 1 |
-| no relation gives solubility from Ksp | 1 |
-| one Kp whose products are two species | 1 |
-| nothing: these five are stoichiometry rows still needing a step the catalogue lacks | 5 |
-| rows now blocked only by grounding, not by the catalogue | 3 |
+| no relation takes the difference of two amounts — the net excess after a neutralisation or a precipitation | 4 |
+| the row needs six calls, one past `PLAN_MAX_STEPS` | 1 |
+| the value the row needs lives in a graph, not in its text | 1 |
+| one Kp whose products are two species, which needs a power no relation computes | 1 |
 
-Three of the four families named in the first reading are gone: `n = c·V`
-(9 rows), the limiting comparison (3, via `min_of`) and the ICE subtraction (3,
-via `kc_from_ice`, two of them in a single call — the third needs a two-species
-Kp the catalogue does not have). What remains is `ions per formula of a
-mixture`, `solubility from Ksp`, and five stoichiometry rows whose next step is
-still missing.
+Every family named in the first reading is now closed: `n = c·V` (9 rows), the
+limiting comparison (3, via `min_of`), the ICE subtraction (3, via `kc_from_ice`),
+ions per formula unit of a mixture (1, via `ions_from_mixture`) and solubility
+from Ksp (1, via `ion_from_ksp`). What is left is one arithmetic shape the
+catalogue still cannot express — `n(left) = n1 - n2` — and three rows that are
+not about the catalogue at all.
 
 ## What this means before a chain corpus is generated
 
 1. **Chain length is not the constraint; the catalogue's shapes are.** Four calls
-   reach 102 relations, and nothing in the measured population wants more than
-   three. A corpus of four-call chains would teach a shape the bank never asks
-   for.
-2. **A chain corpus over today's relations would be mostly synthetic.** Three
-   rows of 23 are the evidence it can reach; the rest of the value is in the
-   relations that do not exist yet.
-3. **Two shapes are worth building before the corpus, not after.** A relation for
-   moles from concentration and volume, and a way to state a stoichiometric ratio
-   as the two coefficients the equation writes (the pattern `rate_factor`
-   already uses for rates) — the second is what makes the three working 2-call
-   chains *groundable*, and grounding is the guard that keeps a wrong number off
-   the screen.
+   reach 106 relations, and the measured population tops out at five calls with a
+   single row. A corpus of four- and five-call chains would teach shapes the bank
+   asks for rarely, and two calls buy 21 of the 23 rows' worth of coverage on
+   their own.
+2. **A chain corpus over today's relations would be mostly synthetic, and that is
+   the honest limit.** Three rows of 23 are the evidence it can reach, and the
+   binding constraint is now the *literal* wall rather than the relation set:
+   thirteen chains are arithmetically exact and refused by grounding.
+3. **The next relation worth building is a subtraction.** `n(left) = n1 - n2`
+   unblocks four rows at once (a neutralisation or a precipitation leaves an
+   excess), and it is the last arithmetic shape the catalogue lacks for this
+   population.
 4. **The graph checks units, never roles.** `molarity` answers `mol/L` and
    `mixing_concentration` has a slot in `mol/L`, so the graph admits
-   `molarity -> mixing_concentration`; a question that needs `n = c·V` needs the
-   reverse, which no relation answers. Every generated chain has to be checked
-   against its own question by hand or by the reference, never by the graph
-   alone.
+   `molarity -> mixing_concentration`; a question that needs `n = c·V`,
+   `n` then a ratio then `c`, needs calls in an order no single edge describes,
+   and u03-148 needs two independent `moles_from_molarity` calls where the graph
+   counts one hop. Every generated chain has to be checked against its own
+   question by hand or by the reference, never by the graph alone.
+5. **A relation's name is a decoded token, so a new relation is invisible until
+   the retrain.** `plan_execute` accepts a step only when `relation_named` finds
+   the name in the generated `reltable.h` (171 relations at the time of this
+   batch). Measured: `CALL kc_from_ice 0.03 0.005 2 ; CALL moles 1 1` is refused
+   with rc=-1, while `CALL beer_lambert 100 0.5 1 ; CALL moles 1 1` runs. The
+   solvers answer the new names directly (`solvers_solve` dispatches on the
+   string), so the arithmetic is ready and the naming is not. That is not a
+   defect to work around: the table *must* be regenerated with `bpe.h`, or the
+   vocabulary and the relation ids disagree.
+6. **An answer that drops its unit hides its own edge.** `ion_from_ksp` was
+   written returning `0.2` while its slot declared `mol/L`; the graph found no
+   edge from it to `moles_from_molarity`, because a chain carries the printed
+   unit. Printing `0.2 mol/L` created the edge. The lesson is that a solver's
+   answer string is metadata the graph reads, not decoration: the same defect
+   costs u04-064 its displayed unit at the end of a chain.
 
 ## Limits of this page
 
-- The graph's dimension coverage is 67 of 171 relations, complete for chemistry
-  and partial for physics. Units cover 124. Where neither declares anything, an
+- The graph's dimension coverage is 72 of 176 relations, complete for chemistry
+  and partial for physics. Units cover 128. Where neither declares anything, an
   edge is missing rather than guessed, so the edge count is a floor.
 - The 23-row reading is one person's read of each row's arithmetic, with the
   chain verified against the runtime and the bank key where a key exists. The
   labels are ids and relation names in `fixtures/chain_rows.txt`; no question
   text is stored here, in the fixture, or in the pull request.
 - The reading was done against the ingested bank (gitignored, `corpora/apchem`)
-  with `apchem_ingest.py --no-ocr`, and the four chains were run on the host
-  build. Nothing was retrained and no weights were used.
+  with `apchem_ingest.py --no-ocr`, and every chain was run step by step on the
+  host build through `solvers_solve`. The two longest were also offered to
+  `plan_execute`, which refuses them by name until `reltable.h` is regenerated.
+  Nothing was retrained and no weights were used.
+- `ion_from_ksp`'s `gen` draws a Ksp of 1e-4 or more, the smallest value the
+  wording layer writes without an exponent. The solvers are exact for any
+  positive Ksp the runtime parses — the bank's own row, 4.0 x 10-8, computes to
+  0.2 mol/L — so the gap is in writing the question, not in answering it.

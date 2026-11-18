@@ -832,6 +832,98 @@ class MassFromMolarity:
         return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"
 
 
+@relation("ions_from_mixture", "chemistry", ["n1", "ions1", "n2", "ions2"],
+          exact=False,
+          step=dict(line="n(ion) = n1*i1 + n2*i2", expr="@1 * @2 + @3 * @4"))
+class IonsFromMixture:
+    """Total moles of one ion from two solutes in the same solution.
+
+    The mirror of `ions_from_moles_formula`, which takes one compound and a
+    formula. A mixture states two amounts and two ion counts, and the sum is
+    one exact step.
+    """
+
+    @staticmethod
+    def gen(rng):
+        n1 = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5])
+        n2 = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5])
+        ions1 = rng.choice([1, 2, 3])
+        ions2 = rng.choice([1, 2, 3])
+        return [n1, ions1, n2, ions2], (
+            f"A solution holds {n1} mol of a salt that gives {ions1} of the "
+            f"ion in question per formula unit, and {n2} mol of another that "
+            f"gives {ions2}. Find the total moles of that ion.")
+
+    @staticmethod
+    def solve(n1, ions1, n2, ions2):
+        return f"{dec_exact(_exact(n1) * ions1 + _exact(n2) * ions2)} mol"
+
+
+def _decimal_literal(value):
+    """A terminating exact rational as the plain decimal a question states.
+
+    A product of decimal literals is itself a decimal, and str() of the float
+    that product became writes binary noise past the ninth place (2.5e-07 came
+    out as 2.5000000000000004e-07), which the runtime refuses and no question
+    ever prints.
+    """
+    value = sp.Rational(value)
+    rest, twos, fives = value.q, 0, 0
+    while rest % 2 == 0:
+        rest //= 2
+        twos += 1
+    while rest % 5 == 0:
+        rest //= 5
+        fives += 1
+    digits = max(twos, fives)
+    if rest != 1 or digits > 9:
+        raise ValueError("%s has no decimal form the runtime parses" % value)
+    scaled = value.p * (10 ** digits // value.q)
+    text = str(scaled).rjust(digits + 1, "0")
+    if digits == 0:
+        return text
+    return "%s.%s" % (text[:-digits], text[-digits:])
+
+
+@relation("ion_from_ksp", "chemistry", ["ksp", "other", "count"], exact=False)
+class IonFromKsp:
+    """One ion's concentration from Ksp and the other ion's concentration.
+
+    Ksp = [other]^m * [ion]^n, so [ion] = (Ksp/[other])^(1/n). Only a square
+    root is computed, because that is the only power the bank's rows use and an
+    exact grid root is worth more here than a general case nobody asked for.
+    No step template: a root is not arithmetic over the arguments, and the
+    runtime prints the same four figures the reference does.
+
+    `gen` draws a Ksp of 1e-4 or more, because that is the smallest value the
+    wording layer writes without an exponent (`numbers.SMALLEST`). The solvers
+    themselves are exact for any positive Ksp the runtime parses: the bank's own
+    row states 4.0 x 10-8 and computes to 0.2 mol/L. What is missing is a
+    question generator that can write 4.0 x 10-8, not the arithmetic.
+    """
+
+    @staticmethod
+    def gen(rng):
+        count = 2
+        other = rng.choice([0.01, 0.02, 0.05, 0.1])
+        ion = rng.choice([0.2, 0.25, 0.5])
+        ksp = _decimal_literal(_exact(other) * _exact(ion) * _exact(ion))
+        return [ksp, other, count], (
+            f"A saturated solution holds {other} mol/L of one ion, and the "
+            f"compound gives {count} of the other ion per formula unit. Ksp is "
+            f"{ksp}. Find the concentration of the other ion.")
+
+    @staticmethod
+    def solve(ksp, other, count):
+        r = _exact(ksp) / _exact(other)
+        if r <= 0 or int(count) != 2:
+            raise ValueError("only a square root, and only for positive inputs")
+        scaled = r.p * 1000000000000 // r.q
+        if scaled > 8000000000000000000:
+            raise ValueError("past the exact grid")
+        return f"{dec_exact(sp.Rational(math.isqrt(scaled), 1000000))} mol/L"
+
+
 @relation("kc_from_ice", "chemistry", ["initial", "product", "coefficient"],
           exact=False,
           step=dict(line="Kc = [prod] / ([init] - c*[prod])^c",

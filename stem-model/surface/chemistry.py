@@ -306,6 +306,28 @@ TEMPLATES["stoich_mass"] = [
     "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
 ]
 
+TEMPLATES["ions_from_mixture"] = [
+    "A solution holds {n1} mol of a salt that gives {ions1} of the ion per formula unit, and {n2} mol of another that gives {ions2}. Find the total moles of that ion.",
+    "Find the total moles of an ion when {n1} mol of a salt contributing {ions1} per unit is mixed with {n2} mol of one contributing {ions2}.",
+    "A mixture contains {n1} mol of a first salt ({ions1} ions per unit) and {n2} mol of a second ({ions2} per unit). Determine the moles of the shared ion.",
+    "How many moles of the ion are present if {n1} mol of a salt with {ions1} per unit and {n2} mol of a salt with {ions2} per unit are dissolved together?",
+    "Calculate the total moles of an ion from {n1} mol of a salt giving {ions1} per unit and {n2} mol of a salt giving {ions2} per unit.",
+    "Two salts are dissolved: {n1} mol at {ions1} ions per unit and {n2} mol at {ions2}. Find the total moles of the ion.",
+    "Determine the moles of an ion contributed by {n1} mol of a salt with {ions1} per unit and {n2} mol of one with {ions2}.",
+    "Given {n1} mol at {ions1} ions per formula unit and {n2} mol at {ions2}, what is the total amount of the ion?",
+]
+
+TEMPLATES["ion_from_ksp"] = [
+    "A saturated solution holds {other} mol/L of one ion, and the compound gives {count} of the other ion per formula unit. Ksp is {ksp}. Find the concentration of the other ion.",
+    "One ion sits at {other} mol/L and the salt releases {count} of the other ion per formula unit. With Ksp {ksp}, find that ion's concentration.",
+    "Find the concentration of the second ion when the first is {other} mol/L, the formula unit carries {count} of the second, and Ksp is {ksp}.",
+    "A precipitate sits in equilibrium with {other} mol/L of one ion and {count} of the other per formula unit. Determine the other ion's concentration, given Ksp {ksp}.",
+    "What is the other ion's concentration if one ion is {other} mol/L, the salt has {count} of the other per unit, and Ksp is {ksp}?",
+    "Calculate the second ion's concentration when the first is {other} mol/L, the salt gives {count} per formula unit, and Ksp is {ksp}.",
+    "With one ion at {other} mol/L, {count} of the other per formula unit and Ksp {ksp}, find the second ion's concentration.",
+    "Determine the concentration of the ion appearing {count} times per unit when the other is {other} mol/L and Ksp is {ksp}.",
+]
+
 TEMPLATES["kc_from_ice"] = [
     "A rigid vessel is charged so that the initial concentration of the reactant is {initial} mol/L. At equilibrium the product is {product} mol/L, and the reaction makes {coefficient} mol of product per mol of reactant. Find Kc.",
     "The reactant starts at {initial} mol/L. At equilibrium {product} mol/L of product is present, with {coefficient} product units per reactant unit. Determine Kc.",

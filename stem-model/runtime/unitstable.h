@@ -3,12 +3,12 @@
  * hand: the units are what a majority of that relation's phrasings
  * state, so a hand-edited row is a claim no phrasing supports.
  *
- * UNIT_SOURCE_SHA 58396cfd1735ad0a
+ * UNIT_SOURCE_SHA ed6c7bc4ed14ab6e
  */
 #ifndef UNITSTABLE_H
 #define UNITSTABLE_H
 
-#define UNIT_NUM_ROWS 126
+#define UNIT_NUM_ROWS 128
 
 typedef struct {
 	const char *name;
@@ -77,6 +77,8 @@ const unit_row_t unit_rows[UNIT_NUM_ROWS] = {
 	{"hydrate_water", "g g - -"},
 	{"impulse", "N s"},
 	{"internal_energy_gas", "K"},
+	{"ion_from_ksp", "- mol/L -"},
+	{"ions_from_mixture", "mol - mol -"},
 	{"kc_from_conc", "M M -"},
 	{"kc_from_ice", "mol/L mol/L -"},
 	{"kg_to_lb", "kg"},

@@ -22,11 +22,22 @@
 # Re-read after `moles_from_molarity` (n = c*V) was added: two rows that were
 # blocked for want of it are chains now, and the other seven that wanted it are
 # still blocked by the step after it (a limiting comparison, an ICE subtraction,
-# a neutralisation). Both new chains are arithmetically right and both still
-# fail `pipeline_args_grounded`, because the row states its volumes in
-# millilitres ("20. mL") and the relation takes litres: a chain cannot convert
-# a unit without producing a literal the question never wrote.
-#   verdict chain-1 | chain-2 | chain-3 | blocked
+# a neutralisation).
+#
+# Re-read once more after `ions_from_mixture` and `ion_from_ksp` landed: sixteen
+# of the 23 rows are chains now, up from six before the batch. `ions_from_mixture`
+# turns the two-solute rows into four- and five-call chains, and `ion_from_ksp`
+# closes the solubility row. What is left blocked is the one arithmetic shape the
+# catalogue still lacks - the difference of two amounts, which a neutralisation
+# or a precipitation leaves as an excess - plus a row whose value lives in a
+# graph and a Kp with two product species.
+#
+# Three of the sixteen chains pass the grounding guard (u03-187, u04-064,
+# u07-016); the other thirteen are arithmetically exact and refused on a literal:
+# a ratio written as two coefficients, a volume written in millilitres, a
+# trailing zero, an ion count written inside a formula, and a number written in
+# exponent notation. The note column names which, per row.
+#   verdict chain-1 | chain-2 | chain-3 | chain-4 | chain-5 | blocked
 #   note    the blocker, or what the chain has to carry
 #
 # No question text is stored here: an id and two relation names are ours. The
@@ -34,16 +45,16 @@
 # balanced equation's coefficients, not a number in the sentence, so the
 # grounding guard refuses the argument even when the arithmetic is a chain.
 mcq-u01-066	moles	stoichiometry	2	chain-2	ratio-not-a-literal
-mcq-u03-148	-	-	-	blocked	no-moles-from-concentration-and-volume
+mcq-u03-148	moles_from_molarity	molarity	4	chain-4	volume-in-millilitres
 mcq-u03-171	beer_lambert	-	-	blocked	value-lives-in-a-graph
 mcq-u03-187	mixing_concentration	ph_from_poh	3	chain-3	both-literals-grounded
 mcq-u04-038	moles_from_molarity	stoichiometry	2	chain-2	volume-in-millilitres-and-ratio
 mcq-u04-039	stoich_mass	percent_yield	2	chain-2	ratio-not-a-literal
-mcq-u04-042	-	stoichiometry	-	blocked	no-moles-from-concentration-and-volume
-mcq-u04-043	limiting_moles	-	-	blocked	needs-a-comparison-between-candidates
+mcq-u04-042	moles_from_molarity	min_of	5	chain-5	volume-in-millilitres
+mcq-u04-043	limiting_moles	-	-	blocked	needs-six-calls
 mcq-u04-046	moles_from_molarity	molarity	3	chain-3	volume-in-millilitres
-mcq-u04-049	-	-	-	blocked	ions-per-formula-of-a-mixture
-mcq-u04-050	-	molarity	-	blocked	no-moles-from-concentration-and-volume
+mcq-u04-049	ions_from_mixture	ions_from_mixture	1	chain-1	ion-count-lives-in-a-formula
+mcq-u04-050	-	molarity	-	blocked	no-relation-takes-a-difference
 mcq-u04-064	stoichiometry	min_of	3	chain-3	comparison-is-a-call-now
 mcq-u04-066	molarity	molarity	1	chain-1	audit-label-was-generous
 mcq-u04-092	stoich_mass	percent_yield	2	chain-2	ratio-not-a-literal
@@ -52,7 +63,7 @@ mcq-u05-004	rate_factor	rate_factor	1	chain-1	answer-loses-its-unit
 mcq-u07-001	kc_from_ice	kc_from_ice	1	chain-1	one-call-now
 mcq-u07-002	-	-	-	blocked	arithmetic-between-two-relations
 mcq-u07-016	kc_from_ice	kc_from_ice	1	chain-1	one-call-now
-mcq-u07-105	-	-	-	blocked	no-solubility-from-ksp
-mcq-u08-015	-	ph_from_poh	-	blocked	no-moles-from-concentration-and-volume
-mcq-u08-016	-	ph_from_poh	-	blocked	no-moles-from-concentration-and-volume
-mcq-u08-068	-	ph_from_poh	-	blocked	no-moles-from-concentration-and-volume
+mcq-u07-105	ion_from_ksp	moles_from_molarity	2	chain-2	exponent-notation-in-the-statement
+mcq-u08-015	-	ph_from_poh	-	blocked	no-relation-takes-a-difference
+mcq-u08-016	-	ph_from_poh	-	blocked	no-relation-takes-a-difference
+mcq-u08-068	-	ph_from_poh	-	blocked	no-relation-takes-a-difference

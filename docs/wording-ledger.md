@@ -5,7 +5,7 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-70 relations, 14712 structures, 2902 rows (2759 eval), 714 structures refused as unresolvable.
+72 relations, 14982 structures, 2954 rows (2807 eval), 732 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -43,6 +43,8 @@ rows drawn from them.
 | `h_from_ph` | 1 | - | 162 | 0 | 31 | 31 |
 | `heat_reaction` | 2 | - | 288 | 0 | 61 | 61 |
 | `hydrate_water` | 4 | mass_anhydrous/mass_hydrate; mm_anhydrous/mm_water | 96 | 12 | 24 | 22 |
+| `ion_from_ksp` | 3 | - | 144 | 0 | 28 | 28 |
+| `ions_from_mixture` | 4 | n1/n2; ions1/ions2 | 126 | 18 | 24 | 20 |
 | `kc_from_conc` | 3 | product/reactant | 108 | 12 | 24 | 23 |
 | `kc_from_ice` | 3 | initial/product | 96 | 12 | 24 | 19 |
 | `ksp_from_solubility` | 3 | anion_count/cation_count | 108 | 12 | 24 | 20 |
@@ -183,7 +185,7 @@ repository from its own contract.
 | `standing_wave_freq` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wave_speed` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wavelength_from_frequency` | applied context (instrument dial and spectrum reading), worked-example prose | `physics-pool` |
-| the other 53 relations | labelled givens, imperative ask | `in-repo` |
+| the other 55 relations | labelled givens, imperative ask | `in-repo` |
 
 Sources, by key:
 
@@ -214,6 +216,7 @@ wording, so the fraction is reported here and not in a pull request body.
 - `gas_mixture_pressure` — 54 of 540 structures (10%): two slots share a dimension and the same unit: V_f, V_i
 - `geom_seq` — 12 of 84 structures (14%): two slots share a dimension and the same unit: a1, n
 - `hydrate_water` — 12 of 96 structures (12%): two slots share a dimension and the same unit: mass_anhydrous, mass_hydrate
+- `ions_from_mixture` — 18 of 126 structures (14%): two slots share a dimension and the same unit: n1, n2
 - `kc_from_conc` — 12 of 108 structures (11%): two slots share a dimension and the same unit: product, reactant
 - `kc_from_ice` — 12 of 96 structures (12%): two slots share a dimension and the same unit: initial, product
 - `ksp_from_solubility` — 12 of 108 structures (11%): two slots share a dimension and the same unit: anion_count, cation_count

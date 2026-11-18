@@ -964,6 +964,60 @@ static int solve_rate_factor(const char *const *args, char *out,
  * rational's limit, and the solver would refuse a question it can answer.
  * product/left^c is (product/left)/left^(c-1), and each of those steps stays
  * inside the range. */
+/* Total moles of one ion from two solutes: n1*i1 + n2*i2. */
+static int solve_ions_from_mixture(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat n1, i1, n2, i2, a, b, total;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &n1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &i1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &n2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &i2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&a, &n1, &i1)) != 0 ||
+	    (rc = rat_mul(&b, &n2, &i2)) != 0 ||
+	    (rc = rat_add(&total, &a, &b)) != 0)
+		return rc;
+	if ((rc = dec4_render(total.n, total.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+/* One ion's concentration from Ksp: (Ksp/other)^(1/2), on the same exact grid
+ * the percent_dissociation root uses, so C and the reference print the same
+ * four figures rather than merely close ones. */
+static int solve_ion_from_ksp(const char *const *args, char *out, size_t outlen)
+{
+	rat ksp, other, r, count;
+	long long root;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &ksp, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &other, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &count, NULL)) != 0)
+		return rc;
+	if (other.n == 0 || ksp.n <= 0 || other.n <= 0)
+		return -4;
+	if (count.d == 0 || count.n != 2 * count.d)
+		return -4;
+	if ((rc = rat_div(&r, &ksp, &other)) != 0)
+		return rc;
+	if (r.n > 8000000)
+		return -4;
+	root = (long long)isqrt64((unsigned long long)(r.n * 1000000000000LL / r.d));
+	if ((rc = dec4_render(root, 1000000, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 static int solve_kc_from_ice(const char *const *args, char *out, size_t outlen)
 {
 	rat initial, product, coef, left, value;
@@ -1419,6 +1473,16 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "rate_factor") == 0) {
 		if (nargs == 4)
 			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ions_from_mixture") == 0) {
+		if (nargs == 4)
+			rc = solve_ions_from_mixture(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ion_from_ksp") == 0) {
+		if (nargs == 3)
+			rc = solve_ion_from_ksp(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "kc_from_ice") == 0) {

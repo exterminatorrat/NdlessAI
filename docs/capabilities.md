@@ -171,6 +171,18 @@ Chemistry bank and cut as unbuildable in a catalogue where every call has a
 number for an answer, which is why the eighteen-relation chemistry batch landed
 without them.
 
+**The formula parser is built**, and it is the part of C8 that needs no model.
+`chem/` holds standard atomic weights, the charges of the ions a formula can
+settle, and the 33 compound names measured in the committed corpus and the AP
+Chemistry bank; `export_chem.py` compiles that data into `runtime/chemtable.h`,
+and `runtime/formula.c` parses the formula a student writes — groups, nested
+groups, unicode subscripts, hydrates — into a composition, an exact molar mass
+and the ions one formula unit supplies. It refuses an unknown symbol, an
+unbalanced group, a count of zero, a hydrate asked for ion counts, and a charged
+species asked for a formula unit. `molar_mass_formula CH3OH` answers
+`32.04 g/mol` through the typed-call path, with the weights shown. Balancing
+equations remains unbuilt.
+
 ## D. Interaction and interface
 
 | # | Capability | Notes |

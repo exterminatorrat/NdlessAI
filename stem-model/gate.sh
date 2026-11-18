@@ -52,7 +52,7 @@ if [ -d runtime ]; then
     # `make` merely warns about - an empty-bodied if reached CI this way. This
     # is the host compiler's -Werror over the same set, so the cheap half of
     # that gate runs here too.
-    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph screen ui diagram shorthand plan steps matrix callmask grounding repair; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
+    run "warnings are errors"    sh -c 'cd runtime && for f in expr pipeline solvers graph screen ui diagram shorthand plan steps matrix callmask grounding repair formula; do cc -O2 -Wall -Wextra -Werror -std=c11 -D_POSIX_C_SOURCE=200809L -I. -c $f.c -o /tmp/w_$f.o || exit 1; done'
     run "solvers match Python"   sh -c 'cd runtime && ./test_solvers | grep -q "0 mismatches"'
     run "tokenizer round-trip"   sh -c 'cd runtime && ./test_bpe | grep -q "failures: 0"'
     run "guard cases"            sh -c 'cd runtime && ./test_guard | grep -q "all cases passed"'
@@ -96,6 +96,12 @@ if [ -d runtime ]; then
     # stating a unit leaves the prompt saying nothing, and no test notices.
     run "unit table in sync"     sh -c "$PY export_units.py --check >/dev/null"
     run "steps match solvers"    sh -c "$PY check_steps.py >/dev/null"
+    # The formula parser's weights, ion charges and measured names live in
+    # chem/elements.py and are compiled into chemtable.h. A hand-edited header
+    # is how the device and the reference start disagreeing about a molar mass.
+    run "chem table in sync"     sh -c "$PY export_chem.py --check >/dev/null"
+    run "formula parser"         sh -c 'cd runtime && ./test_formula | grep -q "all cases passed"'
+    run "formula cases in sync"  sh -c "$PY gen_chem_cases.py --check >/dev/null"
     if [ -f weights.bin ]; then
         run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'
     else

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "formula.h"
 #include "solvers.h"
 #include "solvers_subject.h"
 
@@ -684,6 +685,10 @@ int solvers_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
 	static const solvers_subject_fn subject[] = {
+		/* A formula where a relation wants a number: the chemistry the
+		 * caller would otherwise have to look up. It is tried first because
+		 * its names are none of the numeric subjects' own. */
+		formula_solve,
 		solvers_math_solve,
 		solvers_trig_solve,
 		solvers_physics_solve,

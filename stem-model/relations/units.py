@@ -277,6 +277,31 @@ class CombinedRate:
     def solve(a, b):
         return dec_exact(sp.Rational(a * b, a + b))
 
+@relation("min_of", "units", ["a", "b"], exact=True)
+class MinOf:
+    """The smaller of two numbers, which is what "limiting" decides.
+
+    A chain's only control flow is data flow: a step cannot branch on which
+    reactant runs out. It can compare, though, if the comparison is a call —
+    and the stoichiometry rows that ask for the maximum product are exactly
+    `min(n_a * ratio_a, n_b * ratio_b)`. No step template: a minimum is not
+    arithmetic over the arguments, so there is no substitution to show.
+    """
+
+    @staticmethod
+    def gen(rng):
+        a = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 20])
+        b = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 20])
+        while b == a:
+            b = rng.choice([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 20])
+        return [a, b], (f"Two possible amounts are {a} and {b}. Which is the "
+                        f"smaller?")
+
+    @staticmethod
+    def solve(a, b):
+        return dec_exact(min(_exact(a), _exact(b)))
+
+
 @relation("probability_single", "units", ["favourable", "total"], exact=False,
           step=dict(line="P = favourable / total", expr="@1 / @2"))
 class ProbabilitySingle:

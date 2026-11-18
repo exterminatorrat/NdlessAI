@@ -14595,6 +14595,21 @@ static const tcase RATE_FACTOR[] = {
 	{ { "4", "1", "2", "0", "", "" }, "4" },
 	{ { "0.5", "1", "3", "1", "", "" }, "1.5" },
 };
+static const tcase MIN_OF[] = {
+	{ { "24", "20", "", "", "", "" }, "20" },
+	{ { "0.2", "0.2667", "", "", "", "" }, "0.2" },
+	{ { "3", "5", "", "", "", "" }, "3" },
+	{ { "-4", "2", "", "", "", "" }, "-4" },
+	{ { "0.5", "0.25", "", "", "", "" }, "0.25" },
+};
+
+static const tcase KC_FROM_ICE[] = {
+	{ { "0.03", "0.005", "2", "", "", "" }, "12.5" },
+	{ { "0.0688", "0.0133", "2", "", "", "" }, "7.468" },
+	{ { "0.5", "0.1", "1", "", "", "" }, "0.25" },
+	{ { "2", "0.25", "2", "", "", "" }, "0.1111" },
+};
+
 static const tcase MOLES_FROM_MOLARITY[] = {
 	{ { "0.1", "2", "", "", "", "" }, "0.2 mol" },
 	{ { "0.25", "0.1", "", "", "", "" }, "0.025 mol" },
@@ -14831,6 +14846,8 @@ int main(void)
 	bad += check_rel("hydrate_water", HYDRATE_WATER, (int)(sizeof(HYDRATE_WATER) / sizeof(HYDRATE_WATER[0])), 4, &total);
 	bad += check_rel("faraday_deposit", FARADAY_DEPOSIT, (int)(sizeof(FARADAY_DEPOSIT) / sizeof(FARADAY_DEPOSIT[0])), 3, &total);
 	bad += check_rel("rate_factor", RATE_FACTOR, (int)(sizeof(RATE_FACTOR) / sizeof(RATE_FACTOR[0])), 4, &total);
+	bad += check_rel("min_of", MIN_OF, (int)(sizeof(MIN_OF) / sizeof(MIN_OF[0])), 2, &total);
+	bad += check_rel("kc_from_ice", KC_FROM_ICE, (int)(sizeof(KC_FROM_ICE) / sizeof(KC_FROM_ICE[0])), 3, &total);
 	bad += check_rel("moles_from_molarity", MOLES_FROM_MOLARITY, (int)(sizeof(MOLES_FROM_MOLARITY) / sizeof(MOLES_FROM_MOLARITY[0])), 2, &total);
 	bad += check_rel("mass_from_molarity", MASS_FROM_MOLARITY, (int)(sizeof(MASS_FROM_MOLARITY) / sizeof(MASS_FROM_MOLARITY[0])), 3, &total);
 	bad += check_rel("gas_mixture_pressure", GAS_MIXTURE_PRESSURE, (int)(sizeof(GAS_MIXTURE_PRESSURE) / sizeof(GAS_MIXTURE_PRESSURE[0])), 3, &total);

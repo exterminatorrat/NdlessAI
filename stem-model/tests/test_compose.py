@@ -94,10 +94,12 @@ def test_the_labelled_rows_still_agree_with_the_graph():
                     graph_calls = n
                     break
             agree += graph_calls == int(calls)
-    assert dict(reads) == {"blocked": 15, "chain-2": 4, "chain-1": 2,
-                           "chain-3": 2}
-    # Twenty-two of the 23, and the one that disagrees is the graph's own limit
-    # in the open: u04-046 needs three calls (n, then the reaction ratio, then
-    # the concentration) and the graph offers two, because a magnitude in mol
-    # fills `molarity`'s slot whether or not a ratio should have come between.
-    assert (agree, paired) == (7, 8)
+    assert dict(reads) == {"blocked": 11, "chain-2": 4, "chain-1": 4,
+                           "chain-3": 4}
+    # Twenty of the 23, and the three that disagree are the graph's own limits in
+    # the open. u04-046 needs three calls (n, then the reaction ratio, then the
+    # concentration) and the graph offers two, because a magnitude in mol fills
+    # `molarity`'s slot whether or not a ratio should have come between. The two
+    # limiting rows end in `min_of`, which compares without carrying a dimension
+    # at all, so a unit graph cannot connect them.
+    assert (agree, paired) == (9, 12)

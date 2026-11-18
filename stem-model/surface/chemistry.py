@@ -306,6 +306,17 @@ TEMPLATES["stoich_mass"] = [
     "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
 ]
 
+TEMPLATES["kc_from_ice"] = [
+    "A rigid vessel is charged so that the initial concentration of the reactant is {initial} mol/L. At equilibrium the product is {product} mol/L, and the reaction makes {coefficient} mol of product per mol of reactant. Find Kc.",
+    "The reactant starts at {initial} mol/L. At equilibrium {product} mol/L of product is present, with {coefficient} product units per reactant unit. Determine Kc.",
+    "Find Kc when a reactant begins at {initial} mol/L and equilibrium leaves {product} mol/L of product, the reaction ratio being {coefficient} to one.",
+    "An equilibrium mixture comes from a reactant at {initial} mol/L and holds {product} mol/L of product; {coefficient} mol of product forms per mol of reactant. Compute Kc.",
+    "Starting from {initial} mol/L of reactant, equilibrium gives {product} mol/L of product at a ratio of {coefficient}. What is Kc?",
+    "Calculate Kc for a reaction whose reactant starts at {initial} mol/L and whose equilibrium product concentration is {product} mol/L at a ratio of {coefficient}.",
+    "The initial concentration is {initial} mol/L and the equilibrium product concentration is {product} mol/L at a {coefficient}:1 ratio. Find Kc.",
+    "Determine Kc from an initial reactant concentration of {initial} mol/L and an equilibrium product concentration of {product} mol/L, with {coefficient} product units per reactant unit.",
+]
+
 TEMPLATES["moles_from_molarity"] = [
     "A volume of {V} L of a solution of concentration {c} mol/L is measured out. Find the number of moles of solute in it.",
     "How many moles of solute are in {V} L of a {c} mol/L solution?",

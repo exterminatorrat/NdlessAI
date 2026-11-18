@@ -114,6 +114,8 @@ UNITS = {
     "molality": ("mol", "kg"),
     "molarity": ("mol", "L"),
     "mole_fraction": ("mol", "mol"),
+    "kc_from_ice": ("mol/L", "mol/L", "-"),
+    "min_of": ("-", "-"),
     "moles": ("g", "-"),
     "moles_from_molarity": ("mol/L", "L"),
     "momentum": ("kg", "m/s"),

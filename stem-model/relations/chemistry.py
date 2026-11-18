@@ -832,6 +832,41 @@ class MassFromMolarity:
         return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"
 
 
+@relation("kc_from_ice", "chemistry", ["initial", "product", "coefficient"],
+          exact=False,
+          step=dict(line="Kc = [prod] / ([init] - c*[prod])^c",
+                    expr="@2 / ((@1 - @3 * @2) ^ @3)"))
+class KcFromIce:
+    """Kc from an ICE row's two givens, in one call.
+
+    The bank's equilibrium rows give an initial amount and the amount of
+    product at equilibrium, and the arithmetic in between — subtract the
+    change to get the reactant's equilibrium concentration — is what a chain of
+    relations cannot express and a single relation can.
+    """
+
+    @staticmethod
+    def gen(rng):
+        coefficient = rng.choice([1, 2])
+        product = rng.choice([0.002, 0.005, 0.01, 0.02, 0.0133, 0.25])
+        initial = product * coefficient * rng.choice([2, 3, 4, 5])
+        return [initial, product, coefficient], (
+            f"A rigid vessel is charged so that the initial concentration of "
+            f"the reactant is {initial} mol/L. At equilibrium the product is "
+            f"{product} mol/L. The reaction makes {coefficient} mol of product "
+            f"per mol of reactant. Find Kc.")
+
+    @staticmethod
+    def solve(initial, product, coefficient):
+        c = int(coefficient)
+        if c < 1 or c > 4:
+            raise ValueError("coefficient out of range")
+        left = _exact(initial) - c * _exact(product)
+        if left <= 0:
+            raise ValueError("no equilibrium: the change exceeds the initial")
+        return dec_exact(_exact(product) / (left ** c))
+
+
 @relation("moles_from_molarity", "chemistry", ["c", "V"],
           exact=False,
           step=dict(line="n = c * V", expr="@1 * @2"))

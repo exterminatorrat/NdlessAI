@@ -265,4 +265,14 @@ TEMPLATES = {
         "A raffle sells {total} tickets and {favourable} are winners. One is drawn. Compute the probability of winning.",
         "There are {total} marbles, {favourable} of them green. One marble is picked. Find the probability it is green.",
     ],
+    "min_of": [
+        "Two possible amounts are {a} and {b}. Which is the smaller?",
+        "Compare {a} with {b} and give the smaller value.",
+        "Of {a} and {b}, which is less?",
+        "Find the smaller of {a} and {b}.",
+        "Two candidates for a quantity are {a} and {b}. Report the minimum.",
+        "What is the minimum of {a} and {b}?",
+        "One path gives {a} and another gives {b}. Take the smaller.",
+        "Given the amounts {a} and {b}, find the lower one.",
+    ],
 }

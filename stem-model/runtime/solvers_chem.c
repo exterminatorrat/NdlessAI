@@ -957,6 +957,72 @@ static int solve_rate_factor(const char *const *args, char *out,
 	return 0;
 }
 
+/* Kc from an ICE row: [reactant] = initial - c*[product].
+ *
+ * The divisions are interleaved on purpose. Raising both sides to c first
+ * leaves a numerator around 1e12 for a four-decimal input, past the exact
+ * rational's limit, and the solver would refuse a question it can answer.
+ * product/left^c is (product/left)/left^(c-1), and each of those steps stays
+ * inside the range. */
+static int solve_kc_from_ice(const char *const *args, char *out, size_t outlen)
+{
+	rat initial, product, coef, left, value;
+	int rc, c;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &initial, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &product, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &coef, NULL)) != 0)
+		return rc;
+	if (coef.d == 0 || coef.n % coef.d != 0)
+		return -4;
+	c = (int)(coef.n / coef.d);
+	if (c < 1 || c > 4)
+		return -4;
+	left = initial;
+	for (int i = 0; i < c; i++) {
+		rat next;
+
+		if ((rc = rat_sub(&next, &left, &product)) != 0)
+			return rc;
+		left = next;
+	}
+	if (left.n <= 0)
+		return -4;
+	value = product;
+	for (int i = 0; i < c; i++) {
+		rat next;
+
+		if ((rc = rat_div(&next, &value, &left)) != 0)
+			return rc;
+		value = next;
+	}
+	if ((rc = dec4_render(value.n, value.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+/* The smaller of two numbers: what "limiting" decides, as a call. */
+static int solve_min_of(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b;
+	int rc;
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0)
+		return rc;
+	/* Compare by cross-multiplication so an exact fraction needs no float. */
+	if (a.n * b.d <= b.n * a.d) {
+		if ((rc = dec4_render(a.n, a.d, out, outlen)) != 0)
+			return rc;
+	} else {
+		if ((rc = dec4_render(b.n, b.d, out, outlen)) != 0)
+			return rc;
+	}
+	return 0;
+}
+
 /* n = c*V: the first step of a titration, and the inverse of `molarity`. */
 static int solve_moles_from_molarity(const char *const *args, char *out,
                                      size_t outlen)
@@ -1353,6 +1419,16 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "rate_factor") == 0) {
 		if (nargs == 4)
 			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "kc_from_ice") == 0) {
+		if (nargs == 3)
+			rc = solve_kc_from_ice(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "min_of") == 0) {
+		if (nargs == 2)
+			rc = solve_min_of(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "moles_from_molarity") == 0) {

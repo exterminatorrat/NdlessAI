@@ -98,6 +98,8 @@ TEMPLATES = {
     "kinematic_v": "A second trial in the same session recorded a speed of {n} m/s.",
     "proj_range": "A previous launch in the same report used {n} m/s.",
     "ohm_i": "The bench also holds a resistor rated {n} ohm.",
+    "kc_from_ice": "A second trial starts from {n} mol/L instead.",
+    "min_of": "A third candidate amount is {n}.",
     "moles": "The same shelf holds a second sample, {n} g of a different compound.",
     "moles_from_molarity": "A second aliquot of the same solution is {n} L.",
     "dilution": "The cupboard also holds a volumetric flask of {n} mL.",

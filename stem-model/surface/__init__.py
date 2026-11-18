@@ -144,6 +144,8 @@ _ARG_NAMES = {
     "kinematic_v": ("v0", "a", "t"),
     "proj_range": ("v0", "theta", "g"),
     "ohm_i": ("V", "R"),
+    "kc_from_ice": ("initial", "product", "coefficient"),
+    "min_of": ("a", "b"),
     "moles": ("mass", "mm"),
     "moles_from_molarity": ("c", "V"),
     "dilution": ("c1", "v1", "v2"),

@@ -71,6 +71,16 @@ static void fixed_cases(void)
 	unit_is(" degrees, clockwise", "degrees");
 	unit_is(" mol/L", "M");
 	unit_is(" kJ per mole", "kJ/mol");
+	/*
+	 * A trailing period is significance, not punctuation: the bank writes
+	 * "20. mL" and "100. mL" for three-figure values, and reading the unit
+	 * from the period instead of from what follows it left the number in
+	 * millilitres and the answer a thousand times too large.
+	 */
+	unit_is(". mL of solution", "mL");
+	unit_is(". kg of sample", "kg");
+	unit_is(".", NULL);                /* a full stop, not a unit */
+	unit_is(". A second object is dropped", NULL);  /* amperes? no */
 	unit_is(" in 3 s", NULL);          /* a preposition, not inches */
 	unit_is(" mph", "mph");
 	unit_is(" meters long", "m");
@@ -279,6 +289,26 @@ static void fixed_cases(void)
 	     "4 days?", "CALL half_life 80 2 4");
 	same("1000 dollars earns 5% per day for 2 days. Find the simple interest.",
 	     "CALL simple_interest 1000 5 2");
+}
+
+static void trailing_period_cases(void)
+{
+	/*
+	 * Measured on the AP Chemistry bank's own notation: u04-066 writes
+	 * "100. mL" and asks for a concentration. Before the trailing period was
+	 * read as significance the stack left 100 in the litres slot and the
+	 * pipeline answered 0.0001 mol/L where the key is 0.1 - a wrong answer
+	 * printed as an answer, which is the failure this module exists to stop.
+	 */
+	expect("100. mL of NaOCl solution of unknown concentration.",
+	       "CALL molarity 0.010 100", QUANTITY_CONVERTED,
+	       "CALL molarity 0.010 0.1");
+	expect("A 20. mL sample of 0.20 M solution.",
+	       "CALL molarity 0.004 20", QUANTITY_CONVERTED,
+	       "CALL molarity 0.004 0.02");
+	/* A period followed by a digit is a decimal point and reads as before. */
+	expect("A 25.0 mL sample of solution.", "CALL molarity 0.010 25.0",
+	       QUANTITY_CONVERTED, "CALL molarity 0.010 0.025");
 }
 
 static void zero_cases(void)
@@ -718,6 +748,7 @@ int main(int argc, char **argv)
 	if (argc > 1 && strcmp(argv[1], "--cases") == 0)
 		return corpus();
 	fixed_cases();
+	trailing_period_cases();
 	zero_cases();
 	if (failures) {
 		printf("%d failures\n", failures);

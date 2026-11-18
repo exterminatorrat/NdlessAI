@@ -974,14 +974,15 @@ static int molar_mass_line(const char *text, char *out, int outlen)
 static int mass_line(const char *text, char *out, int outlen)
 {
 	char formula[FORMULA_MAX_TEXT + 8];
+	char line[128], value[32];
 	long long mg;
-	char value[32];
 
 	if (formula_molar_mass_mg(text, &mg) != 0 ||
 	    dec4_render(mg, 1000, value, sizeof value) != 0)
 		return -1;
 	shown_formula(text, formula, sizeof formula);
-	snprintf(out, (size_t)outlen, "M(%s) = %s g/mol", formula, value);
+	snprintf(line, sizeof line, "M(%s) = %s g/mol", formula, value);
+	out_set(out, (size_t)outlen, line);
 	return 0;
 }
 
@@ -989,17 +990,18 @@ static int answer_line(char *out, int outlen, const char *answer)
 {
 	if (answer == NULL || !answer[0])
 		return 0;
-	return appendf(out, outlen, "\n= %s", answer);
+	return appendf(out, outlen, "\n= %.120s", answer);
 }
 
 static int steps_molar_mass(const char *text, const char *answer, char *out,
                             int outlen)
 {
 	if (molar_mass_line(text, out, outlen) != 0) {
-		char formula[FORMULA_MAX_TEXT + 8];
+		char formula[FORMULA_MAX_TEXT + 8], line[96];
 
 		shown_formula(text, formula, sizeof formula);
-		snprintf(out, (size_t)outlen, "M(%s)", formula);
+		snprintf(line, sizeof line, "M(%s)", formula);
+		out_set(out, (size_t)outlen, line);
 	}
 	return answer_line(out, outlen, answer);
 }
@@ -1020,7 +1022,7 @@ static int steps_moles_from_mass(const char *const *args, const char *answer,
 	    append(out, outlen, value) < 0 ||
 	    append(out, outlen, " g/mol") < 0)
 		return -1;
-	snprintf(line, sizeof line, "\nn = m/M = %s/", args[0]);
+	snprintf(line, sizeof line, "\nn = m/M = %.24s/", args[0]);
 	if (append(out, outlen, line) < 0 || append(out, outlen, value) < 0)
 		return -1;
 	return answer_line(out, outlen, answer);
@@ -1042,7 +1044,7 @@ static int steps_mass_from_moles(const char *const *args, const char *answer,
 	    append(out, outlen, value) < 0 ||
 	    append(out, outlen, " g/mol") < 0)
 		return -1;
-	if (appendf(out, outlen, "\nm = n*M = %s*%s", args[0], value) < 0)
+	if (appendf(out, outlen, "\nm = n*M = %.24s*%s", args[0], value) < 0)
 		return -1;
 	return answer_line(out, outlen, answer);
 }
@@ -1069,7 +1071,7 @@ static int steps_ions_from_moles(const char *const *args, const char *answer,
 		return -1;
 	if (ion_line(args[1], out, outlen) < 0)
 		return -1;
-	if (appendf(out, outlen, "\nn = %s*", args[0]) < 0)
+	if (appendf(out, outlen, "\nn = %.24s*", args[0]) < 0)
 		return -1;
 	{
 		char count[16];
@@ -1093,7 +1095,7 @@ static int steps_ksp(const char *const *args, const char *answer, char *out,
 		return -1;
 	shown_formula(args[1], formula, sizeof formula);
 	snprintf(line, sizeof line,
-	         "\nKsp = (%d*%s)^%d*(%d*%s)^%d", cations, args[0], cations,
+	         "\nKsp = (%d*%.24s)^%d*(%d*%.24s)^%d", cations, args[0], cations,
 	         anions, args[0], anions);
 	if (append(out, outlen, line) < 0)
 		return -1;
@@ -1154,9 +1156,9 @@ static int steps_stoich_mass(const char *const *args, const char *answer, char *
 	if (append(out, outlen, first) < 0 || append(out, outlen, "\n") < 0 ||
 	    append(out, outlen, second) < 0)
 		return -1;
-	if (appendf(out, outlen, "\nm = %s/", args[0]) < 0 ||
+	if (appendf(out, outlen, "\nm = %.24s/", args[0]) < 0 ||
 	    append(out, outlen, given) < 0 ||
-	    appendf(out, outlen, "*%s*", args[2]) < 0 ||
+	    appendf(out, outlen, "*%.24s*", args[2]) < 0 ||
 	    append(out, outlen, product) < 0)
 		return -1;
 	return answer_line(out, outlen, answer);

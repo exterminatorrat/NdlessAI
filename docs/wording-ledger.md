@@ -5,7 +5,7 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-67 relations, 14388 structures, 2823 rows (2697 eval), 690 structures refused as unresolvable.
+74 relations, 15270 structures, 3004 rows (2857 eval), 768 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -32,6 +32,8 @@ rows drawn from them.
 | `doppler_freq` | 3 | v/vs | 288 | 36 | 47 | 47 |
 | `double_slit_fringe` | 4 | L/d | 288 | 0 | 48 | 48 |
 | `entropy_change` | 2 | - | 540 | 0 | 99 | 99 |
+| `excess_concentration` | 4 | c1/c2; v1/v2 | 144 | 18 | 24 | 24 |
+| `excess_moles` | 4 | c1/c2; v1/v2 | 144 | 18 | 26 | 26 |
 | `fahrenheit_to_celsius` | 1 | - | 162 | 0 | 25 | 25 |
 | `faraday_deposit` | 3 | - | 126 | 0 | 26 | 26 |
 | `first_law` | 2 | q/w | 162 | 18 | 29 | 29 |
@@ -43,19 +45,24 @@ rows drawn from them.
 | `h_from_ph` | 1 | - | 162 | 0 | 31 | 31 |
 | `heat_reaction` | 2 | - | 288 | 0 | 61 | 61 |
 | `hydrate_water` | 4 | mass_anhydrous/mass_hydrate; mm_anhydrous/mm_water | 96 | 12 | 24 | 22 |
+| `ion_from_ksp` | 3 | - | 144 | 0 | 28 | 28 |
+| `ions_from_mixture` | 4 | n1/n2; ions1/ions2 | 126 | 18 | 24 | 20 |
 | `kc_from_conc` | 3 | product/reactant | 108 | 12 | 24 | 23 |
+| `kc_from_ice` | 3 | initial/product | 96 | 12 | 24 | 19 |
 | `ksp_from_solubility` | 3 | anion_count/cation_count | 108 | 12 | 24 | 20 |
 | `latent_heat` | 2 | - | 288 | 0 | 61 | 61 |
 | `limiting_moles` | 4 | mass_a/mass_b; mm_a/mm_b | 144 | 18 | 30 | 30 |
 | `mass_from_molarity` | 3 | - | 162 | 0 | 27 | 27 |
 | `mass_from_percent_composition` | 2 | - | 144 | 0 | 28 | 28 |
 | `mass_percent` | 2 | solute/solution | 144 | 18 | 34 | 34 |
+| `min_of` | 2 | a/b | 84 | 12 | 24 | 12 |
 | `mixing_concentration` | 4 | c1/c2; v1/v2 | 324 | 36 | 55 | 55 |
 | `mixture_final_temperature` | 4 | m1/m2; T1/T2 | 360 | 36 | 59 | 59 |
 | `molality` | 2 | - | 162 | 0 | 35 | 35 |
 | `molarity` | 2 | - | 324 | 0 | 63 | 63 |
 | `mole_fraction` | 2 | na/nb | 96 | 12 | 24 | 19 |
 | `moles` | 2 | - | 144 | 0 | 29 | 29 |
+| `moles_from_molarity` | 2 | - | 144 | 0 | 31 | 31 |
 | `partial_pressure` | 3 | n_i/n_total | 360 | 36 | 70 | 70 |
 | `percent_change` | 2 | new/original | 126 | 18 | 23 | 17 |
 | `percent_dissociation` | 2 | - | 324 | 0 | 63 | 63 |
@@ -180,7 +187,7 @@ repository from its own contract.
 | `standing_wave_freq` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wave_speed` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wavelength_from_frequency` | applied context (instrument dial and spectrum reading), worked-example prose | `physics-pool` |
-| the other 50 relations | labelled givens, imperative ask | `in-repo` |
+| the other 57 relations | labelled givens, imperative ask | `in-repo` |
 
 Sources, by key:
 
@@ -207,14 +214,19 @@ wording, so the fraction is reported here and not in a pull request body.
 - `dilution` — 54 of 486 structures (11%): two slots share a dimension and the same unit: v1, v2
 - `dilution_v1` — 36 of 324 structures (11%): two slots share a dimension and the same unit: m1, m2
 - `doppler_freq` — 36 of 288 structures (12%): two slots share a dimension and the same unit: v, vs
+- `excess_concentration` — 18 of 144 structures (12%): two slots share a dimension and the same unit: c1, c2
+- `excess_moles` — 18 of 144 structures (12%): two slots share a dimension and the same unit: c1, c2
 - `first_law` — 18 of 162 structures (11%): two slots share a dimension and the same unit: q, w
 - `gas_mixture_pressure` — 54 of 540 structures (10%): two slots share a dimension and the same unit: V_f, V_i
 - `geom_seq` — 12 of 84 structures (14%): two slots share a dimension and the same unit: a1, n
 - `hydrate_water` — 12 of 96 structures (12%): two slots share a dimension and the same unit: mass_anhydrous, mass_hydrate
+- `ions_from_mixture` — 18 of 126 structures (14%): two slots share a dimension and the same unit: n1, n2
 - `kc_from_conc` — 12 of 108 structures (11%): two slots share a dimension and the same unit: product, reactant
+- `kc_from_ice` — 12 of 96 structures (12%): two slots share a dimension and the same unit: initial, product
 - `ksp_from_solubility` — 12 of 108 structures (11%): two slots share a dimension and the same unit: anion_count, cation_count
 - `limiting_moles` — 18 of 144 structures (12%): two slots share a dimension and the same unit: mass_a, mass_b
 - `mass_percent` — 18 of 144 structures (12%): two slots share a dimension and the same unit: solute, solution
+- `min_of` — 12 of 84 structures (14%): two slots share a dimension and the same unit: a, b
 - `mixing_concentration` — 36 of 324 structures (11%): two slots share a dimension and the same unit: c1, c2
 - `mixture_final_temperature` — 36 of 360 structures (10%): two slots share a dimension and the same unit: m1, m2
 - `mole_fraction` — 12 of 96 structures (12%): two slots share a dimension and the same unit: na, nb

@@ -832,6 +832,229 @@ class MassFromMolarity:
         return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"
 
 
+@relation("ions_from_mixture", "chemistry", ["n1", "ions1", "n2", "ions2"],
+          exact=False,
+          step=dict(line="n(ion) = n1*i1 + n2*i2", expr="@1 * @2 + @3 * @4"))
+class IonsFromMixture:
+    """Total moles of one ion from two solutes in the same solution.
+
+    The mirror of `ions_from_moles_formula`, which takes one compound and a
+    formula. A mixture states two amounts and two ion counts, and the sum is
+    one exact step.
+    """
+
+    @staticmethod
+    def gen(rng):
+        n1 = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5])
+        n2 = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5])
+        ions1 = rng.choice([1, 2, 3])
+        ions2 = rng.choice([1, 2, 3])
+        return [n1, ions1, n2, ions2], (
+            f"A solution holds {n1} mol of a salt that gives {ions1} of the "
+            f"ion in question per formula unit, and {n2} mol of another that "
+            f"gives {ions2}. Find the total moles of that ion.")
+
+    @staticmethod
+    def solve(n1, ions1, n2, ions2):
+        return f"{dec_exact(_exact(n1) * ions1 + _exact(n2) * ions2)} mol"
+
+
+def _decimal_literal(value):
+    """A terminating exact rational as the plain decimal a question states.
+
+    A product of decimal literals is itself a decimal, and str() of the float
+    that product became writes binary noise past the ninth place (2.5e-07 came
+    out as 2.5000000000000004e-07), which the runtime refuses and no question
+    ever prints.
+    """
+    value = sp.Rational(value)
+    rest, twos, fives = value.q, 0, 0
+    while rest % 2 == 0:
+        rest //= 2
+        twos += 1
+    while rest % 5 == 0:
+        rest //= 5
+        fives += 1
+    digits = max(twos, fives)
+    if rest != 1 or digits > 9:
+        raise ValueError("%s has no decimal form the runtime parses" % value)
+    scaled = value.p * (10 ** digits // value.q)
+    text = str(scaled).rjust(digits + 1, "0")
+    if digits == 0:
+        return text
+    return "%s.%s" % (text[:-digits], text[-digits:])
+
+
+@relation("excess_moles", "chemistry", ["v1", "c1", "v2", "c2"], exact=False)
+class ExcessMoles:
+    """The amount of reagent left over when two solutions are mixed.
+
+    One-to-one pairing, which is what the bank's neutralisation and
+    precipitation rows ask: n(left) = |c1*V1 - c2*V2|, with the volumes in mL
+    so the magnitudes are the numbers the question writes. The answer is the
+    excess whichever side it falls on, because every row wants how much is
+    left, not which reagent it was. No step template: a difference of two
+    products is not the substitution the working pane renders.
+    """
+
+    @staticmethod
+    def gen(rng):
+        while True:
+            v1 = rng.choice([10, 20, 25, 50, 100])
+            c1 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            v2 = rng.choice([10, 20, 25, 50, 100])
+            c2 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            if v1 * c1 != v2 * c2:
+                break
+        return [v1, c1, v2, c2], (
+            f"A {v1} mL sample of {c1} M solution is mixed with {v2} mL of "
+            f"{c2} M solution and the two react one to one. How many moles of "
+            f"the excess reagent are left over?")
+
+    @staticmethod
+    def solve(v1, c1, v2, c2):
+        left = abs(_exact(v1) * _exact(c1) - _exact(v2) * _exact(c2))
+        return f"{dec_exact(left / 1000)} mol"
+
+
+@relation("excess_concentration", "chemistry", ["v1", "c1", "v2", "c2"],
+          exact=False)
+class ExcessConcentration:
+    """The concentration of the reagent left over after two solutions mix.
+
+    The mirror of `mixing_concentration`, which takes these same four arguments
+    and blends both solutes; this one keeps only the excess of a one-to-one
+    reaction and spreads it over the combined volume:
+
+        c(left) = |c1*V1 - c2*V2| / (V1 + V2)
+
+    Millilitres over millilitres is mol/L with no factor, which is why the
+    volumes are declared in mL. Every argument and both volumes are numbers the
+    question writes, which the plain subtraction's total volume is not. No step
+    template: a difference of products over a sum is not the substitution the
+    working pane renders.
+    """
+
+    @staticmethod
+    def gen(rng):
+        while True:
+            v1 = rng.choice([10, 20, 25, 50, 100])
+            c1 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            v2 = rng.choice([10, 20, 25, 50, 100])
+            c2 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            if v1 * c1 != v2 * c2:
+                break
+        return [v1, c1, v2, c2], (
+            f"A {v1} mL volume of {c1} M solution is mixed with {v2} mL of "
+            f"{c2} M solution and the two react one to one. Find the "
+            f"concentration of the reagent left over in the mixture.")
+
+    @staticmethod
+    def solve(v1, c1, v2, c2):
+        left = abs(_exact(v1) * _exact(c1) - _exact(v2) * _exact(c2))
+        return f"{dec_exact(left / (_exact(v1) + _exact(v2)))} mol/L"
+
+
+@relation("ion_from_ksp", "chemistry", ["ksp", "other", "count"], exact=False)
+class IonFromKsp:
+    """One ion's concentration from Ksp and the other ion's concentration.
+
+    Ksp = [other]^m * [ion]^n, so [ion] = (Ksp/[other])^(1/n). Only a square
+    root is computed, because that is the only power the bank's rows use and an
+    exact grid root is worth more here than a general case nobody asked for.
+    No step template: a root is not arithmetic over the arguments, and the
+    runtime prints the same four figures the reference does.
+
+    `gen` draws a Ksp of 1e-4 or more, because that is the smallest value the
+    wording layer writes without an exponent (`numbers.SMALLEST`). The solvers
+    themselves are exact for any positive Ksp the runtime parses: the bank's own
+    row states 4.0 x 10-8 and computes to 0.2 mol/L. What is missing is a
+    question generator that can write 4.0 x 10-8, not the arithmetic.
+    """
+
+    @staticmethod
+    def gen(rng):
+        count = 2
+        other = rng.choice([0.01, 0.02, 0.05, 0.1])
+        ion = rng.choice([0.2, 0.25, 0.5])
+        ksp = _decimal_literal(_exact(other) * _exact(ion) * _exact(ion))
+        return [ksp, other, count], (
+            f"A saturated solution holds {other} mol/L of one ion, and the "
+            f"compound gives {count} of the other ion per formula unit. Ksp is "
+            f"{ksp}. Find the concentration of the other ion.")
+
+    @staticmethod
+    def solve(ksp, other, count):
+        r = _exact(ksp) / _exact(other)
+        if r <= 0 or int(count) != 2:
+            raise ValueError("only a square root, and only for positive inputs")
+        scaled = r.p * 1000000000000 // r.q
+        if scaled > 8000000000000000000:
+            raise ValueError("past the exact grid")
+        return f"{dec_exact(sp.Rational(math.isqrt(scaled), 1000000))} mol/L"
+
+
+@relation("kc_from_ice", "chemistry", ["initial", "product", "coefficient"],
+          exact=False,
+          step=dict(line="Kc = [prod] / ([init] - c*[prod])^c",
+                    expr="@2 / ((@1 - @3 * @2) ^ @3)"))
+class KcFromIce:
+    """Kc from an ICE row's two givens, in one call.
+
+    The bank's equilibrium rows give an initial amount and the amount of
+    product at equilibrium, and the arithmetic in between — subtract the
+    change to get the reactant's equilibrium concentration — is what a chain of
+    relations cannot express and a single relation can.
+    """
+
+    @staticmethod
+    def gen(rng):
+        coefficient = rng.choice([1, 2])
+        product = rng.choice([0.002, 0.005, 0.01, 0.02, 0.0133, 0.25])
+        initial = product * coefficient * rng.choice([2, 3, 4, 5])
+        return [initial, product, coefficient], (
+            f"A rigid vessel is charged so that the initial concentration of "
+            f"the reactant is {initial} mol/L. At equilibrium the product is "
+            f"{product} mol/L. The reaction makes {coefficient} mol of product "
+            f"per mol of reactant. Find Kc.")
+
+    @staticmethod
+    def solve(initial, product, coefficient):
+        c = int(coefficient)
+        if c < 1 or c > 4:
+            raise ValueError("coefficient out of range")
+        left = _exact(initial) - c * _exact(product)
+        if left <= 0:
+            raise ValueError("no equilibrium: the change exceeds the initial")
+        return dec_exact(_exact(product) / (left ** c))
+
+
+@relation("moles_from_molarity", "chemistry", ["c", "V"],
+          exact=False,
+          step=dict(line="n = c * V", expr="@1 * @2"))
+class MolesFromMolarity:
+    """The inverse of `molarity`, and the first step of most titration rows.
+
+    Measured on the bank: nine of the 23 second-computation rows need the
+    number of moles in a volume of a solution before anything else can happen,
+    and no relation produced it. `molarity` solves the other way (c from n and
+    V), so a chain could not borrow it: the graph admits the edge and the
+    question needs the reverse.
+    """
+
+    @staticmethod
+    def gen(rng):
+        c = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5, 1, 1.5, 2])
+        V = rng.choice([0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2])
+        return [c, V], (
+            f"A volume of {V} L of a solution of concentration {c} mol/L is "
+            f"measured out. Find the number of moles of solute in it.")
+
+    @staticmethod
+    def solve(c, V):
+        return f"{dec_exact(_exact(c) * _exact(V))} mol"
+
+
 # ---------------------------------------------------------------------------
 # AP Chemistry batch C. Five of these are one exact step each, like the two
 # batches before them. The sixth, vsepr_bond_angle, is a table rather than a

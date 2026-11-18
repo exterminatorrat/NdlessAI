@@ -27,11 +27,15 @@ def test_a_multi_valued_answer_never_opens_a_chain():
     assert graph.get("quad_solve", []) == []
 
 
-def test_the_ratio_slot_is_refused_by_its_dimension():
-    """Both sides print `mol`, but the slot is a ratio: the report names it."""
+def test_a_ratio_slot_takes_no_amount_of_moles():
+    """The slot used to be phrased "{ratio} mol", which made the unit table call
+    a ratio a number of moles and made the graph admit `moles -> stoich_mass`.
+    Rewording the templates fixed the metadata: the slot states no unit now, so
+    nothing reports a disagreement about it, and the edge is gone because no
+    slot of that relation takes a number of moles."""
     graph, _answers, notes = compose.build_graph()
+    assert not [note for note in notes if "stoich_mass.ratio" in note]
     assert not compose.path(graph, "moles", "stoich_mass", 2)
-    assert any("stoich_mass.ratio" in note for note in notes)
 
 
 def test_the_two_spellings_of_molarity_are_one_unit():
@@ -90,6 +94,15 @@ def test_the_labelled_rows_still_agree_with_the_graph():
                     graph_calls = n
                     break
             agree += graph_calls == int(calls)
-    assert dict(reads) == {"blocked": 17, "chain-2": 3, "chain-1": 2,
-                           "chain-3": 1}
-    assert (agree, paired) == (6, 6)
+    assert dict(reads) == {"blocked": 3, "chain-1": 6, "chain-2": 6,
+                           "chain-3": 6, "chain-4": 1, "chain-5": 1}
+    # Fifteen of the 20 paired, and the five that disagree are the graph's own
+    # limits in the open. u04-046 needs three calls (n, then the reaction ratio,
+    # then the concentration) and the graph offers two, because a magnitude in
+    # mol fills `molarity`'s slot whether or not a ratio should have come
+    # between. u03-148 needs two separate `moles_from_molarity` calls and the
+    # graph counts the hops along one path, so it reads two where the row needs
+    # four. The two limiting rows end in `min_of`, which compares without
+    # carrying a dimension at all; u04-042 needs five calls and `MAX_CALLS` is
+    # four, so the graph has nothing to say about it.
+    assert (agree, paired) == (15, 20)

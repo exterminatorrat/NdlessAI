@@ -296,14 +296,81 @@ TEMPLATES["mass_percent"] = [
 ]
 
 TEMPLATES["stoich_mass"] = [
-    "{mass} g of a reactant with molar mass {mm_given} g/mol reacts. Each mole of it gives {ratio} mol of product, whose molar mass is {mm_product} g/mol. Find the mass of product.",
-    "Find the mass of product when {mass} g of reactant (molar mass {mm_given} g/mol) reacts, {ratio} mol of product forms per mole, and the product's molar mass is {mm_product} g/mol.",
-    "What mass of product forms from {mass} g of a reactant of molar mass {mm_given} g/mol, given a {ratio}:1 product ratio and product molar mass {mm_product} g/mol?",
-    "Calculate the product mass for {mass} g of reactant with molar mass {mm_given} g/mol, ratio {ratio}, and product molar mass {mm_product} g/mol.",
-    "A reaction uses {mass} g of a substance of molar mass {mm_given} g/mol. It gives {ratio} mol of product per mol, and the product has molar mass {mm_product} g/mol. Find the product mass.",
-    "Determine the mass of product from {mass} g of reactant (molar mass {mm_given} g/mol) where the ratio is {ratio} and the product's molar mass is {mm_product} g/mol.",
-    "Find the mass of product formed when {mass} g of reactant of molar mass {mm_given} g/mol reacts in a {ratio}:1 ratio with a product of molar mass {mm_product} g/mol.",
-    "For {mass} g of reactant with molar mass {mm_given} g/mol, {ratio} mol of product per mol, and product molar mass {mm_product} g/mol, find the product mass.",
+    "{mass} g of a reactant with molar mass {mm_given} g/mol reacts, giving a product at a product-to-reactant ratio of {ratio}. The product's molar mass is {mm_product} g/mol. Find the mass of product.",
+    "Find the mass of product when {mass} g of reactant (molar mass {mm_given} g/mol) reacts at a ratio of {ratio} to one, the product's molar mass being {mm_product} g/mol.",
+    "What mass of product forms from {mass} g of a reactant of molar mass {mm_given} g/mol, at a product-to-reactant ratio of {ratio}, with product molar mass {mm_product} g/mol?",
+    "Calculate the product mass for {mass} g of reactant with molar mass {mm_given} g/mol, a ratio of {ratio} to one, and product molar mass {mm_product} g/mol.",
+    "A reaction uses {mass} g of a substance of molar mass {mm_given} g/mol at a ratio of {ratio} product units per reactant unit. The product has molar mass {mm_product} g/mol. Find the product mass.",
+    "Determine the mass of product from {mass} g of reactant (molar mass {mm_given} g/mol) where the product-to-reactant ratio is {ratio} and the product's molar mass is {mm_product} g/mol.",
+    "Find the mass of product formed when {mass} g of reactant of molar mass {mm_given} g/mol reacts at a ratio of {ratio} to one, with a product of molar mass {mm_product} g/mol.",
+    "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
+]
+
+TEMPLATES["excess_concentration"] = [
+    "A {v1} mL volume of {c1} M solution is mixed with {v2} mL of {c2} M solution and the two react one to one. Find the concentration of the reagent left over.",
+    "Find the concentration of the excess reagent after {v1} mL of {c1} M solution reacts one to one with {v2} mL of {c2} M solution.",
+    "Two solutions react one to one: {v1} mL at {c1} M and {v2} mL at {c2} M. Determine the leftover reagent's concentration in the mixture.",
+    "What is the concentration of the unreacted reagent when {v2} mL of {c2} M solution is added to {v1} mL of {c1} M solution in a one-to-one reaction?",
+    "Calculate the concentration left over when a {v1} mL volume of {c1} M solution meets {v2} mL of {c2} M solution, one to one.",
+    "Determine the concentration of reagent remaining after {v1} mL of {c1} M solution and {v2} mL of {c2} M solution react one to one.",
+    "A mixture brings together {v1} mL of {c1} M solution and {v2} mL of {c2} M solution that react one to one. Find the leftover concentration.",
+    "Find the concentration of the reagent in excess after {v1} mL of {c1} M solution reacts completely with {v2} mL of {c2} M solution.",
+]
+
+TEMPLATES["excess_moles"] = [
+    "A {v1} mL sample of {c1} M solution is mixed with {v2} mL of {c2} M solution and the two react one to one. Find the moles of reagent left over.",
+    "Find the moles of excess reagent when {v2} mL of {c2} M solution is added to {v1} mL of {c1} M solution that reacts with it one to one.",
+    "Two solutions react one to one: {v1} mL at {c1} M and {v2} mL at {c2} M. Determine the amount left over in moles.",
+    "How many moles of the reagent are left over after {v1} mL of {c1} M solution meets {v2} mL of {c2} M solution, one to one?",
+    "Calculate the moles of unreacted reagent when a {v1} mL volume of {c1} M solution is combined with {v2} mL of {c2} M solution.",
+    "Determine the excess in moles when {v1} mL of {c1} M solution and {v2} mL of {c2} M solution react one to one.",
+    "A mixture brings together {v1} mL of {c1} M solution and {v2} mL of {c2} M solution. What amount of reagent remains, in moles?",
+    "Find the moles left over after {v2} mL of {c2} M solution reacts one to one with {v1} mL of {c1} M solution.",
+]
+
+TEMPLATES["ions_from_mixture"] = [
+    "A solution holds {n1} mol of a salt that gives {ions1} of the ion per formula unit, and {n2} mol of another that gives {ions2}. Find the total moles of that ion.",
+    "Find the total moles of an ion when {n1} mol of a salt contributing {ions1} per unit is mixed with {n2} mol of one contributing {ions2}.",
+    "A mixture contains {n1} mol of a first salt ({ions1} ions per unit) and {n2} mol of a second ({ions2} per unit). Determine the moles of the shared ion.",
+    "How many moles of the ion are present if {n1} mol of a salt with {ions1} per unit and {n2} mol of a salt with {ions2} per unit are dissolved together?",
+    "Calculate the total moles of an ion from {n1} mol of a salt giving {ions1} per unit and {n2} mol of a salt giving {ions2} per unit.",
+    "Two salts are dissolved: {n1} mol at {ions1} ions per unit and {n2} mol at {ions2}. Find the total moles of the ion.",
+    "Determine the moles of an ion contributed by {n1} mol of a salt with {ions1} per unit and {n2} mol of one with {ions2}.",
+    "Given {n1} mol at {ions1} ions per formula unit and {n2} mol at {ions2}, what is the total amount of the ion?",
+]
+
+TEMPLATES["ion_from_ksp"] = [
+    "A saturated solution holds {other} mol/L of one ion, and the compound gives {count} of the other ion per formula unit. Ksp is {ksp}. Find the concentration of the other ion.",
+    "One ion sits at {other} mol/L and the salt releases {count} of the other ion per formula unit. With Ksp {ksp}, find that ion's concentration.",
+    "Find the concentration of the second ion when the first is {other} mol/L, the formula unit carries {count} of the second, and Ksp is {ksp}.",
+    "A precipitate sits in equilibrium with {other} mol/L of one ion and {count} of the other per formula unit. Determine the other ion's concentration, given Ksp {ksp}.",
+    "What is the other ion's concentration if one ion is {other} mol/L, the salt has {count} of the other per unit, and Ksp is {ksp}?",
+    "Calculate the second ion's concentration when the first is {other} mol/L, the salt gives {count} per formula unit, and Ksp is {ksp}.",
+    "With one ion at {other} mol/L, {count} of the other per formula unit and Ksp {ksp}, find the second ion's concentration.",
+    "Determine the concentration of the ion appearing {count} times per unit when the other is {other} mol/L and Ksp is {ksp}.",
+]
+
+TEMPLATES["kc_from_ice"] = [
+    "A rigid vessel is charged so that the initial concentration of the reactant is {initial} mol/L. At equilibrium the product is {product} mol/L, and the reaction makes {coefficient} mol of product per mol of reactant. Find Kc.",
+    "The reactant starts at {initial} mol/L. At equilibrium {product} mol/L of product is present, with {coefficient} product units per reactant unit. Determine Kc.",
+    "Find Kc when a reactant begins at {initial} mol/L and equilibrium leaves {product} mol/L of product, the reaction ratio being {coefficient} to one.",
+    "An equilibrium mixture comes from a reactant at {initial} mol/L and holds {product} mol/L of product; {coefficient} mol of product forms per mol of reactant. Compute Kc.",
+    "Starting from {initial} mol/L of reactant, equilibrium gives {product} mol/L of product at a ratio of {coefficient}. What is Kc?",
+    "Calculate Kc for a reaction whose reactant starts at {initial} mol/L and whose equilibrium product concentration is {product} mol/L at a ratio of {coefficient}.",
+    "The initial concentration is {initial} mol/L and the equilibrium product concentration is {product} mol/L at a {coefficient}:1 ratio. Find Kc.",
+    "Determine Kc from an initial reactant concentration of {initial} mol/L and an equilibrium product concentration of {product} mol/L, with {coefficient} product units per reactant unit.",
+]
+
+TEMPLATES["moles_from_molarity"] = [
+    "A volume of {V} L of a solution of concentration {c} mol/L is measured out. Find the number of moles of solute in it.",
+    "How many moles of solute are in {V} L of a {c} mol/L solution?",
+    "Find the moles of solute contained in {V} L of a solution whose concentration is {c} mol/L.",
+    "{V} L of a {c} mol/L solution is available. Determine the amount of solute in moles.",
+    "What number of moles of solute does {V} L of {c} mol/L solution contain?",
+    "Calculate the moles of solute in {V} L of a {c} mol/L solution.",
+    "A {c} mol/L solution is measured out to {V} L. How many moles of solute are there?",
+    "Given {V} L of a solution at {c} mol/L, find the moles of solute dissolved.",
+    "Determine the number of moles of solute in {V} L of a {c} mol/L solution.",
 ]
 
 TEMPLATES["mole_fraction"] = [

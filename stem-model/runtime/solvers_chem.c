@@ -957,6 +957,207 @@ static int solve_rate_factor(const char *const *args, char *out,
 	return 0;
 }
 
+/* Kc from an ICE row: [reactant] = initial - c*[product].
+ *
+ * The divisions are interleaved on purpose. Raising both sides to c first
+ * leaves a numerator around 1e12 for a four-decimal input, past the exact
+ * rational's limit, and the solver would refuse a question it can answer.
+ * product/left^c is (product/left)/left^(c-1), and each of those steps stays
+ * inside the range. */
+/* The excess after one-to-one mixing: |v1*c1 - v2*c2| / 1000, volumes in mL. */
+static int solve_excess_moles(const char *const *args, char *out, size_t outlen)
+{
+	rat v1, c1, v2, c2, a, b, diff, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &v1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &c1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &c2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&a, &v1, &c1)) != 0 ||
+	    (rc = rat_mul(&b, &v2, &c2)) != 0 ||
+	    (rc = rat_sub(&diff, &a, &b)) != 0)
+		return rc;
+	if (diff.n < 0)
+		diff.n = -diff.n;
+	{
+		rat thousand = { 1000, 1 };
+		if ((rc = rat_div(&n, &diff, &thousand)) != 0)
+			return rc;
+	}
+	if ((rc = dec4_render(n.n, n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+/* The excess reagent's concentration: |v1*c1 - v2*c2| / (v1 + v2), mL over mL. */
+static int solve_excess_concentration(const char *const *args, char *out,
+                                      size_t outlen)
+{
+	rat v1, c1, v2, c2, a, b, diff, total, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &v1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &c1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &c2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&a, &v1, &c1)) != 0 ||
+	    (rc = rat_mul(&b, &v2, &c2)) != 0 ||
+	    (rc = rat_sub(&diff, &a, &b)) != 0 ||
+	    (rc = rat_add(&total, &v1, &v2)) != 0)
+		return rc;
+	if (total.n == 0)
+		return -4;
+	if (diff.n < 0)
+		diff.n = -diff.n;
+	if ((rc = rat_div(&n, &diff, &total)) != 0)
+		return rc;
+	if ((rc = dec4_render(n.n, n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+/* Total moles of one ion from two solutes: n1*i1 + n2*i2. */
+static int solve_ions_from_mixture(const char *const *args, char *out,
+                                   size_t outlen)
+{
+	rat n1, i1, n2, i2, a, b, total;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &n1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &i1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &n2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &i2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&a, &n1, &i1)) != 0 ||
+	    (rc = rat_mul(&b, &n2, &i2)) != 0 ||
+	    (rc = rat_add(&total, &a, &b)) != 0)
+		return rc;
+	if ((rc = dec4_render(total.n, total.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+/* One ion's concentration from Ksp: (Ksp/other)^(1/2), on the same exact grid
+ * the percent_dissociation root uses, so C and the reference print the same
+ * four figures rather than merely close ones. */
+static int solve_ion_from_ksp(const char *const *args, char *out, size_t outlen)
+{
+	rat ksp, other, r, count;
+	long long root;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &ksp, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &other, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &count, NULL)) != 0)
+		return rc;
+	if (other.n == 0 || ksp.n <= 0 || other.n <= 0)
+		return -4;
+	if (count.d == 0 || count.n != 2 * count.d)
+		return -4;
+	if ((rc = rat_div(&r, &ksp, &other)) != 0)
+		return rc;
+	if (r.n > 8000000)
+		return -4;
+	root = (long long)isqrt64((unsigned long long)(r.n * 1000000000000LL / r.d));
+	if ((rc = dec4_render(root, 1000000, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol/L", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
+static int solve_kc_from_ice(const char *const *args, char *out, size_t outlen)
+{
+	rat initial, product, coef, left, value;
+	int rc, c;
+	char f1[48];
+
+	if ((rc = parse_rat(args[0], &initial, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &product, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &coef, NULL)) != 0)
+		return rc;
+	if (coef.d == 0 || coef.n % coef.d != 0)
+		return -4;
+	c = (int)(coef.n / coef.d);
+	if (c < 1 || c > 4)
+		return -4;
+	left = initial;
+	for (int i = 0; i < c; i++) {
+		rat next;
+
+		if ((rc = rat_sub(&next, &left, &product)) != 0)
+			return rc;
+		left = next;
+	}
+	if (left.n <= 0)
+		return -4;
+	value = product;
+	for (int i = 0; i < c; i++) {
+		rat next;
+
+		if ((rc = rat_div(&next, &value, &left)) != 0)
+			return rc;
+		value = next;
+	}
+	if ((rc = dec4_render(value.n, value.d, f1, sizeof(f1))) != 0)
+		return rc;
+	out_set(out, outlen, f1);
+	return 0;
+}
+
+/* The smaller of two numbers: what "limiting" decides, as a call. */
+static int solve_min_of(const char *const *args, char *out, size_t outlen)
+{
+	rat a, b;
+	int rc;
+
+	if ((rc = parse_rat(args[0], &a, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &b, NULL)) != 0)
+		return rc;
+	/* Compare by cross-multiplication so an exact fraction needs no float. */
+	if (a.n * b.d <= b.n * a.d) {
+		if ((rc = dec4_render(a.n, a.d, out, outlen)) != 0)
+			return rc;
+	} else {
+		if ((rc = dec4_render(b.n, b.d, out, outlen)) != 0)
+			return rc;
+	}
+	return 0;
+}
+
+/* n = c*V: the first step of a titration, and the inverse of `molarity`. */
+static int solve_moles_from_molarity(const char *const *args, char *out,
+                                     size_t outlen)
+{
+	rat c, v, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&n, &c, &v)) != 0)
+		return rc;
+	if ((rc = dec4_render(n.n, n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 static int solve_mass_from_molarity(const char *const *args, char *out,
                                     size_t outlen)
 {
@@ -1333,6 +1534,41 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "rate_factor") == 0) {
 		if (nargs == 4)
 			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "excess_concentration") == 0) {
+		if (nargs == 4)
+			rc = solve_excess_concentration(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "excess_moles") == 0) {
+		if (nargs == 4)
+			rc = solve_excess_moles(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ions_from_mixture") == 0) {
+		if (nargs == 4)
+			rc = solve_ions_from_mixture(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "ion_from_ksp") == 0) {
+		if (nargs == 3)
+			rc = solve_ion_from_ksp(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "kc_from_ice") == 0) {
+		if (nargs == 3)
+			rc = solve_kc_from_ice(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "min_of") == 0) {
+		if (nargs == 2)
+			rc = solve_min_of(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "moles_from_molarity") == 0) {
+		if (nargs == 2)
+			rc = solve_moles_from_molarity(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "mass_from_molarity") == 0) {

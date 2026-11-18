@@ -14595,6 +14595,56 @@ static const tcase RATE_FACTOR[] = {
 	{ { "4", "1", "2", "0", "", "" }, "4" },
 	{ { "0.5", "1", "3", "1", "", "" }, "1.5" },
 };
+static const tcase EXCESS_MOLES[] = {
+	{ { "150.0", "0.10", "50.0", "0.20", "", "" }, "0.005 mol" },
+	{ { "10", "1", "10", "1.2", "", "" }, "0.002 mol" },
+	{ { "200.0", "2.0", "500.0", "1.0", "", "" }, "0.1 mol" },
+	{ { "20.0", "0.200", "30.0", "0.400", "", "" }, "0.008 mol" },
+};
+
+static const tcase EXCESS_CONCENTRATION[] = {
+	{ { "20.0", "0.200", "30.0", "0.400", "", "" }, "0.16 mol/L" },
+	{ { "150.0", "0.10", "50.0", "0.20", "", "" }, "0.025 mol/L" },
+	{ { "10", "1", "10", "1.2", "", "" }, "0.1 mol/L" },
+	{ { "200", "2.0", "500", "1.0", "", "" }, "0.1429 mol/L" },
+};
+
+static const tcase IONS_FROM_MIXTURE[] = {
+	{ { "0.10", "1", "0.10", "2", "", "" }, "0.3 mol" },
+	{ { "0.20", "2", "0.10", "3", "", "" }, "0.7 mol" },
+	{ { "0.05", "3", "0.25", "1", "", "" }, "0.4 mol" },
+};
+
+static const tcase ION_FROM_KSP[] = {
+	{ { "4e-08", "1e-06", "2", "", "", "" }, "0.2 mol/L" },
+	{ { "0.0001", "0.01", "2", "", "", "" }, "0.1 mol/L" },
+	{ { "0.0004", "0.01", "2", "", "", "" }, "0.2 mol/L" },
+};
+
+static const tcase MIN_OF[] = {
+	{ { "24", "20", "", "", "", "" }, "20" },
+	{ { "0.2", "0.2667", "", "", "", "" }, "0.2" },
+	{ { "3", "5", "", "", "", "" }, "3" },
+	{ { "-4", "2", "", "", "", "" }, "-4" },
+	{ { "0.5", "0.25", "", "", "", "" }, "0.25" },
+};
+
+static const tcase KC_FROM_ICE[] = {
+	{ { "0.03", "0.005", "2", "", "", "" }, "12.5" },
+	{ { "0.0688", "0.0133", "2", "", "", "" }, "7.468" },
+	{ { "0.5", "0.1", "1", "", "", "" }, "0.25" },
+	{ { "2", "0.25", "2", "", "", "" }, "0.1111" },
+};
+
+static const tcase MOLES_FROM_MOLARITY[] = {
+	{ { "0.1", "2", "", "", "", "" }, "0.2 mol" },
+	{ { "0.25", "0.1", "", "", "", "" }, "0.025 mol" },
+	{ { "1", "0.5", "", "", "", "" }, "0.5 mol" },
+	{ { "2", "0.250", "", "", "", "" }, "0.5 mol" },
+	{ { "0.05", "0.02", "", "", "", "" }, "0.001 mol" },
+	{ { "1.5", "0.2", "", "", "", "" }, "0.3 mol" },
+};
+
 static const tcase MASS_FROM_MOLARITY[] = {
 	{ { "0.1", "2", "58.5", "", "", "" }, "11.7 g" },
 	{ { "1", "1", "58.5", "", "", "" }, "58.5 g" },
@@ -14822,6 +14872,13 @@ int main(void)
 	bad += check_rel("hydrate_water", HYDRATE_WATER, (int)(sizeof(HYDRATE_WATER) / sizeof(HYDRATE_WATER[0])), 4, &total);
 	bad += check_rel("faraday_deposit", FARADAY_DEPOSIT, (int)(sizeof(FARADAY_DEPOSIT) / sizeof(FARADAY_DEPOSIT[0])), 3, &total);
 	bad += check_rel("rate_factor", RATE_FACTOR, (int)(sizeof(RATE_FACTOR) / sizeof(RATE_FACTOR[0])), 4, &total);
+	bad += check_rel("excess_concentration", EXCESS_CONCENTRATION, (int)(sizeof(EXCESS_CONCENTRATION) / sizeof(EXCESS_CONCENTRATION[0])), 4, &total);
+	bad += check_rel("excess_moles", EXCESS_MOLES, (int)(sizeof(EXCESS_MOLES) / sizeof(EXCESS_MOLES[0])), 4, &total);
+	bad += check_rel("ions_from_mixture", IONS_FROM_MIXTURE, (int)(sizeof(IONS_FROM_MIXTURE) / sizeof(IONS_FROM_MIXTURE[0])), 4, &total);
+	bad += check_rel("ion_from_ksp", ION_FROM_KSP, (int)(sizeof(ION_FROM_KSP) / sizeof(ION_FROM_KSP[0])), 3, &total);
+	bad += check_rel("min_of", MIN_OF, (int)(sizeof(MIN_OF) / sizeof(MIN_OF[0])), 2, &total);
+	bad += check_rel("kc_from_ice", KC_FROM_ICE, (int)(sizeof(KC_FROM_ICE) / sizeof(KC_FROM_ICE[0])), 3, &total);
+	bad += check_rel("moles_from_molarity", MOLES_FROM_MOLARITY, (int)(sizeof(MOLES_FROM_MOLARITY) / sizeof(MOLES_FROM_MOLARITY[0])), 2, &total);
 	bad += check_rel("mass_from_molarity", MASS_FROM_MOLARITY, (int)(sizeof(MASS_FROM_MOLARITY) / sizeof(MASS_FROM_MOLARITY[0])), 3, &total);
 	bad += check_rel("gas_mixture_pressure", GAS_MIXTURE_PRESSURE, (int)(sizeof(GAS_MIXTURE_PRESSURE) / sizeof(GAS_MIXTURE_PRESSURE[0])), 3, &total);
 	bad += check_rel("mixture_final_temperature", MIXTURE_FINAL_TEMPERATURE, (int)(sizeof(MIXTURE_FINAL_TEMPERATURE) / sizeof(MIXTURE_FINAL_TEMPERATURE[0])), 4, &total);

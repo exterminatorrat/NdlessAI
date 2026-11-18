@@ -115,6 +115,7 @@ UNITS = {
     "molarity": ("mol", "L"),
     "mole_fraction": ("mol", "mol"),
     "excess_moles": ("mL", "mol/L", "mL", "mol/L"),
+    "excess_concentration": ("mL", "mol/L", "mL", "mol/L"),
     "ion_from_ksp": ("-", "mol/L", "-"),
     "ions_from_mixture": ("mol", "-", "mol", "-"),
     "kc_from_ice": ("mol/L", "mol/L", "-"),

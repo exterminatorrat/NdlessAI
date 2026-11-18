@@ -917,6 +917,44 @@ class ExcessMoles:
         return f"{dec_exact(left / 1000)} mol"
 
 
+@relation("excess_concentration", "chemistry", ["v1", "c1", "v2", "c2"],
+          exact=False)
+class ExcessConcentration:
+    """The concentration of the reagent left over after two solutions mix.
+
+    The mirror of `mixing_concentration`, which takes these same four arguments
+    and blends both solutes; this one keeps only the excess of a one-to-one
+    reaction and spreads it over the combined volume:
+
+        c(left) = |c1*V1 - c2*V2| / (V1 + V2)
+
+    Millilitres over millilitres is mol/L with no factor, which is why the
+    volumes are declared in mL. Every argument and both volumes are numbers the
+    question writes, which the plain subtraction's total volume is not. No step
+    template: a difference of products over a sum is not the substitution the
+    working pane renders.
+    """
+
+    @staticmethod
+    def gen(rng):
+        while True:
+            v1 = rng.choice([10, 20, 25, 50, 100])
+            c1 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            v2 = rng.choice([10, 20, 25, 50, 100])
+            c2 = rng.choice([0.1, 0.2, 0.25, 0.5])
+            if v1 * c1 != v2 * c2:
+                break
+        return [v1, c1, v2, c2], (
+            f"A {v1} mL volume of {c1} M solution is mixed with {v2} mL of "
+            f"{c2} M solution and the two react one to one. Find the "
+            f"concentration of the reagent left over in the mixture.")
+
+    @staticmethod
+    def solve(v1, c1, v2, c2):
+        left = abs(_exact(v1) * _exact(c1) - _exact(v2) * _exact(c2))
+        return f"{dec_exact(left / (_exact(v1) + _exact(v2)))} mol/L"
+
+
 @relation("ion_from_ksp", "chemistry", ["ksp", "other", "count"], exact=False)
 class IonFromKsp:
     """One ion's concentration from Ksp and the other ion's concentration.

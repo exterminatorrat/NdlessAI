@@ -99,6 +99,7 @@ TEMPLATES = {
     "proj_range": "A previous launch in the same report used {n} m/s.",
     "ohm_i": "The bench also holds a resistor rated {n} ohm.",
     "excess_moles": "The reacted amount is instead {n} mol.",
+    "excess_concentration": "The reacted concentration is instead {n} mol/L.",
     "ion_from_ksp": "The other ion is instead reported at {n} mol/L.",
     "ions_from_mixture": "A third salt contributes {n} mol of the ion.",
     "kc_from_ice": "A second trial starts from {n} mol/L instead.",

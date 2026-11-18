@@ -94,8 +94,8 @@ def test_the_labelled_rows_still_agree_with_the_graph():
                     graph_calls = n
                     break
             agree += graph_calls == int(calls)
-    assert dict(reads) == {"blocked": 3, "chain-1": 5, "chain-2": 6,
-                           "chain-3": 5, "chain-4": 3, "chain-5": 1}
+    assert dict(reads) == {"blocked": 3, "chain-1": 6, "chain-2": 6,
+                           "chain-3": 6, "chain-4": 1, "chain-5": 1}
     # Fifteen of the 20 paired, and the five that disagree are the graph's own
     # limits in the open. u04-046 needs three calls (n, then the reaction ratio,
     # then the concentration) and the graph offers two, because a magnitude in

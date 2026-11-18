@@ -306,6 +306,17 @@ TEMPLATES["stoich_mass"] = [
     "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
 ]
 
+TEMPLATES["excess_concentration"] = [
+    "A {v1} mL volume of {c1} M solution is mixed with {v2} mL of {c2} M solution and the two react one to one. Find the concentration of the reagent left over.",
+    "Find the concentration of the excess reagent after {v1} mL of {c1} M solution reacts one to one with {v2} mL of {c2} M solution.",
+    "Two solutions react one to one: {v1} mL at {c1} M and {v2} mL at {c2} M. Determine the leftover reagent's concentration in the mixture.",
+    "What is the concentration of the unreacted reagent when {v2} mL of {c2} M solution is added to {v1} mL of {c1} M solution in a one-to-one reaction?",
+    "Calculate the concentration left over when a {v1} mL volume of {c1} M solution meets {v2} mL of {c2} M solution, one to one.",
+    "Determine the concentration of reagent remaining after {v1} mL of {c1} M solution and {v2} mL of {c2} M solution react one to one.",
+    "A mixture brings together {v1} mL of {c1} M solution and {v2} mL of {c2} M solution that react one to one. Find the leftover concentration.",
+    "Find the concentration of the reagent in excess after {v1} mL of {c1} M solution reacts completely with {v2} mL of {c2} M solution.",
+]
+
 TEMPLATES["excess_moles"] = [
     "A {v1} mL sample of {c1} M solution is mixed with {v2} mL of {c2} M solution and the two react one to one. Find the moles of reagent left over.",
     "Find the moles of excess reagent when {v2} mL of {c2} M solution is added to {v1} mL of {c1} M solution that reacts with it one to one.",

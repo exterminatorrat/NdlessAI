@@ -13,6 +13,8 @@ from surface import held_out_indices, render as render_phrasing, train_indices
 from surface.vary import grounded_params, held_out_variant, train_variant
 from tokenizer import Tokenizer, train as train_tokenizer
 
+CHAIN_FIXTURE = os.path.join("fixtures", "chain_cases.jsonl")
+
 def build(relations, n, seed, distractor_rate, max_phrasings=None,
           variant=None):
     return _build(relations, n, seed, distractor_rate, held_out=False,
@@ -70,14 +72,31 @@ def _build(relations, n, seed, distractor_rate, held_out, max_phrasings=None,
     return rows
 
 
+def require_chains(rows, pattern, fixture=CHAIN_FIXTURE):
+    """Fail when a chain fixture is on disk but the glob never reached it.
+
+    A glob that misses a file produces a corpus that trains on everything except
+    what the run is for, and every number afterwards looks plausible. The file
+    being present and the rows being absent is the shape of that mistake, so it
+    is a build error rather than a warning.
+    """
+
+    if os.path.exists(fixture) and not any(row["relation"] == "chain" for row in rows):
+        raise SystemExit(
+            f"{fixture} exists but no chain row reached the corpus: "
+            f"--paraphrases {pattern!r} does not match it.")
+
+
 def paraphrase_rows(paths):
     """Rows from the hand-written paraphrase corpus that are marked for training.
 
     The corpus splits deterministically per relation, so the eval rows never
     reach here: a phrasing the model trains on can never be the phrasing it is
-    measured on. Each row is re-derived rather than trusted, so a corpus row
-    whose args do not render back to themselves fails here instead of teaching
-    the model a wrong call.
+    measured on. A single-call row is re-derived rather than trusted, so a corpus
+    row whose args do not render back to themselves fails here instead of
+    teaching the model a wrong call. A chain row carries its own call — the
+    steps and their result placeholders are the authored thing — so it is taken
+    verbatim and its answer likewise.
     """
     rows = []
     for path in paths:
@@ -88,19 +107,27 @@ def paraphrase_rows(paths):
                 row = json.loads(line)
                 if row.get("split") != "train":
                     continue
-                name = row["relation"]
-                params = list(row["args"])
-                call = render_call(name, params)
-                got = call.split()[2:]
-                if got != [str(p) for p in params]:
-                    raise RuntimeError(
-                        f"{path}:{lineno}: {name} {params} rendered as {call}")
+                if "call" in row:
+                    call = row["call"]
+                    name = row.get("relation", "chain")
+                    answer = row["answer"]
+                    subject = row.get("subject", "")
+                else:
+                    name = row["relation"]
+                    params = list(row["args"])
+                    call = render_call(name, params)
+                    got = call.split()[2:]
+                    if got != [str(p) for p in params]:
+                        raise RuntimeError(
+                            f"{path}:{lineno}: {name} {params} rendered as {call}")
+                    answer = run_call(call)
+                    subject = RELATIONS[name].subject
                 rows.append({
                     "relation": name,
-                    "subject": RELATIONS[name].subject,
+                    "subject": subject,
                     "question": row["question"],
                     "call": call,
-                    "answer": run_call(call),
+                    "answer": answer,
                     "distractor": None,
                 })
     return rows
@@ -159,6 +186,11 @@ def main():
                        args.max_train_phrasings or None)
     if args.paraphrases:
         extra = paraphrase_rows(sorted(glob.glob(args.paraphrases)))
+        require_chains(extra, args.paraphrases)
+        chains = sum(1 for row in extra if row["relation"] == "chain")
+        if chains:
+            print(f"hand-written rows: {len(extra)} over {len(extra) - chains} "
+                  f"phrasings plus {chains} chain rows", flush=True)
         target = int(args.train * args.paraphrase_share)
         injected = injected_rows(extra, target)
         if injected:

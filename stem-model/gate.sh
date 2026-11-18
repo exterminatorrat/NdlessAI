@@ -130,6 +130,12 @@ fi
 # exactly the drift this gate exists to catch.
 run "wording ledger in sync" $PY gen_wording.py --check
 
+# The chain corpus is generated from the composition graph and exact-checked
+# against the reference, so a relation that gains an edge changes it: the same
+# rule applies, and a chain row that no longer verifies must fail here rather
+# than in a training run.
+run "chain corpus in sync" $PY gen_chain_cases.py --check --n 600 --max-steps 2
+
 echo "=== tokenizer sync ==="
 if [ -f data/tokenizer.json ]; then
     run "bpe.h matches tokenizer" $PY check_tokenizer_sync.py

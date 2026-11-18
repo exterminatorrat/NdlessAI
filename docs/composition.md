@@ -122,20 +122,36 @@ grounds and would display** (u03-187, u04-064, u07-016), and sixteen of the 23
 are chains at all — up from six before this batch. The decoder cannot write any
 of them yet, because a relation's name reaches the plan parser only through
 `reltable.h`, which the retrain regenerates; that is what a chain corpus and a
-retrain are for. Thirteen of the sixteen have arithmetic the runtime reproduces
-exactly and at least one literal the grounding guard refuses, and the refusals
-fall into five shapes: four carry a ratio the question writes as two
-coefficients, five are rows whose volume the question states in millilitres while
-the relation takes litres, one writes `0.0300` where the relation needs `0.03`,
-one writes the ion count inside a formula (`CaCl2`) rather than as a numeral, and
-two state a number in exponent notation (`4.0 x 10-8`) that no literal can
-reproduce. The remaining seven are not a chain-length or a grounding problem at
-all.
+retrain are for.
+
+Of the thirteen chains that are not answered today, the split matters more than
+the count. **Ten are refused on a literal**, and those refusals fall into four
+shapes: four carry a ratio the question writes as two coefficients (`1.5`, `3`,
+`0.6667`) rather than as the one number the call needs, two write a count inside
+a formula (`CaCl2`, `Ba(OH)2`) instead of as a numeral, two write a number the
+guard compares too strictly (`0.0300` against `0.03`, `8.0` against `8`), and two
+state a number in exponent notation (`4.0 x 10-8`, `1.0 x 10-3`) that no literal
+reproduces.
+
+**Two are not literal failures at all and wait only on the retrain:** u04-042 and
+u04-046 write every one of their numbers exactly as the question does, and the
+only thing missing is that `moles_from_molarity` is not in `reltable.h`, so the
+unit stack cannot see its slots and leaves `20. mL` as twenty litres.
+
+**And one was a defect in the unit stack, not in this batch**, fixed in #169: a
+number written `100.` had its unit read from the period, so u04-066 answered
+`0.0001 mol/L` where the key is `0.1`. With that fix the row is a one-call chain
+the runtime answers end to end.
+
+The remaining seven are not a chain-length or a grounding problem at all.
 
 ### The chains, and what happens to them
 
-Run step by step through `solvers_solve` — the dispatch that answers a call —
-with each row's own numbers:
+Run step by step with each row's own numbers, written as the question writes
+them. A volume in millilitres is converted into the slot's litres by
+`quantity_check_call`, not by hand — which for the rows below needs
+`moles_from_molarity` to be in `reltable.h`, so the arithmetic column is what the
+solver sequence produces and the notes say where a conversion is still pending:
 
 | Row | Chain | Answer | Bank key |
 | --- | --- | --- | --- |
@@ -143,45 +159,54 @@ with each row's own numbers:
 | u04-039 | `stoich_mass 12.3 123 32 1.5 ; percent_yield 3.2 <1>` | `66.67%` | 67% |
 | u04-092 | `stoich_mass 70 35 8 3 ; percent_yield 8 <1>` | `16.67%` | 25% |
 | u01-066 | `moles 14.2 284 ; stoichiometry <1> 5` | `0.25 mol` | 0.250 |
-| u04-038 | `moles_from_molarity 0.020 0.20 ; stoichiometry <1> 0.75` | `0.003 mol` | 0.0030 |
-| u04-046 | `moles_from_molarity 0.014 0.050 ; stoichiometry <1> 5 ; molarity <2> 0.025` | `0.14 mol/L` | 0.14 |
+| u04-038 | `moles_from_molarity 20 0.20 ; stoichiometry <1> 0.75` | `0.003 mol` | 0.0030 |
+| u04-046 | `moles_from_molarity 14.0 0.050 ; stoichiometry <1> 5 ; molarity <2> 25.0` | `0.14 mol/L` | 0.14 |
 | u04-064 | `stoichiometry 6.0 4 ; stoichiometry 20 1 ; min_of <1> <2>` | `20 mol` | 20 |
 | u04-109 | `stoichiometry 0.40 0.5 ; stoichiometry 0.40 0.6667 ; min_of <1> <2>` | `0.2 mol` | 0.20 |
 | u07-001 | `kc_from_ice 0.03 0.005 2` | `12.5` | 12.5 |
 | u07-016 | `kc_from_ice 0.0688 0.0133 2` | `7.468` | 7.47 |
 | u04-049 | `ions_from_mixture 0.10 1 0.10 2` | `0.3 mol` | 0.30 |
 | u07-105 | `ion_from_ksp 0.00000004 0.000001 2 ; moles_from_molarity <1> 1.00` | `0.2 mol` | 0.2 |
-| u03-148 | `moles_from_molarity 0.25 0.040 ; moles_from_molarity 0.15 0.060 ; ions_from_mixture <1> 1 <2> 2 ; molarity <3> 0.100` | `0.28 mol/L` | 0.28 |
-| u04-042 | `moles_from_molarity 0.20 0.020 ; moles_from_molarity 0.10 0.050 ; stoichiometry <1> 5 ; stoichiometry <2> 2 ; min_of <3> <4>` | `0.01` | 0.010 |
+| u03-148 | `moles_from_molarity 0.25 40.0 ; moles_from_molarity 0.15 60.0 ; ions_from_mixture <1> 1 <2> 2 ; molarity <3> 100.` | `0.28 mol/L` | 0.28 |
+| u04-042 | `moles_from_molarity 0.20 20. ; moles_from_molarity 0.10 50. ; stoichiometry <1> 5 ; stoichiometry <2> 2 ; min_of <3> <4>` | `0.01` | 0.010 |
 
 u04-092 is shown with the ratio that makes its arithmetic reproduce the key: the
 row gives no equation, so the ratio is the solver's to know and the bank's key
 implies 2 rather than the 3 the formula suggests.
 
 Then the guard that runs before any answer is shown, `grounding_arg_in_text`,
-asked every literal of every chain against its own row's text. Measured, not
-assumed:
+asked every literal of every chain against its own row's text — with the chain
+written the way the question writes it, not pre-converted. Measured, not assumed:
 
-| Row | Grounded | Why not |
+| Row | Literals | What stops it |
 | --- | --- | --- |
-| u03-187 | **yes** | — |
-| u04-064 | **yes** | the coefficients `4` and `1` are numerals in the equation |
-| u07-016 | **yes** | every argument is a number the sentence states |
-| u01-066, u04-039, u04-109 | no | the ratio (`5`, `1.5`, `0.5`, `0.6667`) is not a number in the sentence |
-| u04-092 | no | the ratio `3`, and the mass is written `8.0 g` where the call needs `8` |
-| u04-038, u04-046, u04-066, u03-148, u04-042 | no | the volume is `0.020`/`0.014`/`0.100`/`0.040` L and the sentence writes `20. mL`/`14.0 mL`/`100. mL`/`40.0 mL` |
-| u07-001 | no | the sentence writes `0.0300` and `0.00500` where the call needs `0.03` and `0.005` |
-| u04-049 | no | the anion count `2` is written inside `CaCl2`, not as a numeral |
-| u07-105 | no | `4.0 x 10-8` and `1 x 10-6` are exponent notation; no literal reproduces them |
-| u05-004 | no | the rate is `1.0 x 10-3 mol/(L s)`, exponent notation again |
+| u03-187 | all stated | **nothing — answered** |
+| u04-064 | all stated (`6.0`, `4`, `20`, `1`; the coefficients are numerals in the equation) | **nothing — answered**, and the answer prints `20` without its unit because `min_of` compares magnitudes |
+| u07-016 | all stated | **nothing — answered** |
+| u04-042, u04-046 | all stated | nothing literal: `moles_from_molarity` is not in `reltable.h`, so its slots are invisible to the unit stack and `20. mL` stays twenty litres. **The retrain closes these.** |
+| u04-066 | all stated | nothing literal: a number written `100.` had its unit read from the period. **Fixed in #169**, after which this row is answered |
+| u01-066, u04-038, u04-039, u04-109 | ratio missing | the ratio (`5`, `0.75`, `1.5`, `0.5`, `0.6667`) is not a number in the sentence |
+| u04-092 | ratio and form | the ratio `3`, and the mass is written `8.0 g` where the call needs `8` |
+| u03-148, u04-049 | count missing | the ion count (`2` in `Ba(OH)2`, `2` in `CaCl2`) is written inside a formula, not as a numeral |
+| u07-001 | form and count | the sentence writes `0.0300` and `0.00500` where the call needs `0.03` and `0.005`, and the ratio `2` |
+| u07-105, u05-004 | exponent | `4.0 x 10-8`, `1 x 10-6`, `1.0 x 10-3`: no literal reproduces them |
 
-That is the second wall behind the first, and it is a *literal* wall, not an
-arithmetic one. A ratio is written in a balanced equation as two coefficients
-(`2 KClO3 → … 3 O2`), not as their quotient, so a chain cannot carry it as a
-literal even when both coefficients are in the text — which is why u04-064
-grounds: its equation writes `4` and `1` as numerals and the chain uses them
-directly. The three rows that ground are the three whose chain happens to need
-only literals the sentence already writes.
+Two things this table taught, both of them corrections to an earlier reading of
+it:
+
+**A millilitre written against a litre is not a wall.** The first version of this
+page listed five rows as refused because "the volume is `0.020` L and the
+sentence writes `20. mL`" — but that was this page's own hand-conversion, not the
+runtime's behaviour. The pipeline grounds the number **as written** and only then
+rewrites it in the slot's unit, which is what #162 and #167 built. A chain has to
+carry `20`, not `0.020`: the conversion is the unit stack's job, and a chain that
+does it by hand is a chain the guard refuses for a reason that does not exist.
+
+**What remains is a literal wall, and it is about shape rather than units.** A
+ratio is written in a balanced equation as two coefficients (`2 KClO3 → … 3 O2`),
+not as their quotient, so a chain cannot carry it as a literal even when both
+coefficients are in the text — which is why u04-064 grounds: its equation
+writes `4` and `1` as numerals and the chain uses them directly.
 
 ### What blocks the 7
 
@@ -207,9 +232,11 @@ not about the catalogue at all.
    asks for rarely, and two calls buy 21 of the 23 rows' worth of coverage on
    their own.
 2. **A chain corpus over today's relations would be mostly synthetic, and that is
-   the honest limit.** Three rows of 23 are the evidence it can reach, and the
-   binding constraint is now the *literal* wall rather than the relation set:
-   thirteen chains are arithmetically exact and refused by grounding.
+   the honest limit.** Three rows of 23 are the evidence it can reach today, and
+   the binding constraint is the *literal* wall rather than the relation set: ten
+   chains are arithmetically exact and refused on a literal, two more wait only
+   on `reltable.h` being regenerated, and one was a unit-stack defect now fixed
+   in #169.
 3. **The next relation worth building is a subtraction.** `n(left) = n1 - n2`
    unblocks four rows at once (a neutralisation or a precipitation leaves an
    excess), and it is the last arithmetic shape the catalogue lacks for this
@@ -248,9 +275,14 @@ not about the catalogue at all.
   text is stored here, in the fixture, or in the pull request.
 - The reading was done against the ingested bank (gitignored, `corpora/apchem`)
   with `apchem_ingest.py --no-ocr`, and every chain was run step by step on the
-  host build through `solvers_solve`. The two longest were also offered to
-  `plan_execute`, which refuses them by name until `reltable.h` is regenerated.
-  Nothing was retrained and no weights were used.
+  host build through the pipeline's own decision path — grounding on the call as
+  decoded, then `quantity_check_call`, then the solver. The two longest were also
+  offered to `plan_execute`, which refuses them by name until `reltable.h` is
+  regenerated. Nothing was retrained and no weights were used.
+- Chains are written with the literals the question writes, never pre-converted:
+  `moles_from_molarity 20 0.20` for a row that states `20. mL`, not
+  `moles_from_molarity 0.020 0.20`. The first version of this page did the
+  conversion by hand and then reported the guard's refusal as a wall.
 - `ion_from_ksp`'s `gen` draws a Ksp of 1e-4 or more, the smallest value the
   wording layer writes without an exponent. The solvers are exact for any
   positive Ksp the runtime parses — the bank's own row, 4.0 x 10-8, computes to

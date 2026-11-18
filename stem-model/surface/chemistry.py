@@ -306,6 +306,17 @@ TEMPLATES["stoich_mass"] = [
     "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
 ]
 
+TEMPLATES["excess_moles"] = [
+    "A {v1} mL sample of {c1} M solution is mixed with {v2} mL of {c2} M solution and the two react one to one. Find the moles of reagent left over.",
+    "Find the moles of excess reagent when {v2} mL of {c2} M solution is added to {v1} mL of {c1} M solution that reacts with it one to one.",
+    "Two solutions react one to one: {v1} mL at {c1} M and {v2} mL at {c2} M. Determine the amount left over in moles.",
+    "How many moles of the reagent are left over after {v1} mL of {c1} M solution meets {v2} mL of {c2} M solution, one to one?",
+    "Calculate the moles of unreacted reagent when a {v1} mL volume of {c1} M solution is combined with {v2} mL of {c2} M solution.",
+    "Determine the excess in moles when {v1} mL of {c1} M solution and {v2} mL of {c2} M solution react one to one.",
+    "A mixture brings together {v1} mL of {c1} M solution and {v2} mL of {c2} M solution. What amount of reagent remains, in moles?",
+    "Find the moles left over after {v2} mL of {c2} M solution reacts one to one with {v1} mL of {c1} M solution.",
+]
+
 TEMPLATES["ions_from_mixture"] = [
     "A solution holds {n1} mol of a salt that gives {ions1} of the ion per formula unit, and {n2} mol of another that gives {ions2}. Find the total moles of that ion.",
     "Find the total moles of an ion when {n1} mol of a salt contributing {ions1} per unit is mixed with {n2} mol of one contributing {ions2}.",

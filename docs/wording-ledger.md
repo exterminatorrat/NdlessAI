@@ -5,7 +5,7 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-72 relations, 14982 structures, 2954 rows (2807 eval), 732 structures refused as unresolvable.
+73 relations, 15126 structures, 2980 rows (2833 eval), 750 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -32,6 +32,7 @@ rows drawn from them.
 | `doppler_freq` | 3 | v/vs | 288 | 36 | 47 | 47 |
 | `double_slit_fringe` | 4 | L/d | 288 | 0 | 48 | 48 |
 | `entropy_change` | 2 | - | 540 | 0 | 99 | 99 |
+| `excess_moles` | 4 | c1/c2; v1/v2 | 144 | 18 | 26 | 26 |
 | `fahrenheit_to_celsius` | 1 | - | 162 | 0 | 25 | 25 |
 | `faraday_deposit` | 3 | - | 126 | 0 | 26 | 26 |
 | `first_law` | 2 | q/w | 162 | 18 | 29 | 29 |
@@ -185,7 +186,7 @@ repository from its own contract.
 | `standing_wave_freq` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wave_speed` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wavelength_from_frequency` | applied context (instrument dial and spectrum reading), worked-example prose | `physics-pool` |
-| the other 55 relations | labelled givens, imperative ask | `in-repo` |
+| the other 56 relations | labelled givens, imperative ask | `in-repo` |
 
 Sources, by key:
 
@@ -212,6 +213,7 @@ wording, so the fraction is reported here and not in a pull request body.
 - `dilution` — 54 of 486 structures (11%): two slots share a dimension and the same unit: v1, v2
 - `dilution_v1` — 36 of 324 structures (11%): two slots share a dimension and the same unit: m1, m2
 - `doppler_freq` — 36 of 288 structures (12%): two slots share a dimension and the same unit: v, vs
+- `excess_moles` — 18 of 144 structures (12%): two slots share a dimension and the same unit: c1, c2
 - `first_law` — 18 of 162 structures (11%): two slots share a dimension and the same unit: q, w
 - `gas_mixture_pressure` — 54 of 540 structures (10%): two slots share a dimension and the same unit: V_f, V_i
 - `geom_seq` — 12 of 84 structures (14%): two slots share a dimension and the same unit: a1, n

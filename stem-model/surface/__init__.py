@@ -144,6 +144,7 @@ _ARG_NAMES = {
     "kinematic_v": ("v0", "a", "t"),
     "proj_range": ("v0", "theta", "g"),
     "ohm_i": ("V", "R"),
+    "excess_moles": ("v1", "c1", "v2", "c2"),
     "ion_from_ksp": ("ksp", "other", "count"),
     "ions_from_mixture": ("n1", "ions1", "n2", "ions2"),
     "kc_from_ice": ("initial", "product", "coefficient"),

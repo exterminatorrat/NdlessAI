@@ -14595,6 +14595,13 @@ static const tcase RATE_FACTOR[] = {
 	{ { "4", "1", "2", "0", "", "" }, "4" },
 	{ { "0.5", "1", "3", "1", "", "" }, "1.5" },
 };
+static const tcase EXCESS_MOLES[] = {
+	{ { "150.0", "0.10", "50.0", "0.20", "", "" }, "0.005 mol" },
+	{ { "10", "1", "10", "1.2", "", "" }, "0.002 mol" },
+	{ { "200.0", "2.0", "500.0", "1.0", "", "" }, "0.1 mol" },
+	{ { "20.0", "0.200", "30.0", "0.400", "", "" }, "0.008 mol" },
+};
+
 static const tcase IONS_FROM_MIXTURE[] = {
 	{ { "0.10", "1", "0.10", "2", "", "" }, "0.3 mol" },
 	{ { "0.20", "2", "0.10", "3", "", "" }, "0.7 mol" },
@@ -14858,6 +14865,7 @@ int main(void)
 	bad += check_rel("hydrate_water", HYDRATE_WATER, (int)(sizeof(HYDRATE_WATER) / sizeof(HYDRATE_WATER[0])), 4, &total);
 	bad += check_rel("faraday_deposit", FARADAY_DEPOSIT, (int)(sizeof(FARADAY_DEPOSIT) / sizeof(FARADAY_DEPOSIT[0])), 3, &total);
 	bad += check_rel("rate_factor", RATE_FACTOR, (int)(sizeof(RATE_FACTOR) / sizeof(RATE_FACTOR[0])), 4, &total);
+	bad += check_rel("excess_moles", EXCESS_MOLES, (int)(sizeof(EXCESS_MOLES) / sizeof(EXCESS_MOLES[0])), 4, &total);
 	bad += check_rel("ions_from_mixture", IONS_FROM_MIXTURE, (int)(sizeof(IONS_FROM_MIXTURE) / sizeof(IONS_FROM_MIXTURE[0])), 4, &total);
 	bad += check_rel("ion_from_ksp", ION_FROM_KSP, (int)(sizeof(ION_FROM_KSP) / sizeof(ION_FROM_KSP[0])), 3, &total);
 	bad += check_rel("min_of", MIN_OF, (int)(sizeof(MIN_OF) / sizeof(MIN_OF[0])), 2, &total);

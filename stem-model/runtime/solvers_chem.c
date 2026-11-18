@@ -964,6 +964,36 @@ static int solve_rate_factor(const char *const *args, char *out,
  * rational's limit, and the solver would refuse a question it can answer.
  * product/left^c is (product/left)/left^(c-1), and each of those steps stays
  * inside the range. */
+/* The excess after one-to-one mixing: |v1*c1 - v2*c2| / 1000, volumes in mL. */
+static int solve_excess_moles(const char *const *args, char *out, size_t outlen)
+{
+	rat v1, c1, v2, c2, a, b, diff, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &v1, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &c1, NULL)) != 0 ||
+	    (rc = parse_rat(args[2], &v2, NULL)) != 0 ||
+	    (rc = parse_rat(args[3], &c2, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&a, &v1, &c1)) != 0 ||
+	    (rc = rat_mul(&b, &v2, &c2)) != 0 ||
+	    (rc = rat_sub(&diff, &a, &b)) != 0)
+		return rc;
+	if (diff.n < 0)
+		diff.n = -diff.n;
+	{
+		rat thousand = { 1000, 1 };
+		if ((rc = rat_div(&n, &diff, &thousand)) != 0)
+			return rc;
+	}
+	if ((rc = dec4_render(n.n, n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 /* Total moles of one ion from two solutes: n1*i1 + n2*i2. */
 static int solve_ions_from_mixture(const char *const *args, char *out,
                                    size_t outlen)
@@ -1473,6 +1503,11 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "rate_factor") == 0) {
 		if (nargs == 4)
 			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "excess_moles") == 0) {
+		if (nargs == 4)
+			rc = solve_excess_moles(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "ions_from_mixture") == 0) {

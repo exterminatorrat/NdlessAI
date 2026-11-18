@@ -364,6 +364,16 @@ SPECS = {
         ("amount in moles", "number of moles"),
         confusable=("atoms_from_mass", "mass_from_molarity", "stoichiometry"),
     ),
+    "excess_moles": _spec(
+        "excess_moles",
+        [("v1", _slot("volume of the first solution", "volume", "mL")),
+         ("c1", _slot("concentration of the first", "concentration", "M")),
+         ("v2", _slot("volume of the second solution", "volume", "mL")),
+         ("c2", _slot("concentration of the second", "concentration", "M"))],
+        _slot("moles left over", "amount", "mol"),
+        ("moles left over", "the excess amount"),
+        confusable=("mixing_concentration", "moles_from_molarity"),
+    ),
     "ion_from_ksp": _spec(
         "ion_from_ksp",
         [("ksp", _slot("solubility product", "constant", "")),

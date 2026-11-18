@@ -189,11 +189,11 @@ static void fixed_cases(void)
 
 	/* Temperatures never share a rounded factor: near absolute zero the
 	 * offset cancels most of the product, and a shared factor made these
-	 * 0.3516 and 0.01824 K, a Carnot efficiency of 94.81% for 89.55%. The
+	 * 0.3516 and 0.01824 K, a Carnot efficiency of 0.9481 for 0.8955. The
 	 * exact solver refuses five-digit decimals here, which is its own limit
 	 * ("carnot 0.372222 0.038889" fails typed directly), so what is checked
 	 * is that the values are right and the answer is never the wrong one:
-	 * refused, or 89.55%, which the same values give at four digits. */
+	 * refused, or 0.8955, which the same values give at four digits. */
 	{
 		const char *q = "Two reservoirs sit at -459 degrees F and -459.6 "
 		                "degrees F. Find the Carnot efficiency.";
@@ -204,12 +204,12 @@ static void fixed_cases(void)
 		expect(q, "CALL carnot -459 -459.6", QUANTITY_CONVERTED,
 		       "CALL carnot 0.37222 0.0388889");
 		if (solvers_solve("carnot", args, 2, answer, sizeof answer) == 0 &&
-		    strcmp(answer, "89.55%") != 0) {
+		    strcmp(answer, "0.8955") != 0) {
 			printf("FAIL the -459 degF reservoirs answer \"%s\"\n", answer);
 			failures++;
 		}
 		if (solvers_solve("carnot", four, 2, answer, sizeof answer) != 0 ||
-		    strcmp(answer, "89.55%") != 0) {
+		    strcmp(answer, "0.8955") != 0) {
 			printf("FAIL the reservoirs at four digits answer \"%s\"\n", answer);
 			failures++;
 		}

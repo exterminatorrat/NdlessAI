@@ -99,6 +99,7 @@ TEMPLATES = {
     "proj_range": "A previous launch in the same report used {n} m/s.",
     "ohm_i": "The bench also holds a resistor rated {n} ohm.",
     "moles": "The same shelf holds a second sample, {n} g of a different compound.",
+    "moles_from_molarity": "A second aliquot of the same solution is {n} L.",
     "dilution": "The cupboard also holds a volumetric flask of {n} mL.",
     "dilution_v1": "The shelf also holds a volumetric flask of {n} mL.",
     "molality": "A second solution in the same problem uses {n} kg of solvent.",

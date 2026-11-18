@@ -5,7 +5,7 @@ A structure is a (given clause, ask clause, framing) triple, so the count is
 the number of distinct sentence shapes a relation admits, not the number of
 rows drawn from them.
 
-67 relations, 14388 structures, 2823 rows (2697 eval), 690 structures refused as unresolvable.
+68 relations, 14532 structures, 2854 rows (2728 eval), 690 structures refused as unresolvable.
 
 | relation | slots | same-dimension pairs | structures | refused | rows | eval rows |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -56,6 +56,7 @@ rows drawn from them.
 | `molarity` | 2 | - | 324 | 0 | 63 | 63 |
 | `mole_fraction` | 2 | na/nb | 96 | 12 | 24 | 19 |
 | `moles` | 2 | - | 144 | 0 | 29 | 29 |
+| `moles_from_molarity` | 2 | - | 144 | 0 | 31 | 31 |
 | `partial_pressure` | 3 | n_i/n_total | 360 | 36 | 70 | 70 |
 | `percent_change` | 2 | new/original | 126 | 18 | 23 | 17 |
 | `percent_dissociation` | 2 | - | 324 | 0 | 63 | 63 |
@@ -180,7 +181,7 @@ repository from its own contract.
 | `standing_wave_freq` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wave_speed` | applied context (device and bench narration), worked-example prose | `physics-pool` |
 | `wavelength_from_frequency` | applied context (instrument dial and spectrum reading), worked-example prose | `physics-pool` |
-| the other 50 relations | labelled givens, imperative ask | `in-repo` |
+| the other 51 relations | labelled givens, imperative ask | `in-repo` |
 
 Sources, by key:
 

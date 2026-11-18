@@ -3,12 +3,12 @@
  * hand: the units are what a majority of that relation's phrasings
  * state, so a hand-edited row is a claim no phrasing supports.
  *
- * UNIT_SOURCE_SHA e9067ee3ab08a78d
+ * UNIT_SOURCE_SHA c58fa72686b1241f
  */
 #ifndef UNITSTABLE_H
 #define UNITSTABLE_H
 
-#define UNIT_NUM_ROWS 124
+#define UNIT_NUM_ROWS 125
 
 typedef struct {
 	const char *name;
@@ -101,6 +101,7 @@ const unit_row_t unit_rows[UNIT_NUM_ROWS] = {
 	{"molarity", "mol L"},
 	{"mole_fraction", "mol mol"},
 	{"moles", "g -"},
+	{"moles_from_molarity", "mol/L L"},
 	{"momentum", "kg m/s"},
 	{"motional_emf", "T m m/s"},
 	{"newton2", "kg m/s^2"},
@@ -132,7 +133,7 @@ const unit_row_t unit_rows[UNIT_NUM_ROWS] = {
 	{"specific_heat", "g - degrees"},
 	{"spring_energy", "N/m m"},
 	{"standing_wave_freq", "- m/s m"},
-	{"stoich_mass", "g - - mol"},
+	{"stoich_mass", "g - - -"},
 	{"stoich_volume_gas", "L -"},
 	{"stoichiometry", "mol -"},
 	{"string_freq", "N - m"},

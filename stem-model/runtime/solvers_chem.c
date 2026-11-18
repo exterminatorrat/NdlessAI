@@ -957,6 +957,26 @@ static int solve_rate_factor(const char *const *args, char *out,
 	return 0;
 }
 
+/* n = c*V: the first step of a titration, and the inverse of `molarity`. */
+static int solve_moles_from_molarity(const char *const *args, char *out,
+                                     size_t outlen)
+{
+	rat c, v, n;
+	int rc;
+	char f1[48], buf[64];
+
+	if ((rc = parse_rat(args[0], &c, NULL)) != 0 ||
+	    (rc = parse_rat(args[1], &v, NULL)) != 0)
+		return rc;
+	if ((rc = rat_mul(&n, &c, &v)) != 0)
+		return rc;
+	if ((rc = dec4_render(n.n, n.d, f1, sizeof(f1))) != 0)
+		return rc;
+	snprintf(buf, sizeof(buf), "%s mol", f1);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 static int solve_mass_from_molarity(const char *const *args, char *out,
                                     size_t outlen)
 {
@@ -1333,6 +1353,11 @@ int solvers_chem_solve(const char *name, const char *const *args,
 	} else if (strcmp(name, "rate_factor") == 0) {
 		if (nargs == 4)
 			rc = solve_rate_factor(args, out, outlen);
+		else
+			rc = -2;
+	} else if (strcmp(name, "moles_from_molarity") == 0) {
+		if (nargs == 2)
+			rc = solve_moles_from_molarity(args, out, outlen);
 		else
 			rc = -2;
 	} else if (strcmp(name, "mass_from_molarity") == 0) {

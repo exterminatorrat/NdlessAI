@@ -14595,6 +14595,15 @@ static const tcase RATE_FACTOR[] = {
 	{ { "4", "1", "2", "0", "", "" }, "4" },
 	{ { "0.5", "1", "3", "1", "", "" }, "1.5" },
 };
+static const tcase MOLES_FROM_MOLARITY[] = {
+	{ { "0.1", "2", "", "", "", "" }, "0.2 mol" },
+	{ { "0.25", "0.1", "", "", "", "" }, "0.025 mol" },
+	{ { "1", "0.5", "", "", "", "" }, "0.5 mol" },
+	{ { "2", "0.250", "", "", "", "" }, "0.5 mol" },
+	{ { "0.05", "0.02", "", "", "", "" }, "0.001 mol" },
+	{ { "1.5", "0.2", "", "", "", "" }, "0.3 mol" },
+};
+
 static const tcase MASS_FROM_MOLARITY[] = {
 	{ { "0.1", "2", "58.5", "", "", "" }, "11.7 g" },
 	{ { "1", "1", "58.5", "", "", "" }, "58.5 g" },
@@ -14822,6 +14831,7 @@ int main(void)
 	bad += check_rel("hydrate_water", HYDRATE_WATER, (int)(sizeof(HYDRATE_WATER) / sizeof(HYDRATE_WATER[0])), 4, &total);
 	bad += check_rel("faraday_deposit", FARADAY_DEPOSIT, (int)(sizeof(FARADAY_DEPOSIT) / sizeof(FARADAY_DEPOSIT[0])), 3, &total);
 	bad += check_rel("rate_factor", RATE_FACTOR, (int)(sizeof(RATE_FACTOR) / sizeof(RATE_FACTOR[0])), 4, &total);
+	bad += check_rel("moles_from_molarity", MOLES_FROM_MOLARITY, (int)(sizeof(MOLES_FROM_MOLARITY) / sizeof(MOLES_FROM_MOLARITY[0])), 2, &total);
 	bad += check_rel("mass_from_molarity", MASS_FROM_MOLARITY, (int)(sizeof(MASS_FROM_MOLARITY) / sizeof(MASS_FROM_MOLARITY[0])), 3, &total);
 	bad += check_rel("gas_mixture_pressure", GAS_MIXTURE_PRESSURE, (int)(sizeof(GAS_MIXTURE_PRESSURE) / sizeof(GAS_MIXTURE_PRESSURE[0])), 3, &total);
 	bad += check_rel("mixture_final_temperature", MIXTURE_FINAL_TEMPERATURE, (int)(sizeof(MIXTURE_FINAL_TEMPERATURE) / sizeof(MIXTURE_FINAL_TEMPERATURE[0])), 4, &total);

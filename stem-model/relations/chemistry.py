@@ -832,6 +832,32 @@ class MassFromMolarity:
         return f"{dec_exact(_exact(c) * _exact(V) * _exact(molar_mass))} g"
 
 
+@relation("moles_from_molarity", "chemistry", ["c", "V"],
+          exact=False,
+          step=dict(line="n = c * V", expr="@1 * @2"))
+class MolesFromMolarity:
+    """The inverse of `molarity`, and the first step of most titration rows.
+
+    Measured on the bank: nine of the 23 second-computation rows need the
+    number of moles in a volume of a solution before anything else can happen,
+    and no relation produced it. `molarity` solves the other way (c from n and
+    V), so a chain could not borrow it: the graph admits the edge and the
+    question needs the reverse.
+    """
+
+    @staticmethod
+    def gen(rng):
+        c = rng.choice([0.05, 0.1, 0.2, 0.25, 0.5, 1, 1.5, 2])
+        V = rng.choice([0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2])
+        return [c, V], (
+            f"A volume of {V} L of a solution of concentration {c} mol/L is "
+            f"measured out. Find the number of moles of solute in it.")
+
+    @staticmethod
+    def solve(c, V):
+        return f"{dec_exact(_exact(c) * _exact(V))} mol"
+
+
 # ---------------------------------------------------------------------------
 # AP Chemistry batch C. Five of these are one exact step each, like the two
 # batches before them. The sixth, vsepr_bond_angle, is a table rather than a

@@ -12,6 +12,14 @@
 #   needed  the relation that answers what the row asks, or "-" when none does
 #   calls   how many catalogue calls the row's arithmetic needs, "-" if blocked;
 #           checked against the composition graph by compose.py --rows
+#
+# Re-read after `moles_from_molarity` (n = c*V) was added: two rows that were
+# blocked for want of it are chains now, and the other seven that wanted it are
+# still blocked by the step after it (a limiting comparison, an ICE subtraction,
+# a neutralisation). Both new chains are arithmetically right and both still
+# fail `pipeline_args_grounded`, because the row states its volumes in
+# millilitres ("20. mL") and the relation takes litres: a chain cannot convert
+# a unit without producing a literal the question never wrote.
 #   verdict chain-1 | chain-2 | chain-3 | blocked
 #   note    the blocker, or what the chain has to carry
 #
@@ -23,11 +31,11 @@ mcq-u01-066	moles	stoichiometry	2	chain-2	ratio-not-a-literal
 mcq-u03-148	-	-	-	blocked	no-moles-from-concentration-and-volume
 mcq-u03-171	beer_lambert	-	-	blocked	value-lives-in-a-graph
 mcq-u03-187	mixing_concentration	ph_from_poh	3	chain-3	both-literals-grounded
-mcq-u04-038	-	stoichiometry	-	blocked	no-moles-from-concentration-and-volume
+mcq-u04-038	moles_from_molarity	stoichiometry	2	chain-2	volume-in-millilitres-and-ratio
 mcq-u04-039	stoich_mass	percent_yield	2	chain-2	ratio-not-a-literal
 mcq-u04-042	-	stoichiometry	-	blocked	no-moles-from-concentration-and-volume
 mcq-u04-043	limiting_moles	-	-	blocked	needs-a-comparison-between-candidates
-mcq-u04-046	-	molarity	-	blocked	no-moles-from-concentration-and-volume
+mcq-u04-046	moles_from_molarity	molarity	3	chain-3	volume-in-millilitres
 mcq-u04-049	-	-	-	blocked	ions-per-formula-of-a-mixture
 mcq-u04-050	-	molarity	-	blocked	no-moles-from-concentration-and-volume
 mcq-u04-064	-	stoichiometry	-	blocked	needs-a-comparison-between-candidates

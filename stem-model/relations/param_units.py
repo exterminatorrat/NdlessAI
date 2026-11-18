@@ -115,6 +115,7 @@ UNITS = {
     "molarity": ("mol", "L"),
     "mole_fraction": ("mol", "mol"),
     "moles": ("g", "-"),
+    "moles_from_molarity": ("mol/L", "L"),
     "momentum": ("kg", "m/s"),
     "motional_emf": ("T", "m", "m/s"),
     "newton2": ("kg", "-"),

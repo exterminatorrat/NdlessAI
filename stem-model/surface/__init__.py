@@ -145,6 +145,7 @@ _ARG_NAMES = {
     "proj_range": ("v0", "theta", "g"),
     "ohm_i": ("V", "R"),
     "moles": ("mass", "mm"),
+    "moles_from_molarity": ("c", "V"),
     "dilution": ("c1", "v1", "v2"),
     "dilution_v1": ("m1", "m2", "v2"),
     "molality": ("n", "kg"),

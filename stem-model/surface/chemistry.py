@@ -296,14 +296,26 @@ TEMPLATES["mass_percent"] = [
 ]
 
 TEMPLATES["stoich_mass"] = [
-    "{mass} g of a reactant with molar mass {mm_given} g/mol reacts. Each mole of it gives {ratio} mol of product, whose molar mass is {mm_product} g/mol. Find the mass of product.",
-    "Find the mass of product when {mass} g of reactant (molar mass {mm_given} g/mol) reacts, {ratio} mol of product forms per mole, and the product's molar mass is {mm_product} g/mol.",
-    "What mass of product forms from {mass} g of a reactant of molar mass {mm_given} g/mol, given a {ratio}:1 product ratio and product molar mass {mm_product} g/mol?",
-    "Calculate the product mass for {mass} g of reactant with molar mass {mm_given} g/mol, ratio {ratio}, and product molar mass {mm_product} g/mol.",
-    "A reaction uses {mass} g of a substance of molar mass {mm_given} g/mol. It gives {ratio} mol of product per mol, and the product has molar mass {mm_product} g/mol. Find the product mass.",
-    "Determine the mass of product from {mass} g of reactant (molar mass {mm_given} g/mol) where the ratio is {ratio} and the product's molar mass is {mm_product} g/mol.",
-    "Find the mass of product formed when {mass} g of reactant of molar mass {mm_given} g/mol reacts in a {ratio}:1 ratio with a product of molar mass {mm_product} g/mol.",
-    "For {mass} g of reactant with molar mass {mm_given} g/mol, {ratio} mol of product per mol, and product molar mass {mm_product} g/mol, find the product mass.",
+    "{mass} g of a reactant with molar mass {mm_given} g/mol reacts, giving a product at a product-to-reactant ratio of {ratio}. The product's molar mass is {mm_product} g/mol. Find the mass of product.",
+    "Find the mass of product when {mass} g of reactant (molar mass {mm_given} g/mol) reacts at a ratio of {ratio} to one, the product's molar mass being {mm_product} g/mol.",
+    "What mass of product forms from {mass} g of a reactant of molar mass {mm_given} g/mol, at a product-to-reactant ratio of {ratio}, with product molar mass {mm_product} g/mol?",
+    "Calculate the product mass for {mass} g of reactant with molar mass {mm_given} g/mol, a ratio of {ratio} to one, and product molar mass {mm_product} g/mol.",
+    "A reaction uses {mass} g of a substance of molar mass {mm_given} g/mol at a ratio of {ratio} product units per reactant unit. The product has molar mass {mm_product} g/mol. Find the product mass.",
+    "Determine the mass of product from {mass} g of reactant (molar mass {mm_given} g/mol) where the product-to-reactant ratio is {ratio} and the product's molar mass is {mm_product} g/mol.",
+    "Find the mass of product formed when {mass} g of reactant of molar mass {mm_given} g/mol reacts at a ratio of {ratio} to one, with a product of molar mass {mm_product} g/mol.",
+    "For {mass} g of reactant with molar mass {mm_given} g/mol, a product-to-reactant ratio of {ratio}, and product molar mass {mm_product} g/mol, find the product mass.",
+]
+
+TEMPLATES["moles_from_molarity"] = [
+    "A volume of {V} L of a solution of concentration {c} mol/L is measured out. Find the number of moles of solute in it.",
+    "How many moles of solute are in {V} L of a {c} mol/L solution?",
+    "Find the moles of solute contained in {V} L of a solution whose concentration is {c} mol/L.",
+    "{V} L of a {c} mol/L solution is available. Determine the amount of solute in moles.",
+    "What number of moles of solute does {V} L of {c} mol/L solution contain?",
+    "Calculate the moles of solute in {V} L of a {c} mol/L solution.",
+    "A {c} mol/L solution is measured out to {V} L. How many moles of solute are there?",
+    "Given {V} L of a solution at {c} mol/L, find the moles of solute dissolved.",
+    "Determine the number of moles of solute in {V} L of a {c} mol/L solution.",
 ]
 
 TEMPLATES["mole_fraction"] = [

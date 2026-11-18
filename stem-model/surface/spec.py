@@ -364,6 +364,14 @@ SPECS = {
         ("amount in moles", "number of moles"),
         confusable=("atoms_from_mass", "mass_from_molarity", "stoichiometry"),
     ),
+    "moles_from_molarity": _spec(
+        "moles_from_molarity",
+        [("c", _slot("concentration of the solution", "concentration", "M")),
+         ("V", _slot("volume of the solution", "volume", "L"))],
+        _slot("moles of solute", "amount", "mol"),
+        ("moles of solute", "number of moles of solute"),
+        confusable=("molarity", "mass_from_molarity"),
+    ),
     "partial_pressure": _spec(
         "partial_pressure",
         [("n_i", _slot("amount of the gas", "amount", "mol")),

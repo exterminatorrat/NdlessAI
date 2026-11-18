@@ -300,6 +300,21 @@ static void test_formula_calls(void)
 	      "and reports the call it made");
 }
 
+/* work_energy multiplies four speed factors; with ordinary decimals that
+ * overflows 64 bits, which is undefined behaviour, so it must refuse. */
+static void test_work_energy_overflow(void)
+{
+	static const char *const plain[] = {"900", "5", "25"};
+	static const char *const wide[] = {"900", "20.1168", "6.7056"};
+	char answer[128];
+
+	check(solvers_solve("work_energy", plain, 3, answer, sizeof answer) == 0 &&
+	      strcmp(answer, "2.7e+05 J") == 0,
+	      "work_energy still answers ordinary values");
+	check(solvers_solve("work_energy", wide, 3, answer, sizeof answer) == -4,
+	      "a work_energy product outside 64 bits is refused");
+}
+
 int main(void)
 {
 	test_names();
@@ -309,7 +324,7 @@ int main(void)
 	test_collision_decimals();
 	test_formula_calls();
 	check_every_name_fits();
-
+	test_work_energy_overflow();
 	if (failures) {
 		printf("%d failure(s)\n", failures);
 		return 1;

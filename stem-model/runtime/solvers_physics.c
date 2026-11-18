@@ -343,8 +343,25 @@ static int solve_work_energy(const char *const *args, char *out,
 	    (rc = parse_rat(args[1], &v0, NULL)) != 0 ||
 	    (rc = parse_rat(args[2], &v, NULL)) != 0)
 		return rc;
-	num = m.n * (v.n * v.n * v0.d * v0.d - v0.n * v0.n * v.d * v.d);
-	den = 2 * m.d * v.d * v.d * v0.d * v0.d;
+	/* Revised 2026-11-17: four speed factors overflow 64 bits for ordinary
+	 * decimals such as 20.1168 m/s; refuse instead of wrapping. */
+	{
+		long long a, b, t;
+
+		if (__builtin_mul_overflow(v.n, v.n, &a) ||
+		    __builtin_mul_overflow(a, v0.d, &a) ||
+		    __builtin_mul_overflow(a, v0.d, &a) ||
+		    __builtin_mul_overflow(v0.n, v0.n, &b) ||
+		    __builtin_mul_overflow(b, v.d, &b) ||
+		    __builtin_mul_overflow(b, v.d, &b) ||
+		    __builtin_sub_overflow(a, b, &t) ||
+		    __builtin_mul_overflow(m.n, t, &num) ||
+		    __builtin_mul_overflow(2 * m.d, v.d, &den) ||
+		    __builtin_mul_overflow(den, v.d, &den) ||
+		    __builtin_mul_overflow(den, v0.d, &den) ||
+		    __builtin_mul_overflow(den, v0.d, &den))
+			return -4;
+	}
 	if ((rc = dec4_render(num, den, f1, sizeof(f1))) != 0)
 		return rc;
 	snprintf(buf, sizeof(buf), "%s J", f1);

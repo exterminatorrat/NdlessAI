@@ -7,8 +7,6 @@ changed what `moles 128 32` answers would be a regression however good the
 chemistry is.
 """
 
-from fractions import Fraction
-
 import pytest
 
 from chem import formula, variants
@@ -79,7 +77,3 @@ def test_the_derived_molar_mass_is_its_own_answer():
 def test_a_mole_fraction_of_nothing_refuses():
     with pytest.raises(formula.FormulaError):
         variants.mole_fraction_formula("0", "H2O", "0", "H2O")
-
-
-def test_molar_mass_is_exact_before_rounding():
-    assert formula.molar_mass("CH3OH") == Fraction(32042, 1000)

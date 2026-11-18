@@ -28,17 +28,6 @@ from .formula import FormulaError, ion_counts, molar_mass_mg
 _MAX_NUM = 9 * 10 ** 15
 _MAX_DEN = 10 ** 17
 
-VARIANTS = (
-    ("molar_mass_formula", ("formula",)),
-    ("moles_from_mass_formula", ("number", "formula")),
-    ("mass_from_moles_formula", ("number", "formula")),
-    ("ions_from_moles_formula", ("number", "formula")),
-    ("ksp_from_solubility_formula", ("number", "formula")),
-    ("mole_fraction_formula", ("number", "formula", "number", "formula")),
-    ("stoich_mass_formula", ("number", "formula", "number", "formula")),
-)
-
-
 def _number(text):
     try:
         value = Fraction(str(text))

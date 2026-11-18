@@ -254,6 +254,21 @@ static const unit_t *unit_after(const char *end, int *span)
 	const char *at = end;
 	const unit_t *u;
 
+	/*
+	 * "20. mL" is twenty millilitres. The bank writes a trailing period for
+	 * significance ("20. mL", "100. mL"), and without this the unit is read
+	 * from the period, found to be nothing, and the number is left in the
+	 * unit the question wrote - silently, because a number with no unit of
+	 * its own is left alone rather than refused. A value in millilitres then
+	 * reaches a slot expecting litres and the answer is 1000 times off.
+	 * A period followed by a digit is a decimal point, and number_end has
+	 * already consumed it.
+	 */
+	int after_period = 0;
+	if (*at == '.' && !is_digit(at[1])) {
+		at++;
+		after_period = 1;
+	}
 	/* "5 kg", "5kg" and the attributive "a 5-kg block" all write a unit. */
 	if (*at == '-' && is_alpha(at[1]))
 		at++;
@@ -261,6 +276,14 @@ static const unit_t *unit_after(const char *end, int *span)
 		while (*at == ' ')
 			at++;
 	u = unit_at(at);
+	/*
+	 * After a period only a spelled-out unit counts. A single letter there is
+	 * a sentence opening, not a unit: "g = 10. A second object is dropped"
+	 * reads "A" as amperes, and every one of the 232 rows that pass through
+	 * this shape in the generated cases says exactly that.
+	 */
+	if (u && after_period && spelled_at(u, at) < 2)
+		u = NULL;
 	if (u && span)
 		*span = (int)(at - end) + spelled_at(u, at);
 	return u;

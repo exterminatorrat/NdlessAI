@@ -133,9 +133,9 @@ CALL gas_p 0.5 298 1
 
 The runtime enforces the contract in four places:
 
-1. `pipeline.c` decodes at most 20 tokens (`MAX_GEN`) and stops at `<eos>` or `<pad>`.
-2. `callmask.c` makes the malformed header impossible rather than merely rejected: the first token can only be `CALL`, the second only `<sep>`, the third only a relation name from `reltable.h`, and after that `CALL` and the relation names are removed so the call cannot be restarted.
-3. `pipeline_args_grounded` requires every argument string, from the third field onward, to occur in the original question. This catches the model's dominant failure: copying a plausible digit that belongs to a distractor or to the wrong slot. `repair.c` gets one unambiguous edit before the guard refuses.
+1. `pipeline.c` decodes at most 64 tokens (`MAX_GEN`) and stops at `<eos>` or `<pad>`; the window, not this, is what bounds a long question. Sixty-four is room for a four-step chain, which tokenizes to 39.
+2. `callmask.c` makes the malformed header impossible rather than merely rejected: the first token can only be `CALL`, the second only `<sep>`, the third only a relation name from `reltable.h`, and after that `CALL` and the relation names are removed so the call cannot be restarted. With `pipeline_t.allow_chain` set, that same rule is applied from the start of each `;`-separated step instead of from the start of the text, so a chain's second header opens the way the first one did. It is off until the corpus has a chain target: the current weights have never been shown a `;` inside a call.
+3. `pipeline_args_grounded` requires every argument string, from the third field onward, to occur in the original question. This catches the model's dominant failure: copying a plausible digit that belongs to a distractor or to the wrong slot. `repair.c` gets one unambiguous edit before the guard refuses. A chain is grounded a step at a time on the text the decode wrote, and a `<n>` argument passes: it names a number the plan computed, not one the model chose.
 4. `solvers_solve` dispatches by relation and rejects an unknown relation, a wrong argument count, a malformed number, complex roots, or a singular system.
 
 The solver is the only component that produces an answer. The model produces a call, and a call that fails validation produces no answer. `pipeline.h` carries the verdicts: `PIPELINE_OK`, `PIPELINE_UNCERTAIN`, `PIPELINE_TOO_LONG`, `PIPELINE_NO_VALUE` and `PIPELINE_ERR`.

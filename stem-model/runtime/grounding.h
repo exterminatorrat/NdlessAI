@@ -33,6 +33,15 @@ int grounding_number_boundary(const char *text, const char *start, int len);
 /* Whether every argument of "CALL name a b ..." is in the question. */
 int grounding_call_grounded(const char *call, const char *question);
 
+/*
+ * The same rule for a call that may be one step of a plan: words before `skip`
+ * are the step's own name and CALL, and every word after it must be a number
+ * the question wrote — except "<n>", which names the number an earlier step
+ * computed. That one is grounded by construction: the model chose a step to
+ * feed, not a value, and the value is the solver's own output.
+ */
+int grounding_args_grounded(const char *text, int skip, const char *question);
+
 #define GROUNDING_MAX_SPANS 24
 #define GROUNDING_SPAN_LEN 24
 

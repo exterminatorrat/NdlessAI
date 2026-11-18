@@ -61,7 +61,10 @@ _Static_assert(UI_INPUT_MAX - 1 <= 272 - 6 - 1,
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048
 #define UI_HELP_PAGES 5
-#define UI_CALL_MAX   128
+/* As long as the input line, so a chain the student typed is kept whole: a
+ * diagram or a plot is drawn from its last step, and a call cut at 128
+ * characters would name a step in the middle of the plan. */
+#define UI_CALL_MAX   256
 /* The three steps of solve by formula: subject (or course), relation,
  * arguments. The course list reuses the first step rather than adding a
  * fourth: same depth, same screen, same tests. Finding a relation by name is

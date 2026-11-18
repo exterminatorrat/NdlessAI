@@ -48,6 +48,16 @@ typedef struct {
 	 * test can sweep it.
 	 */
 	int32_t margin_min;
+	/*
+	 * Whether the decode may write a second call after a ';' and so produce a
+	 * chain. Zero by default, and that is a measurement rather than caution:
+	 * no corpus in the tree has a chain target, so the weights have never been
+	 * shown a ';' in a call and cannot prefer one. With this set the mask
+	 * stops blocking the shape (see callmask.h); the corpus is what makes it
+	 * likely. A test sets it to prove the rest of the path handles what the
+	 * mask would let through.
+	 */
+	int allow_chain;
 } pipeline_t;
 
 enum {

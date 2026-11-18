@@ -27,6 +27,13 @@
 
 #define PLAN_MAX_STEPS 5
 
+/*
+ * The longest plan text the parser accepts, in bytes. Public because a caller
+ * that renders or grounds a plan step by step needs a buffer of the same size:
+ * a step is bounded by the text it came from.
+ */
+#define PLAN_TEXT_MAX 256
+
 typedef struct {
 	/* The step's own copies: a plan is executed once and rendered after, so
 	 * nothing in here may point into a scratch buffer. */
@@ -52,8 +59,10 @@ int plan_execute(const char *text, plan_t *p);
 
 /*
  * The working for a plan that ran: each step's formula with its numbers, then
- * its answer, headed by the step number. Returns 1 when something was written,
- * 0 when a step carries no template, -1 when it did not fit.
+ * its answer, headed by the step number. Returns 1 when every step was written,
+ * 0 when there was nothing to write, and -1 when the buffer was too small — in
+ * which case part of the text is there but it is not the whole plan, and a
+ * caller that shows it must say so or show something else.
  */
 int plan_render(const plan_t *p, char *out, int outlen);
 

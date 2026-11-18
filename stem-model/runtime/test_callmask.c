@@ -15,7 +15,9 @@
 #include "callmask.h"
 #include "reltable.h"
 
-#define VOCAB 512
+/* The vocabulary the shipped tokenizer compiles: a mask tested against a
+ * smaller one passes over tokens the device can actually emit. */
+#define VOCAB BPE_VOCAB_SIZE
 
 static int32_t logits[VOCAB];
 static unsigned char allow[VOCAB];
@@ -32,7 +34,7 @@ static int masked_argmax(const char *sofar)
 {
 	int best = 0;
 
-	callmask_next(sofar, allow, VOCAB);
+	callmask_next(sofar, allow, VOCAB, 0);
 	for (int i = 0; i < VOCAB; i++)
 		if (!allow[i])
 			logits[i] = INT32_MIN;
@@ -46,7 +48,7 @@ static int allowed_count(const char *sofar)
 {
 	int n = 0;
 
-	callmask_next(sofar, allow, VOCAB);
+	callmask_next(sofar, allow, VOCAB, 0);
 	for (int i = 0; i < VOCAB; i++)
 		n += allow[i] ? 1 : 0;
 	return n;
@@ -67,11 +69,92 @@ static void expect_allowed(const char *sofar, int id, int want, const char *why)
 {
 	int got;
 
-	callmask_next(sofar, allow, VOCAB);
+	callmask_next(sofar, allow, VOCAB, 0);
 	got = allow[id] ? 1 : 0;
 	if (got != want) {
 		printf("FAIL %s: token %d is %s\n  text: \"%s\"\n", why, id,
 		       got ? "allowed" : "blocked", sofar);
+		failures++;
+	}
+}
+
+/*
+ * The same two questions for a chain. Kept beside the single-call helpers so a
+ * reader can see the two modes answer the same text differently.
+ */
+static void expect_chain_allowed(const char *sofar, int chains, int id,
+                                 int want, const char *why)
+{
+	int got;
+
+	callmask_next(sofar, allow, VOCAB, chains);
+	got = allow[id] ? 1 : 0;
+	if (got != want) {
+		printf("FAIL %s: token %d is %s\n  text: \"%s\"\n", why, id,
+		       got ? "allowed" : "blocked", sofar);
+		failures++;
+	}
+}
+
+static void expect_chain_count(const char *sofar, int want, const char *why)
+{
+	int got = 0;
+
+	callmask_next(sofar, allow, VOCAB, 1);
+	for (int i = 0; i < VOCAB; i++)
+		got += allow[i] ? 1 : 0;
+	if (got != want) {
+		printf("FAIL %s: %d tokens allowed, want %d\n  text: \"%s\"\n",
+		       why, got, want, sofar);
+		failures++;
+	}
+}
+
+/*
+ * Whether the decode could emit `chain` token for token. Every token has to be
+ * eligible at the moment the decode reaches it, on the text decoded so far —
+ * the exact test pipeline_answer makes on every step, replayed against a
+ * target the model is supposed to produce.
+ */
+static void expect_maskable(const char *chain, int chains, int want,
+                            const char *why)
+{
+	bpe_tok tok;
+	uint16_t ids[128];
+	char sofar[256];
+	char where[160];
+	int n, used = 0, ok = 1;
+
+	where[0] = '\0';
+
+	if (bpe_init(&tok) < 0) {
+		printf("FAIL bpe_init\n");
+		failures++;
+		return;
+	}
+	n = bpe_encode(&tok, chain, ids, 128);
+	sofar[0] = '\0';
+	for (int i = 0; i < n && ok; i++) {
+		char piece[64];
+		int got = bpe_token_bytes(&tok, ids[i], piece, (int)sizeof piece - 1);
+
+		if (got < 0 || used + got >= (int)sizeof sofar) {
+			ok = 0;
+			break;
+		}
+		piece[got] = '\0';
+		callmask_next(sofar, allow, VOCAB, chains);
+		if (!allow[ids[i]]) {
+			snprintf(where, sizeof where, " (blocked at token %d of %d, after \"%s\")",
+			         i, n, sofar);
+			ok = 0;
+			break;
+		}
+		memcpy(sofar + used, piece, (size_t)got + 1);
+		used += got;
+	}
+	if (ok != want) {
+		printf("FAIL %s%s\n", why, where);
 		failures++;
 	}
 }
@@ -234,6 +317,44 @@ int main(void)
 		     "a longer word is not the header");
 	expect_count("CALL ohm_i 12", VOCAB - REL_NUM_RELATIONS - 1,
 		     "later steps keep the same blacklist");
+
+	/*
+	 * (e) A chain. The model is supposed to answer a two-step question with
+	 * two calls, and the mask of (c) is what made that impossible: after the
+	 * first step every relation id is blocked, so the second call could name
+	 * nothing and no amount of training could produce one.
+	 */
+	{
+		const char *chain =
+			"CALL newton2 2 9.8 ; CALL friction_force 0.2 <1>";
+
+		expect_maskable(chain, 0, 0,
+		                "without chains the second call is unmaskable");
+		expect_maskable(chain, 1, 1, "with chains every token is eligible");
+		expect_maskable("CALL newton2 2 9.8 ; CALL friction_force 0.2 <1> ; "
+		                "CALL work 3.92 2 0 ; CALL power 7.84 2", 1, 1,
+		                "and a four-step chain, reference tokens included");
+
+		/* The header reopens after the separator, and only there. */
+		expect_chain_allowed("CALL ohm_i 1 ; ", 1, call, 1,
+		                     "a separator reopens the header");
+		expect_chain_allowed("CALL ohm_i 1 ; CALL ", 1, ohm_i, 1,
+		                     "the second header takes a relation");
+		expect_chain_allowed("CALL ohm_i 1 ; CALL ", 1, (int)'7', 0,
+		                     "and still not a digit");
+		expect_chain_allowed("CALL ohm_i 1 ; CALL ohm_i 2 ", 1, call, 0,
+		                     "mid-call the header stays closed");
+		expect_chain_allowed("CALLS ; ", 1, call, 1,
+		                     "a separator inside a wrong word reopens nothing");
+		expect_chain_count("CALL ohm_i 1 ; CALL ", REL_NUM_RELATIONS,
+		                   "a second header allows only relations");
+		expect_chain_count("CALL ohm_i 1 ;", 2,
+		                   "a started step allows the header and its space");
+		/* Without the flag the text is masked as one long call, exactly as
+		 * it was before: this is what keeps today's decode bit-identical. */
+		expect_chain_allowed("CALL ohm_i 1 ; CALL ", 0, ohm_i, 0,
+		                     "a separated text is still one call by default");
+	}
 
 	if (failures) {
 		printf("%d call mask case(s) failed\n", failures);

@@ -832,6 +832,93 @@ static void test_steps(void)
 	check(!ui_row_dim(&u, 0), "that answer is not dimmed");
 }
 
+/* ---- a chain of calls ---- */
+
+/*
+ * One answer, several computations, every intermediate on the screen.
+ *
+ * A chain is the one answer the old screen could not show: it rendered each
+ * step into a 256-byte block, and a four-step working is longer than that, so
+ * the pane printed a number cut in half and dimmed its own answer because the
+ * render ended on a blank line. Both are framebuffer facts, so they are
+ * asserted here rather than in the pipeline's own tests.
+ *
+ * The chain is typed, because typing it is the same text a decoded one would
+ * arrive as: pipeline_answer hands a decoded call to the same run_call_text and
+ * the same answer pane, so with no weights this is the whole display path.
+ */
+static void test_chain_answer(void)
+{
+	static const char *four =
+		"CALL newton2 2 9.8 ; CALL friction_force 0.2 <1> ; "
+		"CALL work 3.92 2 0 ; CALL power 7.84 2";
+	static const char *long_four =
+		"CALL percent_dissociation 0.1 0.0001 ; "
+		"CALL percent_dissociation 0.1 <1> ; "
+		"CALL percent_dissociation 0.1 <2> ; "
+		"CALL percent_dissociation 0.1 <3>";
+
+	ui_init(&u, NULL, NULL);
+	ui_key(&u, UI_KEY_MODE);
+	ask(four);
+
+	check(u.nrows == 12, "a four-step chain is twelve rows");
+	check(strcmp(ui_row(&u, 0), "1. F = m*a") == 0, "the first step is numbered");
+	check(strcmp(ui_row(&u, 2), "  = 19.6 N") == 0, "and shows its answer");
+	check(strcmp(ui_row(&u, 3), "2. f = mu*N") == 0, "the second step follows");
+	check(strcmp(ui_row(&u, 6), "3. W = F*d*cos(theta)") == 0,
+	      "then the third");
+	check(strcmp(ui_row(&u, 9), "4. P = W/t") == 0, "and the fourth");
+	check(strcmp(ui_row(&u, 11), "  = 3.92 W") == 0,
+	      "which ends on the chain's answer");
+	check(ui_row_dim(&u, 0) && ui_row_dim(&u, 5) && ui_row_dim(&u, 10),
+	      "every intermediate is dimmed as working");
+	check(!ui_row_dim(&u, 11), "the answer is not");
+
+	render();
+	check(ink_of(UI_PANE_X, UI_PANE_Y, UI_TEXT_COLS * SCREEN_ADVANCE,
+	             9 * UI_PANE_ROWS, SCREEN_DIM) > 0,
+	      "the intermediates are drawn");
+	check(band_is_text(UI_PANE_Y, ui_row(&u, 0), SCREEN_DIM),
+	      "the first step lands on its own row, in the working colour");
+	check(band_is_text(UI_PANE_Y + 6 * SCREEN_LINE_H, ui_row(&u, 6), SCREEN_DIM),
+	      "so does the third");
+	check(band_is_text(UI_PANE_Y + 11 * SCREEN_LINE_H, "  = 3.92 W", SCREEN_WHITE),
+	      "and the chain's answer is drawn whole and bright");
+
+	/*
+	 * The same depth with longer templates: 302 bytes of working, which is
+	 * past the 256 the pane used to copy it through. The final answer has to
+	 * be intact — the old path showed "  = 100 * sqrt(7" and called it done.
+	 */
+	ask(long_four);
+	check(u.nrows == 12, "a four-step chain of long templates is twelve rows");
+	check(strcmp(ui_row(&u, 0), "1. percent = 100*sqrt(Ka/c0), small-x approximation") == 0,
+	      "a fifty-column formula still fits one row");
+	check(strcmp(ui_row(&u, 11), "  = 2.738e+04%") == 0,
+	      "the last answer is not cut in half");
+	render();
+	check(band_is_text(UI_PANE_Y + 11 * SCREEN_LINE_H, "  = 2.738e+04%",
+	                   SCREEN_WHITE),
+	      "and is drawn whole and bright on the framebuffer");
+
+	/*
+	 * The deepest plan the parser allows still fits the pane without
+	 * scrolling: five steps are fifteen rows against the eighteen the pane
+	 * shows. Scrolling a longer working is test_wrap_and_scroll's job; this
+	 * pins that the maximum-depth chain does not need it.
+	 */
+	ask("CALL percent_dissociation 0.1 0.0001 ; "
+	    "CALL percent_dissociation 0.1 <1> ; "
+	    "CALL percent_dissociation 0.1 <2> ; "
+	    "CALL percent_dissociation 0.1 <3> ; "
+	    "CALL percent_dissociation 0.1 <4>");
+	check(u.nrows == 15, "five steps are fifteen rows");
+	check(u.pane_top == 0, "and start at the top");
+	render();
+	check(ui_render(&u, fb) == 0, "with nothing below the pane");
+}
+
 /* ---- the graph screen ---- */
 
 /*
@@ -1776,6 +1863,7 @@ int main(void)
 	test_wrap_and_scroll();
 	test_errors();
 	test_steps();
+	test_chain_answer();
 	test_render_frame();
 	test_diagram_screen();
 	test_plot_key();

@@ -3,14 +3,14 @@
  * Do not edit by hand: check_steps.py proves each template reproduces
  * its solver's answer, and a hand-edited copy is not covered by that.
  *
- * STEP_SOURCE_SHA c12e591a40392a9d
+ * STEP_SOURCE_SHA 2f20ddf96649b943
  */
 #ifndef STEPTABLE_H
 #define STEPTABLE_H
 
 #include <stdint.h>
 
-#define STEP_NUM_ROWS 154
+#define STEP_NUM_ROWS 157
 
 typedef struct {
 	const char *name;
@@ -90,7 +90,9 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"index_from_speed", "n = c/v", "3/@1"},
 	{"integr_poly3", "int(a*x^3 + b*x^2 + c*x + d) from lo to hi", "(@1*@6^4/4 + @2*@6^3/3 + @3*@6^2/2 + @4*@6) - (@1*@5^4/4 + @2*@5^3/3 + @3*@5^2/2 + @4*@5)"},
 	{"internal_energy_gas", "U = 3*R*T/2", "3*8.314*@1/2"},
+	{"ions_from_mixture", "n(ion) = n1*i1 + n2*i2", "@1 * @2 + @3 * @4"},
 	{"kc_from_conc", "Kc = product^coef / reactant", "@1^@3 / @2"},
+	{"kc_from_ice", "Kc = [prod] / ([init] - c*[prod])^c", "@2 / ((@1 - @3 * @2) ^ @3)"},
 	{"kg_to_lb", "lb = kg * 2.205", "@1 * 2.205"},
 	{"kinematic_v", "v = v0 + a*t", "@1 + @2*@3"},
 	{"kinetic_energy", "KE = m*v^2 / 2", "@1 * @2^2 / 2"},
@@ -117,6 +119,7 @@ const step_row_t step_rows[STEP_NUM_ROWS] = {
 	{"molarity", "M = n/V", "@1 / @2"},
 	{"mole_fraction", "xA = nA/(nA + nB)", "@1 / (@1 + @2)"},
 	{"moles", "n = m/M", "@1 / @2"},
+	{"moles_from_molarity", "n = c * V", "@1 * @2"},
 	{"momentum", "p = m*v", "@1 * @2"},
 	{"motional_emf", "emf = B*L*v", "@1 * @2 * @3"},
 	{"newton2", "F = m*a", "@1 * @2"},

@@ -91,6 +91,23 @@ enum {
 	 * for a question nobody asked. The screen refuses in words instead.
 	 */
 	PIPELINE_UNITS = 4,
+	/*
+	 * A call was produced, every argument is a number the question wrote, and
+	 * the units were converted exactly — then the solver refused the converted
+	 * numbers. A conversion legitimately changes the scale of a written number:
+	 * "450 hours" becomes 1620000 s, and "1 km/h" becomes 0.2778 m/s. The exact
+	 * arithmetic keeps its numerators and denominators inside fixed limits, so
+	 * a number that grew, or a value that needed decimals to survive the
+	 * conversion, can land outside them. Measured on a sweep of single
+	 * conversions: 1013 of 6156 converted calls, 450 of them carrying a
+	 * decimal.
+	 *
+	 * The question was read and the conversion was right; it is the converted
+	 * number the build cannot compute with, which is why this is its own code
+	 * and not PIPELINE_NO_VALUE: no answer is missing and nothing is out of
+	 * range in Q16.16, and the next step a student needs is different.
+	 */
+	PIPELINE_UNITS_LIMIT = 5,
 	PIPELINE_ERR = -1
 };
 

@@ -649,6 +649,31 @@ static void test_errors(void)
 	      "the unit explanation is dimmed under the headline");
 
 	/*
+	 * A conversion that was exact and a solver that still refused the numbers
+	 * it produced. The question was read and its units were right, so the
+	 * sentence owns the conversion and shows the call it became: 1 km/h and
+	 * 2500 m/s, rewritten in the formula's unit, are what the exact arithmetic
+	 * could not carry.
+	 */
+	ui_result(&u, "q", PIPELINE_UNITS_LIMIT, "",
+	          "CALL work_energy 1000 2500 0.2778");
+	render();
+	check(band_is_text(UI_PANE_Y,
+	                   "I converted the units and could not finish.",
+	                   SCREEN_WHITE),
+	      "a refused conversion draws its own headline");
+	check(band_is_text(UI_PANE_Y + 3 * SCREEN_LINE_H,
+	                   "carry: too large, or with more decimals", SCREEN_DIM),
+	      "and says what the converted number did");
+	check(band_is_text(UI_PANE_Y + 6 * SCREEN_LINE_H,
+	                   "It became: CALL work_energy 1000 2500 0.2778",
+	                   SCREEN_DIM),
+	      "and shows the call the conversion produced");
+	check(!rows_have("weights.bin.tns") && !rows_have("tokenizer"),
+	      "a refused conversion blames neither the weights nor the tokenizer");
+	check(u.nrows <= UI_PANE_ROWS, "the refused-conversion note fits the pane");
+
+	/*
 	 * The ordinary refusal. The call names nothing this build can run, and the
 	 * truth available on this screen is about the question, not about the
 	 * build: the headline and the next step are drawn, and the tokenizer is

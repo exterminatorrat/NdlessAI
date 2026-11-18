@@ -600,8 +600,17 @@ int pipeline_answer(pipeline_t *p, const char *question,
 			return PIPELINE_ERR;
 		memcpy(call, checked, strlen(checked) + 1);
 	}
-	if (run_call_text(call, answer, answer_max) < 0)
+	if (run_call_text(call, answer, answer_max) < 0) {
+		/*
+		 * A solver refusal after a conversion is about the converted numbers:
+		 * the question was read, its numbers were in the text, and the units
+		 * were rewritten exactly. Only when grounding held, so an invented
+		 * argument is still an unreadable call rather than a number too big.
+		 */
+		if (units == QUANTITY_CONVERTED && grounded)
+			return PIPELINE_UNITS_LIMIT;
 		return PIPELINE_ERR;
+	}
 	if (!grounded) {
 		answer[0] = '\0';
 		return PIPELINE_UNCERTAIN;

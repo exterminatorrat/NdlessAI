@@ -283,7 +283,7 @@ def main():
                     help="corpus split to score: eval is the honest one")
     ap.add_argument("--weights", default="weights.bin")
     ap.add_argument("--binary", default="runtime/main_device")
-    ap.add_argument("--seq", type=int, default=160)
+    ap.add_argument("--seq", type=int, default=384)
     ap.add_argument("--floor", type=float, default=0.5)
     ap.add_argument("--max-thin", type=int, default=0,
                     help="fail when more than this many relations sit below "

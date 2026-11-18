@@ -10,14 +10,18 @@ all: data train
 data:
 	$(PY) python make_dataset.py --out $(DATA) --paraphrases 'fixtures/paraphrase_*.jsonl'
 
-# --seq 192, not 128: the longest question plus call is 178 tokens, and the
-# packer drops anything longer. At 128 that is 0.46% of rows, and the rows it
-# drops are the long ones - which is what a five- or six-argument relation looks
-# like. The device prompt buffer is 256, so nothing here is untrainable on
-# device; this is only the training window.
+# --seq 384 is the reading window, and it is one number in three places: here,
+# the packer's cap (seq + 1, in train.py) and the device's own SEQ in
+# device/main.c. A window raised in the trainer alone produces a model whose
+# questions the device refuses at the tail, with no error anywhere.
+#
+# The corpus is what bounds it at 384: the longest question plus call in the
+# r9 corpus is 179 tokens, so the packer drops nothing at either width and the
+# widening buys no extra training rows - only room for long questions at
+# inference. At 192 the wall was the width, not the corpus.
 train:
 	$(PY) python train.py --traces $(DATA)/train.jsonl \
-		--tokenizer $(DATA)/tokenizer.json --seq 192 --batch 32 \
+		--tokenizer $(DATA)/tokenizer.json --seq 384 --batch 32 \
 		--steps 12000 --eval-every 500 --out model.pt
 
 export:

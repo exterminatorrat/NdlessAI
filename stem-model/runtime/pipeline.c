@@ -43,11 +43,26 @@
  * chain 30 and a four-step chain 39. At the 20 this used to be, a two-step
  * chain only fitted while its numbers stayed short and every three- and
  * four-step chain was cut off mid-call — the runtime could execute a chain it
- * could never be handed. The window (seq, 192) still ends generation on a long
+ * could never be handed. The window (seq, 384) still ends generation on a long
  * question; this is only the ceiling for a short one.
  */
 #define MAX_GEN 64
-#define MAX_PROMPT 256
+/*
+ * The reading window, in tokens: the width the weights are trained at. A prompt
+ * at or past it is refused rather than cut, because a question whose tail is
+ * dropped names a relation from a sentence nobody wrote. `ids` is sized by it,
+ * and the generation loop stops there too, so a larger `seq` passed to
+ * pipeline_init cannot write past the buffer.
+ */
+#define MAX_PROMPT 384
+/*
+ * The same question budget in bytes, and it is deliberately not MAX_PROMPT:
+ * 384 tokens of an exam question run past a thousand characters, so a prompt
+ * buffer sized by the token count would refuse questions the window now admits.
+ * Corpus rows measure 4.2 characters per token and the longest real exam row is
+ * 1,079 characters, so 384 x 5 with headroom is 2,048.
+ */
+#define MAX_TEXT 2048
 #define MAX_VOCAB 1024
 
 static int argmax32(const int32_t *v, int n)
@@ -482,7 +497,7 @@ int pipeline_answer(pipeline_t *p, const char *question,
                     char *call, int call_max)
 {
 	uint16_t ids[MAX_PROMPT];
-	char prompt[MAX_PROMPT + 16];
+	char prompt[MAX_TEXT];
 	char checked[256];
 	int n, pos = 0, gen = 0;
 	int rc_offline, grounded, units;

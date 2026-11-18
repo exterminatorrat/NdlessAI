@@ -48,15 +48,15 @@
 /* 256 rather than 64: a hand-written chemistry question runs past 63
  * characters, and the editor silently stopped accepting the rest.
  *
- * The decoder's prompt buffer is 272 bytes -- MAX_PROMPT + 16 at
- * pipeline.c:16-18, which is another unit's file and owns that number -- and it
- * spends 6 of them on PROMPT_SUFFIX. Text the pipeline can never decode must not
- * be typeable, so the editor's ceiling is pinned to that budget instead of
- * drifting: 272 - 6 - 1 spare = 265 characters, and UI_INPUT_MAX counts the
- * terminating NUL. */
+ * This ceiling is now the editor's own, not the decoder's. The decoder's text
+ * budget is 2,048 bytes -- MAX_TEXT at pipeline.c, which is another unit's file
+ * and owns that number -- and 384 tokens of exam question fit inside it, while
+ * 255 characters is about 60 tokens. Raising the line to match the window is a
+ * product change (#118) and is not this constant's to make; what it must keep
+ * doing is staying inside the buffer it types into. */
 #define UI_INPUT_MAX  256
-_Static_assert(UI_INPUT_MAX - 1 <= 272 - 6 - 1,
-               "UI_INPUT_MAX must stay inside the decoder's 272-byte prompt budget");
+_Static_assert(UI_INPUT_MAX - 1 <= 2048 - 6 - 1,
+               "UI_INPUT_MAX must stay inside the decoder's 2,048-byte prompt budget");
 #define UI_ROWS_MAX   64
 #define UI_HISTORY    8
 #define UI_HIST_PANE  2048

@@ -180,8 +180,18 @@ groups, unicode subscripts, hydrates — into a composition, an exact molar mass
 and the ions one formula unit supplies. It refuses an unknown symbol, an
 unbalanced group, a count of zero, a hydrate asked for ion counts, and a charged
 species asked for a formula unit. `molar_mass_formula CH3OH` answers
-`32.04 g/mol` through the typed-call path, with the weights shown. Balancing
-equations remains unbuilt.
+`32.04 g/mol` through the typed-call path, with the weights shown.
+
+Six relation variants take a formula where the catalogue demands a number:
+`moles_from_mass_formula`, `mass_from_moles_formula`, `ions_from_moles_formula`,
+`ksp_from_solubility_formula`, `mole_fraction_formula` and
+`stoich_mass_formula`. A student can also type the relation's own name with a
+formula — `moles 128 CH3OH`, `mole_fraction 128 CH3OH 108 H2O` — and the app
+fills the chemistry it used to demand as an argument. Every answer shows the
+derived quantity as its own line: the molar mass it computed, or the ions per
+formula unit. Balancing equations and mole ratios read from an equation remain
+unbuilt, and the decoder cannot name these calls without the retrain a new
+relation would force, so natural-language rows still stop at the same place.
 
 ## D. Interaction and interface
 

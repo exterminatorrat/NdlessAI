@@ -239,6 +239,90 @@ static void test_reference_fixture(const char *path)
 	fclose(f);
 }
 
+/*
+ * The variant fixture: what chem/variants.py answered for the same calls, one
+ * tab-separated row each, with "-" standing for a call the reference refuses.
+ */
+static void test_variant_fixture(const char *path)
+{
+	FILE *f = fopen(path, "r");
+	char line[320];
+
+	if (f == NULL) {
+		printf("FAIL cannot open %s\n", path);
+		failures++;
+		return;
+	}
+	while (fgets(line, (int)sizeof line, f)) {
+		char *nl = strchr(line, '\n');
+		char *name, *args_text, *want;
+		const char *args[4];
+		char storage[4][128];
+		int nargs = 0;
+		char out[256];
+		int rc;
+
+		if (nl)
+			*nl = '\0';
+		if (line[0] == '#' || line[0] == '\0')
+			continue;
+		name = line;
+		args_text = strchr(name, '\t');
+		if (args_text == NULL)
+			continue;
+		*args_text++ = '\0';
+		want = strchr(args_text, '\t');
+		if (want == NULL)
+			continue;
+		*want++ = '\0';
+		while (nargs < 4 && *args_text) {
+			char *sep = strchr(args_text, ';');
+			size_t len = sep ? (size_t)(sep - args_text)
+			                 : strlen(args_text);
+
+			if (len >= sizeof storage[nargs])
+				len = sizeof storage[nargs] - 1;
+			memcpy(storage[nargs], args_text, len);
+			storage[nargs][len] = '\0';
+			args[nargs] = storage[nargs];
+			nargs++;
+			if (sep == NULL)
+				break;
+			args_text = sep + 1;
+		}
+		rc = formula_solve(name, args, nargs, out, sizeof out);
+		if (strcmp(want, "-") == 0) {
+			check(rc < 0, name);
+		} else {
+			check(rc == 1 && strcmp(out, want) == 0, name);
+		}
+	}
+	fclose(f);
+}
+
+static void test_variant_calls(void)
+{
+	const char *mixture[4] = { "128", "CH3OH", "108", "H2O" };
+	const char *ions[2] = { "0.2", "Ba(NO3)2" };
+	const char *moles[2] = { "128", "CH3OH" };
+	char answer[128], steps[256];
+
+	check(solvers_solve("mole_fraction_formula", mixture, 4, answer,
+	                    sizeof answer) == 0 &&
+	      strcmp(answer, "0.3999") == 0,
+	      "a mole fraction from two masses");
+	check(steps_render("moles_from_mass_formula", moles, 2, "3.995 mol",
+	                   steps, (int)sizeof steps) == 1 &&
+	      strstr(steps, "M(CH3OH) = 32.04 g/mol") != NULL &&
+	      strstr(steps, "n = m/M = 128/32.04") != NULL,
+	      "the working shows the molar mass it derived and the substitution");
+	check(steps_render("ions_from_moles_formula", ions, 2, "0.6 mol ions",
+	                   steps, (int)sizeof steps) == 1 &&
+	      strstr(steps, "Ba(NO3)2: 1 cation + 2 anions") != NULL,
+	      "the working shows ions per formula unit");
+
+}
+
 int main(int argc, char **argv)
 {
 	test_composition();
@@ -247,6 +331,8 @@ int main(int argc, char **argv)
 	test_ions();
 	test_calls();
 	test_reference_fixture(argc > 1 ? argv[1] : "fixtures/chem_cases.txt");
+	test_variant_fixture(argc > 2 ? argv[2] : "fixtures/chem_variants.txt");
+	test_variant_calls();
 	if (failures) {
 		printf("formula: %d failure(s)\n", failures);
 		return 1;

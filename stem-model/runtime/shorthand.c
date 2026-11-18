@@ -213,6 +213,14 @@ typedef struct {
 
 static const form_row_t form_rows[] = {
 	{"molar_mass_formula", 1, {SLOT_CHEM}},
+	{"moles_from_mass_formula", 2, {SLOT_NUMBER, SLOT_CHEM}},
+	{"mass_from_moles_formula", 2, {SLOT_NUMBER, SLOT_CHEM}},
+	{"ions_from_moles_formula", 2, {SLOT_NUMBER, SLOT_CHEM}},
+	{"ksp_from_solubility_formula", 2, {SLOT_NUMBER, SLOT_CHEM}},
+	{"mole_fraction_formula", 4,
+	 {SLOT_NUMBER, SLOT_CHEM, SLOT_NUMBER, SLOT_CHEM}},
+	{"stoich_mass_formula", 4,
+	 {SLOT_NUMBER, SLOT_CHEM, SLOT_NUMBER, SLOT_CHEM}},
 };
 
 static const form_row_t *resolve_form(const char *tok)
@@ -296,16 +304,29 @@ int shorthand_build(const char *text, char *call, int call_max)
 	if (n < 2)
 		return -1;
 	row = resolve(tok[0]);
-	if (!row) {
+	if (row) {
+		int numeric = 1;
+
+		for (int i = 1; i < n; i++)
+			if (!is_number(tok[i]))
+				numeric = 0;
+		if (numeric) {
+			build(row, tok, n, call, call_max);
+			return n - 1 == (int)row->arity ? 0 : 1;
+		}
+	}
+	/*
+	 * A relation's own name followed by a formula is the formula call, not a
+	 * miss: "moles 128 CH3OH" is what a student would try first, and the
+	 * numeric call it names cannot take that argument. Only a call whose
+	 * arguments are not all numbers reaches here, so every numeric call that
+	 * works today resolves exactly as it did.
+	 */
+	{
 		const form_row_t *form = resolve_form(tok[0]);
 
 		if (!form)
 			return -1;
 		return build_form(form, tok, n, call, call_max);
 	}
-	for (int i = 1; i < n; i++)
-		if (!is_number(tok[i]))
-			return -1;
-	build(row, tok, n, call, call_max);
-	return n - 1 == (int)row->arity ? 0 : 1;
 }

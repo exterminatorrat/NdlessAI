@@ -14,7 +14,7 @@ BENCH_CFLAGS ?= $(CFLAGS) $(VEC_OFF)
 
 HEADERS = coursetable.h bpe.h fixed.h infer.h solvers.h solvers_subject.h pipeline.h \
 	  graph.h expr.h equation.h callmask.h reltable.h matrix.h steps.h \
-	  steptable.h unitstable.h screen.h ui.h
+	  steptable.h unitstable.h screen.h ui.h quantity.h
 
 SOLVERS = solvers.c solvers_math.c equation.c solvers_trig.c solvers_physics.c \
 	  solvers_chem.c solvers_thermo.c solvers_em.c solvers_units.c \
@@ -32,7 +32,7 @@ all: infer_host main_device test_solvers test_parity test_bpe test_fixed \
      test_guard test_graph test_typed test_callmask test_expr test_equation \
      test_matrix test_steps test_symbolic test_series test_ode test_alt \
      test_screen test_ui test_diagram test_shorthand test_plan test_repair \
-     test_formula bench_kernel
+     test_formula test_quantity bench_kernel
 
 infer_host: main_host.c infer.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ main_host.c infer.c $(LDLIBS)
@@ -101,6 +101,9 @@ test_plan: test_plan.c $(PIPELINE) plan.h $(HEADERS)
 test_repair: test_repair.c $(PIPELINE) repair.h $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_repair.c $(PIPELINE) $(LDLIBS)
 
+test_quantity: test_quantity.c quantity.c $(PIPELINE) $(HEADERS)
+	$(CC) $(CFLAGS) -I. -o $@ test_quantity.c quantity.c $(PIPELINE) $(LDLIBS)
+
 test_typed: test_typed.c $(PIPELINE) $(HEADERS)
 	$(CC) $(CFLAGS) -I. -o $@ test_typed.c $(PIPELINE) $(LDLIBS)
 
@@ -135,6 +138,7 @@ check: all
 	./test_formula
 	./test_plan
 	./test_repair
+	./test_quantity
 	./test_typed
 	./test_screen
 	./test_ui
@@ -146,6 +150,6 @@ clean:
 	rm -f infer_host main_device test_solvers test_parity test_bpe test_fixed \
 	      test_guard test_graph test_typed test_callmask test_expr \
 	      test_equation test_alt test_screen test_ui test_diagram test_shorthand \
-      test_plan test_repair test_formula bench_kernel
+      test_plan test_repair test_formula test_quantity bench_kernel
 
 .PHONY: all clean check

@@ -64,3 +64,31 @@ def test_the_build_fails_when_a_chain_fixture_is_on_disk_but_not_in_the_glob():
 
 def test_the_build_accepts_a_glob_that_reaches_the_chain_fixture():
     make_dataset.require_chains([{"relation": "chain"}], "fixtures/*.jsonl")
+
+
+def test_the_floor_budget_counts_only_the_relations_it_judges():
+    # Three rows is not enough to judge a relation, however bad it looks: the
+    # denominator is the relations the floor is entitled to speak about, so a
+    # catalogue that grows with thin rows does not dilute the share.
+    per = {"thin_four": [4, 0], "thin_three": [3, 0], "fine": [10, 9]}
+    thin, judged = report_relations.floor_count(per, 0.5, 4)
+    assert (thin, judged) == (1, 2)
+
+
+def test_a_relation_exactly_on_the_floor_is_not_below_it():
+    per = {"half": [4, 2], "just_under": [4, 1]}
+    thin, judged = report_relations.floor_count(per, 0.5, 4)
+    assert thin == 1 and judged == 2
+
+
+def test_the_share_is_a_ratchet_the_catalogue_growing_cannot_lower():
+    # The same proportion of bad relations scores the same share whether the
+    # catalogue has 141 judged relations or 500, which is what a fixed count
+    # could not do: 25 of 141 and 89 of 500 are both 17.8%.
+    small = {f"r{i}": [4, 0] for i in range(25)}
+    small.update({f"g{i}": [10, 9] for i in range(116)})
+    large = {f"r{i}": [4, 0] for i in range(89)}
+    large.update({f"g{i}": [10, 9] for i in range(411)})
+    assert report_relations.floor_count(small, 0.5, 4) == (25, 141)
+    assert report_relations.floor_count(large, 0.5, 4) == (89, 500)
+    assert 25 / 141 == pytest.approx(89 / 500, abs=0.002)

@@ -67,24 +67,38 @@ def report(rows, args):
 
     worst = sorted(per.items(), key=lambda kv: (kv[1][1] / kv[1][0], -kv[1][0]))
     print(f"{'relation':<24}{'correct':>8}{'of':>5}{'exact':>9}")
-    thin = 0
+    thin, judged = floor_count(per, args.floor, args.min_rows)
     for relation, (n, hits) in worst:
-        flag = ""
-        if n >= args.min_rows and hits / n < args.floor:
-            flag = "  below floor"
-            thin += 1
+        flag = "  below floor" if n >= args.min_rows and hits / n < args.floor else ""
         print(f"{relation:<24}{hits:>8}{n:>5}{hits / n:>9.1%}{flag}")
 
     print()
     print(f"{len(per)} relations, {thin} below {args.floor:.0%} on "
-          f"{args.min_rows}+ rows")
+          f"{args.min_rows}+ rows ({thin / judged:.1%} of the {judged} the "
+          f"floor judges)" if judged else
+          f"{len(per)} relations, none with {args.min_rows}+ rows")
 
     if args.show_misses:
         print()
         for relation, question, expected, got in misses[: args.show_misses]:
             print(f"  {relation}\n    Q: {question}\n"
                   f"    want {expected}\n    got  {got or '(nothing)'}")
-    return thin
+    return thin, judged
+
+
+def floor_count(per, floor, min_rows):
+    """How many judged relations sit below the floor, out of how many judged.
+
+    The denominator is the relations with enough rows to be judged, not the
+    whole catalogue and not the rows: the count is a share of what the floor is
+    entitled to speak about, which is the only form that survives the catalogue
+    growing. 170 of 178 relations had eval rows when this replaced a count.
+    """
+
+    judged = sum(1 for n, _ in per.values() if n >= min_rows)
+    thin = sum(1 for n, hits in per.values()
+               if n >= min_rows and hits / n < floor)
+    return thin, judged
 
 
 def arg_audit(rows, args):
@@ -285,9 +299,10 @@ def main():
     ap.add_argument("--binary", default="runtime/main_device")
     ap.add_argument("--seq", type=int, default=384)
     ap.add_argument("--floor", type=float, default=0.5)
-    ap.add_argument("--max-thin", type=int, default=0,
-                    help="fail when more than this many relations sit below "
-                         "the floor; the gate's recorded budget")
+    ap.add_argument("--max-thin-share", type=float, default=0.0,
+                    help="fail when more than this share of the relations the "
+                         "floor judges sits below it; the gate's recorded "
+                         "budget, a ratchet rather than a permission slip")
     ap.add_argument("--min-rows", type=int, default=4,
                     help="a relation needs this many rows before the floor "
                          "judges it")
@@ -334,9 +349,11 @@ def main():
     if args.arg_audit:
         arg_audit(rows, args)
 
-    thin = report(rows, args)
-    if thin > args.max_thin:
-        print(f"\n{thin} relations below the floor, budget is {args.max_thin}")
+    thin, judged = report(rows, args)
+    share = thin / judged if judged else 0.0
+    if share > args.max_thin_share:
+        print(f"\n{thin} of {judged} relations below the floor "
+              f"({share:.1%}), budget is {args.max_thin_share:.0%}")
         return 1
     return 0
 

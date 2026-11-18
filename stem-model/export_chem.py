@@ -56,6 +56,20 @@ def cstr(s):
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def pack(rows, per_line):
+    """Rows as few lines, `per_line` entries on each, so the table is read, not scrolled."""
+    out = []
+    line = ""
+    for i, row in enumerate(rows):
+        line += row
+        if i % per_line == per_line - 1:
+            out.append(line)
+            line = ""
+    if line:
+        out.append(line)
+    return out
+
+
 def render(table):
     elements, anions, mono, cations, names = table
     lines = [
@@ -98,36 +112,32 @@ def render(table):
         "#ifdef CHEMTABLE_IMPL",
         "const chem_element_t chem_elements[CHEM_NUM_ELEMENTS] = {",
     ]
-    for symbol, weight, charge in elements:
-        lines.append('\t{"%s", %d, %d},' % (cstr(symbol), weight, charge))
+    lines += pack(('\t{"%s", %d, %d},' % (cstr(sym), w, ch)
+                   for sym, w, ch in elements), 3)
     lines += [
         "};",
         "",
         "const chem_ion_t chem_anions[CHEM_NUM_ANIONS] = {",
     ]
-    for formula, charge in anions:
-        lines.append('\t{"%s", %d},' % (cstr(formula), charge))
+    lines += pack(('\t{"%s", %d},' % (cstr(f), ch) for f, ch in anions), 4)
     lines += [
         "};",
         "",
         "const chem_ion_t chem_mono_anions[CHEM_NUM_MONO_ANIONS] = {",
     ]
-    for symbol, charge in mono:
-        lines.append('\t{"%s", %d},' % (cstr(symbol), charge))
+    lines += pack(('\t{"%s", %d},' % (cstr(sym), ch) for sym, ch in mono), 4)
     lines += [
         "};",
         "",
         "const chem_ion_t chem_cations[CHEM_NUM_CATIONS] = {",
     ]
-    for formula, charge in cations:
-        lines.append('\t{"%s", %d},' % (cstr(formula), charge))
+    lines += pack(('\t{"%s", %d},' % (cstr(f), ch) for f, ch in cations), 4)
     lines += [
         "};",
         "",
         "const chem_name_t chem_names[CHEM_NUM_NAMES] = {",
     ]
-    for name, formula in names:
-        lines.append('\t{"%s", "%s"},' % (cstr(name), cstr(formula)))
+    lines += pack(('\t{"%s", "%s"},' % (cstr(n), cstr(f)) for n, f in names), 2)
     lines += [
         "};",
         "#else",

@@ -185,14 +185,14 @@ static void test_calls(void)
 
 /*
  * The fixture holds what the Python reference answered for the same formulas,
- * so this walks it and compares row by row. A missing file is a failure rather
- * than a skip: the host test is where the two implementations are compared.
+ * one tab-separated row each, so this walks it and compares row by row. A
+ * missing file is a failure rather than a skip: the host test is where the two
+ * implementations are compared.
  */
 static void test_reference_fixture(const char *path)
 {
 	FILE *f = fopen(path, "r");
 	char line[256];
-	char text[128] = "";
 
 	if (f == NULL) {
 		printf("FAIL cannot open %s\n", path);
@@ -201,37 +201,39 @@ static void test_reference_fixture(const char *path)
 	}
 	while (fgets(line, (int)sizeof line, f)) {
 		char *nl = strchr(line, '\n');
+		char *field[4];
+		int n = 0, c, a;
 
 		if (nl)
 			*nl = '\0';
 		if (line[0] == '#' || line[0] == '\0')
 			continue;
-		if (strncmp(line, "TEXT\t", 5) == 0) {
-			snprintf(text, sizeof text, "%s", line + 5);
-		} else if (strncmp(line, "MASS\t", 5) == 0) {
-			long long want, mg = 0;
-			int rc = formula_molar_mass_mg(text, &mg);
-
-			if (strcmp(line + 5, "-") == 0) {
-				check(rc < 0, text);
-			} else {
-				want = atoll(line + 5);
-				check(rc == 0 && mg == want, text);
+		field[n++] = line;
+		for (char *q = line; *q && n < 4; q++)
+			if (*q == '\t') {
+				*q = '\0';
+				field[n++] = q + 1;
 			}
-		} else if (strncmp(line, "IONS\t", 5) == 0 && strcmp(line + 5, "-\t-") == 0) {
-			int c, a;
+		if (n != 4) {
+			printf("FAIL a fixture row has %d fields\n", n);
+			failures++;
+			continue;
+		}
+		if (strcmp(field[1], "-") == 0) {
+			long long mg;
 
-			check(formula_ion_counts(text, &c, &a) < 0, text);
-		} else if (strncmp(line, "IONS\t", 5) == 0) {
-			int want_c = atoi(line + 5);
-			const char *tab = strchr(line + 5, '\t');
-			int c, a;
+			check(formula_molar_mass_mg(field[0], &mg) < 0, field[0]);
+		} else {
+			long long mg = 0;
 
-			check(tab != NULL, text);
-			if (tab == NULL)
-				continue;
-			check(formula_ion_counts(text, &c, &a) == 0 &&
-			      c == want_c && a == atoi(tab + 1), text);
+			check(formula_molar_mass_mg(field[0], &mg) == 0 &&
+			      mg == atoll(field[1]), field[0]);
+		}
+		if (strcmp(field[2], "-") == 0) {
+			check(formula_ion_counts(field[0], &c, &a) < 0, field[0]);
+		} else {
+			check(formula_ion_counts(field[0], &c, &a) == 0 &&
+			      c == atoi(field[2]) && a == atoi(field[3]), field[0]);
 		}
 	}
 	fclose(f);

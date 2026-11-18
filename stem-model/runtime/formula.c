@@ -8,6 +8,7 @@
  * the Python reference. The parser walks the text once and refuses on the
  * first thing it cannot read.
  */
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -581,6 +582,123 @@ int formula_ion_counts(const char *text, int *cations, int *anions)
 
 /* ---- the calls ---- */
 
+/*
+ * The arithmetic is exact rationals, like every other solver, and it refuses
+ * when a product would leave the int64 the device holds rather than wrapping
+ * into a plausible-looking number. Cross-reduction before each multiply is
+ * what keeps a Ksp of a sparingly soluble salt inside that range.
+ */
+typedef struct {
+	long long n, d;
+} frac;
+
+long long gcd_ll(long long a, long long b);
+
+static int frac_set(frac *r, long long n, long long d)
+{
+	long long g;
+
+	if (d == 0)
+		return -4;
+	if (d < 0) {
+		n = -n;
+		d = -d;
+	}
+	if (n == 0) {
+		r->n = 0;
+		r->d = 1;
+		return 0;
+	}
+	g = gcd_ll(n, d);
+	r->n = n / g;
+	r->d = d / g;
+	return 0;
+}
+
+static int frac_mul(frac *r, const frac *a, const frac *b)
+{
+	long long g1 = gcd_ll(a->n, b->d), g2 = gcd_ll(b->n, a->d);
+	long long an = a->n / g1, ad = a->d / g2;
+	long long bn = b->n / g2, bd = b->d / g1;
+	long long an_abs = an < 0 ? -an : an;
+	long long bn_abs = bn < 0 ? -bn : bn;
+
+	if (an_abs != 0 && bn_abs > WIDE_LIMIT / an_abs)
+		return -4;
+	if (ad != 0 && bd > WIDE_LIMIT / ad)
+		return -4;
+	return frac_set(r, an * bn, ad * bd);
+}
+
+static int frac_mul_ll(frac *r, const frac *a, long long k)
+{
+	frac b;
+
+	b.n = k;
+	b.d = 1;
+	return frac_mul(r, a, &b);
+}
+
+static int frac_div_ll(frac *r, const frac *a, long long k)
+{
+	frac b;
+
+	b.n = 1;
+	b.d = k;
+	return frac_mul(r, a, &b);
+}
+
+static int frac_add(frac *r, const frac *a, const frac *b)
+{
+	long long g = gcd_ll(a->d, b->d);
+	long long ad = a->d / g, bd = b->d / g;
+	long long an_abs = a->n < 0 ? -a->n : a->n;
+	long long bn_abs = b->n < 0 ? -b->n : b->n;
+
+	if (an_abs != 0 && bd > WIDE_LIMIT / an_abs)
+		return -4;
+	if (bn_abs != 0 && ad > WIDE_LIMIT / bn_abs)
+		return -4;
+	if (ad != 0 && b->d > WIDE_LIMIT / ad)
+		return -4;
+	return frac_set(r, a->n * bd + b->n * ad, ad * b->d);
+}
+
+static int arg_frac(const char *text, frac *f)
+{
+	rat r;
+	int rc = parse_rat(text, &r, NULL);
+
+	if (rc != 0)
+		return rc;
+	return frac_set(f, r.n, r.d);
+}
+
+static int grams_from_mass(const char *mass, frac *out)
+{
+	frac m;
+
+	if (arg_frac(mass, &m) != 0)
+		return -3;
+	return frac_mul_ll(out, &m, 1000);
+}
+
+static int answer_fraction(const frac *value, const char *unit, char *out,
+                           size_t outlen)
+{
+	char piece[48], buf[64];
+	int rc;
+
+	if ((rc = dec4_render(value->n, value->d, piece, sizeof piece)) != 0)
+		return rc;
+	if (unit && unit[0])
+		snprintf(buf, sizeof buf, "%s %s", piece, unit);
+	else
+		snprintf(buf, sizeof buf, "%s", piece);
+	out_set(out, outlen, buf);
+	return 0;
+}
+
 static int solve_molar_mass_formula(const char *const *args, char *out,
                                     size_t outlen)
 {
@@ -597,19 +715,197 @@ static int solve_molar_mass_formula(const char *const *args, char *out,
 	return 0;
 }
 
+static int solve_moles_from_mass_formula(const char *const *args, char *out,
+                                         size_t outlen)
+{
+	long long mg;
+	frac n;
+	int rc;
+
+	if (formula_molar_mass_mg(args[1], &mg) != 0)
+		return -3;
+	if ((rc = grams_from_mass(args[0], &n)) != 0)
+		return rc;
+	if ((rc = frac_div_ll(&n, &n, mg)) != 0)
+		return rc;
+	return answer_fraction(&n, "mol", out, outlen);
+}
+
+static int solve_mass_from_moles_formula(const char *const *args, char *out,
+                                         size_t outlen)
+{
+	long long mg;
+	frac n;
+	int rc;
+
+	if (formula_molar_mass_mg(args[1], &mg) != 0)
+		return -3;
+	if ((rc = arg_frac(args[0], &n)) != 0)
+		return -3;
+	if ((rc = frac_mul_ll(&n, &n, mg)) != 0)
+		return rc;
+	if ((rc = frac_div_ll(&n, &n, 1000)) != 0)
+		return rc;
+	return answer_fraction(&n, "g", out, outlen);
+}
+
+static int solve_ions_from_moles_formula(const char *const *args, char *out,
+                                         size_t outlen)
+{
+	int cations, anions, rc;
+	frac n;
+
+	if (formula_ion_counts(args[1], &cations, &anions) != 0)
+		return -3;
+	if ((rc = arg_frac(args[0], &n)) != 0)
+		return -3;
+	if ((rc = frac_mul_ll(&n, &n, cations + anions)) != 0)
+		return rc;
+	return answer_fraction(&n, "mol ions", out, outlen);
+}
+
+static int solve_ksp_from_solubility_formula(const char *const *args, char *out,
+                                             size_t outlen)
+{
+	int cations, anions, i, rc;
+	frac s, cp, ap, ksp;
+
+	if (formula_ion_counts(args[1], &cations, &anions) != 0)
+		return -3;
+	if ((rc = arg_frac(args[0], &s)) != 0)
+		return -3;
+	if (s.n <= 0)
+		return -4;
+	for (i = 0; i < 2; i++) {
+		int count = i == 0 ? cations : anions;
+		frac *term = i == 0 ? &cp : &ap;
+		frac side;
+
+		if ((rc = frac_mul_ll(&side, &s, count)) != 0)
+			return rc;
+		term->n = 1;
+		term->d = 1;
+		for (int k = 0; k < count; k++)
+			if ((rc = frac_mul(term, term, &side)) != 0)
+				return rc;
+	}
+	if ((rc = frac_mul(&ksp, &cp, &ap)) != 0)
+		return rc;
+	return answer_fraction(&ksp, "", out, outlen);
+}
+
+static int solve_mole_fraction_formula(const char *const *args, char *out,
+                                       size_t outlen)
+{
+	long long mg_a, mg_b;
+	frac n_a, n_b, total;
+	int rc;
+
+	if (formula_molar_mass_mg(args[1], &mg_a) != 0)
+		return -3;
+	if (formula_molar_mass_mg(args[3], &mg_b) != 0)
+		return -3;
+	if ((rc = grams_from_mass(args[0], &n_a)) != 0 ||
+	    (rc = frac_div_ll(&n_a, &n_a, mg_a)) != 0)
+		return rc;
+	if ((rc = grams_from_mass(args[2], &n_b)) != 0 ||
+	    (rc = frac_div_ll(&n_b, &n_b, mg_b)) != 0)
+		return rc;
+	if ((rc = frac_add(&total, &n_a, &n_b)) != 0 || total.n == 0)
+		return -4;
+	{
+		frac inv;
+
+		inv.n = total.d;
+		inv.d = total.n;
+		if (inv.d < 0) {
+			inv.n = -inv.n;
+			inv.d = -inv.d;
+		}
+		if ((rc = frac_mul(&n_a, &n_a, &inv)) != 0)
+			return rc;
+	}
+	return answer_fraction(&n_a, "", out, outlen);
+}
+
+static int solve_stoich_mass_formula(const char *const *args, char *out,
+                                     size_t outlen)
+{
+	long long mg_given, mg_product;
+	frac moles, ratio, m;
+	int rc;
+
+	if (formula_molar_mass_mg(args[1], &mg_given) != 0)
+		return -3;
+	if (formula_molar_mass_mg(args[3], &mg_product) != 0)
+		return -3;
+	if ((rc = grams_from_mass(args[0], &moles)) != 0 ||
+	    (rc = frac_div_ll(&moles, &moles, mg_given)) != 0)
+		return rc;
+	if ((rc = arg_frac(args[2], &ratio)) != 0)
+		return -3;
+	if ((rc = frac_mul(&m, &moles, &ratio)) != 0 ||
+	    (rc = frac_mul_ll(&m, &m, mg_product)) != 0 ||
+	    (rc = frac_div_ll(&m, &m, 1000)) != 0)
+		return rc;
+	return answer_fraction(&m, "g", out, outlen);
+}
+
+static const struct {
+	const char *name;
+	unsigned char arity;
+	int (*solve)(const char *const *args, char *out, size_t outlen);
+} calls[] = {
+	{"molar_mass_formula", 1, solve_molar_mass_formula},
+	{"moles_from_mass_formula", 2, solve_moles_from_mass_formula},
+	{"mass_from_moles_formula", 2, solve_mass_from_moles_formula},
+	{"ions_from_moles_formula", 2, solve_ions_from_moles_formula},
+	{"ksp_from_solubility_formula", 2, solve_ksp_from_solubility_formula},
+	{"mole_fraction_formula", 4, solve_mole_fraction_formula},
+	{"stoich_mass_formula", 4, solve_stoich_mass_formula},
+};
+
 int formula_solve(const char *name, const char *const *args, int nargs,
                   char *out, size_t outlen)
 {
-	int rc;
+	size_t i;
 
 	if (name == NULL)
 		return 0;
-	if (strcmp(name, "molar_mass_formula") != 0)
-		return 0;
-	if (nargs != 1)
-		return -2;
-	rc = solve_molar_mass_formula(args, out, outlen);
-	return rc == 0 ? 1 : rc;
+	for (i = 0; i < sizeof calls / sizeof calls[0]; i++) {
+		int rc;
+
+		if (strcmp(name, calls[i].name) != 0)
+			continue;
+		if (nargs != (int)calls[i].arity)
+			return -2;
+		rc = calls[i].solve(args, out, outlen);
+		return rc == 0 ? 1 : rc;
+	}
+	return 0;
+}
+
+/* ---- the working ---- */
+
+static int append(char *out, int outlen, const char *s)
+{
+	size_t have = strlen(out), add = strlen(s);
+
+	if (have + add >= (size_t)outlen)
+		return -1;
+	memcpy(out + have, s, add + 1);
+	return 0;
+}
+
+static int appendf(char *out, int outlen, const char *fmt, ...)
+{
+	char line[160];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsnprintf(line, sizeof line, fmt, ap);
+	va_end(ap);
+	return append(out, outlen, line);
 }
 
 /* The formula as it was understood, for the working's first line. */
@@ -624,75 +920,272 @@ static void shown_formula(const char *text, char *out, size_t outlen)
 		out_set(out, outlen, text ? text : "");
 }
 
-/* M(CH3OH) = 12.01 + 4*1.008 + 16 */
+/* M(CH3OH) = 12.01 + 4*1.008 + 16, in the order the formula is written. */
 static int molar_mass_line(const char *text, char *out, int outlen)
 {
 	char formula[FORMULA_MAX_TEXT + 8];
 	comp_t comp;
+	unsigned char used[CHEM_NUM_ELEMENTS];
 	char *at = out, *end = out + outlen - 1;
-	char piece[32];
-	int charge, rc, i, terms = 0;
+	const char *p;
+	int charge, terms = 0;
 
 	if (resolve_text(text, formula, (int)sizeof formula, &charge) != 0)
 		return -1;
 	if (parse_body(formula, &comp) != 0)
 		return -1;
+	memset(used, 0, sizeof used);
 	at += snprintf(at, (size_t)(end - at), "M(%s) = ", formula);
-	for (i = 0; i < CHEM_NUM_ELEMENTS; i++) {
-		if (!comp.count[i])
+	for (p = formula; *p; ) {
+		int start, end_at, idx;
+		char piece[32], term[48];
+
+		if (!is_upper(*p)) {
+			p++;
 			continue;
+		}
+		start = (int)(p - formula);
+		end_at = start + 1;
+		if (is_lower(formula[end_at]))
+			end_at++;
+		p = formula + end_at;
+		idx = element_index(formula + start, (size_t)(end_at - start));
+		if (idx < 0 || used[idx] || !comp.count[idx])
+			continue;
+		used[idx] = 1;
 		if (terms >= MAX_TERMS)
 			return -1;
-		if (dec4_render(chem_elements[i].weight_mg, 1000, piece,
+		if (dec4_render(chem_elements[idx].weight_mg, 1000, piece,
 		                sizeof piece) != 0)
 			return -1;
-		{
-			char term[48];
-
-			if (comp.count[i] == 1)
-				snprintf(term, sizeof term, "%s%s",
-				         terms ? " + " : "", piece);
-			else
-				snprintf(term, sizeof term, "%s%d*%s",
-				         terms ? " + " : "", comp.count[i], piece);
-			at += snprintf(at, (size_t)(end - at), "%s", term);
-		}
+		if (comp.count[idx] == 1)
+			snprintf(term, sizeof term, "%s%s", terms ? " + " : "",
+			         piece);
+		else
+			snprintf(term, sizeof term, "%s%d*%s",
+			         terms ? " + " : "", comp.count[idx], piece);
+		at += snprintf(at, (size_t)(end - at), "%s", term);
 		terms++;
 	}
-	(void)rc;
+	return terms ? 0 : -1;
+}
+
+/* "M(CH3OH) = 32.04 g/mol", or the formula alone when the line will not fit. */
+static int mass_line(const char *text, char *out, int outlen)
+{
+	char formula[FORMULA_MAX_TEXT + 8];
+	char line[128], value[32];
+	long long mg;
+
+	if (formula_molar_mass_mg(text, &mg) != 0 ||
+	    dec4_render(mg, 1000, value, sizeof value) != 0)
+		return -1;
+	shown_formula(text, formula, sizeof formula);
+	snprintf(line, sizeof line, "M(%s) = %s g/mol", formula, value);
+	out_set(out, (size_t)outlen, line);
 	return 0;
+}
+
+static int answer_line(char *out, int outlen, const char *answer)
+{
+	if (answer == NULL || !answer[0])
+		return 0;
+	return appendf(out, outlen, "\n= %.120s", answer);
+}
+
+static int steps_molar_mass(const char *text, const char *answer, char *out,
+                            int outlen)
+{
+	if (molar_mass_line(text, out, outlen) != 0) {
+		char formula[FORMULA_MAX_TEXT + 8], line[96];
+
+		shown_formula(text, formula, sizeof formula);
+		snprintf(line, sizeof line, "M(%s)", formula);
+		out_set(out, (size_t)outlen, line);
+	}
+	return answer_line(out, outlen, answer);
+}
+
+static int steps_moles_from_mass(const char *const *args, const char *answer,
+                                 char *out, int outlen)
+{
+	char line[120], value[32];
+	long long mg;
+	char formula[FORMULA_MAX_TEXT + 8];
+
+	if (formula_molar_mass_mg(args[1], &mg) != 0)
+		return -1;
+	shown_formula(args[1], formula, sizeof formula);
+	snprintf(line, sizeof line, "M(%s) = ", formula);
+	if (append(out, outlen, line) < 0 ||
+	    dec4_render(mg, 1000, value, sizeof value) != 0 ||
+	    append(out, outlen, value) < 0 ||
+	    append(out, outlen, " g/mol") < 0)
+		return -1;
+	snprintf(line, sizeof line, "\nn = m/M = %.24s/", args[0]);
+	if (append(out, outlen, line) < 0 || append(out, outlen, value) < 0)
+		return -1;
+	return answer_line(out, outlen, answer);
+}
+
+static int steps_mass_from_moles(const char *const *args, const char *answer,
+                                 char *out, int outlen)
+{
+	char line[120], value[32];
+	long long mg;
+	char formula[FORMULA_MAX_TEXT + 8];
+
+	if (formula_molar_mass_mg(args[1], &mg) != 0)
+		return -1;
+	shown_formula(args[1], formula, sizeof formula);
+	snprintf(line, sizeof line, "M(%s) = ", formula);
+	if (append(out, outlen, line) < 0 ||
+	    dec4_render(mg, 1000, value, sizeof value) != 0 ||
+	    append(out, outlen, value) < 0 ||
+	    append(out, outlen, " g/mol") < 0)
+		return -1;
+	if (appendf(out, outlen, "\nm = n*M = %.24s*%s", args[0], value) < 0)
+		return -1;
+	return answer_line(out, outlen, answer);
+}
+
+static int ion_line(const char *formula_arg, char *out, int outlen)
+{
+	int cations, anions;
+	char formula[FORMULA_MAX_TEXT + 8], line[120];
+
+	if (formula_ion_counts(formula_arg, &cations, &anions) != 0)
+		return -1;
+	shown_formula(formula_arg, formula, sizeof formula);
+	snprintf(line, sizeof line, "%s: %d cation%s + %d anion%s", formula,
+	         cations, cations == 1 ? "" : "s", anions, anions == 1 ? "" : "s");
+	return append(out, outlen, line);
+}
+
+static int steps_ions_from_moles(const char *const *args, const char *answer,
+                                 char *out, int outlen)
+{
+	int cations, anions;
+
+	if (formula_ion_counts(args[1], &cations, &anions) != 0)
+		return -1;
+	if (ion_line(args[1], out, outlen) < 0)
+		return -1;
+	if (appendf(out, outlen, "\nn = %.24s*", args[0]) < 0)
+		return -1;
+	{
+		char count[16];
+
+		snprintf(count, sizeof count, "%d", cations + anions);
+		if (append(out, outlen, count) < 0)
+			return -1;
+	}
+	return answer_line(out, outlen, answer);
+}
+
+static int steps_ksp(const char *const *args, const char *answer, char *out,
+                     int outlen)
+{
+	int cations, anions;
+	char formula[FORMULA_MAX_TEXT + 8], line[160];
+
+	if (formula_ion_counts(args[1], &cations, &anions) != 0)
+		return -1;
+	if (ion_line(args[1], out, outlen) < 0)
+		return -1;
+	shown_formula(args[1], formula, sizeof formula);
+	snprintf(line, sizeof line,
+	         "\nKsp = (%d*%.24s)^%d*(%d*%.24s)^%d", cations, args[0], cations,
+	         anions, args[0], anions);
+	if (append(out, outlen, line) < 0)
+		return -1;
+	return answer_line(out, outlen, answer);
+}
+
+static int steps_mole_fraction(const char *const *args, const char *answer,
+                               char *out, int outlen)
+{
+	char first[96], second[96], line[160];
+
+	if (mass_line(args[1], first, sizeof first) < 0 ||
+	    mass_line(args[3], second, sizeof second) < 0)
+		return -1;
+	if (append(out, outlen, first) < 0 || append(out, outlen, "\n") < 0 ||
+	    append(out, outlen, second) < 0)
+		return -1;
+	{
+		long long mg_a, mg_b;
+		frac n_a, n_b, total;
+		char va[32], vb[32];
+
+		if (formula_molar_mass_mg(args[1], &mg_a) != 0 ||
+		    formula_molar_mass_mg(args[3], &mg_b) != 0)
+			return -1;
+		if (grams_from_mass(args[0], &n_a) != 0 ||
+		    frac_div_ll(&n_a, &n_a, mg_a) != 0 ||
+		    grams_from_mass(args[2], &n_b) != 0 ||
+		    frac_div_ll(&n_b, &n_b, mg_b) != 0 ||
+		    frac_add(&total, &n_a, &n_b) != 0)
+			return -1;
+		if (dec4_render(n_a.n, n_a.d, va, sizeof va) != 0 ||
+		    dec4_render(n_b.n, n_b.d, vb, sizeof vb) != 0)
+			return -1;
+		snprintf(line, sizeof line, "\nnA = %s mol, nB = %s mol", va, vb);
+		if (append(out, outlen, line) < 0)
+			return -1;
+	}
+	if (append(out, outlen, "\nx = nA/(nA+nB)") < 0)
+		return -1;
+	return answer_line(out, outlen, answer);
+}
+
+static int steps_stoich_mass(const char *const *args, const char *answer, char *out,
+                             int outlen)
+{
+	char first[96], second[96], product[32], given[32];
+	long long mg_product, mg_given;
+
+	if (mass_line(args[1], first, sizeof first) < 0 ||
+	    mass_line(args[3], second, sizeof second) < 0)
+		return -1;
+	if (formula_molar_mass_mg(args[3], &mg_product) != 0 ||
+	    dec4_render(mg_product, 1000, product, sizeof product) != 0 ||
+	    formula_molar_mass_mg(args[1], &mg_given) != 0 ||
+	    dec4_render(mg_given, 1000, given, sizeof given) != 0)
+		return -1;
+	if (append(out, outlen, first) < 0 || append(out, outlen, "\n") < 0 ||
+	    append(out, outlen, second) < 0)
+		return -1;
+	if (appendf(out, outlen, "\nm = %.24s/", args[0]) < 0 ||
+	    append(out, outlen, given) < 0 ||
+	    appendf(out, outlen, "*%.24s*", args[2]) < 0 ||
+	    append(out, outlen, product) < 0)
+		return -1;
+	return answer_line(out, outlen, answer);
 }
 
 int formula_steps(const char *name, const char *const *args, int nargs,
                   const char *answer, char *out, int outlen)
 {
-	char first[160], second[64], value[48];
-	long long mg;
-	int rc;
-
 	if (out == NULL || outlen < 2)
 		return -1;
 	out[0] = '\0';
-	if (name == NULL || strcmp(name, "molar_mass_formula") != 0 || nargs != 1)
+	if (name == NULL)
 		return 0;
-	if (molar_mass_line(args[0], first, (int)sizeof first) != 0) {
-		shown_formula(args[0], first, sizeof first);
-		snprintf(out, (size_t)outlen, "M(%s)", first);
-	} else {
-		snprintf(out, (size_t)outlen, "%s", first);
-	}
-	if ((rc = formula_molar_mass_mg(args[0], &mg)) == 0 &&
-	    dec4_render(mg, 1000, value, sizeof value) == 0) {
-		snprintf(second, sizeof second, "\n= %s g/mol", value);
-		if (strlen(out) + strlen(second) < (size_t)outlen)
-			strcat(out, second);
-	}
-	if (answer && answer[0]) {
-		char line[96];
-
-		snprintf(line, sizeof line, "\n= %s", answer);
-		if (strlen(out) + strlen(line) < (size_t)outlen)
-			strcat(out, line);
-	}
-	return 1;
+	if (strcmp(name, "molar_mass_formula") == 0 && nargs == 1)
+		return steps_molar_mass(args[0], answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "moles_from_mass_formula") == 0 && nargs == 2)
+		return steps_moles_from_mass(args, answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "mass_from_moles_formula") == 0 && nargs == 2)
+		return steps_mass_from_moles(args, answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "ions_from_moles_formula") == 0 && nargs == 2)
+		return steps_ions_from_moles(args, answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "ksp_from_solubility_formula") == 0 && nargs == 2)
+		return steps_ksp(args, answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "mole_fraction_formula") == 0 && nargs == 4)
+		return steps_mole_fraction(args, answer, out, outlen) == 0 ? 1 : -1;
+	if (strcmp(name, "stoich_mass_formula") == 0 && nargs == 4)
+		return steps_stoich_mass(args, answer, out, outlen) == 0 ? 1 : -1;
+	(void)nargs;
+	return 0;
 }

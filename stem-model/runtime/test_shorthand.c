@@ -269,6 +269,28 @@ static void test_formula_calls(void)
 	check(built("a 5 kg crate slides with friction 0.4", &rc)[0] == '\0' && rc == -1,
 	      "a sentence is still not a shorthand");
 
+	/* A relation's own name followed by a formula is the formula call: the
+	 * numeric call it names cannot take that argument, so nothing that works
+	 * today moves. */
+	check(pipeline_answer_offline("moles 128 CH3OH", answer,
+	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&
+	      strcmp(answer, "3.995 mol") == 0 &&
+	      strcmp(call, "CALL moles_from_mass_formula 128 CH3OH") == 0,
+	      "a relation's name with a formula reaches the formula call");
+	check(pipeline_answer_offline("moles 128 32", answer,
+	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&
+	      strcmp(answer, "4 mol") == 0 &&
+	      strcmp(call, "CALL moles 128 32") == 0,
+	      "the numeric call is untouched");
+	check(pipeline_answer_offline("mole_fraction 128 CH3OH 108 H2O", answer,
+	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&
+	      strcmp(answer, "0.3999") == 0,
+	      "a four-argument relation takes two formulas");
+	check(pipeline_answer_offline("ions 0.2 Ba(NO3)2", answer,
+	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&
+	      strcmp(answer, "0.6 mol ions") == 0,
+	      "ions per formula unit, from the relation's own name");
+
 	/* And the answer comes out of the chemistry, with the working beside it. */
 	check(pipeline_answer_offline("molar_mass_formula CH3OH", answer,
 	                              (int)sizeof answer, call, (int)sizeof call) == 0 &&

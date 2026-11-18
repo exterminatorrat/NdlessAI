@@ -72,6 +72,15 @@ One entry path is left, and it is the most expensive:
 | --- | --- | --- |
 | **Sentence templates** | A phrasing from the bank with its numbers blanked: "A mass of __ kg accelerates at __ m/s^2" — fill the blanks with the arrows | It keeps natural language, but it needs template storage on the device and a blank-navigation UI, and everything after the blanks still routes through the decoder |
 
+A third kind of typed call arrived with the chemistry work: **a formula where a
+relation wants a number.** `moles 128 CH3OH` is `CALL moles_from_mass_formula
+128 CH3OH`, `mole_fraction 128 CH3OH 108 H2O` computes both mole counts, and
+`ksp 0.01 Ca(OH)2` reads the ions per formula unit. The numeric call is
+untouched — `moles 128 32` still answers `4 mol` — and the working prints the
+molar mass or ion count the app derived, so a computed intermediate is never
+hidden from the student. The formula parser refuses an unknown symbol, an
+unbalanced group, an ambiguous name or a charge it cannot interpret.
+
 The order is deliberate: each step removes more typing per unit of change than
 the one after it. Typed calls remove the decoder for the questions a student can
 name; the picker removes the need to know the name; templates remove the need to

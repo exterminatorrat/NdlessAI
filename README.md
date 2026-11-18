@@ -18,7 +18,7 @@ flowchart LR
   T --> M["int8 transformer<br/>6 layers, 5.25M parameters"]
   M --> C["CALL relation args<br/>about 7 tokens"]
   C --> G{"Every argument appears<br/>in the question?"}
-  G -- yes --> S["solvers.c<br/>exact integer and rational math"]
+  G -- yes --> S["solvers_*.c<br/>exact integer and rational math"]
   G -- no --> R["!uncertain<br/>no answer shown"]
   S --> A["Answer text<br/>formatted on device"]
 ```
@@ -40,11 +40,12 @@ The grounding check is deliberately conservative. If the model copies a number t
 
 ## Supported relations
 
-Every relation has a fixed arity, an exact solver, and wording to read: 163 of
-the 171 have hand-written paraphrase rows (4,768 rows across fifteen fixtures)
-and 146 have generated surface templates, 138 with both, which leaves no
-relation without either. A held-out row is chosen by a hash of its relation and
-question, so no revision of the corpus can move a row between the halves.
+Every relation has a fixed arity, an exact solver, and wording to read. `surface/`
+holds phrasings for all 171 relations, at least eight each, and reserves every
+fifth index of each list for held-out wording. 163 of the relations also carry
+hand-written paraphrase rows in `fixtures/` (4,768 rows across fifteen files).
+A row's train or eval half is a field in the file it lives in — 0 of the 4,768
+questions appears in both halves — so rebuilding the corpus cannot move one.
 
 The tags below are the ten in `runtime/reltable.h`, so the counts sum to the
 catalogue total; `docs/status.md` splits physics into its electricity, magnetism
@@ -86,56 +87,68 @@ No weights are committed. The commands above create `stem-model/data/`, `stem-mo
 ```mermaid
 flowchart TB
   subgraph offline["Offline pipeline (Python)"]
-    Rel["relations.py<br/>call contract and exact solvers"]
-    Surf["surface.py<br/>phrasing variants"]
+    Rel["relations/<br/>contract and exact solvers<br/>one module per subject"]
+    Surf["surface/<br/>spec, grammar, vary, lexicon<br/>and TEMPLATES per subject"]
     Dist["distractors.py<br/>plausible extra quantity"]
     Data["make_dataset.py<br/>train, validation, held-out splits"]
-    Tok["tokenizer.py<br/>byte-level BPE, 512 tokens"]
+    Tok["tokenizer.py<br/>byte-level BPE, 640 entries"]
     Train["train.py<br/>decoder, call-masked loss"]
     Exp["export_model.py<br/>int8 weights and Q24 scales"]
-    Rel --> Data
-    Surf --> Data
-    Dist --> Data
-    Data --> Train
-    Tok --> Train
-    Train --> Exp
+    Crs["courses.py<br/>course to topic to call"]
+    Gen["export_relations.py<br/>export_steps.py<br/>export_units.py<br/>export_courses.py"]
   end
 
   subgraph runtime["On-device path (C11)"]
     BPE["bpe.c"]
     Fixed["fixed.c<br/>Q12 integer forward pass"]
     Inf["infer.c<br/>NSM1 loader"]
-    Main["main_device.c<br/>decode and grounding"]
-    Solv["solvers.c<br/>exact answers"]
-    BPE --> Main
-    Inf --> Fixed
-    Fixed --> Main
-    Main --> Solv
+    Pipe["pipeline.c<br/>decode, mask, grounding"]
+    UI["ui.c<br/>screen model"]
+    Solv["solvers_*.c<br/>exact answers"]
   end
 
   subgraph ndless["Ndless platform"]
     Loader["ndless/<br/>loader and installers"]
     SDK["ndless-sdk/<br/>toolchain and samples"]
+    Bench["int8bench<br/>hardware measurement"]
   end
 
   W[("weights.bin<br/>5.91 MB")]
   H[("bpe.h<br/>tokenizer tables")]
-  Bench["int8bench<br/>hardware measurement"]
+  T[("reltable.h, steptable.h<br/>unitstable.h, coursetable.h")]
 
+  Rel --> Data
+  Surf --> Data
+  Dist --> Data
+  Data --> Train
+  Tok --> Train
+  Train --> Exp
   Exp --> W
   Tok --> H
+  Rel --> Gen
+  Crs --> Gen
+  Gen --> T
   W -. loaded by .-> Inf
   H -. compiled into .-> BPE
+  T -. compiled into .-> Pipe
+  BPE --> Pipe
+  Inf --> Fixed
+  Fixed --> Pipe
+  Pipe --> Solv
+  Pipe --> UI
   Solv -. cross-compiled with .-> SDK
   Bench -. sizes the model .-> Train
-  Loader -. hosts .-> Main
+  Loader -. hosts .-> UI
 ```
 
 | Path | Contents |
 | --- | --- |
 | [`stem-model/`](stem-model/) | Python data, training, export, evaluation, and the C runtime |
-| [`stem-model/runtime/`](stem-model/runtime/) | BPE, fixed-point transformer, NSM1 loader, solvers, host and device entry points |
-| [`stem-model/tests/`](stem-model/tests/) | Golden solver values, data invariants, quantization, tokenizer, packing, training, and logit parity |
+| [`stem-model/relations/`](stem-model/relations/) | The call contract in `core.py`, and one module per subject holding that subject's relations and solvers |
+| [`stem-model/surface/`](stem-model/surface/) | Slot specs, the clause grammar, wording families, the lexicon, and one `TEMPLATES` table per subject |
+| [`stem-model/runtime/`](stem-model/runtime/) | BPE, fixed-point transformer, NSM1 loader, the pipeline, the solvers, the screen, and the host and device entry points |
+| [`stem-model/device/`](stem-model/device/) | The Ndless app: key mapping, the keypad and panel, and the Makefile that packages `stemhelp.tns` |
+| [`stem-model/tests/`](stem-model/tests/) | The measurement instruments: the split, the floors, the answer formats, the spec, and the pipeline |
 | [`ndless-sdk/samples/int8bench/`](ndless-sdk/samples/int8bench/) | Hardware benchmark that settled the int8 dot-product cost on a CX II |
 | [`ndless/`](ndless/) and [`ndless-sdk/`](ndless-sdk/) | Upstream Ndless loader, installers, toolchain, and samples |
 | [`docs/`](docs/) | Architecture, model notes, development guide, and upstream Ndless documentation |

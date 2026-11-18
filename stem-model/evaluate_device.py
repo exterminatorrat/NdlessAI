@@ -10,7 +10,7 @@ def main():
     ap.add_argument("--weights", default="weights.bin")
     ap.add_argument("--binary", default="runtime/main_device")
     ap.add_argument("--limit", type=int, default=60)
-    ap.add_argument("--seq", type=int, default=160)
+    ap.add_argument("--seq", type=int, default=384)
     args = ap.parse_args()
 
     if not os.path.exists(args.binary):

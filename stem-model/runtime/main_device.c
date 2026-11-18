@@ -14,7 +14,9 @@
 int main(int argc, char **argv)
 {
 	static pipeline_t p;
-	char line[512];
+	/* A question the window admits runs past 511 characters, and fgets would
+	 * split it into two questions instead of failing. */
+	char line[2048];
 	char answer[256];
 	char call[256];
 

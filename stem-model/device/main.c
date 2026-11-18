@@ -18,7 +18,10 @@
 #include "pipeline.h"
 #include "ui.h"
 
-#define SEQ 160
+/* The reading window the weights are trained at. A question longer than this
+ * is refused by the pipeline rather than cut, so this must match the trainer's
+ * --seq or the device reads less of every question than the model was taught. */
+#define SEQ 384
 
 /*
  * TI's transfer software only accepts files ending in .tns, so the model

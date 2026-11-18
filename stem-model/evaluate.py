@@ -24,7 +24,7 @@ def main():
     ap.add_argument("--binary", default="runtime/infer_host")
     ap.add_argument("--limit", type=int, default=50)
     ap.add_argument("--max-new", type=int, default=16)
-    ap.add_argument("--seq", type=int, default=128)
+    ap.add_argument("--seq", type=int, default=384)
     args = ap.parse_args()
 
     if not os.path.exists(args.binary):

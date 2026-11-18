@@ -186,7 +186,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", default="weights.bin")
     ap.add_argument("--binary", default="runtime/infer_host")
-    ap.add_argument("--seq", type=int, default=160)
+    ap.add_argument("--seq", type=int, default=384)
     ap.add_argument("--max-new", type=int, default=16)
     ap.add_argument("--corpus", default=CORPUS)
     ap.add_argument("--max-show", type=int, default=5,

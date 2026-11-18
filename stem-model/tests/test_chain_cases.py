@@ -34,12 +34,26 @@ def rows():
         return [json.loads(line) for line in handle if line.strip()]
 
 
-def test_the_fixture_has_rows_of_every_length():
-    lengths = {}
+def test_the_corpus_is_the_two_call_slice_that_fits_the_window():
+    """Two calls is what the reading window carries; the longer rows are measured
+    in `docs/composition.md` and wait on their own decision."""
+    lengths = {row["steps"] for row in rows()}
+    assert lengths == {2}
+    # The generator still builds three- and four-call rows; the corpus ships the
+    # slice whose tokens fit `train.pack()`.
+    longer, _dropped = cases.build(12, "longer", max_steps=4)
+    assert longer and {row["steps"] for row in longer} - {2}, longer[:2]
+
+
+def test_every_row_fits_the_packing_window():
+    """`pack()` skips a long row instead of truncating it, so a row that does not
+    fit is a row the model never sees — and the only trace is a warning line."""
+    specials, ranks = cases.token_table()
+    lengths = sorted(cases.row_tokens(row, specials, ranks) for row in rows())
     for row in rows():
-        lengths[row["steps"]] = lengths.get(row["steps"], 0) + 1
-    assert set(lengths) == {2, 3, 4}
-    assert all(lengths[steps] > 20 for steps in lengths), lengths
+        assert cases.row_tokens(row, specials, ranks) <= cases.PACK_LIMIT, row["call"]
+    p95 = lengths[int(round(0.95 * (len(lengths) - 1)))]
+    assert p95 <= 190, p95
 
 
 def test_every_row_is_a_plan_the_runtime_would_accept():
@@ -99,5 +113,6 @@ def test_the_split_is_deterministic_and_named():
 
 def test_the_fixture_is_what_the_generator_would_write():
     current = open(FIXTURE, encoding="utf-8").read()
-    built, _dropped = cases.build(len(rows()), "chain")
-    assert current == cases.render(built), "stale: run gen_chain_cases.py --write"
+    built, _dropped = cases.build(len(rows()), "chain", max_steps=2)
+    assert current == cases.render(built), \
+        "stale: run gen_chain_cases.py --write --max-steps 2"

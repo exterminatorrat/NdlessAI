@@ -248,6 +248,50 @@ arithmetic; `c1, V1, c2, V2` are all four in the text, so the relation that take
 them can be. That is a stronger test than "the arithmetic is right", and it is
 the one the four rows actually failed.
 
+## The chain corpus, and the reading window
+
+Nothing in the corpus asked for a chain, so `allow_chain` could be switched on at
+the retrain and teach the model a format it had never been asked to write.
+`gen_chain_cases.py` builds the missing rows from the graph and exact-checks every
+one: the plan is re-evaluated the way `plan.c` does — one magnitude per step,
+`<n>` substituted — and the answer must be the row's own.
+
+**The register is one statement, one ask.** A real multi-step question states its
+givens once and asks for one answer that happens to need two computations; it does
+not concatenate two questions. The first step's numbers travel as a `With …` clause
+in the catalogue's own slot wording, the second step's own question carries the ask,
+and the number the chain hands over is replaced by `that result`. That is why the
+corpus is short: the concatenated form ran to p95 352 tokens and two thirds of it
+would have been skipped by `train.pack()`.
+
+**Two filters make a row readable rather than merely exact.**
+
+1. **An edge stays inside one subject, on an exact unit match.** Units alone admit
+   nonsense: a mass percent can feed a simple-interest percentage, and the row is
+   exact and unreadable. A class change is not a unit change.
+2. **The handed-over number is replaced as a standalone token.** A bare replace
+   landed a value inside a unit exponent — `kg/m^3` became `kg/m^that result` — so
+   the substitution has to see a number standing alone, which is also what keeps the
+   question from stating the intermediate the chain exists to carry.
+
+**A row that does not fit the window is a row the model never sees.**
+`train.pack()` skips a row longer than `seq + 1` rather than truncating it, and the
+only trace is a warning line, so a corpus of long chains can produce a run that
+looks like "chains do not help" when no chain was ever trained on. Measured with the
+shipped `runtime/bpe.h` table, question plus `<sep>` plus call plus end token:
+
+| Chain length | Rows | p50 | p95 | max | fits 193 | shipped |
+| --- | --- | --- | --- | --- | --- | --- |
+| two calls | 600 | 111 | 174 | 193 | **600 of 600** | yes |
+| three calls | 189 | 163 | 223 | 258 | 153 of 189 | no |
+| four calls | 73 | 210 | 264 | 283 | 27 of 73 | no |
+
+The corpus ships the two-call slice: every row fits, and the generator drops a row
+that would not, so the count in the fixture is the count the trainer can use. The
+three- and four-call rows are built and measured (`--max-steps 4`) and wait on
+their own decision, because carrying them needs a wider reading window and that
+changes what the product reads.
+
 ## What this means before a chain corpus is generated
 
 1. **Chain length is not the constraint; the catalogue's shapes are.** Four calls

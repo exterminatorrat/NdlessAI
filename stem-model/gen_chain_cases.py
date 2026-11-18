@@ -48,6 +48,7 @@ sys.path.insert(0, str(ROOT))
 
 import compose  # noqa: E402
 from relations import RELATIONS  # noqa: E402
+from surface.spec import SPECS  # noqa: E402
 
 GENERATED = ROOT / "fixtures" / "chain_cases.jsonl"
 
@@ -56,6 +57,10 @@ GENERATED = ROOT / "fixtures" / "chain_cases.jsonl"
 MAGNITUDE = re.compile(r"[+-]?[0-9.]+(?:[eE][+-]?[0-9]+)?")
 
 MAX_STEPS = 4
+
+# train.pack() skips a row longer than seq + 1 with the reading window at 192,
+# and a skipped row is never trained on. A row has to fit to exist.
+PACK_LIMIT = 193
 
 
 def magnitude(answer):
@@ -145,9 +150,19 @@ def one_row(rng, graph):
         "CALL " + target + " " + " ".join(
             "<1>" if i == slot else str(a) for i, a in enumerate(chained)),
     ]
+    # One statement, one ask: a multi-step exam question states its givens once
+    # rather than concatenating two questions. The first step's numbers travel as
+    # a "With ..." clause in the catalogue's own slot wording, and the second
+    # step's own question keeps the ask and its own givens.
+    steps = [[source, list(args_first), None],
+             [target, [None if i == slot else a for i, a in enumerate(chained)], slot]]
+    question = assemble(steps, question)
+    if question is None:
+        return None
     row = {
         "subject": second.subject,
-        "question": f"{question_first} Then, using that result: {question}",
+        "question": question,
+        "last_question": question,
         "call": " ; ".join(calls),
         "answer": answer,
         "steps": 2,
@@ -158,6 +173,28 @@ def one_row(rng, graph):
     if not all(str(a) in row["question"] for a in args_first):
         return None
     return row
+
+
+def claim(relation, values):
+    """One step's literals as a clause a single-statement question can carry.
+
+    "14.2 g as the mass of the sample, 284 g/mol as the molar mass". The role
+    and the unit come from the relation's own spec, so a chain prompt states its
+    givens the way the catalogue already phrases them; a relation with no spec
+    falls back to its parameter name, which is still a word rather than a blank.
+    """
+    described = SPECS.get(relation)
+    if described is None:
+        return None
+    parts = []
+    for index, (param, value) in enumerate(zip(RELATIONS[relation].params, values)):
+        if value is None:
+            continue
+        slot = described.slots[param] if described and param in described.slots else None
+        role = slot.role if slot else param.replace("_", " ")
+        unit = slot.unit if slot else ""
+        parts.append(f"{value} {unit} as the {role}".replace("  ", " "))
+    return ", ".join(parts)
 
 
 def swap_in(question, number):
@@ -178,16 +215,56 @@ def substitute(call, previous):
     return re.sub(r"<(\d+)>", lambda m: previous, call)
 
 
+def parse_steps(call):
+    """[(relation, args, chained index)] from a call text, refs as None."""
+    steps = []
+    for part in call.split(";"):
+        words = part.split()
+        args, chained = [], None
+        for index, word in enumerate(words[2:]):
+            if word.startswith("<"):
+                chained = index
+                args.append(None)
+            else:
+                args.append(int(word) if word.lstrip("-").isdigit() else float(word))
+        steps.append([words[1], args, chained])
+    return steps
+
+
+def render_steps(steps):
+    out = []
+    for index, (name, args, chained) in enumerate(steps):
+        words = ["CALL", name]
+        for position, value in enumerate(args):
+            words.append("<%d>" % index if position == chained else str(value))
+        out.append(" ".join(words))
+    return " ; ".join(out)
+
+
+def assemble(steps, last_question):
+    """One statement: the earlier steps' givens as a clause, then the ask.
+
+    A multi-step exam question states its givens once. The clause carries only
+    the literals of the steps that are no longer last - the last step's own
+    question already states its own - so nothing is said twice.
+    """
+    clauses = [claim(name, args) for name, args, _ in steps[:-1]]
+    if not clauses or None in clauses:
+        return None
+    lowered = last_question[0].lower() + last_question[1:]
+    return f"With {'; '.join(clauses)}, {lowered}"
+
+
 def extended(rng, graph, base, extra):
     """Extend a two-call row by `extra` more calls through the graph."""
-    steps = [part.strip() for part in base["call"].split(";")]
+    steps = parse_steps(base["call"])
     answer = base["answer"]
+    last_question = base["last_question"]
     for _ in range(extra):
         carried = magnitude(answer)
         if carried is None:
             return None
-        last = steps[-1].split()
-        source = last[1]
+        source = steps[-1][0]
         edges = [edge for edge in graph.get(source, ())
                  if edge[2] == 1.0
                  and RELATIONS[edge[0]].subject == RELATIONS[source].subject]
@@ -206,17 +283,18 @@ def extended(rng, graph, base, extra):
             answer = relation.solve(*chained)
         except Exception:
             return None
-        question = swap_in(question, str(args[slot]))
-        if question is None:
+        last_question = swap_in(question, str(args[slot]))
+        if last_question is None:
             return None
-        step = "CALL " + target + " " + " ".join(
-            "<%d>" % len(steps) if i == slot else str(a)
-            for i, a in enumerate(chained))
-        steps.append(step)
-        base["question"] += f" Then, using that result: {question}"
-    base["call"] = " ; ".join(steps)
+        steps.append([target, [None if i == slot else a for i, a in enumerate(chained)], slot])
+    question = assemble(steps, last_question)
+    if question is None:
+        return None
+    base["call"] = render_steps(steps)
+    base["question"] = question
     base["answer"] = answer
     base["steps"] = len(steps)
+    base.pop("last_question", None)
     return base
 
 
@@ -256,8 +334,86 @@ def verify(row):
     return True, ""
 
 
-def build(count, seed):
+BPE_HEADER = ROOT / "runtime" / "bpe.h"
+
+
+def token_table():
+    """The shipped tokenizer, read from the generated header.
+
+    `data/tokenizer.json` is what a retrain writes; until then `bpe.h` is the
+    only table that exists, and it is the one the device runs. Reading it means a
+    chain row's length is measured against the tokenizer that will see it.
+    """
+    text = BPE_HEADER.read_text(encoding="utf-8")
+    first = int(re.search(r"#define BPE_FIRST_MERGE (\d+)", text).group(1))
+    merges_text = re.search(r"bpe_merges\[BPE_NUM_MERGES\]\[2\] = \{(.*?)\n\};",
+                            text, re.S).group(1)
+    merges = [(int(a), int(b)) for a, b in re.findall(r"\{(\d+),(\d+)\}", merges_text)]
+    specials_text = re.search(r"bpe_specials\[BPE_NUM_SPECIALS\] = \{(.*?)\n\};",
+                              text, re.S).group(1)
+    names = re.findall(r'"([^"]*)"', specials_text)
+    ids_text = re.search(r"bpe_special_ids\[BPE_NUM_SPECIALS\] = \{(.*?)\n\};",
+                         text, re.S).group(1)
+    ids = [int(value) for value in re.findall(r"\d+", ids_text)]
+    return dict(zip(names, ids)), {pair: first + i for i, pair in enumerate(merges)}
+
+
+def encode(text, specials, ranks):
+    """Token ids, the way tokenizer.py does it: specials first, then BPE on bytes."""
+    out = []
+    keys = sorted(specials, key=len, reverse=True)
+    index = 0
+    while index < len(text):
+        for key in keys:
+            if text.startswith(key, index):
+                out.append(specials[key])
+                index += len(key)
+                break
+        else:
+            start = index
+            while index < len(text) and not any(text.startswith(k, index) for k in keys):
+                index += 1
+            ids = list(text[start:index].encode())
+            while len(ids) > 1:
+                best = None
+                for i in range(len(ids) - 1):
+                    rank = ranks.get((ids[i], ids[i + 1]))
+                    if rank is not None and (best is None or rank < best[0]):
+                        best = (rank, i)
+                if best is None:
+                    break
+                _, at = best
+                ids[at:at + 2] = [ranks[(ids[at], ids[at + 1])]]
+            out.extend(ids)
+    return out
+
+
+def row_tokens(row, specials, ranks):
+    """What `pack()` would count: question, <sep>, call, end token."""
+    return (len(encode(row["question"], specials, ranks)) + 1
+            + len(encode(row["call"], specials, ranks)) + 1)
+
+
+def token_report(rows):
+    specials, ranks = token_table()
+    counts = {}
+    for row in rows:
+        counts.setdefault(row["steps"], []).append(row_tokens(row, specials, ranks))
+    print("tokens per row (question + <sep> + call + end), shipped bpe.h:")
+    for steps in sorted(counts):
+        values = sorted(counts[steps])
+        pick = lambda p: values[min(len(values) - 1, int(round(p * (len(values) - 1))))]
+        fits = sum(1 for value in values if value <= PACK_LIMIT)
+        print(f"  {steps} calls: n={len(values)} p50={pick(0.5)} p95={pick(0.95)} "
+              f"max={values[-1]} fits {PACK_LIMIT}: {fits}/{len(values)}")
+    every = sorted(value for group in counts.values() for value in group)
+    pick = lambda p: every[min(len(every) - 1, int(round(p * (len(every) - 1))))]
+    print(f"  all: n={len(every)} p50={pick(0.5)} p95={pick(0.95)} max={every[-1]}")
+
+
+def build(count, seed, max_steps=MAX_STEPS):
     graph, _answers, _notes = compose.build_graph()
+    specials, ranks = token_table()
     rng = random.Random(seed)
     rows = []
     dropped = 0
@@ -274,11 +430,18 @@ def build(count, seed):
             if row is None:
                 dropped += 1
                 continue
-        if row["steps"] > MAX_STEPS:
+        if row["steps"] > max_steps:
             dropped += 1
             continue
         ok, why = verify(row)
         if not ok:
+            dropped += 1
+            continue
+        # `train.pack()` skips a row longer than the window rather than cutting
+        # it, so a row over the limit is a row the model never sees. Drop it
+        # here, where the count is visible, instead of letting a warning line
+        # carry it into a training run.
+        if row_tokens(row, specials, ranks) > PACK_LIMIT:
             dropped += 1
             continue
         rows.append(row)
@@ -293,12 +456,23 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--n", type=int, default=600, help="rows to generate")
     ap.add_argument("--seed", default="chain", help="instance seed")
-    ap.add_argument("--write", action="store_true", help="write the fixture")
+    ap.add_argument("--write", action="store_true",
+                    help="write the fixture (the shipped corpus is "
+                         "`--n 600 --max-steps 2`)")
     ap.add_argument("--check", action="store_true",
-                    help="fail when the fixture is not what this would write")
+                    help="fail when the fixture is not what this would write "
+                         "(run with `--n 600 --max-steps 2`)")
+    ap.add_argument("--max-steps", type=int, default=MAX_STEPS,
+                    help="longest chain to generate (2 keeps every row inside "
+                         "pack()'s window)")
+    ap.add_argument("--tokens", action="store_true",
+                    help="report the token distribution instead of building")
     args = ap.parse_args()
 
-    rows, dropped = build(args.n, args.seed)
+    rows, dropped = build(args.n, args.seed, args.max_steps)
+    if args.tokens:
+        token_report(rows)
+        return 0
     if len(rows) < args.n:
         print(f"only {len(rows)} of {args.n} rows survived the checks")
     by_steps = {}

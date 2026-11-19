@@ -108,9 +108,11 @@ if [ -d runtime ]; then
     run "chem table in sync"     sh -c "$PY export_chem.py --check >/dev/null"
     run "formula parser"         sh -c 'cd runtime && ./test_formula | grep -q "all cases passed"'
     run "formula cases in sync"  sh -c "$PY gen_chem_cases.py --check >/dev/null"
+    # Revised 2026-11-19: run the synthetic cache and kernel checks on fresh clones.
     if [ -f weights.bin ]; then
-        run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin | grep -q "6/6 cases passed"'
+        run "fixed-point parity" sh -c 'cd runtime && ./test_fixed ../weights.bin'
     else
+        run "fixed-point kernel and prefill" runtime/test_fixed
         skip "fixed-point parity (no weights.bin)"
     fi
     run "ARM cross-compile"      sh -c 'cd runtime && sh crosscheck.sh'

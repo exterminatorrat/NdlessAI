@@ -292,6 +292,78 @@ static int check_kernel(void)
 	return fails;
 }
 
+/* Added 2026-11-19: exercise cache-only prefill without trained weights. */
+static int check_prefill(void)
+{
+	enum { DIM = QT_GROUP, LAYERS = 2, VOCAB = 2 * DIM, SEQ = 384 };
+	const int prompt_lengths[] = {1, 5, SEQ - 1};
+	int8_t weights[8][LAYERS * DIM * DIM];
+	int32_t scales[8][LAYERS * DIM];
+	float gains[LAYERS * DIM];
+	model_t m = {
+		.dim = DIM, .layers = LAYERS, .heads = 2, .hidden = DIM,
+		.vocab = VOCAB, .seq = SEQ,
+		.tok_emb = weights[0], .tok_emb_s = scales[0],
+		.wq = weights[1], .wq_s = scales[1], .wk = weights[2], .wk_s = scales[2],
+		.wv = weights[3], .wv_s = scales[3], .wo = weights[4], .wo_s = scales[4],
+		.w1 = weights[5], .w1_s = scales[5], .w2 = weights[6], .w2_s = scales[6],
+		.w3 = weights[7], .w3_s = scales[7], .n1 = gains, .n2 = gains, .norm = gains,
+	};
+	qstate_t qs;
+	qwork_t full = {0}, prefill = {0};
+	int32_t expected[VOCAB], actual[VOCAB];
+	int failed = 1;
+
+	for (int t = 0; t < 8; t++) {
+		for (int i = 0; i < LAYERS * DIM * DIM; i++)
+			weights[t][i] = (int8_t)((int)(next_rand() % 255) - 127);
+		for (int i = 0; i < LAYERS * DIM; i++)
+			scales[t][i] = 1 << 15;
+	}
+	for (int i = 0; i < LAYERS * DIM; i++)
+		gains[i] = 1.0f;
+
+	if (qstate_init(&qs, &m, SEQ) < 0 || qwork_alloc(&full, &m) < 0 ||
+	    qwork_alloc(&prefill, &m) < 0)
+		goto done;
+
+	for (size_t c = 0; c < sizeof(prompt_lengths) / sizeof(prompt_lengths[0]); c++) {
+		int length = prompt_lengths[c];
+
+		for (int pos = 0; pos < length + 2 && pos < SEQ; pos++) {
+			int tok = (int)(next_rand() % VOCAB);
+			int32_t *out = pos < length - 1 ? NULL : actual;
+
+			if (forward_q(&m, &qs, &full, tok, pos, expected) < 0 ||
+			    forward_q(&m, &qs, &prefill, tok, pos, out) < 0 ||
+			    (out && memcmp(expected, actual, sizeof(expected)) != 0)) {
+				fprintf(stderr, "prefill logits differ: prompt %d, position %d\n",
+				        length, pos);
+				goto done;
+			}
+			for (int l = 0; l < LAYERS; l++) {
+				size_t off = ((size_t)l * SEQ + pos) * DIM;
+				size_t bytes = DIM * sizeof(*full.k);
+
+				if (memcmp(full.k + off, prefill.k + off, bytes) != 0 ||
+				    memcmp(full.v + off, prefill.v + off, bytes) != 0) {
+					fprintf(stderr, "prefill cache differs: prompt %d, position %d, layer %d\n",
+					        length, pos, l);
+					goto done;
+				}
+			}
+		}
+	}
+	failed = 0;
+
+done:
+	qwork_free(&prefill);
+	qwork_free(&full);
+	qstate_free(&qs);
+	printf("prefill cache and logits bit-exactness: %s\n", failed ? "FAIL" : "ok");
+	return failed;
+}
+
 int main(int argc, char **argv)
 {
 	model_t m;
@@ -309,6 +381,7 @@ int main(int argc, char **argv)
 	}
 
 	kfails = check_kernel();
+	kfails += check_prefill();
 
 	if (argc < 2) {
 		printf("skip fixed-point parity: no weights file given\n");

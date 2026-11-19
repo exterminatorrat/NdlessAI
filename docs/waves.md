@@ -235,6 +235,7 @@ is supposed to carry.
 | 0.3 record the baseline | done | the numbers under "Baseline measured on the build machine" |
 | 1.1 invalid output blocking | merged, #20; linked into the device app in #58 | `runtime/callmask.c`, `callmask.o` in `device/Makefile` |
 | 1.2 faster multiply-accumulate | merged, #21 | `runtime/fixed.c` |
+| 1.2 follow-up: cache-only prompt processing | host-verified on `perf/stemhelp-review`, 2026-11-19 | For word problems, every prompt token before the last skips 884,736 matrix multiply-accumulates (16.8% of that token's matrix work with the default model). The synthetic regression checks bit-for-bit cache and decode-logit parity through the 384-token window. Host UI, graph, plan and solver gates pass. Calculator latency is unmeasured. |
 | 1.3 vocabulary 1,024 | **closed as a measured regression**: 87.9% exact against 92.5% at 512 on the same 2,000 rows. The capacity bug it exposed is fixed in #23 | 512-token vocabulary |
 | 1.4 typed maths without the weights file | merged with #15; #17 closed as folded | `typed_mode()` in `device/main.c` |
 | 2.1 solve for any variable (equation engine) | merged; #25 closed as folded into the wave-2 integration | `runtime/equation.c` |

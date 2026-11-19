@@ -543,8 +543,10 @@ int pipeline_answer(pipeline_t *p, const char *question,
 	if (n <= 0 || n >= p->seq)
 		return PIPELINE_ERR;
 
+	/* Revised 2026-11-19: only the final prompt token supplies decode logits. */
 	for (int i = 0; i < n; i++)
-		if (forward_q(&p->model, &p->qs, &p->qw, ids[i], pos++, p->logits) < 0)
+		if (forward_q(&p->model, &p->qs, &p->qw, ids[i], pos++,
+		              i == n - 1 ? p->logits : NULL) < 0)
 			return PIPELINE_ERR;
 
 	for (int i = 0; i < MAX_GEN && pos < p->seq; i++) {

@@ -18,7 +18,7 @@ Solve x^2 - 5x + 6 = 0  ->  CALL quad_solve 1 -5 6  ->  x=2, x=3
 ```mermaid
 flowchart LR
   Q["Word problem<br/>plain English"] --> T["bpe.c<br/>640-entry byte-level BPE"]
-  T --> M["int8 transformer<br/>6 layers, 5.25M parameters"]
+  T --> M["int8 transformer<br/>6 layers, d=256, 8 heads"]
   M --> C["CALL relation args<br/>about 7 tokens"]
   C --> G{"Every argument appears<br/>in the question?"}
   G -- yes --> S["solvers_*.c<br/>exact integer and rational math"]
@@ -33,32 +33,38 @@ The grounding check is deliberately conservative. If the model copies a number t
 | | |
 | --- | --- |
 | Task | English word problem to one `CALL <relation> <args>` line |
-| Model | 5,246,208 parameters; 6 layers, d=256, 8 heads, hidden 768, vocabulary 640 (208 merges) |
+| Model | 5,278,976 parameters; 6 layers, d=256, 8 heads, hidden 768, 640-entry vocabulary (201 merges) |
 | Training | Llama-2-style decoder with RoPE and a loss masked to call tokens |
 | Runtime | C11; int8 weights, Q12 fixed-point activations, no FPU in the hot path |
 | Target | TI-Nspire CX II, ARM926EJ-S; hardware cost measured with `int8bench` |
-| Artifacts | `weights.bin` (5.91 MB, NSM1 format) and an embedded BPE header |
+| Artifacts | `weights.bin` (5.95 MB, NSM1 format) and an embedded BPE header |
 | Subjects | Precalculus, calculus, trig, logs, algebra, physics, chemistry, and units |
-| Status | Research preview; host-verified and builds a `.tns` for the calculator |
+| Status | Research preview; host-verified and builds a `.tns` for the calculator, and never run on one |
+
+Those dimensions are the five values in the export's `NSM1` header — `dim`,
+`layers`, `heads`, `hidden`, `vocab` — which `runtime/infer.c` reads and relies
+on; `runtime/bpe.h` states the vocabulary size, its special count and its merge
+count. The parameter count above is the integer part plus the float norms.
 
 ## Supported relations
 
 Every relation has a fixed arity, an exact solver, and wording to read. `surface/`
-holds phrasings for all 171 relations, at least eight each, and reserves every
-fifth index of each list for held-out wording. 163 of the relations also carry
+holds phrasings for all 178 relations, at least eight each, and reserves every
+fifth index of each list for held-out wording. 153 of the relations also carry
 hand-written paraphrase rows in `fixtures/` (4,768 rows across fifteen files).
 A row's train or eval half is a field in the file it lives in — 0 of the 4,768
 questions appears in both halves — so rebuilding the corpus cannot move one.
 
 The tags below are the ten in `runtime/reltable.h`, so the counts sum to the
-catalogue total; `docs/status.md` splits physics into its electricity, magnetism
-and thermodynamics groups for display, which is why its table has more rows.
+catalogue total: 56 + 54 + 21 + 9 + 9 + 7 + 7 + 7 + 6 + 2 = 178. Circuits,
+magnetism and thermodynamics are relations inside `physics` rather than tags of
+their own.
 
 | Subject | Count | Relations |
 | --- | --- | --- |
 | Physics | 56 | `adiabatic_work`, `beat_freq`, `bernoulli_pressure`, `buoyant_force`, `capacitor_charge`, `capacitor_energy`, `carnot_efficiency`, `circular_accel`, `collision_velocity`, `conduction_rate`, `continuity_velocity`, `coulomb_force`, `doppler_freq`, `double_slit_fringe`, `electric_field_point`, `energy_friction`, `entropy_change`, `free_fall`, `friction_force`, `gas_density`, `gas_heat_cp`, `gas_work_isobaric`, `gauge_pressure`, `heat_pump_cop`, `impulse`, `internal_energy_gas`, `kinematic_v`, `kinetic_energy`, `momentum`, `motional_emf`, `newton2`, `ohm_i`, `ohm_power`, `ohm_v`, `parallel_resistance`, `pascal_press`, `pendulum_period`, `potential_energy`, `power`, `power_force`, `proj_range`, `radiation_power`, `rms_speed`, `series_resistance`, `sound_intensity`, `sound_level`, `specific_heat`, `spring_energy`, `standing_wave_freq`, `string_freq`, `submerged_fraction`, `torque`, `volume_flow_rate`, `wave_speed`, `work`, `work_energy` |
-| Chemistry | 48 | `atoms_from_mass`, `avg_rate`, `beer_lambert`, `boyles`, `buffer_ph`, `calorimetry_c`, `calorimetry_mass`, `carnot`, `cell_potential`, `charles`, `combined_gas`, `density`, `dilution`, `dilution_v1`, `faraday_deposit`, `first_law`, `gas_mixture_pressure`, `gas_p`, `gibbs`, `h_from_ph`, `heat_reaction`, `hydrate_water`, `kc_from_conc`, `ksp_from_solubility`, `latent_heat`, `limiting_moles`, `mass_from_molarity`, `mass_from_percent_composition`, `mass_percent`, `mixing_concentration`, `mixture_final_temperature`, `molality`, `molarity`, `mole_fraction`, `moles`, `partial_pressure`, `percent_dissociation`, `percent_yield`, `ph`, `ph_from_poh`, `ph_of_water`, `poh`, `rate_factor`, `stoich_mass`, `stoich_volume_gas`, `stoichiometry`, `vsepr_bond_angle`, `wavelength_from_frequency` |
-| Units | 20 | `average`, `average_speed`, `celsius_to_fahrenheit`, `combined_rate`, `fahrenheit_to_celsius`, `kg_to_lb`, `km_to_m`, `liters_to_ml`, `m_to_cm`, `percent_change`, `percent_error`, `percent_of`, `probability_single`, `ratio_share`, `rectangle_area`, `scientific_notation`, `sig_figs`, `simple_interest`, `triangle_area`, `volume_prism` |
+| Chemistry | 54 | `atoms_from_mass`, `avg_rate`, `beer_lambert`, `boyles`, `buffer_ph`, `calorimetry_c`, `calorimetry_mass`, `carnot`, `cell_potential`, `charles`, `combined_gas`, `density`, `dilution`, `dilution_v1`, `excess_concentration`, `excess_moles`, `faraday_deposit`, `first_law`, `gas_mixture_pressure`, `gas_p`, `gibbs`, `h_from_ph`, `heat_reaction`, `hydrate_water`, `ion_from_ksp`, `ions_from_mixture`, `kc_from_conc`, `kc_from_ice`, `ksp_from_solubility`, `latent_heat`, `limiting_moles`, `mass_from_molarity`, `mass_from_percent_composition`, `mass_percent`, `mixing_concentration`, `mixture_final_temperature`, `molality`, `molarity`, `mole_fraction`, `moles`, `moles_from_molarity`, `partial_pressure`, `percent_dissociation`, `percent_yield`, `ph`, `ph_from_poh`, `ph_of_water`, `poh`, `rate_factor`, `stoich_mass`, `stoich_volume_gas`, `stoichiometry`, `vsepr_bond_angle`, `wavelength_from_frequency` |
+| Units | 21 | `average`, `average_speed`, `celsius_to_fahrenheit`, `combined_rate`, `fahrenheit_to_celsius`, `kg_to_lb`, `km_to_m`, `liters_to_ml`, `m_to_cm`, `min_of`, `percent_change`, `percent_error`, `percent_of`, `probability_single`, `ratio_share`, `rectangle_area`, `scientific_notation`, `sig_figs`, `simple_interest`, `triangle_area`, `volume_prism` |
 | Modern physics | 9 | `activity_bq`, `bohr_energy_ev`, `bohr_transition_nm`, `de_broglie_electron`, `half_life_fraction`, `mass_energy_mev`, `photoelectric_kev`, `photon_energy_ev`, `threshold_wavelength` |
 | Trig | 9 | `arc_length`, `cos_eval`, `law_cosines`, `law_sines`, `pythagoras`, `right_triangle`, `sin_eval`, `sinusoid`, `tan_eval` |
 | Algebra | 7 | `abs_value_eq`, `arith_seq`, `complete_square`, `cubic_solve`, `factor_quadratic`, `geom_seq`, `linear_ineq` |
@@ -75,7 +81,8 @@ Requirements are Python 3, [`uv`](https://docs.astral.sh/uv/), `make`, and a C11
 cd stem-model
 
 make data         # about 200k traces plus the tokenizer (roughly 11 minutes)
-make train        # 5.25M-parameter decoder; 834 s on 2 CPU cores in the recorded run
+make train        # 5.28M-parameter decoder, 12,000 steps at the 384-token window;
+                  # budget hours per seed, as docs/ap-chemistry-ceiling.md records
 make export       # weights.bin and the generated tokenizer header
 make host         # build the C engine and its test binaries
 make eval         # score the int8 engine on held-out validation rows
@@ -116,7 +123,7 @@ flowchart TB
     Bench["int8bench<br/>hardware measurement"]
   end
 
-  W[("weights.bin<br/>5.91 MB")]
+  W[("weights.bin<br/>5.95 MB")]
   H[("bpe.h<br/>tokenizer tables")]
   T[("reltable.h, steptable.h<br/>unitstable.h, coursetable.h")]
 

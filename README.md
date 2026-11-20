@@ -4,6 +4,9 @@ NdlessAI is an on-device STEM solver for TI-Nspire calculators, built as a fork 
 
 > **Status: developer research preview.** The data contract, training and export pipeline, C inference engine, and ARM cross-compile checks are implemented and exercised on the host. The app builds as `stemhelp.tns`, but it has never been run on a physical calculator, and no trained checkpoint or release artifact is committed.
 
+Where the project is going, what is deliberately not being done, and where a
+contributor can pick up work: [`docs/roadmap.md`](docs/roadmap.md).
+
 ## How it works
 
 The model maps language to a fixed-arity call, not to an answer:

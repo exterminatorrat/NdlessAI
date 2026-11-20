@@ -57,11 +57,10 @@ jobs:
           for t in test_*; do
             case "$t" in *.c) continue ;; esac
             [ -x "$t" ] || continue
-            # test_fixed and test_alt need the exported weights, which this
-            # lane has no way to build; gate.sh skips the same checks for the
-            # same reason.
+            # Revised 2026-11-19: test_fixed exercises synthetic prefill
+            # without weights. Only test_alt requires the exported model.
             case "$t" in
-              test_fixed|test_alt)
+              test_alt)
                 if [ ! -f ../weights.bin ]; then
                   echo "== $t (skipped: no weights.bin)"
                   continue

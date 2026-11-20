@@ -333,17 +333,22 @@ int forward_q(const model_t *m, const qstate_t *qs, qwork_t *w, int token,
 		size_t off = (size_t)l * m->seq * d;
 
 		rmsnorm_q(w->xn, w->x, qs->n1q + (size_t)l * d, d, qs->rcp_n);
-		matvec_q(m->wq + l * nd, m->wq_s + l * nd / QT_GROUP, w->xn,
-		          w->q, d, d);
 		matvec_q(m->wk + l * nd, m->wk_s + l * nd / QT_GROUP, w->xn,
 		          w->k + off + (size_t)pos * d, d, d);
 		matvec_q(m->wv + l * nd, m->wv_s + l * nd / QT_GROUP, w->xn,
 		          w->v + off + (size_t)pos * d, d, d);
-
-		for (int h = 0; h < m->heads; h++) {
-			rope_q(w->q + h * hd, pos, hd, qs);
+		for (int h = 0; h < m->heads; h++)
 			rope_q(w->k + off + (size_t)pos * d + h * hd, pos, hd, qs);
-		}
+
+		/* Revised 2026-11-19: later tokens only read this layer's K/V.
+		 * Earlier layers still have to produce the input to the next layer. */
+		if (!logits && l == m->layers - 1)
+			return 0;
+
+		matvec_q(m->wq + l * nd, m->wq_s + l * nd / QT_GROUP, w->xn,
+		          w->q, d, d);
+		for (int h = 0; h < m->heads; h++)
+			rope_q(w->q + h * hd, pos, hd, qs);
 
 		attention_q(m, qs, w, l, pos);
 		matvec_q(m->wo + l * nd, m->wo_s + l * nd / QT_GROUP, w->att,
@@ -366,8 +371,10 @@ int forward_q(const model_t *m, const qstate_t *qs, qwork_t *w, int token,
 			w->x[i] = sat16((int32_t)w->x[i] + w->xb[i]);
 	}
 
-	rmsnorm_q(w->xn, w->x, qs->normq, d, qs->rcp_n);
-	matvec_q32(m->tok_emb, m->tok_emb_s, w->xn, logits, m->vocab, d);
+	if (logits) {
+		rmsnorm_q(w->xn, w->x, qs->normq, d, qs->rcp_n);
+		matvec_q32(m->tok_emb, m->tok_emb_s, w->xn, logits, m->vocab, d);
+	}
 	return 0;
 }
 

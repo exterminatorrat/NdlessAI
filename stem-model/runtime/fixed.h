@@ -62,6 +62,7 @@ int32_t exp_lut(int32_t dx);
 void softmax_q(const int32_t *sc, int n, int32_t *p);
 void silu_q(int16_t *h, int n);
 void rope_q(int16_t *v, int pos, int hd, const qstate_t *qs);
+/* Revised 2026-11-19: NULL logits updates only the cache for this token. */
 int forward_q(const model_t *m, const qstate_t *qs, qwork_t *w, int token,
               int pos, int32_t *logits);
 

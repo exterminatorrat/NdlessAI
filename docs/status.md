@@ -63,6 +63,8 @@ and it is small on purpose.
   finds **28 trustworthy single-call rows of 1,136**, 25 of which fit the
   192-token window. No amount of wording work grows this measurement past 28
   rows, so the slice is a directional test rather than a resolved one.
+  [`ap-chemistry-ceiling.md`](ap-chemistry-ceiling.md) counts what the rest of the
+  bank would take to reach, and why 100% of it is not a goal this design can meet.
 - **Why, and it is not wording.** 23 of those 70 rows need a second computation,
   9 name the wrong quantity, 6 need a tabulated constant the row does not carry
   and 3 have no relation at all; bank-wide, 835 of 1,136 items name no catalogue
